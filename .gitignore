@@ -1,5 +1,22 @@
-venv/
+# Ignore Python cache and environment files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .env
 .venv
+
+# Ignore node_modules if any
+node_modules/
+
+# Ignore build output
+dist/
+build/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE/editor folders
+.vscode/
+.idea/
