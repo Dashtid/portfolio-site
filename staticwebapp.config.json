@@ -1,6 +1,10 @@
 {
   "routes": [
     {
+      "route": "/static/*",
+      "serve": "/static/:path*"
+    },
+    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
