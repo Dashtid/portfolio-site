@@ -22,11 +22,17 @@
       min-height: 180px;
     }
   </style>
+  <script>
+    if (!localStorage.getItem('splashShown')) {
+        window.location.href = 'splash.html';
+        localStorage.setItem('splashShown', 'true');
+    }
+  </script>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-      <a class="navbar-brand" href="#">David Dashti</a>
+      <!-- <a class="navbar-brand" href="#">David Dashti</a> -->
       <div>
         <a class="nav-link d-inline" href="#projects">Projects</a>
         <a class="nav-link d-inline" href="#about">About</a>
