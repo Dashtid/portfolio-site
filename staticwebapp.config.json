@@ -1,13 +1,21 @@
 {
   "routes": [
     {
-      "route": "/static/*",
-      "serve": "/static/:path*"
+      "route": "/",
+      "redirect": "/splash.html",
+      "statusCode": 302
+    },
+    {
+      "route": "/index.html",
+      "statusCode": 200
+    },
+    {
+      "route": "/splash.html",
+      "statusCode": 200
     },
     {
       "route": "/*",
-      "serve": "/index.html",
-      "statusCode": 200
+      "statusCode": 404
     }
   ]
 }
