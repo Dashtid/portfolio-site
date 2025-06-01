@@ -2,15 +2,10 @@
   "routes": [
     {
       "route": "/",
-      "redirect": "/splash.html",
-      "statusCode": 302
-    },
-    {
-      "route": "/index.html",
       "statusCode": 200
     },
     {
-      "route": "/splash.html",
+      "route": "/index.html",
       "statusCode": 200
     },
     {
