@@ -1,7 +1,7 @@
 /* Custom styles for David Dashti's portfolio */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: url('static/images/stockholm.jpg') no-repeat center top;
+  background: url('../../images/stockholm.jpg') no-repeat center top;
   background-size: cover;
   background-attachment: fixed;
 }
