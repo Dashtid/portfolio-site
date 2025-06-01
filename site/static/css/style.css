@@ -1,13 +1,15 @@
 /* Custom styles for David Dashti's portfolio */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
+  background: url('static/images/stockholm.jpg') no-repeat center top;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 .hero {
-  background: url('static/images/stockholm.jpg') no-repeat center center;
-  background-size: cover;
+  /* background removed so body handles it */
   position: relative;
-  padding: 40px 0;
+  padding: 60px 0 40px 0; /* More top padding for spacing */
   text-align: center;
 }
 
@@ -28,11 +30,16 @@ body {
 }
 
 .hero-content {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.65); /* More transparent */
   padding: 2rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   display: inline-block;
+  max-width: 1200px; /* Wider */
+}
+
+.hero-content .lead {
+  white-space: nowrap; /* Keep subtitle on one line */
 }
 
 .section-icon {
