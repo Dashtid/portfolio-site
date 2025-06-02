@@ -57,6 +57,15 @@ body {
   min-width: 48px;
 }
 
+/* Make LTH, Scania, and Karolinska logos slightly bigger */
+.card-logo[alt="LTH Logo"],
+.card-logo[alt="Scania Logo"],
+.card-logo[alt="Karolinska Logo"] {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+}
+
 .project-card,
 .experience-card {
   min-height: 180px;
