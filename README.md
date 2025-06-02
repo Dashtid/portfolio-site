@@ -1,6 +1,6 @@
 # David Dashti Portfolio
 
-This repository contains the source code for [daviddashti.se](https://daviddashti.se), a personal portfolio and project hub focused on cybersecurity in healthcare.
+This repository contains the source code for [dashti.se](https://dashti.se), a personal portfolio and project hub focused on cybersecurity in healthcare.
 
 ## Project Overview
 
@@ -34,7 +34,7 @@ Deployment is fully automated:
 
 - Any push to the `master` branch triggers a GitHub Actions workflow.
 - The workflow deploys the contents of the `site/` directory to Azure Static Web Apps.
-- The site is live at [agreeable-sky-0d52c1303.6.azurestaticapps.net](https://agreeable-sky-0d52c1303.6.azurestaticapps.net) and (once DNS is propagated) at [daviddashti.se](https://daviddashti.se).
+- The site is live at [agreeable-sky-0d52c1303.6.azurestaticapps.net](https://agreeable-sky-0d52c1303.6.azurestaticapps.net) and (once DNS is propagated) at [dashti.se](https://dashti.se).
 
 ### How to Update the Site
 
