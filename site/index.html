@@ -189,7 +189,7 @@
             <div class="card experience-card">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                  <img src="static/images/LTH.png" alt="LTH Logo" class="card-logo">
+                  <img src="static/images/LTH.webp" alt="LTH Logo" class="card-logo">
                   <h5 class="card-title mb-0">Lunds University</h5>
                 </div>
                 <p class="card-text">
@@ -214,9 +214,9 @@
           Markets
         </h2>
         <div class="row">
-          a <div class="col-md-3 mb-4">
-            <!-- First TradingView Widget (Stocks) -->
-            <div class="tradingview-widget-container">
+          <div class="col-md-3 mb-4">
+            <!-- Stocks Widget -->
+            <div class="tradingview-widget-container" id="tradingview-stocks-widget">
               <div class="tradingview-widget-container__widget"></div>
               <div class="tradingview-widget-copyright">
                 <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
@@ -225,7 +225,7 @@
               </div>
               <script type="text/javascript">
                 new TradingView.MediumWidget({
-                  "container_id": "tradingview-widget-container__widget",
+                  "container_id": "tradingview-stocks-widget",
                   "title": "Stocks",
                   "tabs": [
                     {
@@ -248,16 +248,6 @@
                         { "s": "NASDAQ:FB", "d": "Meta Platforms" },
                         { "s": "NYSE:ORCL", "d": "Oracle Corp" },
                         { "s": "NASDAQ:INTC", "d": "Intel Corp" }
-                      ]
-                    },
-                    {
-                      "title": "Services",
-                      "symbols": [
-                        { "s": "NASDAQ:AMZN", "d": "Amazon" },
-                        { "s": "NYSE:BABA", "d": "Alibaba Group Hldg Ltd" },
-                        { "s": "NYSE:T", "d": "At&t Inc" },
-                        { "s": "NYSE:WMT", "d": "Walmart" },
-                        { "s": "NYSE:V", "d": "Visa" }
                       ]
                     }
                   ],
@@ -284,8 +274,8 @@
             </div>
           </div>
           <div class="col-md-3 mb-4">
-            <!-- Second TradingView Widget (Indices) -->
-            <div class="tradingview-widget-container">
+            <!-- Indices Widget -->
+            <div class="tradingview-widget-container" id="tradingview-indices-widget">
               <div class="tradingview-widget-container__widget"></div>
               <div class="tradingview-widget-copyright">
                 <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
@@ -294,12 +284,11 @@
               </div>
               <script type="text/javascript">
                 new TradingView.MediumWidget({
-                  "container_id": "tradingview-widget-container__widget",
+                  "container_id": "tradingview-indices-widget",
                   "title": "Indices",
                   "tabs": [
                     {
                       "title": "US & Canada",
-                      "title_raw": "US & Canada",
                       "symbols": [
                         { "s": "FOREXCOM:SPXUSD", "d": "S&P 500" },
                         { "s": "FOREXCOM:NSXUSD", "d": "US 100" },
@@ -310,7 +299,6 @@
                     },
                     {
                       "title": "Europe",
-                      "title_raw": "Europe",
                       "symbols": [
                         { "s": "INDEX:SX5E", "d": "Euro Stoxx 50" },
                         { "s": "FOREXCOM:UKXGBP", "d": "UK 100" },
@@ -321,7 +309,6 @@
                     },
                     {
                       "title": "Asia/Pacific",
-                      "title_raw": "Asia/Pacific",
                       "symbols": [
                         { "s": "INDEX:NKY", "d": "Nikkei 225" },
                         { "s": "INDEX:HSI", "d": "Hang Seng" },
@@ -354,7 +341,7 @@
             </div>
           </div>
           <div class="col-md-3 mb-4">
-            <!-- Third TradingView Widget (Currencies) -->
+            <!-- Currencies Widget -->
             <div class="tradingview-widget-container" id="tradingview-currencies-widget">
               <div class="tradingview-widget-container__widget"></div>
               <div class="tradingview-widget-copyright">
@@ -369,7 +356,6 @@
                   "tabs": [
                     {
                       "title": "Major",
-                      "title_raw": "Major",
                       "symbols": [
                         { "s": "FX_IDC:EURUSD", "d": "EUR to USD" },
                         { "s": "FX_IDC:USDJPY", "d": "USD to JPY" },
@@ -377,15 +363,10 @@
                         { "s": "FX_IDC:AUDUSD", "d": "AUD to USD" },
                         { "s": "FX_IDC:USDCAD", "d": "USD to CAD" },
                         { "s": "FX_IDC:USDCHF", "d": "USD to CHF" }
-                      ],
-                      "quick_link": {
-                        "title": "More majors",
-                        "href": "/markets/currencies/rates-major/"
-                      }
+                      ]
                     },
                     {
                       "title": "Minor",
-                      "title_raw": "Minor",
                       "symbols": [
                         { "s": "FX_IDC:EURGBP", "d": "EUR to GBP" },
                         { "s": "FX_IDC:EURJPY", "d": "EUR to JPY" },
@@ -393,30 +374,9 @@
                         { "s": "FX_IDC:CADJPY", "d": "CAD to JPY" },
                         { "s": "FX_IDC:GBPCAD", "d": "GBP to CAD" },
                         { "s": "FX_IDC:EURCAD", "d": "EUR to CAD" }
-                      ],
-                      "quick_link": {
-                        "title": "More minors",
-                        "href": "/markets/currencies/rates-minor/"
-                      }
-                    },
-                    {
-                      "title": "Exotic",
-                      "title_raw": "Exotic",
-                      "symbols": [
-                        { "s": "FX_IDC:USDSEK", "d": "USD to SEK" },
-                        { "s": "FX_IDC:USDMXN", "d": "USD to MXN" },
-                        { "s": "FX_IDC:USDZAR", "d": "USD to ZAR" },
-                        { "s": "FX_IDC:EURTRY", "d": "EUR to TRY" },
-                        { "s": "FX_IDC:EURNOK", "d": "EUR to NOK" },
-                        { "s": "FX_IDC:GBPPLN", "d": "GBP to PLN" }
-                      ],
-                      "quick_link": {
-                        "title": "More exotics",
-                        "href": "/markets/currencies/rates-exotic/"
-                      }
+                      ]
                     }
                   ],
-                  "title_link": "/markets/currencies/rates-major/",
                   "width": "100%",
                   "height": "100%",
                   "showChart": true,
@@ -440,7 +400,7 @@
             </div>
           </div>
           <div class="col-md-3 mb-4">
-            <!-- TradingView Widget BEGIN -->
+            <!-- Cryptocurrencies Widget -->
             <div class="tradingview-widget-container" id="tradingview-crypto-widget">
               <div class="tradingview-widget-container__widget"></div>
               <div class="tradingview-widget-copyright">
@@ -452,11 +412,9 @@
                 new TradingView.MediumWidget({
                   "container_id": "tradingview-crypto-widget",
                   "title": "Cryptocurrencies",
-                  "title_raw": "Cryptocurrencies",
                   "tabs": [
                     {
                       "title": "Overview",
-                      "title_raw": "Overview",
                       "symbols": [
                         { "s": "CRYPTOCAP:TOTAL" },
                         { "s": "BITSTAMP:BTCUSD" },
@@ -464,77 +422,9 @@
                         { "s": "COINBASE:SOLUSD" },
                         { "s": "BINANCE:AVAXUSD" },
                         { "s": "COINBASE:UNIUSD" }
-                      ],
-                      "quick_link": {
-                        "title": "More cryptocurrencies",
-                        "href": "/markets/cryptocurrencies/prices-all/"
-                      }
-                    },
-                    {
-                      "title": "Bitcoin",
-                      "title_raw": "Bitcoin",
-                      "symbols": [
-                        { "s": "BITSTAMP:BTCUSD" },
-                        { "s": "COINBASE:BTCEUR" },
-                        { "s": "COINBASE:BTCGBP" },
-                        { "s": "BITFLYER:BTCJPY" },
-                        { "s": "BMFBOVESPA:BIT1!" }
-                      ],
-                      "quick_link": {
-                        "title": "More Bitcoin pairs",
-                        "href": "/symbols/BTCUSD/markets/"
-                      }
-                    },
-                    {
-                      "title": "Ethereum",
-                      "title_raw": "Ethereum",
-                      "symbols": [
-                        { "s": "BITSTAMP:ETHUSD" },
-                        { "s": "KRAKEN:ETHEUR" },
-                        { "s": "COINBASE:ETHGBP" },
-                        { "s": "BITFLYER:ETHJPY" },
-                        { "s": "BINANCE:ETHBTC" },
-                        { "s": "BINANCE:ETHUSDT" }
-                      ],
-                      "quick_link": {
-                        "title": "More Ethereum pairs",
-                        "href": "/symbols/ETHUSD/markets/"
-                      }
-                    },
-                    {
-                      "title": "Solana",
-                      "title_raw": "Solana",
-                      "symbols": [
-                        { "s": "COINBASE:SOLUSD" },
-                        { "s": "BINANCE:SOLEUR" },
-                        { "s": "COINBASE:SOLGBP" },
-                        { "s": "BINANCE:SOLBTC" },
-                        { "s": "COINBASE:SOLETH" },
-                        { "s": "BINANCE:SOLUSDT" }
-                      ],
-                      "quick_link": {
-                        "title": "More Solana pairs",
-                        "href": "/symbols/SOLUSD/markets/"
-                      }
-                    },
-                    {
-                      "title": "Uniswap",
-                      "title_raw": "Uniswap",
-                      "symbols": [
-                        { "s": "COINBASE:UNIUSD" },
-                        { "s": "KRAKEN:UNIEUR" },
-                        { "s": "COINBASE:UNIGBP" },
-                        { "s": "BINANCE:UNIBTC" },
-                        { "s": "KRAKEN:UNIETH" },
-                        { "s": "BINANCE:UNIUSDT" }
-                      ],
-                      "quick_link": {
-                        "title": "More Uniswap pairs",
-                        "href": "/symbols/UNIUSD/markets/"
-                      }
+                      ]
                     }
                   ],
-                  "title_link": "/markets/cryptocurrencies/prices-all/",
                   "width": "100%",
                   "height": "100%",
                   "showChart": true,
@@ -556,8 +446,9 @@
               <script type="text/javascript"
                 src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async></script>
             </div>
-            <!-- TradingView Widget END -->
           </div>
+        </div>
+      </div>
     </section>
 
     <section id="about" class="py-5 bg-light">

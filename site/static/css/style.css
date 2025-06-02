@@ -57,16 +57,6 @@ body {
   min-width: 48px;
 }
 
-/* Make SÖS, Scania, Karolinska, and LTH logos even bigger */
-.card-logo[alt="Södersjukhuset Logo"],
-.card-logo[alt="Scania Logo"],
-.card-logo[alt="Karolinska Logo"],
-.card-logo[alt="LTH Logo"] {
-  width: 80px;
-  height: 80px;
-  min-width: 80px;
-}
-
 .project-card,
 .experience-card {
   min-height: 180px;
