@@ -219,53 +219,16 @@
         <div class="row">
           <div class="col-md-6 mb-4">
             <!-- Stocks Widget -->
-            <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container" data-widget-type="ticker-tape"
+              data-config='{"symbols":[{"proName":"NASDAQ:AAPL","title":"Apple"},{"proName":"NASDAQ:GOOGL","title":"Alphabet"},{"proName":"NASDAQ:MSFT","title":"Microsoft"}],"colorTheme":"light","isTransparent":false,"displayMode":"adaptive","locale":"en"}'>
               <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-                  <!-
-                  {
-                    "symbols": [
-                      { "proName": "NASDAQ:AAPL", "title": "Apple" },
-                      { "proName": "NASDAQ:GOOGL", "title": "Alphabet" },
-                      { "proName": "NASDAQ:MSFT", "title": "Microsoft" }
-                    ],
-                    "colorTheme": "light",
-                    "isTransparent": false,
-                    "displayMode": "adaptive",
-                    "locale": "en"
-                  }
-                   ->
-                </script>
             </div>
           </div>
           <div class="col-md-6 mb-4">
             <!-- Indices Widget -->
-            <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container" data-widget-type="market-quotes"
+              data-config='{"width":"100%","height":"220","symbolsGroups":[{"name":"Indices","originalName":"Indices","symbols":[{"name":"FOREXCOM:SPXUSD","displayName":"S&P 500"},{"name":"FOREXCOM:NSXUSD","displayName":"US 100"}]}],"showSymbolLogo":true,"colorTheme":"light","isTransparent":false,"locale":"en"}'>
               <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
-                  <!-
-                  {
-                    "width": "100%",
-                    "height": "220",
-                    "symbolsGroups": [
-                      {
-                        "name": "Indices",
-                        "originalName": "Indices",
-                        "symbols": [
-                          { "name": "FOREXCOM:SPXUSD", "displayName": "S&P 500" },
-                          { "name": "FOREXCOM:NSXUSD", "displayName": "US 100" }
-                        ]
-                      }
-                    ],
-                    "showSymbolLogo": true,
-                    "colorTheme": "light",
-                    "isTransparent": false,
-                    "locale": "en"
-                  }
-                   ->
-                </script>
             </div>
           </div>
         </div>
@@ -273,52 +236,41 @@
         <div class="row">
           <div class="col-md-6 mb-4">
             <!-- Currencies Widget -->
-            <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container" data-widget-type="forex-cross-rates"
+              data-config='{"width":"100%","height":"220","currencies":["EUR","USD","JPY"],"colorTheme":"light","isTransparent":false,"locale":"en"}'>
               <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js" async>
-                  <!-
-                  {
-                    "width": "100%",
-                    "height": "220",
-                    "currencies": [
-                      "EUR",
-                      "USD",
-                      "JPY"
-                    ],
-                    "colorTheme": "light",
-                    "isTransparent": false,
-                    "locale": "en"
-                  }
-                   ->
-                </script>
             </div>
           </div>
           <div class="col-md-6 mb-4">
             <!-- Cryptocurrencies Widget -->
-            <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container" data-widget-type="crypto-coins-markets"
+              data-config='{"width":"100%","height":"220","currencies":["BTC","ETH"],"colorTheme":"light","isTransparent":false,"locale":"en"}'>
               <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-markets.js" async>
-                  <!-
-                  {
-                    "width": "100%",
-                    "height": "220",
-                    "currencies": [
-                      "BTC",
-                      "ETH"
-                    ],
-                    "colorTheme": "light",
-                    "isTransparent": false,
-                    "locale": "en"
-                  }
-                   ->
-                </script>
             </div>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Initialize TradingView Widgets -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const widgets = document.querySelectorAll('.tradingview-widget-container[data-widget-type]');
+
+        widgets.forEach(function (container) {
+          const widgetType = container.getAttribute('data-widget-type');
+          const config = JSON.parse(container.getAttribute('data-config'));
+
+          const script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.src = `https://s3.tradingview.com/external-embedding/embed-widget-${widgetType}.js`;
+          script.async = true;
+          script.innerHTML = JSON.stringify(config);
+
+          container.appendChild(script);
+        });
+      });
+    </script>
 
     <section id="about" class="py-5 bg-light">
       <div class="container">
