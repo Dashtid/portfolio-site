@@ -59,7 +59,8 @@
             <div class="card experience-card">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                  <img src="static/images/scania.svg" alt="Scania Logo" class="card-logo">
+                  <img src="static/images/scania.svg" alt="Scania Logo" class="card-logo"
+                    style="width:60px;height:60px;">
                   <h5 class="card-title mb-0">Scania Engines</h5>
                 </div>
                 <p class="card-text">
@@ -93,7 +94,8 @@
             <div class="card experience-card">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                  <img src="static/images/karolinska.jpg" alt="Karolinska Logo" class="card-logo">
+                  <img src="static/images/karolinska.jpg" alt="Karolinska Logo" class="card-logo"
+                    style="width:60px;height:60px;">
                   <h5 class="card-title mb-0">Karolinska University Hospital</h5>
                 </div>
                 <p class="card-text">
@@ -189,7 +191,7 @@
             <div class="card experience-card">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                  <img src="static/images/LTH.webp" alt="LTH Logo" class="card-logo">
+                  <img src="static/images/LTH.webp" alt="LTH Logo" class="card-logo" style="width:60px;height:60px;">
                   <h5 class="card-title mb-0">Lunds University</h5>
                 </div>
                 <p class="card-text">
@@ -213,238 +215,105 @@
           <img src="static/images/market.svg" alt="Market Icon" class="section-icon">
           Markets
         </h2>
+        <!-- First Row -->
         <div class="row">
-          <div class="col-md-3 mb-4">
+          <div class="col-md-6 mb-4">
             <!-- Stocks Widget -->
-            <div class="tradingview-widget-container" id="tradingview-stocks-widget">
+            <div class="tradingview-widget-container">
               <div class="tradingview-widget-container__widget"></div>
-              <div class="tradingview-widget-copyright">
-                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                  <span class="blue-text">Track all markets on TradingView</span>
-                </a>
-              </div>
-              <script type="text/javascript">
-                new TradingView.MediumWidget({
-                  "container_id": "tradingview-stocks-widget",
-                  "title": "Stocks",
-                  "tabs": [
-                    {
-                      "title": "Financial",
-                      "symbols": [
-                        { "s": "NYSE:JPM", "d": "JPMorgan Chase" },
-                        { "s": "NYSE:WFC", "d": "Wells Fargo Co New" },
-                        { "s": "NYSE:BAC", "d": "Bank Amer Corp" },
-                        { "s": "NYSE:HSBC", "d": "Hsbc Hldgs Plc" },
-                        { "s": "NYSE:C", "d": "Citigroup Inc" },
-                        { "s": "NYSE:MA", "d": "Mastercard Incorporated" }
-                      ]
-                    },
-                    {
-                      "title": "Technology",
-                      "symbols": [
-                        { "s": "NASDAQ:AAPL", "d": "Apple" },
-                        { "s": "NASDAQ:GOOGL", "d": "Alphabet" },
-                        { "s": "NASDAQ:MSFT", "d": "Microsoft" },
-                        { "s": "NASDAQ:FB", "d": "Meta Platforms" },
-                        { "s": "NYSE:ORCL", "d": "Oracle Corp" },
-                        { "s": "NASDAQ:INTC", "d": "Intel Corp" }
-                      ]
-                    }
-                  ],
-                  "width": "100%",
-                  "height": "100%",
-                  "showChart": true,
-                  "showFloatingTooltip": false,
-                  "locale": "en",
-                  "plotLineColorGrowing": "#2962FF",
-                  "plotLineColorFalling": "#2962FF",
-                  "belowLineFillColorGrowing": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorFalling": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorGrowingBottom": "rgba(41, 98, 255, 0)",
-                  "belowLineFillColorFallingBottom": "rgba(41, 98, 255, 0)",
-                  "gridLineColor": "rgba(240, 243, 250, 0)",
-                  "scaleFontColor": "rgba(120, 123, 134, 1)",
-                  "showSymbolLogo": true,
-                  "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
-                  "colorTheme": "light"
-                });
-              </script>
               <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async></script>
+                src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                  <!-
+                  {
+                    "symbols": [
+                      { "proName": "NASDAQ:AAPL", "title": "Apple" },
+                      { "proName": "NASDAQ:GOOGL", "title": "Alphabet" },
+                      { "proName": "NASDAQ:MSFT", "title": "Microsoft" }
+                    ],
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "displayMode": "adaptive",
+                    "locale": "en"
+                  }
+                   ->
+                </script>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
+          <div class="col-md-6 mb-4">
             <!-- Indices Widget -->
-            <div class="tradingview-widget-container" id="tradingview-indices-widget">
+            <div class="tradingview-widget-container">
               <div class="tradingview-widget-container__widget"></div>
-              <div class="tradingview-widget-copyright">
-                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                  <span class="blue-text">Track all markets on TradingView</span>
-                </a>
-              </div>
-              <script type="text/javascript">
-                new TradingView.MediumWidget({
-                  "container_id": "tradingview-indices-widget",
-                  "title": "Indices",
-                  "tabs": [
-                    {
-                      "title": "US & Canada",
-                      "symbols": [
-                        { "s": "FOREXCOM:SPXUSD", "d": "S&P 500" },
-                        { "s": "FOREXCOM:NSXUSD", "d": "US 100" },
-                        { "s": "BMFBOVESPA:ISP1!", "d": "S&P 500" },
-                        { "s": "INDEX:DXY", "d": "U.S. Dollar Currency Index" },
-                        { "s": "FOREXCOM:DJI", "d": "Dow 30" }
-                      ]
-                    },
-                    {
-                      "title": "Europe",
-                      "symbols": [
-                        { "s": "INDEX:SX5E", "d": "Euro Stoxx 50" },
-                        { "s": "FOREXCOM:UKXGBP", "d": "UK 100" },
-                        { "s": "INDEX:DEU40", "d": "DAX Index" },
-                        { "s": "INDEX:CAC40", "d": "CAC 40 Index" },
-                        { "s": "INDEX:SMI", "d": "SWISS MARKET INDEX SMI® PRICE" }
-                      ]
-                    },
-                    {
-                      "title": "Asia/Pacific",
-                      "symbols": [
-                        { "s": "INDEX:NKY", "d": "Nikkei 225" },
-                        { "s": "INDEX:HSI", "d": "Hang Seng" },
-                        { "s": "BSE:SENSEX", "d": "Sensex" },
-                        { "s": "BSE:BSE500", "d": "S&P BSE 500 INDEX" },
-                        { "s": "INDEX:KSIC", "d": "Kospi Composite" }
-                      ]
-                    }
-                  ],
-                  "width": "100%",
-                  "height": "100%",
-                  "showChart": true,
-                  "showFloatingTooltip": false,
-                  "locale": "en",
-                  "plotLineColorGrowing": "#2962FF",
-                  "plotLineColorFalling": "#2962FF",
-                  "belowLineFillColorGrowing": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorFalling": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorGrowingBottom": "rgba(41, 98, 255, 0)",
-                  "belowLineFillColorFallingBottom": "rgba(41, 98, 255, 0)",
-                  "gridLineColor": "rgba(240, 243, 250, 0)",
-                  "scaleFontColor": "rgba(120, 123, 134, 1)",
-                  "showSymbolLogo": true,
-                  "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
-                  "colorTheme": "light"
-                });
-              </script>
               <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async></script>
+                src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
+                  <!-
+                  {
+                    "width": "100%",
+                    "height": "220",
+                    "symbolsGroups": [
+                      {
+                        "name": "Indices",
+                        "originalName": "Indices",
+                        "symbols": [
+                          { "name": "FOREXCOM:SPXUSD", "displayName": "S&P 500" },
+                          { "name": "FOREXCOM:NSXUSD", "displayName": "US 100" }
+                        ]
+                      }
+                    ],
+                    "showSymbolLogo": true,
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "locale": "en"
+                  }
+                   ->
+                </script>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
+        </div>
+        <!-- Second Row -->
+        <div class="row">
+          <div class="col-md-6 mb-4">
             <!-- Currencies Widget -->
-            <div class="tradingview-widget-container" id="tradingview-currencies-widget">
+            <div class="tradingview-widget-container">
               <div class="tradingview-widget-container__widget"></div>
-              <div class="tradingview-widget-copyright">
-                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                  <span class="blue-text">Track all markets on TradingView</span>
-                </a>
-              </div>
-              <script type="text/javascript">
-                new TradingView.MediumWidget({
-                  "container_id": "tradingview-currencies-widget",
-                  "title": "Currencies",
-                  "tabs": [
-                    {
-                      "title": "Major",
-                      "symbols": [
-                        { "s": "FX_IDC:EURUSD", "d": "EUR to USD" },
-                        { "s": "FX_IDC:USDJPY", "d": "USD to JPY" },
-                        { "s": "FX_IDC:GBPUSD", "d": "GBP to USD" },
-                        { "s": "FX_IDC:AUDUSD", "d": "AUD to USD" },
-                        { "s": "FX_IDC:USDCAD", "d": "USD to CAD" },
-                        { "s": "FX_IDC:USDCHF", "d": "USD to CHF" }
-                      ]
-                    },
-                    {
-                      "title": "Minor",
-                      "symbols": [
-                        { "s": "FX_IDC:EURGBP", "d": "EUR to GBP" },
-                        { "s": "FX_IDC:EURJPY", "d": "EUR to JPY" },
-                        { "s": "FX_IDC:GBPJPY", "d": "GBP to JPY" },
-                        { "s": "FX_IDC:CADJPY", "d": "CAD to JPY" },
-                        { "s": "FX_IDC:GBPCAD", "d": "GBP to CAD" },
-                        { "s": "FX_IDC:EURCAD", "d": "EUR to CAD" }
-                      ]
-                    }
-                  ],
-                  "width": "100%",
-                  "height": "100%",
-                  "showChart": true,
-                  "showFloatingTooltip": false,
-                  "locale": "en",
-                  "plotLineColorGrowing": "#2962FF",
-                  "plotLineColorFalling": "#2962FF",
-                  "belowLineFillColorGrowing": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorFalling": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorGrowingBottom": "rgba(41, 98, 255, 0)",
-                  "belowLineFillColorFallingBottom": "rgba(41, 98, 255, 0)",
-                  "gridLineColor": "rgba(240, 243, 250, 0)",
-                  "scaleFontColor": "rgba(120, 123, 134, 1)",
-                  "showSymbolLogo": true,
-                  "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
-                  "colorTheme": "light"
-                });
-              </script>
               <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async></script>
+                src="https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js" async>
+                  <!-
+                  {
+                    "width": "100%",
+                    "height": "220",
+                    "currencies": [
+                      "EUR",
+                      "USD",
+                      "JPY"
+                    ],
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "locale": "en"
+                  }
+                   ->
+                </script>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
+          <div class="col-md-6 mb-4">
             <!-- Cryptocurrencies Widget -->
-            <div class="tradingview-widget-container" id="tradingview-crypto-widget">
+            <div class="tradingview-widget-container">
               <div class="tradingview-widget-container__widget"></div>
-              <div class="tradingview-widget-copyright">
-                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                  <span class="blue-text">Track all markets on TradingView</span>
-                </a>
-              </div>
-              <script type="text/javascript">
-                new TradingView.MediumWidget({
-                  "container_id": "tradingview-crypto-widget",
-                  "title": "Cryptocurrencies",
-                  "tabs": [
-                    {
-                      "title": "Overview",
-                      "symbols": [
-                        { "s": "CRYPTOCAP:TOTAL" },
-                        { "s": "BITSTAMP:BTCUSD" },
-                        { "s": "BITSTAMP:ETHUSD" },
-                        { "s": "COINBASE:SOLUSD" },
-                        { "s": "BINANCE:AVAXUSD" },
-                        { "s": "COINBASE:UNIUSD" }
-                      ]
-                    }
-                  ],
-                  "width": "100%",
-                  "height": "100%",
-                  "showChart": true,
-                  "showFloatingTooltip": false,
-                  "locale": "en",
-                  "plotLineColorGrowing": "#2962FF",
-                  "plotLineColorFalling": "#2962FF",
-                  "belowLineFillColorGrowing": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorFalling": "rgba(41, 98, 255, 0.12)",
-                  "belowLineFillColorGrowingBottom": "rgba(41, 98, 255, 0)",
-                  "belowLineFillColorFallingBottom": "rgba(41, 98, 255, 0)",
-                  "gridLineColor": "rgba(240, 243, 250, 0)",
-                  "scaleFontColor": "rgba(120, 123, 134, 1)",
-                  "showSymbolLogo": true,
-                  "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
-                  "colorTheme": "light"
-                });
-              </script>
               <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async></script>
+                src="https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-markets.js" async>
+                  <!-
+                  {
+                    "width": "100%",
+                    "height": "220",
+                    "currencies": [
+                      "BTC",
+                      "ETH"
+                    ],
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "locale": "en"
+                  }
+                   ->
+                </script>
             </div>
           </div>
         </div>
