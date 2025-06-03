@@ -111,3 +111,17 @@ body {
   background-color: #f1f3f4 !important;
   color: #444 !important;
 }
+
+/* TradingView Widget Responsive Styles */
+.tradingview-responsive-widget {
+  width: 100%;
+  min-width: 980px;
+  min-height: 610px;
+  height: 70vh;
+  position: relative;
+}
+
+.tradingview-widget-container__widget {
+  height: 100% !important;
+  min-height: 610px;
+}
