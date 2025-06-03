@@ -20,5 +20,3 @@ Thumbs.db
 # Ignore IDE/editor folders
 .vscode/
 .idea/
-
-.prettierrc
