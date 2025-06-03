@@ -20,16 +20,16 @@
 
 <body>
   <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <nav class="navbar navbar-expand-lg" style="background: transparent;">
     <div class="container">
-      <span class="navbar-brand px-4 py-2 border rounded bg-white" style="background: none;">
+      <span class="navbar-brand px-4 py-2 border rounded" style="background: transparent;">
         David Dashti
       </span>
       <div class="d-flex gap-3">
         <!-- Navigation Links -->
-        <a class="nav-link px-4 py-2 border rounded bg-white shadow-sm text-center" href="#experience">Experience</a>
-        <a class="nav-link px-4 py-2 border rounded bg-white shadow-sm text-center" href="#about">About</a>
-        <a class="nav-link px-4 py-2 border rounded bg-white shadow-sm text-center" href="#contact">Contact</a>
+        <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="#experience">Experience</a>
+        <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="#about">About</a>
+        <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="#contact">Contact</a>
       </div>
     </div>
   </nav>
@@ -221,7 +221,8 @@
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                   <!-- Företagsuniversitet logo -->
-                  <img src="static/images/foretagsuniversitet.png" alt="Företagsuniversitet Logo" class="card-logo" style="width:60px;height:60px;">
+                  <img src="static/images/foretagsuniversitet.png" alt="Företagsuniversitet Logo" class="card-logo"
+                    style="width:60px;height:60px;">
                   <h5 class="card-title mb-0">Företagsuniversitet</h5>
                 </div>
                 <p class="card-text">
@@ -254,23 +255,24 @@
                   <span class="blue-text">Track all markets on TradingView</span>
                 </a>
               </div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-              {
-                "width": "980",
-                "height": "610",
-                "symbol": "NASDAQ:AAPL",
-                "timezone": "Europe/Stockholm",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "withdateranges": true,
-                "range": "60M",
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
-                "details": true,
-                "support_host": "https://www.tradingview.com"
-              }
-              </script>
+              <script type="text/javascript"
+                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                  {
+                    "width": "980",
+                      "height": "610",
+                        "symbol": "NASDAQ:AAPL",
+                          "timezone": "Europe/Stockholm",
+                            "theme": "dark",
+                              "style": "1",
+                                "locale": "en",
+                                  "withdateranges": true,
+                                    "range": "60M",
+                                      "hide_side_toolbar": false,
+                                        "allow_symbol_change": true,
+                                          "details": true,
+                                            "support_host": "https://www.tradingview.com"
+                  }
+                </script>
             </div>
             <!-- TradingView Widget END -->
           </div>
@@ -369,7 +371,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(248, 249, 250, 0.15); /* Lower opacity for more visible image */
+    background: rgba(248, 249, 250, 0.15);
+    /* Lower opacity for more visible image */
     z-index: 1;
   }
 </style>
