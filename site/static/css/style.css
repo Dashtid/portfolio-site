@@ -18,6 +18,7 @@ body {
   background: url('../images/stockholm.png') no-repeat center top;
   background-size: cover;
   background-attachment: fixed;
+  min-height: 180px; /* Ensures background is visible */
 }
 
 /* Hero section layout and overlay */
@@ -25,6 +26,7 @@ body {
   position: relative;
   padding: 60px 0 40px 0;
   text-align: center;
+  min-height: 350px; /* Ensures hero section is tall enough */
 }
 
 /* Semi-transparent overlay for hero to improve text readability */
