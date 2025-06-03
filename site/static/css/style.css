@@ -1,16 +1,20 @@
 /* Custom styles for David Dashti's portfolio */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
+  /* Remove the background image from body */
+  /* background: url('../../images/stockholm.jpg') no-repeat center top;
+  background-size: cover;
+  background-attachment: fixed; */
+}
+
+/* Add the background image only to the hero section */
+.hero {
+  position: relative;
+  padding: 60px 0 40px 0;
+  text-align: center;
   background: url('../../images/stockholm.jpg') no-repeat center top;
   background-size: cover;
   background-attachment: fixed;
-}
-
-.hero {
-  /* background removed so body handles it */
-  position: relative;
-  padding: 60px 0 40px 0; /* More top padding for spacing */
-  text-align: center;
 }
 
 .hero::before {
