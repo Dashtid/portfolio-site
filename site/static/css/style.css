@@ -19,7 +19,8 @@ body {
 }
 
 .hero {
-  background: none;
+  background: url("../images/stockholm.png") no-repeat center center;
+  background-size: cover;
   min-height: 350px;
   position: relative;
   padding: 60px 0 40px 0;
