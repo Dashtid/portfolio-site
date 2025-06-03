@@ -275,38 +275,29 @@
                   <span class="blue-text">Track all markets on TradingView</span>
                 </a>
               </div>
-              <script type="text/javascript">
-                new TradingView.widget({
-                  "autosize": true,
-                  "symbol": "XDWD",
-                  "timezone": "Europe/Stockholm",
-                  "theme": "dark",
-                  "style": "1",
-                  "locale": "en",
-                  "withdateranges": true,
-                  "range": "60M",
-                  "hide_side_toolbar": false,
-                  "allow_symbol_change": true,
-                  "details": true,
-                  "support_host": "https://www.tradingview.com",
-                  "container_id": "tradingview_widget"
-                });
-              </script>
               <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async></script>
+                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>/* eslint-disable semi */
+                  {
+                    "autosize": true,
+                      "symbol": "XDWD",
+                        "timezone": "Europe/Stockholm",
+                          "theme": "dark",
+                            "style": "1",
+                              "locale": "en",
+                                "withdateranges": true,
+                                  "range": "60M",
+                                    "hide_side_toolbar": false,
+                                      "allow_symbol_change": true,
+                                        "details": true,
+                                          "support_host": "https://www.tradingview.com"
+                  }
+                  /* eslint-enable semi */
+                </script>
             </div>
             <!-- TradingView Widget END -->
           </div>
         </div>
       </div>
-    </section>
-    </div>
-    </div>
-    </div>
-    </section>
-    </div>
-    </div>
-    </div>
     </section>
 
     <!-- About Section -->
