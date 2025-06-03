@@ -4,7 +4,7 @@
 
 /* Set global font */
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   /* No background image on body to avoid conflicts */
 }
 
@@ -12,21 +12,18 @@ body {
    Navbar and Hero Background
    ================================ */
 
-/* Add the stockholm.png background to both navbar and hero */
-.navbar,
-.hero {
-  background: url('../images/stockholm.png') no-repeat center top;
-  background-size: cover;
-  background-attachment: fixed;
-  min-height: 180px; /* Ensures background is visible */
+/* Remove background image from navbar and hero */
+.navbar {
+  background: #fff; /* or use Bootstrap's default */
+  min-height: unset;
 }
 
-/* Hero section layout and overlay */
 .hero {
+  background: none;
+  min-height: 350px;
   position: relative;
   padding: 60px 0 40px 0;
   text-align: center;
-  min-height: 350px; /* Ensures hero section is tall enough */
 }
 
 /* Semi-transparent overlay for hero to improve text readability */
