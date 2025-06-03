@@ -52,4 +52,4 @@ MIT
 
 ---
 
-*Maintained by David Dashti. For questions or suggestions, please open an issue or contact me directly.*
+_Maintained by David Dashti. For questions or suggestions, please open an issue or contact me directly._
