@@ -1,22 +1,33 @@
-/* Custom styles for David Dashti's portfolio */
+/* ================================
+   Custom styles for David Dashti's portfolio
+   ================================ */
+
+/* Set global font */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  /* Remove the background image from body */
-  /* background: url('../../images/stockholm.jpg') no-repeat center top;
-  background-size: cover;
-  background-attachment: fixed; */
+  /* No background image on body to avoid conflicts */
 }
 
-/* Add the background image only to the hero section */
+/* ================================
+   Navbar and Hero Background
+   ================================ */
+
+/* Add the stockholm.png background to both navbar and hero */
+.navbar,
 .hero {
-  position: relative;
-  padding: 60px 0 40px 0;
-  text-align: center;
-  background: url('../../images/stockholm.jpg') no-repeat center top;
+  background: url('../images/stockholm.png') no-repeat center top;
   background-size: cover;
   background-attachment: fixed;
 }
 
+/* Hero section layout and overlay */
+.hero {
+  position: relative;
+  padding: 60px 0 40px 0;
+  text-align: center;
+}
+
+/* Semi-transparent overlay for hero to improve text readability */
 .hero::before {
   content: "";
   position: absolute;
@@ -24,28 +35,36 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(248, 249, 250, 0.65);
+  background: rgba(248, 249, 250, 0.07); /* Lower opacity for more visible image */
   z-index: 1;
 }
 
+/* Ensure hero content appears above overlay */
 .hero > div {
   position: relative;
   z-index: 2;
 }
 
+/* Hero content box styling */
 .hero-content {
-  background: rgba(255, 255, 255, 0.65); /* More transparent */
+  background: rgba(255, 255, 255, 0.65); /* Slightly transparent white */
   padding: 2rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   display: inline-block;
-  max-width: 1200px; /* Wider */
+  max-width: 1200px;
 }
 
+/* Keep hero subtitle on one line */
 .hero-content .lead {
-  white-space: nowrap; /* Keep subtitle on one line */
+  white-space: nowrap;
 }
 
+/* ================================
+   Icon and Logo Styles
+   ================================ */
+
+/* Section icons (e.g., for headings) */
 .section-icon {
   width: 36px;
   height: 36px;
@@ -53,6 +72,7 @@ body {
   min-width: 36px;
 }
 
+/* Card logos (e.g., company/university logos) */
 .card-logo {
   width: 48px;
   height: 48px;
@@ -61,15 +81,22 @@ body {
   min-width: 48px;
 }
 
+/* ================================
+   Card and Project Styles
+   ================================ */
+
+/* Project and experience card minimum height */
 .project-card,
 .experience-card {
   min-height: 180px;
 }
 
+/* About section profile image */
 .about-img {
   max-width: 260px;
 }
 
+/* Contact section icons */
 .contact-icon {
   width: 28px;
   height: 28px;
@@ -77,9 +104,10 @@ body {
   min-width: 28px;
 }
 
+/* ================================
+   Footer Styles
+   ================================ */
 .footer-blend {
   background-color: #f1f3f4 !important;
   color: #444 !important;
 }
-
-/* Add any other custom styles here */
