@@ -220,13 +220,7 @@
         </h2>
         <!-- First Row -->
         <div class="row">
-          <div class="col-md-6 mb-4">
-            <!-- Stocks Widget -->
-            <div class="tradingview-widget-container" data-widget-type="ticker-tape"
-              data-config='{"symbols":[{"proName":"NASDAQ:AAPL","title":"Apple"},{"proName":"NASDAQ:GOOGL","title":"Alphabet"},{"proName":"NASDAQ:MSFT","title":"Microsoft"}],"colorTheme":"light","isTransparent":false,"displayMode":"adaptive","locale":"en"}'>
-              <div class="tradingview-widget-container__widget"></div>
-            </div>
-          </div>
+          <!-- Widgets removed. Add them back here later if needed. -->
         </div>
       </div>
     </section>
@@ -324,3 +318,16 @@
 </body>
 
 </html>
+
+<style>
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(248, 249, 250, 0.15); /* Lower opacity for more visible image */
+    z-index: 1;
+  }
+</style>
