@@ -259,34 +259,43 @@
               </div>
             </div>
           </div>
-          <!-- TradingView Widget as a card spanning 3 columns and 2 rows -->
-          <div class="col-12 mb-4">
-            <div class="card h-100 p-3" style="min-height: 380px;">
-              <div class="tradingview-widget-container tradingview-responsive-widget">
-                <div class="tradingview-widget-container__widget"></div>
-                <div class="tradingview-widget-copyright">
-                  <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                    <span class="blue-text">Track all markets on TradingView</span>
-                  </a>
-                </div>
-                <script type="text/javascript"
-                  src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                    {
-                      "autosize": true,
-                        "symbol": "XETR:XDWD",
-                          "timezone": "Europe/Stockholm",
-                            "theme": "dark",
-                              "style": "1",
-                                "locale": "en",
-                                  "withdateranges": true,
-                                    "range": "60M",
-                                      "hide_side_toolbar": false,
-                                        "allow_symbol_change": true,
-                                          "details": true,
-                                            "support_host": "https://www.tradingview.com"
-                    }
-                  </script>
+        </div>
+      </div>
+    </section>
+
+    <!-- Move the Markets Section here, right after Education -->
+    <section id="markets" class="py-5">
+      <div class="container">
+        <h2 class="mb-4 d-flex align-items-center">
+          <img src="static/images/market.svg" alt="Market Icon" class="section-icon" />
+          Markets
+        </h2>
+        <div class="row">
+          <div class="col-12">
+            <div class="tradingview-widget-container tradingview-responsive-widget">
+              <div class="tradingview-widget-container__widget"></div>
+              <div class="tradingview-widget-copyright">
+                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                  <span class="blue-text">Track all markets on TradingView</span>
+                </a>
               </div>
+              <script type="text/javascript"
+                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                  {
+                    "autosize": true,
+                      "symbol": "XETR:XDWD",
+                        "timezone": "Europe/Stockholm",
+                          "theme": "dark",
+                            "style": "1",
+                              "locale": "en",
+                                "withdateranges": true,
+                                  "range": "60M",
+                                    "hide_side_toolbar": false,
+                                      "allow_symbol_change": true,
+                                        "details": true,
+                                          "support_host": "https://www.tradingview.com"
+                  }
+                </script>
             </div>
           </div>
         </div>
@@ -368,45 +377,6 @@
             </span>
           </li>
         </ul>
-      </div>
-    </section>
-
-    <!-- Markets Section -->
-    <section id="markets" class="py-5">
-      <div class="container">
-        <h2 class="mb-4 d-flex align-items-center">
-          <img src="static/images/market.svg" alt="Market Icon" class="section-icon" />
-          Markets
-        </h2>
-        <div class="row">
-          <div class="col-12">
-            <div class="tradingview-widget-container tradingview-responsive-widget">
-              <div class="tradingview-widget-container__widget"></div>
-              <div class="tradingview-widget-copyright">
-                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                  <span class="blue-text">Track all markets on TradingView</span>
-                </a>
-              </div>
-              <script type="text/javascript"
-                src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                  {
-                    "autosize": true,
-                      "symbol": "XETR:XDWD",
-                        "timezone": "Europe/Stockholm",
-                          "theme": "dark",
-                            "style": "1",
-                              "locale": "en",
-                                "withdateranges": true,
-                                  "range": "60M",
-                                    "hide_side_toolbar": false,
-                                      "allow_symbol_change": true,
-                                        "details": true,
-                                          "support_host": "https://www.tradingview.com"
-                  }
-                </script>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   </main>
