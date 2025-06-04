@@ -44,10 +44,9 @@ body {
 
 /* Navbar background: slightly less transparent, more padding for height */
 .navbar {
-  background: rgba(255, 255, 255, 0.5) !important; /* More opaque */
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0;
+  background: transparent !important;
+  backdrop-filter: none;
+  border-bottom: none;
   box-shadow: none;
   padding-top: 0.7rem;
   padding-bottom: 0.7rem;
@@ -71,9 +70,10 @@ body {
    Hero Section Styling
    ==== */
 
-/* Hero section: fill most of the viewport height for a dramatic intro */
+/* Hero section: fill the entire viewport height */
 .hero {
-  min-height: 90vh; /* 90% of the viewport height */
+  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
