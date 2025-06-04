@@ -44,7 +44,7 @@ body {
 
 /* Navbar styling - now transparent to show Stockholm background */
 .navbar {
-  background: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.6) !important; /* More transparent */
   backdrop-filter: blur(10px);
   min-height: unset;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -63,9 +63,9 @@ body {
   background: none; /* Remove individual background */
 }
 
-/* Hero content box styling */
+/* Hero content box styling: more transparent */
 .hero-content {
-  background: rgba(255, 255, 255, 0.5); /* More transparent */
+  background: rgba(255, 255, 255, 0.3); /* Even more transparent */
   padding: 2rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
