@@ -1,60 +1,76 @@
-/* ================================
+/* ====
    Custom styles for David Dashti's portfolio
-   ================================ */
+   ==== */
 
 /* Set global font for the site */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* ================================
-   Navbar and Hero Background
-   ================================ */
+/* ====
+   Stockholm Background Container
+   ==== */
 
-/* Navbar styling */
-.navbar {
-  background: #fff;
-  min-height: unset;
-}
-
-/* Hero section with Stockholm background image */
-.hero {
-  /* The path below is correct if your CSS is in static/css/ and image in static/images/ */
-  background: url("../images/stockholm.png") no-repeat center center;
+/* Container for both navbar and hero with Stockholm background */
+.stockholm-background {
+  background: url("../images/stockholm.jpg") no-repeat center center;
   background-size: cover;
-  min-height: 350px;
+  background-attachment: fixed;
   position: relative;
-  padding: 60px 0 40px 0;
-  text-align: center;
-  /* Remove any background-color that could cover the image */
+  min-height: 500px;
 }
 
-/* Optional: Temporarily comment out the overlay to test image visibility */
-/*
-.hero::before {
+/* Optional overlay for better text readability */
+.stockholm-background::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(248, 249, 250, 0.03);
+  background: rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
-*/
 
-/* Ensure hero content appears above overlay */
-.hero > div {
+/* Ensure all content appears above overlay */
+.stockholm-background > * {
   position: relative;
   z-index: 2;
 }
 
+/* ====
+   Navbar Styling
+   ==== */
+
+/* Navbar styling - now transparent to show Stockholm background */
+.navbar {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px);
+  min-height: unset;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ====
+   Hero Section Styling
+   ==== */
+
+/* Hero section - no background since it inherits from stockholm-background */
+.hero {
+  min-height: 350px;
+  position: relative;
+  padding: 60px 0 40px 0;
+  text-align: center;
+  background: none; /* Remove individual background */
+}
+
 /* Hero content box styling */
 .hero-content {
-  background: rgba(255, 255, 255, 0.65); /* Slightly transparent white */
+  background: rgba(255, 255, 255, 0.9); /* More opaque for better readability */
   padding: 2rem 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: inline-block;
   max-width: 1200px;
 }
@@ -64,9 +80,9 @@ body {
   white-space: nowrap;
 }
 
-/* ================================
+/* ====
    Icon and Logo Styles
-   ================================ */
+   ==== */
 
 /* Section icons (e.g., for headings) */
 .section-icon {
@@ -97,9 +113,9 @@ body {
   height: 60px;
 }
 
-/* ================================
+/* ====
    Card and Project Styles
-   ================================ */
+   ==== */
 
 /* Project and experience card minimum height */
 .project-card,
@@ -120,17 +136,17 @@ body {
   min-width: 28px;
 }
 
-/* ================================
+/* ====
    Footer Styles
-   ================================ */
+   ==== */
 .footer-blend {
   background-color: #f1f3f4 !important;
   color: #444 !important;
 }
 
-/* ================================
+/* ====
    TradingView Widget Responsive Styles
-   ================================ */
+   ==== */
 
 /* Widget container: min width/height as required by TradingView */
 .tradingview-responsive-widget {
@@ -146,4 +162,29 @@ body {
 .tradingview-widget-container__widget {
   height: 100% !important;
   min-height: 610px;
+}
+
+/* ====
+   Responsive Design
+   ==== */
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .stockholm-background {
+    background-attachment: scroll; /* Fixed backgrounds can cause issues on mobile */
+  }
+
+  .hero-content .lead {
+    white-space: normal; /* Allow text wrapping on mobile */
+    font-size: 1.1rem !important;
+  }
+
+  .hero-content {
+    margin: 0 1rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .navbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
 }
