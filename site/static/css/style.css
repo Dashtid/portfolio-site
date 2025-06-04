@@ -79,23 +79,23 @@ body {
    Hero Section Styling
    ==== */
 
-/* Hero section: fill the entire viewport height exactly */
+/* Hero section: fill the entire viewport height, center content vertically */
 .hero {
   height: 100vh;
   min-height: 100vh;
   max-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: center;      /* Center content vertically */
   justify-content: center;
   position: relative;
   padding: 0;
   text-align: center;
-  background: none; /* Remove individual background */
+  background: none;
 }
 
-/* Hero content box styling: more transparent */
+/* Hero content box styling: brighter and positioned higher */
 .hero-content {
-  background: rgba(255, 255, 255, 0.3); /* Even more transparent */
+  background: rgba(255, 255, 255, 0.6); /* Brighter background for better readability */
   padding: 2rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
