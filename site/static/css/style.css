@@ -43,20 +43,23 @@ body {
    ==== */
 
 /* Navbar styling - now transparent to show Stockholm background */
-.navbar {
-  background: rgba(255, 255, 255, 0.6) !important; /* More transparent */
+.navbar,
+.navbar .container {
+  background: rgba(255, 255, 255, 0.3) !important; /* Unified transparency */
   backdrop-filter: blur(10px);
-  min-height: unset;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
-/* Make the navbar container less transparent than the navbar itself */
-.navbar .container {
-  background: rgba(255, 255, 255, 0.85); /* Less transparent */
-  border-radius: 1rem;
-  padding: 0.25rem 1rem;
-  /* Optional: add a subtle box-shadow for separation */
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+/* Keep navbar-brand and nav-link buttons more opaque */
+.navbar-brand,
+.nav-link {
+  background: rgba(255, 255, 255, 0.6);
+  /* Optional: add border and shadow for contrast */
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 /* ====
