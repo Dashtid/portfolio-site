@@ -191,10 +191,10 @@
           <img src="static/images/education.svg" alt="Education Icon" class="section-icon" />
           Education
         </h2>
-        <div class="row">
+        <div class="row align-items-stretch">
           <!-- KTH Card -->
-          <div class="col-md-4 mb-4">
-            <div class="card experience-card">
+          <div class="col-md-4 mb-4 d-flex">
+            <div class="card experience-card flex-fill">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                   <!-- KTH logo -->
@@ -215,8 +215,8 @@
             </div>
           </div>
           <!-- LTH Card -->
-          <div class="col-md-4 mb-4">
-            <div class="card experience-card">
+          <div class="col-md-4 mb-4 d-flex">
+            <div class="card experience-card flex-fill">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                   <!-- LTH logo -->
@@ -235,8 +235,8 @@
             </div>
           </div>
           <!-- Företagsuniversitet Card -->
-          <div class="col-md-4 mb-4">
-            <div class="card experience-card">
+          <div class="col-md-4 mb-4 d-flex">
+            <div class="card experience-card flex-fill">
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                   <!-- Företagsuniversitet logo -->
@@ -253,41 +253,38 @@
               </div>
             </div>
           </div>
-          <!-- Add more cards as needed -->
+          <!-- TradingView Widget as a card spanning 3 columns and 2 rows -->
+          <div class="col-12 mb-4">
+            <div class="card h-100 p-3" style="min-height: 380px;">
+              <div class="tradingview-widget-container tradingview-responsive-widget">
+                <div class="tradingview-widget-container__widget"></div>
+                <div class="tradingview-widget-copyright">
+                  <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                    <span class="blue-text">Track all markets on TradingView</span>
+                  </a>
+                </div>
+                <script type="text/javascript"
+                  src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                  {
+                    "autosize": true,
+                    "symbol": "XETR:XDWD",
+                    "timezone": "Europe/Stockholm",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "withdateranges": true,
+                    "range": "60M",
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "details": true,
+                    "support_host": "https://www.tradingview.com"
+                  }
+                </script>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
-
-    <!-- TradingView Widget BEGIN -->
-    <div class="tradingview-widget-container tradingview-responsive-widget">
-      <div class="tradingview-widget-container__widget"></div>
-      <div class="tradingview-widget-copyright">
-        <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-          <span class="blue-text">Track all markets on TradingView</span>
-        </a>
-      </div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-        async>
-          {
-            "autosize": true,
-              "symbol": "XETR:XDWD",
-                "timezone": "Europe/Stockholm",
-                  "theme": "dark",
-                    "style": "1",
-                      "locale": "en",
-                        "withdateranges": true,
-                          "range": "60M",
-                            "hide_side_toolbar": false,
-                              "allow_symbol_change": true,
-                                "details": true,
-                                  "support_host": "https://www.tradingview.com"
-          }
-        </script>
-    </div>
-    <!-- TradingView Widget END -->
-    </div>
-    </div>
-    </div>
     </section>
 
     <!-- About Section -->
