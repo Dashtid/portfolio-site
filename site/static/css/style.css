@@ -7,6 +7,15 @@ body {
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
+/* Ensure html and body take full height, remove default margin/padding */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 /* ====
    Stockholm Background Container
    ==== */
@@ -70,10 +79,11 @@ body {
    Hero Section Styling
    ==== */
 
-/* Hero section: fill the entire viewport height */
+/* Hero section: fill the entire viewport height exactly */
 .hero {
-  min-height: 100vh;
   height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
