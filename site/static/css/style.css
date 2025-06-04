@@ -2,22 +2,22 @@
    Custom styles for David Dashti's portfolio
    ================================ */
 
-/* Set global font */
+/* Set global font for the site */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
-  /* No background image on body to avoid conflicts */
 }
 
 /* ================================
    Navbar and Hero Background
    ================================ */
 
-/* Remove background image from navbar and hero */
+/* Navbar styling */
 .navbar {
-  background: #fff; /* or use Bootstrap's default */
+  background: #fff;
   min-height: unset;
 }
 
+/* Hero section with Stockholm background image */
 .hero {
   background: url("../images/stockholm.png") no-repeat center center;
   background-size: cover;
@@ -72,13 +72,25 @@ body {
   min-width: 36px;
 }
 
-/* Card logos (e.g., company/university logos) */
+/* Card logos (default size) */
 .card-logo {
   width: 48px;
   height: 48px;
   object-fit: contain;
   margin-right: 1rem;
   min-width: 48px;
+}
+
+/* Large logos: Scania, SÖS, Karolinska */
+.card-logo-large {
+  width: 80px;
+  height: 80px;
+}
+
+/* Medium logos: KTH, LTH, Företagsuniversitet */
+.card-logo-medium {
+  width: 60px;
+  height: 60px;
 }
 
 /* ================================
@@ -112,7 +124,11 @@ body {
   color: #444 !important;
 }
 
-/* TradingView Widget Responsive Styles */
+/* ================================
+   TradingView Widget Responsive Styles
+   ================================ */
+
+/* Widget container: min width/height as required by TradingView */
 .tradingview-responsive-widget {
   width: 100%;
   min-width: 980px;
@@ -122,61 +138,8 @@ body {
   margin: 0 auto;
 }
 
+/* Widget inner container: fill parent */
 .tradingview-widget-container__widget {
   height: 100% !important;
   min-height: 610px;
-}
-
-/* Scania Card */
-img[src="static/images/scania.svg"] {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-right: 1rem;
-  display: inline-block;
-}
-
-/* SÖS Card */
-img[src="static/images/sös.png"] {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-right: 1rem;
-  display: inline-block;
-}
-
-/* Karolinska Card */
-img[src="static/images/karolinska.jpg"] {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-right: 1rem;
-  display: inline-block;
-}
-
-/* KTH Card */
-img[src="static/images/KTH.png"] {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-right: 1rem;
-  display: inline-block;
-}
-
-/* LTH Card */
-img[src="static/images/LTH.webp"] {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-right: 1rem;
-  display: inline-block;
-}
-
-/* Företagsuniversitet Card */
-img[src="static/images/foretagsuniversitet.png"] {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-right: 1rem;
-  display: inline-block;
 }

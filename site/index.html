@@ -218,8 +218,7 @@
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                   <!-- LTH logo -->
-                  <img src="static/images/LTH.webp" alt="LTH Logo" class="card-logo card-logo-medium"
-                    style="width: 80px; height: 80px" />
+                  <img src="static/images/LTH.webp" alt="LTH Logo" class="card-logo card-logo-medium" />
                   <h5 class="card-title mb-0">Lunds University</h5>
                 </div>
                 <p class="card-text">
@@ -238,8 +237,7 @@
               <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                   <!-- Företagsuniversitet logo -->
-                  <img src="static/images/foretagsuniversitet.png" alt="Företagsuniversitet Logo" class="card-logo card-logo-medium"
-                    style="width: 60px; height: 60px" />
+                  <img src="static/images/foretagsuniversitet.png" alt="Företagsuniversitet Logo" class="card-logo card-logo-medium" />
                   <h5 class="card-title mb-0">Företagsuniversitet</h5>
                 </div>
                 <p class="card-text">
@@ -261,7 +259,7 @@
       </div>
     </section>
 
-    <!-- Move the Markets Section here, right after Education -->
+    <!-- Markets Section -->
     <section id="markets" class="py-5">
       <div class="container">
         <h2 class="mb-4 d-flex align-items-center">
@@ -270,6 +268,7 @@
         </h2>
         <div class="row">
           <div class="col-12">
+            <!-- TradingView Widget -->
             <div class="tradingview-widget-container tradingview-responsive-widget">
               <div class="tradingview-widget-container__widget"></div>
               <div class="tradingview-widget-copyright">
@@ -277,23 +276,24 @@
                   <span class="blue-text">Track all markets on TradingView</span>
                 </a>
               </div>
+              <!-- TradingView Widget Script -->
               <script type="text/javascript"
                 src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                  {
-                    "autosize": true,
-                      "symbol": "XETR:XDWD",
-                        "timezone": "Europe/Stockholm",
-                          "theme": "dark",
-                            "style": "1",
-                              "locale": "en",
-                                "withdateranges": true,
-                                  "range": "60M",
-                                    "hide_side_toolbar": false,
-                                      "allow_symbol_change": true,
-                                        "details": true,
-                                          "support_host": "https://www.tradingview.com"
-                  }
-                </script>
+                {
+                  "autosize": true,
+                  "symbol": "XETR:XDWD",
+                  "timezone": "Europe/Stockholm",
+                  "theme": "dark",
+                  "style": "1",
+                  "locale": "en",
+                  "withdateranges": true,
+                  "range": "60M",
+                  "hide_side_toolbar": false,
+                  "allow_symbol_change": true,
+                  "details": true,
+                  "support_host": "https://www.tradingview.com"
+                }
+              </script>
             </div>
           </div>
         </div>
