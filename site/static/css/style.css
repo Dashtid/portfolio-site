@@ -42,6 +42,16 @@ body {
    Navbar Styling
    ==== */
 
+/* Navbar background: semi-transparent, glass effect */
+.navbar {
+  background: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
 /* Navbar styling - now transparent to show Stockholm background */
 .navbar,
 .navbar .container {
