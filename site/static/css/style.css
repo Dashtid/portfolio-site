@@ -126,3 +126,57 @@ body {
   height: 100% !important;
   min-height: 610px;
 }
+
+/* Scania Card */
+img[src="static/images/scania.svg"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  display: inline-block;
+}
+
+/* SÖS Card */
+img[src="static/images/sös.png"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  display: inline-block;
+}
+
+/* Karolinska Card */
+img[src="static/images/karolinska.jpg"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  display: inline-block;
+}
+
+/* KTH Card */
+img[src="static/images/KTH.png"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  display: inline-block;
+}
+
+/* LTH Card */
+img[src="static/images/LTH.webp"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  display: inline-block;
+}
+
+/* Företagsuniversitet Card */
+img[src="static/images/foretagsuniversitet.png"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  display: inline-block;
+}
