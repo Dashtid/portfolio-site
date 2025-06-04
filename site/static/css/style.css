@@ -71,11 +71,14 @@ body {
    Hero Section Styling
    ==== */
 
-/* Hero section - no background since it inherits from stockholm-background */
+/* Hero section: fill most of the viewport height for a dramatic intro */
 .hero {
-  min-height: 350px;
+  min-height: 90vh; /* 90% of the viewport height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  padding: 60px 0 40px 0;
+  padding: 0;
   text-align: center;
   background: none; /* Remove individual background */
 }
