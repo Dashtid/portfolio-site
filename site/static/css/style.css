@@ -115,13 +115,12 @@ body {
 /* TradingView Widget Responsive Styles */
 .tradingview-responsive-widget {
   width: 100%;
-  min-width: 980px;
-  min-height: 610px;
-  height: 70vh;
+  min-height: 360px; /* 2x card height */
+  height: 360px;
   position: relative;
 }
 
 .tradingview-widget-container__widget {
   height: 100% !important;
-  min-height: 610px;
+  min-height: 360px;
 }
