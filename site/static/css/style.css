@@ -50,6 +50,15 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Make the navbar container less transparent than the navbar itself */
+.navbar .container {
+  background: rgba(255, 255, 255, 0.85); /* Less transparent */
+  border-radius: 1rem;
+  padding: 0.25rem 1rem;
+  /* Optional: add a subtle box-shadow for separation */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
 /* ====
    Hero Section Styling
    ==== */
