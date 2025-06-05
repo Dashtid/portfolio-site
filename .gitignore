@@ -16,7 +16,3 @@ build/
 # Ignore OS files
 .DS_Store
 Thumbs.db
-
-# Ignore IDE/editor folders
-.vscode/
-.idea/
