@@ -21,11 +21,15 @@ body {
    Stockholm Background
 ==== */
 .stockholm-background {
-  background: url("../images/stockholm.jpg") no-repeat center center;
+  background: url("../images/stockholm-blur.jpg") no-repeat center center;
   background-size: cover;
   background-attachment: fixed;
   position: relative;
   min-height: 500px;
+  transition: background-image 0.5s;
+}
+.stockholm-background.loaded {
+  background-image: url("../images/stockholm.jpg");
 }
 .stockholm-background::before {
   content: "";
@@ -204,10 +208,5 @@ body {
   }
   .navbar {
     background: rgba(255, 255, 255, 0.95) !important;
-  }
-  /* Remove dotted lines on mobile for better appearance */
-  .experience-card::after,
-  .education-card::after {
-    display: none !important;
   }
 }
