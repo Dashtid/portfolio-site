@@ -187,6 +187,22 @@ body {
 }
 
 /* ====
+   Media Column Styles
+==== */
+.media-col {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.media-col .ratio {
+  height: auto;
+}
+@media (max-width: 991.98px) {
+  .media-col {
+    max-width: 100%;
+  }
+}
+
+/* ====
    Responsive Design
 ==== */
 @media (max-width: 1200px) {
