@@ -1,13 +1,14 @@
 /* ====
-   Custom styles for David Dashti's portfolio
-   ==== */
+   Custom Styles for David Dashti's Portfolio
+==== */
 
-/* Set global font for the site */
+/* ====
+   Global Styles
+==== */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* Ensure html and body take full height, remove default margin/padding */
 html,
 body {
   height: 100%;
@@ -17,10 +18,8 @@ body {
 }
 
 /* ====
-   Stockholm Background Container
-   ==== */
-
-/* Container for both navbar and hero with Stockholm background */
+   Stockholm Background
+==== */
 .stockholm-background {
   background: url("../images/stockholm.jpg") no-repeat center center;
   background-size: cover;
@@ -28,8 +27,6 @@ body {
   position: relative;
   min-height: 500px;
 }
-
-/* Optional overlay for better text readability */
 .stockholm-background::before {
   content: "";
   position: absolute;
@@ -40,8 +37,6 @@ body {
   background: rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
-
-/* Ensure all content appears above overlay */
 .stockholm-background > * {
   position: relative;
   z-index: 2;
@@ -49,58 +44,41 @@ body {
 
 /* ====
    Navbar Styling
-   ==== */
-
-/* Navbar background: slightly less transparent, more padding for height */
+==== */
 .navbar {
   background: transparent !important;
-  backdrop-filter: none;
   border-bottom: none;
   box-shadow: none;
   padding-top: 0.7rem;
   padding-bottom: 0.7rem;
 }
-
-/* Navbar-brand and nav-link: slightly less transparent, more vertical padding */
 .navbar-brand,
 .nav-link {
-  background: rgba(255, 255, 255, 0.75); /* More opaque */
+  background: rgba(255, 255, 255, 0.75);
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-left: 1.2rem;
-  padding-right: 1.2rem;
+  padding: 0.5rem 1.2rem;
   margin-top: 0.1rem;
   margin-bottom: 0.1rem;
 }
 
 /* ====
-   Hero Section Styling
-   ==== */
-
-/* Hero section: fill the entire viewport height, center content vertically */
+   Hero Section
+==== */
 .hero {
   height: 100vh;
   min-height: 100vh;
   max-height: 100vh;
   display: flex;
-  align-items: center; /* Center content vertically */
+  align-items: center;
   justify-content: center;
   position: relative;
   padding: 0;
   text-align: center;
   background: none;
 }
-
-/* Hero content box styling: brighter and positioned higher */
 .hero-content {
-  background: rgba(
-    255,
-    255,
-    255,
-    0.6
-  ); /* Brighter background for better readability */
+  background: rgba(255, 255, 255, 0.6);
   padding: 2rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -109,25 +87,19 @@ body {
   display: inline-block;
   max-width: 1200px;
 }
-
-/* Keep hero subtitle on one line */
 .hero-content .lead {
   white-space: nowrap;
 }
 
 /* ====
    Icon and Logo Styles
-   ==== */
-
-/* Section icons (e.g., for headings) */
+==== */
 .section-icon {
   width: 36px;
   height: 36px;
   margin-right: 14px;
   min-width: 36px;
 }
-
-/* Card logos (default size) */
 .card-logo {
   width: 48px;
   height: 48px;
@@ -135,14 +107,10 @@ body {
   margin-right: 1rem;
   min-width: 48px;
 }
-
-/* Large logos: Scania, SÖS, Karolinska */
 .card-logo-large {
   width: 80px;
   height: 80px;
 }
-
-/* Medium logos: KTH, LTH, Företagsuniversitet */
 .card-logo-medium {
   width: 60px;
   height: 60px;
@@ -150,20 +118,39 @@ body {
 
 /* ====
    Card and Project Styles
-   ==== */
-
-/* Project and experience card minimum height */
+==== */
 .project-card,
 .experience-card {
   min-height: 180px;
+  position: relative;
 }
 
-/* About section profile image */
+/* Dotted line between cards in grid (for chronological order) */
+@media (min-width: 768px) {
+  /* For 3-column grid: add line to all but last card in each row */
+  .row .col-md-4:not(:nth-child(3n)) .experience-card::after,
+  .row .col-md-4:not(:nth-child(3n)) .education-card::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -16px;
+    width: 32px;
+    border-top: 2px dotted #888;
+    z-index: 2;
+    transform: translateY(-50%);
+  }
+}
+
+/* ====
+   About Section
+==== */
 .about-img {
   max-width: 260px;
 }
 
-/* Contact section icons */
+/* ====
+   Contact Section
+==== */
 .contact-icon {
   width: 28px;
   height: 28px;
@@ -173,7 +160,7 @@ body {
 
 /* ====
    Footer Styles
-   ==== */
+==== */
 .footer-blend {
   background-color: #f1f3f4 !important;
   color: #444 !important;
@@ -181,9 +168,7 @@ body {
 
 /* ====
    TradingView Widget Responsive Styles
-   ==== */
-
-/* Widget container: min width/height as required by TradingView */
+==== */
 .tradingview-responsive-widget {
   width: 100%;
   min-width: 980px;
@@ -192,114 +177,37 @@ body {
   position: relative;
   margin: 0 auto;
 }
-
-/* Widget inner container: fill parent */
 .tradingview-widget-container__widget {
   height: 100% !important;
   min-height: 610px;
 }
 
 /* ====
-   Timeline Styles
-   ==== */
-
-.timeline-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  position: relative;
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-}
-
-.timeline-row::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 5%;
-  right: 5%;
-  height: 0;
-  border-top: 2px dotted #888;
-  z-index: 0;
-}
-
-.timeline-card {
-  background: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: 1rem;
-  min-width: 220px;
-  max-width: 260px;
-  z-index: 1;
-  position: relative;
-  margin: 0 8px;
-  flex: 1 1 0;
-}
-
-.timeline-arrow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-left: 12px;
-  z-index: 2;
-  position: relative;
-}
-
-.arrow-symbol {
-  font-size: 2.5rem;
-  color: #28a745;
-  margin-bottom: 0.25rem;
-}
-
-.timeline-label {
-  font-size: 0.95rem;
-  color: #888;
-  text-align: center;
-}
-
-/* ====
    Responsive Design
-   ==== */
-
-/* Mobile adjustments */
+==== */
+@media (max-width: 1200px) {
+  .hero-content {
+    max-width: 98vw;
+  }
+}
 @media (max-width: 768px) {
   .stockholm-background {
-    background-attachment: scroll; /* Fixed backgrounds can cause issues on mobile */
+    background-attachment: scroll;
   }
-
   .hero-content .lead {
-    white-space: normal; /* Allow text wrapping on mobile */
+    white-space: normal;
     font-size: 1.1rem !important;
   }
-
   .hero-content {
     margin: 0 1rem;
     padding: 1.5rem 1rem;
   }
-
   .navbar {
     background: rgba(255, 255, 255, 0.95) !important;
   }
-}
-
-@media (max-width: 1200px) {
-  .timeline-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .timeline-row::before {
-    left: 50%;
-    right: auto;
-    top: 5%;
-    bottom: 5%;
-    width: 0;
-    height: 90%;
-    border-top: none;
-    border-left: 2px dotted #888;
-  }
-  .timeline-card,
-  .timeline-arrow {
-    margin: 16px auto;
-    max-width: 95vw;
+  /* Remove dotted lines on mobile for better appearance */
+  .experience-card::after,
+  .education-card::after {
+    display: none !important;
   }
 }
