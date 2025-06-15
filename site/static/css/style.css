@@ -181,6 +181,14 @@ body {
 }
 
 /* ====
+   Media Row Styles
+==== */
+.media-row {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+/* ====
    Responsive Design
 ==== */
 @media (max-width: 1200px) {
