@@ -311,35 +311,12 @@
           Github Repositories
         </h2>
         <div id="repo-container"></div>
-        <div class="mt-4 text-center">
+        <div class="mt-4 text-start">
           <a href="https://github.com/Dashtid" target="_blank" rel="noopener" class="btn btn-dark">
             GitHub Profile
           </a>
         </div>
       </div>
-      <script src="https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js"></script>
-      <script>
-        createRepoWidget({
-          "username": "dashtid",
-          "containerId": "repo-container",
-          "columns": {
-            "mobile": 1,
-            "tablet": 2,
-            "desktop": 3
-          },
-          "maxRepos": 6,
-          "sortBy": "updated",
-          "scaleOnHover": 1.05,
-          "cardStyles": {
-            "backgroundColor": "#ffffff"
-          },
-          "textStyles": {
-            "titleColor": "#333333",
-            "descriptionColor": "#666666",
-            "iconColor": "#888888"
-          }
-        });
-      </script>
     </section>
 
     <!-- Markets Section -->
@@ -478,6 +455,29 @@
       img.onload = function () {
         bg.classList.add('loaded');
       };
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js"></script>
+  <script>
+    createRepoWidget({
+      "username": "dashtid",
+      "containerId": "repo-container",
+      "columns": {
+        "mobile": 1,
+        "tablet": 2,
+        "desktop": 3
+      },
+      "maxRepos": 6,
+      "sortBy": "updated",
+      "scaleOnHover": 1.05,
+      "cardStyles": {
+        "backgroundColor": "#ffffff"
+      },
+      "textStyles": {
+        "titleColor": "#333333",
+        "descriptionColor": "#666666",
+        "iconColor": "#888888"
+      }
     });
   </script>
 </body>
