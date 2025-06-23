@@ -457,9 +457,11 @@
       };
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    // Dynamically load the RepoWidget script and initialize after it's loaded
+    var script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js";
+    script.onload = function () {
       createRepoWidget({
         "username": "dashtid",
         "containerId": "repo-container",
@@ -480,7 +482,8 @@
           "iconColor": "#888888"
         }
       });
-    });
+    };
+    document.body.appendChild(script);
   </script>
 </body>
 
