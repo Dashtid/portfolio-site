@@ -457,34 +457,28 @@
       };
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js"></script>
   <script>
-    console.log("Attempting to load RepoWidget...");
-    var script = document.createElement('script');
-    script.src = "https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js";
-    script.onload = function () {
-      console.log("RepoWidget loaded!");
-      createRepoWidget({
-        "username": "dashtid",
-        "containerId": "repo-container",
-        "columns": {
-          "mobile": 1,
-          "tablet": 2,
-          "desktop": 3
-        },
-        "maxRepos": 6,
-        "sortBy": "updated",
-        "scaleOnHover": 1.05,
-        "cardStyles": {
-          "backgroundColor": "#ffffff"
-        },
-        "textStyles": {
-          "titleColor": "#333333",
-          "descriptionColor": "#666666",
-          "iconColor": "#888888"
-        }
-      });
-    };
-    document.body.appendChild(script);
+    createRepoWidget({
+      "username": "dashtid",
+      "containerId": "repo-container",
+      "columns": {
+        "mobile": 1,
+        "tablet": 2,
+        "desktop": 3
+      },
+      "maxRepos": 6,
+      "sortBy": "updated",
+      "scaleOnHover": 1.05,
+      "cardStyles": {
+        "backgroundColor": "#ffffff"
+      },
+      "textStyles": {
+        "titleColor": "#333333",
+        "descriptionColor": "#666666",
+        "iconColor": "#888888"
+      }
+    });
   </script>
 </body>
 
