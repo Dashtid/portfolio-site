@@ -458,10 +458,11 @@
     });
   </script>
   <script>
-    // Dynamically load the RepoWidget script and initialize after it's loaded
+    console.log("Attempting to load RepoWidget...");
     var script = document.createElement('script');
     script.src = "https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js";
     script.onload = function () {
+      console.log("RepoWidget loaded!");
       createRepoWidget({
         "username": "dashtid",
         "containerId": "repo-container",
