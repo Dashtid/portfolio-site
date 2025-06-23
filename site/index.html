@@ -209,7 +209,7 @@
           <img src="static/images/education.svg" alt="Education Icon" class="section-icon" />
           Education
         </h2>
-        <div class="row">
+        <div class="row align-items-stretch">
           <div class="col-md-4 mb-4 h-100">
             <!-- LTH Card Content -->
             <div class="card experience-card h-100 d-flex flex-column">
@@ -459,25 +459,27 @@
   </script>
   <script src="https://cdn.jsdelivr.net/gh/peterbenoit/RepoWidget@latest/dist/repoWidget.min.js"></script>
   <script>
-    createRepoWidget({
-      "username": "dashtid",
-      "containerId": "repo-container",
-      "columns": {
-        "mobile": 1,
-        "tablet": 2,
-        "desktop": 3
-      },
-      "maxRepos": 6,
-      "sortBy": "updated",
-      "scaleOnHover": 1.05,
-      "cardStyles": {
-        "backgroundColor": "#ffffff"
-      },
-      "textStyles": {
-        "titleColor": "#333333",
-        "descriptionColor": "#666666",
-        "iconColor": "#888888"
-      }
+    document.addEventListener('DOMContentLoaded', function () {
+      createRepoWidget({
+        "username": "dashtid",
+        "containerId": "repo-container",
+        "columns": {
+          "mobile": 1,
+          "tablet": 2,
+          "desktop": 3
+        },
+        "maxRepos": 6,
+        "sortBy": "updated",
+        "scaleOnHover": 1.05,
+        "cardStyles": {
+          "backgroundColor": "#ffffff"
+        },
+        "textStyles": {
+          "titleColor": "#333333",
+          "descriptionColor": "#666666",
+          "iconColor": "#888888"
+        }
+      });
     });
   </script>
 </body>
