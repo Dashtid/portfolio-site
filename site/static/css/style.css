@@ -21,7 +21,7 @@ body {
    Stockholm Background
 ==== */
 .stockholm-background {
-  background: url("../images/stockholm.webp") no-repeat center center;
+  background: url("/static/images/stockholm.webp") no-repeat center center;
   background-size: cover;
   background-attachment: fixed;
   position: relative;
@@ -29,7 +29,7 @@ body {
   transition: background-image 0.5s;
 }
 .stockholm-background.loaded {
-  background-image: url("../images/stockholm.webp");
+  background-image: url("/static/images/stockholm.webp");
 }
 .stockholm-background::before {
   content: "";
