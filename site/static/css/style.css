@@ -97,6 +97,22 @@ body {
   white-space: nowrap;
 }
 
+/* Custom classes for removed inline styles */
+.custom-hero-width {
+  max-width: 950px;
+}
+.custom-hero-title {
+  font-size: 2.4rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.custom-hero-lead {
+  font-size: 1.35rem;
+}
+.contact-list {
+  font-size: 1.1rem;
+}
+
 /* ====
    Icon and Logo Styles
 ==== */
