@@ -1,6 +1,7 @@
 name: Azure Static Web Apps CI/CD
 
 on:
+  # Trigger workflow on push to master or relevant pull request events
   push:
     branches:
       - master
@@ -11,30 +12,38 @@ on:
 
 jobs:
   build_and_deploy_job:
+    # Only run this job for push or non-closed PR events
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
+      # Checkout the repository code
       - uses: actions/checkout@v3
+
+      # Build and deploy the static site to Azure Static Web Apps
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
+          # This secret must be set in your repository settings: Settings > Secrets and variables > Actions > New repository secret
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # GitHub token for PR comment automation
           action: "upload"
-          app_location: "site" # This is where your index.html is!
-          output_location: "" # No build output for static HTML
+          app_location: "site" # Directory containing index.html and all site files
+          output_location: "" # No build output directory for static HTML
 
   close_pull_request_job:
+    # Only run this job when a PR is closed
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
     steps:
+      # Close the Azure Static Web Apps preview environment for the closed PR
       - name: Close Pull Request
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
+          # This secret must be set in your repository settings: Settings > Secrets and variables > Actions > New repository secret
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           app_location: "site"
           action: "close"

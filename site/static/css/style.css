@@ -1,10 +1,10 @@
-/* ====
+/* ============================================================
    Custom Styles for David Dashti's Portfolio
-==== */
+============================================================ */
 
-/* ====
+/* =========================
    Global Styles
-==== */
+========================= */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
 }
@@ -17,9 +17,9 @@ body {
   box-sizing: border-box;
 }
 
-/* ====
+/* =========================
    Stockholm Background
-==== */
+========================= */
 .stockholm-background {
   background: url("/static/images/stockholm.webp") no-repeat center center;
   background-size: cover;
@@ -46,9 +46,9 @@ body {
   z-index: 2;
 }
 
-/* ====
+/* =========================
    Navbar Styling
-==== */
+========================= */
 .navbar {
   background: transparent !important;
   border-bottom: none;
@@ -67,9 +67,9 @@ body {
   margin-bottom: 0.1rem;
 }
 
-/* ====
+/* =========================
    Hero Section
-==== */
+========================= */
 .hero {
   height: 100vh;
   min-height: 100vh;
@@ -97,7 +97,9 @@ body {
   white-space: nowrap;
 }
 
-/* Custom classes for removed inline styles */
+/* =========================
+   Custom Classes for Inline Styles
+========================= */
 .custom-hero-width {
   max-width: 950px;
 }
@@ -113,9 +115,9 @@ body {
   font-size: 1.1rem;
 }
 
-/* ====
+/* =========================
    Icon and Logo Styles
-==== */
+========================= */
 .section-icon {
   width: 36px;
   height: 36px;
@@ -132,25 +134,25 @@ body {
   vertical-align: middle;
 }
 
-/* ====
+/* =========================
    Card and Project Styles
-==== */
+========================= */
 .project-card,
 .experience-card {
   min-height: 180px;
   position: relative;
 }
 
-/* ====
+/* =========================
    About Section
-==== */
+========================= */
 .about-img {
   max-width: 260px;
 }
 
-/* ====
+/* =========================
    Contact Section
-==== */
+========================= */
 .contact-icon {
   width: 28px;
   height: 28px;
@@ -158,17 +160,17 @@ body {
   min-width: 28px;
 }
 
-/* ====
+/* =========================
    Footer Styles
-==== */
+========================= */
 .footer-blend {
   background-color: #f1f3f4 !important;
   color: #444 !important;
 }
 
-/* ====
+/* =========================
    TradingView Widget Responsive Styles
-==== */
+========================= */
 .tradingview-responsive-widget {
   width: 100%;
   min-width: 980px;
@@ -189,9 +191,9 @@ body {
   height: 100%;
 }
 
-/* ====
+/* =========================
    Media Column Styles
-==== */
+========================= */
 .media-col {
   max-width: 600px;
   margin: 0 auto;
@@ -205,17 +207,17 @@ body {
   }
 }
 
-/* ====
+/* =========================
    Media Row Styles
-==== */
+========================= */
 .media-row {
   margin-top: 3rem;
   margin-bottom: 3rem;
 }
 
-/* ====
+/* =========================
    Responsive Design
-==== */
+========================= */
 @media (max-width: 1200px) {
   .hero-content {
     max-width: 98vw;
@@ -237,10 +239,18 @@ body {
     background: rgba(255, 255, 255, 0.95) !important;
   }
 }
+
+/* =========================
+   SÖS Location Container
+========================= */
 .sos-location-container {
   max-width: 600px;
   margin: 0 auto;
 }
+
+/* =========================
+   Iframe Borderless Utility
+========================= */
 .iframe-borderless {
   border: 0;
 }

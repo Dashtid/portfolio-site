@@ -1,6 +1,7 @@
 {
   "html.validate.scripts": false,
-  "javascript.validate.enable": false
+  "javascript.validate.enable": false,
+  "yaml.validate": false
 }
 // This file is used to configure settings for the Visual Studio Code editor.
-// It disables HTML script validation and JavaScript validation to avoid false positives in the code editor.
+// It disables HTML script validation, JavaScript validation, and YAML validation to avoid false positives in the code editor.
