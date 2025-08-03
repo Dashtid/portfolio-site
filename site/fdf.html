@@ -5,10 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Finnish Defence Forces | David Dashti</title>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Custom Styles -->
   <link rel="stylesheet" href="static/css/style.css" />
   <link rel="icon" type="image/svg+xml" href="static/images/D.svg" />
   <style>
+    /* Media column layout for video/map */
     .media-col {
       max-width: 600px;
       margin: 0 auto;
@@ -24,6 +27,7 @@
       }
     }
 
+    /* Utility for borderless iframes */
     .iframe-borderless {
       border: 0;
       width: 100%;
@@ -33,13 +37,17 @@
 </head>
 
 <body>
+  <!-- Navigation Bar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
       <a class="navbar-brand" href="index.html">David Dashti</a>
     </div>
   </nav>
+
+  <!-- Main Content: Video and Map -->
   <div class="container mt-5 mb-4">
     <div class="row justify-content-center g-4">
+      <!-- Finnish Defence Forces Video -->
       <div class="col-lg-6 media-col order-lg-1 order-1">
         <h2>Finnish Defence Forces</h2>
         <div class="ratio ratio-16x9">
@@ -49,6 +57,7 @@
           </iframe>
         </div>
       </div>
+      <!-- Nyland Brigade Location Map -->
       <div class="col-lg-6 media-col order-lg-2 order-2">
         <h2>Nyland Brigade Location</h2>
         <div class="ratio ratio-16x9">
@@ -60,6 +69,8 @@
       </div>
     </div>
   </div>
+
+  <!-- Leadership Experience Section -->
   <main class="container py-3">
     <h1>Platoon Leader, 2nd Lieutenant</h1>
     <p>
@@ -98,9 +109,13 @@
       decisive action, and maintaining team cohesion under pressure.
     </p>
   </main>
+
+  <!-- Back to Portfolio Button -->
   <div class="container text-start mb-5">
     <a href="index.html" class="btn btn-secondary mt-4">Back to Portfolio</a>
   </div>
+
+  <!-- Footer -->
   <footer class="footer-blend text-center py-3">
     &copy; 2025 David Dashti. All rights reserved.
   </footer>
