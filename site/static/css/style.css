@@ -261,3 +261,27 @@ body {
 .iframe-borderless {
   border: 0;
 }
+
+/* Sticky Navbar (Bootstrap's .sticky-top is used, but you can add custom tweaks if needed) */
+
+/* Back to Top Button */
+.back-to-top {
+  display: none;
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  z-index: 9999;
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: 48px;
+  height: 48px;
+  font-size: 2rem;
+  line-height: 1;
+  text-align: center;
+  transition: background 0.2s;
+}
+.back-to-top:hover {
+  background-color: #084298;
+}

@@ -13,8 +13,8 @@
 </head>
 
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Sticky Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
         <div class="container">
             <a class="navbar-brand" href="index.html">David Dashti</a>
             <div class="d-flex gap-3">
@@ -378,6 +378,28 @@
     <footer class="footer-blend text-center py-3">
         &copy; 2025 David Dashti. All rights reserved.
     </footer>
+
+    <!-- Back to Top Button -->
+    <button type="button" class="btn btn-primary btn-lg rounded-circle back-to-top" id="backToTopBtn"
+        title="Back to Top">
+        &uarr;
+    </button>
+
+    <!-- Scripts -->
+    <script>
+        // Show/hide back to top button
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        window.onscroll = function () {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        };
+        backToTopBtn.onclick = function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+    </script>
 </body>
 
 </html>
