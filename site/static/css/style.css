@@ -181,6 +181,13 @@ body {
   height: 100% !important;
   min-height: 610px;
 }
+.tradingview-widget-outer-600 {
+  height: 600px;
+  position: relative;
+}
+.tradingview-widget-container-100 {
+  height: 100%;
+}
 
 /* ====
    Media Column Styles
