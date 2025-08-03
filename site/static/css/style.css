@@ -237,6 +237,10 @@ body {
     background: rgba(255, 255, 255, 0.95) !important;
   }
 }
+.sos-location-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
 .iframe-borderless {
   border: 0;
 }
