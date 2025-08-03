@@ -8,25 +8,35 @@ This is a static website (HTML, CSS, JS) deployed using [Azure Static Web Apps](
 
 ## Directory Structure
 
-.
-├── .github/
-│ └── workflows/
-│ └── azure-static-web-apps.yml
-├── site/
-│ ├── index.html
-│ ├── projects.html
-│ └── static/
-│ ├── css/
-│ ├── js/
-│ └── images/
-├── .gitignore
-├── README.md
-└── staticwebapp.config.json
+```plaintext
+site/
+├── index.html
+├── fdf.html
+├── hermes.html
+├── karolinska.html
+├── market-analysis.html
+├── philips.html
+├── scania.html
+├── sos.html
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── images/
+│   └── js/
+staticwebapp.config.json
+README.md
+```
 
-- **.github/workflows/**: Contains the Azure Static Web Apps workflow configuration.
-- **site/**: Contains all static website content (HTML, CSS, JS, images).
-- **.gitignore**: Specifies intentionally untracked files that Git should ignore.
-- **staticwebapp.config.json**: Configuration file for Azure Static Web Apps, defining routes, rewrites, and other settings.
+- **index.html**: Main landing page with navigation to all sections.
+- **fdf.html**: Finnish Defence Forces experience.
+- **hermes.html**: Hermes Medical Solutions experience.
+- **karolinska.html**: Karolinska University Hospital experience.
+- **market-analysis.html**: Interactive dashboards and market analysis.
+- **philips.html**: Philips Healthcare experience.
+- **scania.html**: Scania Engines experience.
+- **sos.html**: Södersjukhuset (SÖS) experience.
+- **static/**: Contains all static assets (CSS, images, JS).
+- **staticwebapp.config.json**: Azure Static Web Apps configuration file.
 
 ## Deployment
 
@@ -38,7 +48,7 @@ Deployment is fully automated:
 
 ### How to Update the Site
 
-1. Edit or add files in the `site/` directory (e.g., `index.html`).
+1. Edit or add files in the `site/` directory (e.g., `index.html`, `hermes.html`).
 2. Commit and push your changes to the `master` branch.
 3. GitHub Actions will automatically deploy your changes to Azure.
 
@@ -52,4 +62,4 @@ MIT
 
 ---
 
-_Maintained by David Dashti. For questions or suggestions, please open an issue or contact me directly._
+\_Maintained by David Dashti. For questions or suggestions, please open an issue
