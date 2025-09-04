@@ -28,4 +28,20 @@ document.addEventListener("DOMContentLoaded", () => {
     button.classList.toggle("btn-outline-light", t === "dark");
     button.classList.toggle("btn-outline-dark", t !== "dark");
   }
+
+  // Back to Top (shared across all pages)
+  const backToTopBtn = document.getElementById("backToTopBtn");
+  if (backToTopBtn) {
+    const toggleBackToTop = () => {
+      const show =
+        document.body.scrollTop > 300 ||
+        document.documentElement.scrollTop > 300;
+      backToTopBtn.style.display = show ? "block" : "none";
+    };
+    window.addEventListener("scroll", toggleBackToTop);
+    toggleBackToTop();
+    backToTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 });

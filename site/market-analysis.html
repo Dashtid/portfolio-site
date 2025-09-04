@@ -27,6 +27,10 @@
                     href="market-analysis.html">Markets</a>
                 <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="philips.html">Philips</a>
                 <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="sos.html">SÖS</a>
+                <!-- Theme toggle button -->
+                <button id="themeToggle" class="btn btn-sm btn-outline-dark ms-2" type="button"
+                    aria-label="Toggle theme">Dark
+                </button>
             </div>
         </div>
     </nav>
@@ -73,19 +77,6 @@
 
     <!-- Scripts -->
     <script>
-        // Show/hide back to top button
-        const backToTopBtn = document.getElementById('backToTopBtn');
-        window.onscroll = function () {
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                backToTopBtn.style.display = "block";
-            } else {
-                backToTopBtn.style.display = "none";
-            }
-        };
-        backToTopBtn.onclick = function () {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
         // Widget configs
         const marketSections = [
             {
@@ -221,7 +212,6 @@
     ["NASDAQ:GEHC|60M"]
     ]);
     </script>
-    <!-- Include theme script before </body> -->
     <script src="static/js/theme.js"></script>
 </body>
 
