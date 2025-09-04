@@ -58,11 +58,11 @@ body {
 }
 .navbar-brand,
 .nav-link {
-  border: 1px solid #000 !important;
-  background: #fff !important;
-  color: #000 !important;
+  border: 1px solid var(--link-border) !important;
+  background: var(--link-bg) !important;
+  color: var(--link-fg) !important;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px var(--card-shadow);
   padding: 0.5rem 1.2rem;
   margin-top: 0.1rem;
   margin-bottom: 0.1rem;
@@ -70,9 +70,9 @@ body {
 
 /* Highlight the active navigation link */
 .nav-link.active {
-  background-color: #000 !important;
-  color: #fff !important;
-  border-color: #000 !important;
+  background-color: var(--link-active-bg) !important;
+  color: var(--link-active-fg) !important;
+  border-color: var(--link-active-bg) !important;
 }
 
 /* =========================
@@ -272,19 +272,61 @@ body {
   bottom: 40px;
   right: 40px;
   z-index: 9999;
-  background-color: #000;
-  color: #fff;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-border);
+  box-shadow: 0 2px 8px var(--card-shadow);
   width: 48px;
   height: 48px;
   font-size: 2rem;
   line-height: 1;
   text-align: center;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .back-to-top:hover {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #000;
+  background-color: var(--link-bg);
+  color: var(--link-fg);
+  border: 1px solid var(--link-border);
+}
+
+/* Theme variables */
+:root {
+  --bg: #ffffff;
+  --fg: #000000;
+
+  --link-bg: #ffffff;
+  --link-fg: #000000;
+  --link-border: #000000;
+
+  --link-active-bg: #000000;
+  --link-active-fg: #ffffff;
+
+  --btn-bg: #000000;
+  --btn-fg: #ffffff;
+  --btn-border: #000000;
+
+  --card-shadow: rgba(0, 0, 0, 0.03);
+}
+[data-theme="dark"] {
+  --bg: #000000;
+  --fg: #ffffff;
+
+  --link-bg: #000000;
+  --link-fg: #ffffff;
+  --link-border: #ffffff;
+
+  --link-active-bg: #ffffff;
+  --link-active-fg: #000000;
+
+  --btn-bg: #ffffff;
+  --btn-fg: #000000;
+  --btn-border: #ffffff;
+
+  --card-shadow: rgba(255, 255, 255, 0.08);
+}
+
+/* Apply theme colors */
+body {
+  background-color: var(--bg);
+  color: var(--fg);
 }
