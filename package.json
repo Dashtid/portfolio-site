@@ -1,0 +1,147 @@
+{
+  "name": "portfolio-site",
+  "version": "1.0.0",
+  "description": "David Dashti's professional portfolio website",
+  "author": "David Dashti <david@dashti.se>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node server.js --port=3000 --host=0.0.0.0 --no-open --root=site",
+    "dev:open": "node server.js --port=3000 --host=0.0.0.0 --root=site",
+    "lint": "npm run lint:js && npm run lint:html && npm run lint:css",
+    "lint:js": "eslint site/static/js/**/*.js",
+    "lint:html": "htmlhint site/**/*.html",
+    "lint:css": "stylelint site/static/css/**/*.css",
+    "format": "prettier --write site/**/*.{html,css,js,json}",
+    "format:check": "prettier --check site/**/*.{html,css,js,json}",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "lighthouse": "lhci autorun",
+    "lighthouse:upload": "lhci upload",
+    "build": "npm run optimize:images && npm run minify:css && npm run minify:js",
+    "optimize:images": "node scripts/optimize-images.js",
+    "minify:css": "cleancss -o site/static/css/style.min.css site/static/css/style.css",
+    "minify:js": "terser site/static/js/*.js -c -m -o site/static/js/bundle.min.js",
+    "validate:html": "html-validate site/**/*.html",
+    "validate:links": "node scripts/validate-links.js",
+    "security:audit": "npm audit && node scripts/security-check.js",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@lhci/cli": "^0.12.0",
+    "eslint": "^8.55.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^16.4.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "htmlhint": "^1.1.4",
+    "stylelint": "^16.0.0",
+    "stylelint-config-standard": "^34.0.0",
+    "prettier": "^3.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "chokidar": "^3.5.3",
+    "ws": "^8.15.0",
+    "mime-types": "^2.1.35",
+    "jsdom": "^23.0.1",
+    "clean-css-cli": "^5.6.3",
+    "terser": "^5.26.0",
+    "html-validate": "^8.7.0",
+    "sharp": "^0.33.0",
+    "imagemin": "^8.0.1",
+    "imagemin-webp": "^8.0.0",
+    "imagemin-mozjpeg": "^10.0.0",
+    "imagemin-pngquant": "^10.0.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "lint-staged": {
+    "*.{html,css,js,json}": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.html": [
+      "htmlhint",
+      "html-validate"
+    ],
+    "*.css": [
+      "stylelint --fix",
+      "git add"
+    ]
+  },
+  "eslintConfig": {
+    "extends": ["standard"],
+    "env": {
+      "browser": true,
+      "es2022": true
+    },
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-console": "warn",
+      "prefer-const": "error",
+      "no-var": "error"
+    }
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "none",
+    "tabWidth": 2,
+    "printWidth": 80,
+    "htmlWhitespaceSensitivity": "css"
+  },
+  "stylelint": {
+    "extends": ["stylelint-config-standard"],
+    "rules": {
+      "color-function-notation": "legacy",
+      "declaration-block-no-redundant-longhand-properties": null,
+      "custom-property-pattern": null,
+      "selector-class-pattern": null
+    }
+  },
+  "htmlhint": {
+    "doctype-first": true,
+    "doctype-html5": true,
+    "title-require": true,
+    "alt-require": true,
+    "attr-lowercase": true,
+    "attr-no-duplication": true,
+    "attr-unsafe-chars": true,
+    "attr-value-double-quotes": true,
+    "id-unique": true,
+    "src-not-empty": true,
+    "tag-pair": true,
+    "tag-self-close": false,
+    "tagname-lowercase": true,
+    "spec-char-escape": true
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead",
+    "> 0.5%"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dashtid/Portfolio-site.git"
+  },
+  "homepage": "https://dashti.se",
+  "keywords": [
+    "portfolio",
+    "cybersecurity",
+    "healthcare",
+    "biomedical-engineering",
+    "static-site",
+    "pwa"
+  ]
+}
