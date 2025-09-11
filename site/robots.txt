@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://dashti.se/sitemap.xml
+
+# Disallow common sensitive directories (even though they don't exist)
+Disallow: /admin/
+Disallow: /private/
+Disallow: /logs/
+Disallow: /.env
+Disallow: /config/
+
+# Allow all static resources
+Allow: /static/
+
+# Crawl-delay (optional - in seconds)
+Crawl-delay: 1

@@ -1,0 +1,35 @@
+{
+  "name": "David Dashti - Cybersecurity in Healthcare",
+  "short_name": "David Dashti",
+  "description": "Biomedical Engineer and Cybersecurity Specialist focused on securing healthcare technology and patient data",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/images/D.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/cropped.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "healthcare", "cybersecurity"],
+  "lang": "en",
+  "scope": "/",
+  "screenshots": [
+    {
+      "src": "/static/images/stockholm.webp",
+      "sizes": "1920x1080",
+      "type": "image/webp",
+      "form_factor": "wide"
+    }
+  ]
+}
