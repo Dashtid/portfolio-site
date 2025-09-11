@@ -16,3 +16,20 @@ build/
 # Ignore OS files
 .DS_Store
 Thumbs.db
+
+# Ignore development and testing files
+*.log
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore temporary files
+*.tmp
+*.temp
