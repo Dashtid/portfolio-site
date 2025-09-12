@@ -5,8 +5,8 @@
   "author": "David Dashti <david@dashti.se>",
   "license": "MIT",
   "scripts": {
-    "dev": "node server.js --port=3000 --host=0.0.0.0 --no-open --root=site",
-    "dev:open": "node server.js --port=3000 --host=0.0.0.0 --root=site",
+    "dev": "node build/server.js --port=3000 --host=0.0.0.0 --no-open --root=site",
+    "dev:open": "node build/server.js --port=3000 --host=0.0.0.0 --root=site",
     "lint": "npm run lint:js && npm run lint:html && npm run lint:css",
     "lint:js": "eslint site/static/js/**/*.js",
     "lint:html": "htmlhint site/**/*.html",
