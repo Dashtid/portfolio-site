@@ -52,21 +52,60 @@ function initializeHomeWidget(theme) {
   const script = document.createElement("script");
   script.type = "text/javascript";
   script.src =
-    "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    "https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js";
   script.async = true;
   script.innerHTML = JSON.stringify({
-    autosize: true,
-    symbol: "XETR:XDWD",
-    timezone: "Europe/Stockholm",
-    theme: theme,
-    style: "1",
+    title: "Stocks",
+    tabs: [
+      {
+        title: "Financial",
+        symbols: [
+          { s: "NYSE:JPM", d: "JPMorgan Chase" },
+          { s: "NYSE:WFC", d: "Wells Fargo Co New" },
+          { s: "NYSE:BAC", d: "Bank Amer Corp" },
+          { s: "NYSE:HSBC", d: "Hsbc Hldgs Plc" },
+          { s: "NYSE:C", d: "Citigroup Inc" },
+          { s: "NYSE:MA", d: "Mastercard Incorporated" }
+        ]
+      },
+      {
+        title: "Technology",
+        symbols: [
+          { s: "NASDAQ:AAPL", d: "Apple" },
+          { s: "NASDAQ:GOOGL", d: "Alphabet" },
+          { s: "NASDAQ:MSFT", d: "Microsoft" },
+          { s: "NASDAQ:META", d: "Meta Platforms" },
+          { s: "NYSE:ORCL", d: "Oracle Corp" },
+          { s: "NASDAQ:INTC", d: "Intel Corp" }
+        ]
+      },
+      {
+        title: "Services",
+        symbols: [
+          { s: "NASDAQ:AMZN", d: "Amazon" },
+          { s: "NYSE:BABA", d: "Alibaba Group Hldg Ltd" },
+          { s: "NYSE:T", d: "At&t Inc" },
+          { s: "NYSE:WMT", d: "Walmart" },
+          { s: "NYSE:V", d: "Visa" }
+        ]
+      }
+    ],
+    width: "100%",
+    height: "100%",
+    showChart: true,
+    showFloatingTooltip: false,
     locale: "en",
-    withdateranges: true,
-    range: "60M",
-    hide_side_toolbar: false,
-    allow_symbol_change: true,
-    details: true,
-    support_host: "https://www.tradingview.com",
+    plotLineColorGrowing: "#2962FF",
+    plotLineColorFalling: "#2962FF",
+    belowLineFillColorGrowing: "rgba(41, 98, 255, 0.12)",
+    belowLineFillColorFalling: "rgba(41, 98, 255, 0.12)",
+    belowLineFillColorGrowingBottom: "rgba(41, 98, 255, 0)",
+    belowLineFillColorFallingBottom: "rgba(41, 98, 255, 0)",
+    gridLineColor: "rgba(240, 243, 250, 0)",
+    scaleFontColor: "rgba(120, 123, 134, 1)",
+    showSymbolLogo: true,
+    symbolActiveColor: "rgba(41, 98, 255, 0.12)",
+    colorTheme: theme
   });
 
   container.appendChild(script);
