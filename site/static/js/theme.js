@@ -47,7 +47,7 @@ class ThemeManager {
     this.setTheme(this.currentTheme);
 
     // Setup theme toggle button
-    const themeButton = document.getElementById('themeToggle');
+    const themeButton = document.getElementById('theme-toggle');
     if (themeButton) {
       this.updateButton(themeButton, this.currentTheme);
       
