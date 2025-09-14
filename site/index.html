@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>David Dashti | Cybersecurity in Healthcare</title>
     <meta
       name="description"
@@ -143,8 +142,8 @@
 
       .navbar {
         background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
         border-bottom: 1px solid var(--slate-200);
       }
 
@@ -159,8 +158,8 @@
 
       .hero-content {
         background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
         padding: var(--space-12) var(--space-8);
         border-radius: var(--radius-xl);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -287,94 +286,77 @@
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#experience"
-                role="menuitem"
                 data-scroll="experience"
                 >Experience</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#education"
-                role="menuitem"
                 data-scroll="education"
                 >Education</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#github-repos"
-                role="menuitem"
                 data-scroll="github-repos"
                 >Projects</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#skills"
-                role="menuitem"
                 data-scroll="skills"
                 >Skills</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#about"
-                role="menuitem"
                 data-scroll="about"
                 >About</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#contact"
-                role="menuitem"
                 data-scroll="contact"
                 >Contact</a
               >
             </div>
 
             <!-- External Pages -->
-            <div
-              class="d-flex gap-2 flex-wrap"
-              role="menubar"
-              aria-label="Experience pages"
-            >
+            <div class="d-flex gap-2 flex-wrap" aria-label="Experience pages">
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="experience/scania.html"
-                role="menuitem"
                 >Scania</a
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="education/fdf.html"
-                role="menuitem"
                 aria-label="Finnish Defence Forces"
                 >FDF</a
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="experience/hermes.html"
-                role="menuitem"
                 >Hermes</a
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="experience/karolinska.html"
-                role="menuitem"
                 >Karolinska</a
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="market-analysis.html"
-                role="menuitem"
                 >Markets</a
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="experience/philips.html"
-                role="menuitem"
                 >Philips</a
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="experience/sos.html"
-                role="menuitem"
                 aria-label="Södersjukhuset"
                 >SÖS</a
               >
@@ -385,9 +367,7 @@
               id="theme-toggle"
               class="btn btn-sm btn-outline-dark ms-2"
               type="button"
-              role="menuitem"
               aria-label="Switch to dark theme"
-              aria-pressed="false"
             >
               Dark
             </button>
@@ -405,7 +385,7 @@
             </h1>
             <p class="lead mb-0 custom-hero-lead" role="doc-subtitle">
               <strong
-                >Biomedical Engineer | QA/RA &amp; Cybersecurity Specialist |
+                >Biomedical Engineer | QA/RA &amp; Security Specialist |
                 Stockholm, Sweden</strong
               >
             </p>
@@ -797,6 +777,7 @@
             <div class="d-flex flex-wrap gap-2 align-items-center">
               <span class="fw-semibold me-2">Filter by:</span>
               <button
+                type="button"
                 class="btn btn-sm btn-outline-primary active filter-btn"
                 data-filter="all"
                 aria-pressed="true"
@@ -804,6 +785,7 @@
                 All Projects
               </button>
               <button
+                type="button"
                 class="btn btn-sm btn-outline-primary filter-btn"
                 data-filter="cybersecurity"
                 aria-pressed="false"
@@ -811,6 +793,7 @@
                 Cybersecurity
               </button>
               <button
+                type="button"
                 class="btn btn-sm btn-outline-primary filter-btn"
                 data-filter="healthcare"
                 aria-pressed="false"
@@ -818,6 +801,7 @@
                 Healthcare
               </button>
               <button
+                type="button"
                 class="btn btn-sm btn-outline-primary filter-btn"
                 data-filter="automation"
                 aria-pressed="false"
@@ -825,6 +809,7 @@
                 Automation
               </button>
               <button
+                type="button"
                 class="btn btn-sm btn-outline-primary filter-btn"
                 data-filter="tools"
                 aria-pressed="false"

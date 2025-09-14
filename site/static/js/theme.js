@@ -518,8 +518,12 @@ class AnimationManager {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (
+            entry.isIntersecting &&
+            !this.animatedElements.has(entry.target)
+          ) {
             entry.target.classList.add('fade-in')
+            this.animatedElements.add(entry.target)
           }
         })
       },
