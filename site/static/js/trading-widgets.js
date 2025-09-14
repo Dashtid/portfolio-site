@@ -4,39 +4,39 @@
  */
 
 // Initialize widgets when DOM is loaded
-document.addEventListener("DOMContentLoaded", function () {
-  initializeTradingWidgets();
-});
+document.addEventListener('DOMContentLoaded', () => {
+  initializeTradingWidgets()
+})
 
 /**
  * Initialize all trading widgets on the page
  */
-function initializeTradingWidgets() {
+function initializeTradingWidgets () {
   // Get current theme
-  const theme = document.documentElement.getAttribute("data-theme") || "light";
-  const widgetTheme = theme === "dark" ? "dark" : "light";
+  const theme = document.documentElement.getAttribute('data-theme') || 'light'
+  const widgetTheme = theme === 'dark' ? 'dark' : 'light'
 
   // Initialize home page widget
-  initializeHomeWidget(widgetTheme);
+  initializeHomeWidget(widgetTheme)
 
   // Initialize market analysis widgets
-  if (window.location.pathname.includes("market-analysis")) {
-    initializeMarketAnalysisWidgets(widgetTheme);
+  if (window.location.pathname.includes('market-analysis')) {
+    initializeMarketAnalysisWidgets(widgetTheme)
   }
 
   // Listen for theme changes
-  observeThemeChanges();
+  observeThemeChanges()
 }
 
 /**
  * Initialize the main widget on the home page
  */
-function initializeHomeWidget(theme) {
-  const container = document.querySelector(".tradingview-widget-container");
-  if (!container) return;
+function initializeHomeWidget (theme) {
+  const container = document.querySelector('.tradingview-widget-container')
+  if (!container) return
 
   // Clear existing content
-  container.innerHTML = "";
+  container.innerHTML = ''
 
   // Create widget HTML
   container.innerHTML = `
@@ -46,192 +46,192 @@ function initializeHomeWidget(theme) {
         <span class="blue-text">Track all markets on TradingView</span>
       </a>
     </div>
-  `;
+  `
 
   // Create and load script
-  const script = document.createElement("script");
-  script.type = "text/javascript";
+  const script = document.createElement('script')
+  script.type = 'text/javascript'
   script.src =
-    "https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js";
-  script.async = true;
+    'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js'
+  script.async = true
   script.innerHTML = JSON.stringify({
-    title: "Stocks",
+    title: 'Stocks',
     tabs: [
       {
-        title: "Financial",
+        title: 'Financial',
         symbols: [
-          { s: "NYSE:JPM", d: "JPMorgan Chase" },
-          { s: "NYSE:WFC", d: "Wells Fargo Co New" },
-          { s: "NYSE:BAC", d: "Bank Amer Corp" },
-          { s: "NYSE:HSBC", d: "Hsbc Hldgs Plc" },
-          { s: "NYSE:C", d: "Citigroup Inc" },
-          { s: "NYSE:MA", d: "Mastercard Incorporated" }
+          { s: 'NYSE:JPM', d: 'JPMorgan Chase' },
+          { s: 'NYSE:WFC', d: 'Wells Fargo Co New' },
+          { s: 'NYSE:BAC', d: 'Bank Amer Corp' },
+          { s: 'NYSE:HSBC', d: 'Hsbc Hldgs Plc' },
+          { s: 'NYSE:C', d: 'Citigroup Inc' },
+          { s: 'NYSE:MA', d: 'Mastercard Incorporated' }
         ]
       },
       {
-        title: "Technology",
+        title: 'Technology',
         symbols: [
-          { s: "NASDAQ:AAPL", d: "Apple" },
-          { s: "NASDAQ:GOOGL", d: "Alphabet" },
-          { s: "NASDAQ:MSFT", d: "Microsoft" },
-          { s: "NASDAQ:META", d: "Meta Platforms" },
-          { s: "NYSE:ORCL", d: "Oracle Corp" },
-          { s: "NASDAQ:INTC", d: "Intel Corp" }
+          { s: 'NASDAQ:AAPL', d: 'Apple' },
+          { s: 'NASDAQ:GOOGL', d: 'Alphabet' },
+          { s: 'NASDAQ:MSFT', d: 'Microsoft' },
+          { s: 'NASDAQ:META', d: 'Meta Platforms' },
+          { s: 'NYSE:ORCL', d: 'Oracle Corp' },
+          { s: 'NASDAQ:INTC', d: 'Intel Corp' }
         ]
       },
       {
-        title: "Services",
+        title: 'Services',
         symbols: [
-          { s: "NASDAQ:AMZN", d: "Amazon" },
-          { s: "NYSE:BABA", d: "Alibaba Group Hldg Ltd" },
-          { s: "NYSE:T", d: "At&t Inc" },
-          { s: "NYSE:WMT", d: "Walmart" },
-          { s: "NYSE:V", d: "Visa" }
+          { s: 'NASDAQ:AMZN', d: 'Amazon' },
+          { s: 'NYSE:BABA', d: 'Alibaba Group Hldg Ltd' },
+          { s: 'NYSE:T', d: 'At&t Inc' },
+          { s: 'NYSE:WMT', d: 'Walmart' },
+          { s: 'NYSE:V', d: 'Visa' }
         ]
       }
     ],
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
     showChart: true,
     showFloatingTooltip: false,
-    locale: "en",
-    plotLineColorGrowing: "#2962FF",
-    plotLineColorFalling: "#2962FF",
-    belowLineFillColorGrowing: "rgba(41, 98, 255, 0.12)",
-    belowLineFillColorFalling: "rgba(41, 98, 255, 0.12)",
-    belowLineFillColorGrowingBottom: "rgba(41, 98, 255, 0)",
-    belowLineFillColorFallingBottom: "rgba(41, 98, 255, 0)",
-    gridLineColor: "rgba(240, 243, 250, 0)",
-    scaleFontColor: "rgba(120, 123, 134, 1)",
+    locale: 'en',
+    plotLineColorGrowing: '#2962FF',
+    plotLineColorFalling: '#2962FF',
+    belowLineFillColorGrowing: 'rgba(41, 98, 255, 0.12)',
+    belowLineFillColorFalling: 'rgba(41, 98, 255, 0.12)',
+    belowLineFillColorGrowingBottom: 'rgba(41, 98, 255, 0)',
+    belowLineFillColorFallingBottom: 'rgba(41, 98, 255, 0)',
+    gridLineColor: 'rgba(240, 243, 250, 0)',
+    scaleFontColor: 'rgba(120, 123, 134, 1)',
     showSymbolLogo: true,
-    symbolActiveColor: "rgba(41, 98, 255, 0.12)",
+    symbolActiveColor: 'rgba(41, 98, 255, 0.12)',
     colorTheme: theme
-  });
+  })
 
-  container.appendChild(script);
+  container.appendChild(script)
 }
 
 /**
  * Initialize widgets for market analysis page
  */
-function initializeMarketAnalysisWidgets(theme) {
+function initializeMarketAnalysisWidgets (theme) {
   // Market sections data
   const marketSections = [
     {
-      id: "Americas",
-      title: "Americas",
-      desc: "Main Americas indices and their 5Y performance",
+      id: 'Americas',
+      title: 'Americas',
+      desc: 'Main Americas indices and their 5Y performance',
       symbols: [
-        ["FOREXCOM:DJI", "Dow Jones"],
-        ["FOREXCOM:SPXUSD", "S&P 500"],
-        ["FOREXCOM:NSXUSD", "NASDAQ"],
-        ["TSX:TSX", "TSX Composite"],
-        ["BMFBOVESPA:IBOV", "Bovespa"],
-      ],
+        ['FOREXCOM:DJI', 'Dow Jones'],
+        ['FOREXCOM:SPXUSD', 'S&P 500'],
+        ['FOREXCOM:NSXUSD', 'NASDAQ'],
+        ['TSX:TSX', 'TSX Composite'],
+        ['BMFBOVESPA:IBOV', 'Bovespa']
+      ]
     },
     {
-      id: "Europe",
-      title: "Europe",
-      desc: "Main European indices and their 5Y performance",
+      id: 'Europe',
+      title: 'Europe',
+      desc: 'Main European indices and their 5Y performance',
       symbols: [
-        ["FOREXCOM:UKXGBP", "FTSE 100"],
-        ["FOREXCOM:FRXEUR", "CAC 40"],
-        ["XETR:DAX", "DAX"],
-        ["FOREXCOM:SPXEUR", "Euro Stoxx 50"],
-        ["FOREXCOM:ESXEUR", "Euro Stoxx 600"],
-      ],
+        ['FOREXCOM:UKXGBP', 'FTSE 100'],
+        ['FOREXCOM:FRXEUR', 'CAC 40'],
+        ['XETR:DAX', 'DAX'],
+        ['FOREXCOM:SPXEUR', 'Euro Stoxx 50'],
+        ['FOREXCOM:ESXEUR', 'Euro Stoxx 600']
+      ]
     },
     {
-      id: "APAC",
-      title: "Asia-Pacific",
-      desc: "Main Asia-Pacific indices and their 5Y performance",
+      id: 'APAC',
+      title: 'Asia-Pacific',
+      desc: 'Main Asia-Pacific indices and their 5Y performance',
       symbols: [
-        ["TVC:NI225", "Nikkei 225"],
-        ["HKEX:HSI", "Hang Seng"],
-        ["SSE:000001", "Shanghai Composite"],
-        ["ASX:XJO", "ASX 200"],
-        ["KRX:KOSPI", "KOSPI"],
-      ],
-    },
-  ];
+        ['TVC:NI225', 'Nikkei 225'],
+        ['HKEX:HSI', 'Hang Seng'],
+        ['SSE:000001', 'Shanghai Composite'],
+        ['ASX:XJO', 'ASX 200'],
+        ['KRX:KOSPI', 'KOSPI']
+      ]
+    }
+  ]
 
   // Create market sections
-  const marketWidgetsContainer = document.getElementById("market-widgets");
+  const marketWidgetsContainer = document.getElementById('market-widgets')
   if (marketWidgetsContainer) {
-    marketWidgetsContainer.innerHTML = "";
+    marketWidgetsContainer.innerHTML = ''
     marketSections.forEach((section) => {
-      const sectionElement = createMarketSection(section, theme);
-      marketWidgetsContainer.appendChild(sectionElement);
-    });
+      const sectionElement = createMarketSection(section, theme)
+      marketWidgetsContainer.appendChild(sectionElement)
+    })
   }
 
   // Initialize MedTech widget
   const medtechSymbols = [
-    ["NYSE:MDT", "Medtronic"],
-    ["NYSE:JNJ", "Johnson & Johnson"],
-    ["XETR:SHL", "Siemens Healthineers"],
-    ["NYSE:SYK", "Stryker"],
-    ["NYSE:PHG", "Philips"],
-    ["NASDAQ:GEHC", "GE HealthCare"],
-    ["NYSE:ABT", "Abbott"],
-    ["NYSE:BSX", "Boston Scientific"],
-    ["NYSE:BDX", "Becton Dickinson"],
-    ["NYSE:BAX", "Baxter"],
-  ];
+    ['NYSE:MDT', 'Medtronic'],
+    ['NYSE:JNJ', 'Johnson & Johnson'],
+    ['XETR:SHL', 'Siemens Healthineers'],
+    ['NYSE:SYK', 'Stryker'],
+    ['NYSE:PHG', 'Philips'],
+    ['NASDAQ:GEHC', 'GE HealthCare'],
+    ['NYSE:ABT', 'Abbott'],
+    ['NYSE:BSX', 'Boston Scientific'],
+    ['NYSE:BDX', 'Becton Dickinson'],
+    ['NYSE:BAX', 'Baxter']
+  ]
 
-  const medtechContainer = document.getElementById("medtech-widget");
+  const medtechContainer = document.getElementById('medtech-widget')
   if (medtechContainer) {
-    createSymbolOverviewWidget(medtechContainer, medtechSymbols, theme);
+    createSymbolOverviewWidget(medtechContainer, medtechSymbols, theme)
   }
 
   // Initialize Nuclear Medicine widget
   const nuclearSymbols = [
-    ["NASDAQ:GEHC", "GE HealthCare"],
-    ["XETR:SHL", "Siemens Healthineers"],
-    ["NYSE:PHG", "Philips"],
-    ["NASDAQ:CMLS", "Curium Medical"],
-  ];
+    ['NASDAQ:GEHC', 'GE HealthCare'],
+    ['XETR:SHL', 'Siemens Healthineers'],
+    ['NYSE:PHG', 'Philips'],
+    ['NASDAQ:CMLS', 'Curium Medical']
+  ]
 
-  const nuclearContainer = document.getElementById("nuclear-widget");
+  const nuclearContainer = document.getElementById('nuclear-widget')
   if (nuclearContainer) {
-    createSymbolOverviewWidget(nuclearContainer, nuclearSymbols, theme);
+    createSymbolOverviewWidget(nuclearContainer, nuclearSymbols, theme)
   }
 }
 
 /**
  * Create a market section with widget
  */
-function createMarketSection(section, theme) {
-  const sectionDiv = document.createElement("section");
-  sectionDiv.className = "mb-5";
+function createMarketSection (section, theme) {
+  const sectionDiv = document.createElement('section')
+  sectionDiv.className = 'mb-5'
   sectionDiv.innerHTML = `
     <h2 class="mb-3">${section.title}</h2>
     <p class="mb-4 text-muted">${section.desc}</p>
     <div class="widget-container-${section.id.toLowerCase()}"></div>
-  `;
+  `
 
   // Create widget in the container
   const widgetContainer = sectionDiv.querySelector(
     `.widget-container-${section.id.toLowerCase()}`
-  );
-  createSymbolOverviewWidget(widgetContainer, section.symbols, theme);
+  )
+  createSymbolOverviewWidget(widgetContainer, section.symbols, theme)
 
-  return sectionDiv;
+  return sectionDiv
 }
 
 /**
  * Create a symbol overview widget using direct embed
  */
-function createSymbolOverviewWidget(container, symbols, theme) {
-  if (!container) return;
+function createSymbolOverviewWidget (container, symbols, theme) {
+  if (!container) return
 
   // Clear container
-  container.innerHTML = "";
+  container.innerHTML = ''
 
   // Create widget container
-  const widgetDiv = document.createElement("div");
-  widgetDiv.className = "tradingview-widget-container mb-4";
-  widgetDiv.style.height = "500px";
+  const widgetDiv = document.createElement('div')
+  widgetDiv.className = 'tradingview-widget-container mb-4'
+  widgetDiv.style.height = '500px'
 
   widgetDiv.innerHTML = `
     <div class="tradingview-widget-container__widget"></div>
@@ -240,20 +240,20 @@ function createSymbolOverviewWidget(container, symbols, theme) {
         <span class="blue-text">Track all markets on TradingView</span>
       </a>
     </div>
-  `;
+  `
 
   // Create script element
-  const script = document.createElement("script");
-  script.type = "text/javascript";
+  const script = document.createElement('script')
+  script.type = 'text/javascript'
   script.src =
-    "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
-  script.async = true;
+    'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js'
+  script.async = true
   script.innerHTML = JSON.stringify({
-    symbols: symbols,
+    symbols,
     chartOnly: false,
-    width: "100%",
-    height: "500",
-    locale: "en",
+    width: '100%',
+    height: '500',
+    locale: 'en',
     colorTheme: theme,
     autosize: true,
     showVolume: true,
@@ -261,58 +261,58 @@ function createSymbolOverviewWidget(container, symbols, theme) {
     hideDateRanges: false,
     hideMarketStatus: false,
     hideSymbolLogo: false,
-    scalePosition: "right",
-    scaleMode: "Normal",
+    scalePosition: 'right',
+    scaleMode: 'Normal',
     fontFamily:
-      "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
-    fontSize: "10",
+      '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+    fontSize: '10',
     noTimeScale: false,
-    valuesTracking: "1",
-    changeMode: "price-and-percent",
-    chartType: "area",
-    maLineColor: "#2563eb",
+    valuesTracking: '1',
+    changeMode: 'price-and-percent',
+    chartType: 'area',
+    maLineColor: '#2563eb',
     maLineWidth: 1,
     maLength: 9,
-    headerFontSize: "medium",
+    headerFontSize: 'medium',
     lineWidth: 2,
     lineType: 0,
-    dateRanges: ["1d|1", "1m|30", "3m|60", "12m|1D", "60m|1W", "all|1M"],
-  });
+    dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M']
+  })
 
-  widgetDiv.appendChild(script);
-  container.appendChild(widgetDiv);
+  widgetDiv.appendChild(script)
+  container.appendChild(widgetDiv)
 }
 
 /**
  * Observe theme changes and reload widgets
  */
-function observeThemeChanges() {
+function observeThemeChanges () {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (
-        mutation.type === "attributes" &&
-        mutation.attributeName === "data-theme"
+        mutation.type === 'attributes' &&
+        mutation.attributeName === 'data-theme'
       ) {
         // Reload page to refresh widgets with new theme
         setTimeout(() => {
-          window.location.reload();
-        }, 100);
+          window.location.reload()
+        }, 100)
       }
-    });
-  });
+    })
+  })
 
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["data-theme"],
-  });
+    attributeFilter: ['data-theme']
+  })
 }
 
 /**
  * Utility function to refresh all widgets
  */
-function refreshAllWidgets() {
-  window.location.reload();
+function refreshAllWidgets () {
+  window.location.reload()
 }
 
 // Export for global access
-window.refreshAllWidgets = refreshAllWidgets;
+window.refreshAllWidgets = refreshAllWidgets

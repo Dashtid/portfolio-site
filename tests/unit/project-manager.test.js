@@ -31,7 +31,6 @@ describe('ProjectManager', () => {
         'data-filter': 'healthcare'
       })
     ]
-
     ;[mockContainer, mockNoResults, ...mockFilterButtons].forEach((el) => {
       document.body.appendChild(el)
     })
@@ -427,7 +426,8 @@ describe('ProjectManager', () => {
       }
 
       // Mock querySelectorAll to return our mock buttons
-      document.querySelectorAll = jest.fn().mockReturnValue(mockFilterButtons)
+      const mockQuerySelectorAll = jest.fn().mockReturnValue(mockFilterButtons)
+      document.querySelectorAll = mockQuerySelectorAll
 
       updateFilterButtons(mockFilterButtons[1])
 
@@ -436,7 +436,6 @@ describe('ProjectManager', () => {
         'aria-pressed',
         'true'
       )
-
       ;[mockFilterButtons[0], mockFilterButtons[2]].forEach((btn) => {
         expect(btn.classList.remove).toHaveBeenCalledWith('active')
         expect(btn.setAttribute).toHaveBeenCalledWith('aria-pressed', 'false')
