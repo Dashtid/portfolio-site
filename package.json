@@ -69,20 +69,16 @@
   },
   "lint-staged": {
     "*.{html,css,js,json}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ],
     "*.js": [
-      "eslint --fix",
-      "git add"
+      "eslint --fix"
     ],
     "*.html": [
-      "htmlhint",
-      "html-validate"
+      "htmlhint"
     ],
     "*.css": [
-      "stylelint --fix",
-      "git add"
+      "stylelint --fix"
     ]
   },
   "eslintConfig": {
