@@ -1,9 +1,9 @@
-import { defineConfig, devices } from '@playwright/test'
+const { defineConfig, devices } = require('@playwright/test')
 
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
-export default defineConfig({
+module.exports = defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -14,8 +14,8 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI 
-    ? [['html'], ['github']] 
+  reporter: process.env.CI
+    ? [['html'], ['github']]
     : [['list'], ['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -24,10 +24,10 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    
+
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
-    
+
     /* Record video on first retry */
     video: 'retain-on-failure'
   },
@@ -77,8 +77,8 @@ export default defineConfig({
   },
 
   /* Run your local dev server before starting the tests */
-  webServer: process.env.CI 
-    ? undefined 
+  webServer: process.env.CI
+    ? undefined
     : {
         command: 'npm run dev',
         port: 3000,

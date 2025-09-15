@@ -1,0 +1,17 @@
+# Build artifacts and minified files
+*.min.js
+site/static/js/bundle.min.js
+site/static/js/*.min.js
+
+# Node modules
+node_modules/
+
+# Test coverage
+coverage/
+
+# Lighthouse CI
+.lighthouseci/
+
+# Build output
+build/
+dist/

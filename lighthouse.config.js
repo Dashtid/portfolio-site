@@ -3,8 +3,8 @@ module.exports = {
     collect: {
       url: [
         'http://localhost:3000/',
-        'http://localhost:3000/hermes.html',
-        'http://localhost:3000/scania.html',
+        'http://localhost:3000/experience/hermes.html',
+        'http://localhost:3000/experience/scania.html',
         'http://localhost:3000/market-analysis.html'
       ],
       settings: {
