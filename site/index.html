@@ -262,7 +262,6 @@
       <!-- Sticky Navigation Bar -->
       <nav
         class="navbar navbar-expand-lg navbar-light bg-light sticky-top"
-        role="navigation"
         aria-label="Main navigation"
       >
         <div class="container">
@@ -327,7 +326,14 @@
             </div>
 
             <!-- External Pages -->
-            <div class="d-flex gap-2 flex-wrap" aria-label="Experience pages">
+            <div
+              class="d-flex gap-2 flex-wrap"
+              role="group"
+              aria-labelledby="experience-pages-label"
+            >
+              <span id="experience-pages-label" class="visually-hidden"
+                >Experience pages</span
+              >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
                 href="experience/scania.html"
@@ -381,11 +387,11 @@
       </nav>
 
       <!-- Hero/Header Section with background image -->
-      <header class="hero" role="banner">
+      <header class="hero">
         <div class="container">
           <div class="hero-content mx-auto custom-hero-width">
             <h1 class="mb-3 custom-hero-title" id="main-heading" tabindex="-1">
-              Cybersecurity & AI Compliance<br />
+              Cybersecurity &amp; AI Compliance<br />
               in Medical Software Development
             </h1>
             <p class="lead mb-0 custom-hero-lead" role="doc-subtitle">
@@ -483,9 +489,10 @@
                     <h5 class="card-title mb-0">Hermes Medical Solutions</h5>
                   </div>
                   <p class="card-text">
-                    QA/RA & Security Specialist at Hermes Medical Solutions,
+                    QA/RA &amp; Security Specialist at Hermes Medical Solutions,
                     ensuring NIS2/ISO 27001 compliance, regulatory clearance,
-                    and V&V processes for nuclear medicine software solutions.
+                    and V&amp;V processes for nuclear medicine software
+                    solutions.
                   </p>
                   <a
                     href="experience/hermes.html"
@@ -774,7 +781,7 @@
               loading="lazy"
               role="presentation"
             />
-            Projects & Repositories
+            Projects &amp; Repositories
           </h2>
 
           <!-- Project Filters -->
@@ -933,7 +940,7 @@
               <p>
                 I am a biomedical engineer specializing in cybersecurity and
                 regulatory compliance for medical software and AI systems. As a
-                QA/RA & Security Specialist at Hermes Medical Solutions, I
+                QA/RA &amp; Security Specialist at Hermes Medical Solutions, I
                 ensure that our software and digital health solutions meet the
                 highest standards of security, privacy, and regulatory alignment
                 (NIS2, ISO 27001, EU AI Act).
@@ -1000,7 +1007,7 @@
                 <div class="card-body">
                   <h5 class="card-title mb-3">
                     <span class="text-primary me-2" aria-hidden="true">🛡️</span>
-                    Cybersecurity & Compliance
+                    Cybersecurity &amp; Compliance
                   </h5>
                   <div class="skills-group">
                     <div class="skill-item mb-3">
@@ -1012,16 +1019,14 @@
                         >
                         <span class="skill-level">Expert</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-primary progress-90"
-                          role="progressbar"
-                          aria-valuenow="90"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="ISO 27001 NIS2 Compliance skill level 90%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-primary"
+                        max="100"
+                        value="90"
+                        aria-label="ISO 27001 NIS2 Compliance skill level 90%"
+                      >
+                        90%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1031,16 +1036,14 @@
                         <span class="skill-name">Security Risk Assessment</span>
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-primary progress-85"
-                          role="progressbar"
-                          aria-valuenow="85"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Security Risk Assessment skill level 85%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-primary"
+                        max="100"
+                        value="85"
+                        aria-label="Security Risk Assessment skill level 85%"
+                      >
+                        85%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1050,16 +1053,14 @@
                         <span class="skill-name">Penetration Testing</span>
                         <span class="skill-level">Intermediate</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-teal progress-70"
-                          role="progressbar"
-                          aria-valuenow="70"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Penetration Testing skill level 70%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-teal"
+                        max="100"
+                        value="70"
+                        aria-label="Penetration Testing skill level 70%"
+                      >
+                        70%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1069,16 +1070,14 @@
                         <span class="skill-name">Incident Response</span>
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-primary progress-80"
-                          role="progressbar"
-                          aria-valuenow="80"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Incident Response skill level 80%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-primary"
+                        max="100"
+                        value="80"
+                        aria-label="Incident Response skill level 80%"
+                      >
+                        80%
+                      </progress>
                     </div>
                   </div>
                 </div>
@@ -1091,7 +1090,7 @@
                 <div class="card-body">
                   <h5 class="card-title mb-3">
                     <span class="text-success me-2" aria-hidden="true">💻</span>
-                    Development & Infrastructure
+                    Development &amp; Infrastructure
                   </h5>
                   <div class="skills-group">
                     <div class="skill-item mb-3">
@@ -1101,16 +1100,14 @@
                         <span class="skill-name">Python / PowerShell</span>
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-success progress-85"
-                          role="progressbar"
-                          aria-valuenow="85"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Python PowerShell skill level 85%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-success"
+                        max="100"
+                        value="85"
+                        aria-label="Python PowerShell skill level 85%"
+                      >
+                        85%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1122,16 +1119,14 @@
                         >
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-success progress-80"
-                          role="progressbar"
-                          aria-valuenow="80"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Docker Containerization skill level 80%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-success"
+                        max="100"
+                        value="80"
+                        aria-label="Docker Containerization skill level 80%"
+                      >
+                        80%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1143,16 +1138,14 @@
                         >
                         <span class="skill-level">Expert</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-success"
-                          role="progressbar"
-                          aria-valuenow="90"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Windows Server Active Directory skill level 90%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-success"
+                        max="100"
+                        value="90"
+                        aria-label="Windows Server Active Directory skill level 90%"
+                      >
+                        90%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1162,16 +1155,14 @@
                         <span class="skill-name">Git / CI/CD Pipelines</span>
                         <span class="skill-level">Intermediate</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-warning"
-                          role="progressbar"
-                          aria-valuenow="75"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Git CI CD Pipelines skill level 75%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-warning"
+                        max="100"
+                        value="75"
+                        aria-label="Git CI CD Pipelines skill level 75%"
+                      >
+                        75%
+                      </progress>
                     </div>
                   </div>
                 </div>
@@ -1184,7 +1175,7 @@
                 <div class="card-body">
                   <h5 class="card-title mb-3">
                     <span class="text-danger me-2" aria-hidden="true">🏥</span>
-                    Healthcare IT & Biomedical
+                    Healthcare IT &amp; Biomedical
                   </h5>
                   <div class="skills-group">
                     <div class="skill-item mb-3">
@@ -1194,16 +1185,14 @@
                         <span class="skill-name">DICOM / HL7 Standards</span>
                         <span class="skill-level">Expert</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-danger"
-                          role="progressbar"
-                          aria-valuenow="95"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="DICOM HL7 Standards skill level 95%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-danger"
+                        max="100"
+                        value="95"
+                        aria-label="DICOM HL7 Standards skill level 95%"
+                      >
+                        95%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1213,16 +1202,14 @@
                         <span class="skill-name">PACS / RIS Systems</span>
                         <span class="skill-level">Expert</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-danger"
-                          role="progressbar"
-                          aria-valuenow="90"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="PACS RIS Systems skill level 90%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-danger"
+                        max="100"
+                        value="90"
+                        aria-label="PACS RIS Systems skill level 90%"
+                      >
+                        90%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1234,35 +1221,33 @@
                         >
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-danger"
-                          role="progressbar"
-                          aria-valuenow="85"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Medical Device Integration skill level 85%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-danger"
+                        max="100"
+                        value="85"
+                        aria-label="Medical Device Integration skill level 85%"
+                      >
+                        85%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
                       <div
                         class="d-flex justify-content-between align-items-center mb-1"
                       >
-                        <span class="skill-name">Regulatory Affairs (V&V)</span>
+                        <span class="skill-name"
+                          >Regulatory Affairs (V&amp;V)</span
+                        >
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-danger"
-                          role="progressbar"
-                          aria-valuenow="80"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Regulatory Affairs V&V skill level 80%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-danger"
+                        max="100"
+                        value="80"
+                        aria-label="Regulatory Affairs V&amp;V skill level 80%"
+                      >
+                        80%
+                      </progress>
                     </div>
                   </div>
                 </div>
@@ -1275,7 +1260,7 @@
                 <div class="card-body">
                   <h5 class="card-title mb-3">
                     <span class="text-info me-2" aria-hidden="true">👥</span>
-                    Leadership & Communication
+                    Leadership &amp; Communication
                   </h5>
                   <div class="skills-group">
                     <div class="skill-item mb-3">
@@ -1285,16 +1270,14 @@
                         <span class="skill-name">Team Leadership</span>
                         <span class="skill-level">Expert</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-info"
-                          role="progressbar"
-                          aria-valuenow="90"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Team Leadership skill level 90%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-info"
+                        max="100"
+                        value="90"
+                        aria-label="Team Leadership skill level 90%"
+                      >
+                        90%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1304,16 +1287,14 @@
                         <span class="skill-name">Project Management</span>
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-info"
-                          role="progressbar"
-                          aria-valuenow="85"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Project Management skill level 85%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-info"
+                        max="100"
+                        value="85"
+                        aria-label="Project Management skill level 85%"
+                      >
+                        85%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1325,16 +1306,14 @@
                         >
                         <span class="skill-level">Expert</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-info"
-                          role="progressbar"
-                          aria-valuenow="95"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Cross-functional Collaboration skill level 95%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-info"
+                        max="100"
+                        value="95"
+                        aria-label="Cross-functional Collaboration skill level 95%"
+                      >
+                        95%
+                      </progress>
                     </div>
 
                     <div class="skill-item mb-3">
@@ -1344,16 +1323,14 @@
                         <span class="skill-name">Technical Documentation</span>
                         <span class="skill-level">Advanced</span>
                       </div>
-                      <div class="progress progress-6">
-                        <div
-                          class="progress-bar bg-info"
-                          role="progressbar"
-                          aria-valuenow="80"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          aria-label="Technical Documentation skill level 80%"
-                        ></div>
-                      </div>
+                      <progress
+                        class="skill-progress bg-info"
+                        max="100"
+                        value="80"
+                        aria-label="Technical Documentation skill level 80%"
+                      >
+                        80%
+                      </progress>
                     </div>
                   </div>
                 </div>

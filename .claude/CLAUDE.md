@@ -57,3 +57,9 @@ This is David Dashti's professional portfolio website showcasing his expertise i
 - Ensure all contact links are functional
 - Keep LinkedIn and GitHub profiles up-to-date
 - Verify email addresses are current
+
+## Learning and Communication
+- Always explain coding actions and decisions to help the user learn
+- Describe why specific approaches or technologies are chosen
+- Explain the purpose and functionality of code changes
+- Provide context about best practices and coding patterns used

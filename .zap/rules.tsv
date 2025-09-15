@@ -1,0 +1,93 @@
+# OWASP ZAP Baseline Scan Rules Configuration
+# Format: RULE_ID	THRESHOLD	[COMMENT]
+# RULE_ID: The ZAP rule ID
+# THRESHOLD: IGNORE, INFO, WARN, FAIL
+# COMMENT: Optional comment explaining the rule configuration
+
+# Security headers - should be present
+10020	WARN	Missing Anti-clickjacking Header
+10021	WARN	Missing Anti-MIME-Sniffing Header
+10023	WARN	Information Disclosure - Debug Error Messages
+10024	FAIL	Information Disclosure - Sensitive Information in URL
+10025	WARN	Information Disclosure - Sensitive Information in HTTP Referrer Header
+10026	WARN	HTTP Parameter Override
+10027	WARN	Information Disclosure - Suspicious Comments
+10028	WARN	Open Redirect
+10029	WARN	Cookie Poisoning
+10030	WARN	User Controllable Charset
+10031	WARN	User Controllable HTML Element Attribute (Potential XSS)
+10032	WARN	Viewstate Scanner
+10033	WARN	Directory Browsing
+10034	WARN	Heartbleed OpenSSL Vulnerability
+10035	WARN	Strict-Transport-Security Header Not Set
+10036	WARN	HTTP Server Response Header Scanner
+10037	WARN	Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s)
+10038	WARN	Content Security Policy (CSP) Header Not Set
+10039	WARN	X-Frame-Options Header Scanner
+10040	WARN	Secure Pages Include Mixed Content
+10041	WARN	HTTP to HTTPS Insecure Transition in Form Post
+10042	WARN	HTTPS to HTTP Insecure Transition in Form Post
+10043	WARN	User Controllable JavaScript Event (XSS)
+10044	WARN	Big Redirect Detected (Potential Sensitive Information Leak)
+10045	WARN	Source Code Disclosure - /WEB-INF folder
+10046	WARN	Source Code Disclosure - /META-INF folder
+10047	WARN	Source Code Disclosure - Suspected
+10048	WARN	Remote Code Execution - Shell Shock
+10049	WARN	Content Cacheability
+10050	WARN	Retrieved from Cache
+10051	WARN	Relative Path Confusion
+10052	WARN	X-ChromeLogger-Data (XCOLD) Header Information Leak
+10053	WARN	Apache Range Header DoS (CVE-2011-3192)
+10054	WARN	Cookie Without SameSite Attribute
+10055	WARN	CSP Scanner
+10056	WARN	X-Debug-Token Information Leak
+10057	WARN	Username Hash Found
+10058	WARN	GET for POST
+10059	WARN	Multiple X-Frame-Options Header Entries
+10060	WARN	Source Code Disclosure - PHP
+10061	WARN	X-AspNet-Version Response Header Scanner
+10062	WARN	PII Scanner
+10063	WARN	Permissions Policy Header Not Set
+10064	WARN	Timestamp Disclosure
+10065	WARN	Source Code Disclosure - ASP
+10066	WARN	HTTP Only Site
+10067	WARN	Httpoxy - Proxy Header Misuse
+10068	WARN	X-Content-Type-Options Header Missing
+10069	WARN	X-Frame-Options Setting Malformed
+10070	WARN	CORS Header Scanner
+10071	WARN	Cookie without SameSite Attribute
+10094	INFO	Base64 Disclosure
+10095	INFO	Backup File Disclosure
+10096	INFO	Timestamp Disclosure - Unix
+10097	INFO	Hash Disclosure - MD5
+10098	INFO	Hash Disclosure - SHA1
+
+# Common false positives for static sites - set to IGNORE
+90001	IGNORE	Insecure JSF ViewState (not applicable to static sites)
+90011	IGNORE	Charset Mismatch (acceptable for static sites)
+90017	IGNORE	XSLT Injection (not applicable to static sites)
+90019	IGNORE	Server Side Code Injection (not applicable to static sites)
+90020	IGNORE	Remote OS Command Injection (not applicable to static sites)
+90021	IGNORE	XPath Injection (not applicable to static sites)
+90022	IGNORE	Application Error Disclosure (acceptable for static sites)
+90023	IGNORE	XML External Entity Attack (not applicable to static sites)
+90024	IGNORE	Generic Padding Oracle (not applicable to static sites)
+90025	IGNORE	Expression Language Injection (not applicable to static sites)
+90026	IGNORE	SOAP Action Spoofing (not applicable to static sites)
+90027	IGNORE	Cookie Slack Detector (acceptable for static sites)
+90028	IGNORE	Insecure Authentication (not applicable to static sites)
+90029	IGNORE	LDAP Injection (not applicable to static sites)
+90030	IGNORE	CRLF Injection (not applicable to static sites)
+
+# Portfolio-specific exceptions
+10109	IGNORE	Modern Web Application (expected for portfolio site)
+10110	IGNORE	Dangerous JS Functions (acceptable for interactive portfolio features)
+
+# Performance-related alerts (info level only)
+10049	INFO	Content Cacheability
+10050	INFO	Retrieved from Cache
+
+# Development vs Production considerations
+# These should be WARN in development but might be IGNORE in production depending on hosting
+10017	WARN	Cross-Domain JavaScript Source File Inclusion (CDN usage)
+10015	WARN	Re-examine Cache-control Directives (hosting dependent)

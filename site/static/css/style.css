@@ -1147,6 +1147,82 @@ section h2 {
   width: 95% !important;
 }
 
+/* Native HTML5 Progress Element Styling */
+progress.skill-progress {
+  width: 100%;
+  height: 6px;
+  border: none;
+  border-radius: 3px;
+  background-color: var(--slate-200);
+  overflow: hidden;
+  appearance: none;
+}
+
+/* Webkit browsers (Chrome, Safari, etc.) */
+progress.skill-progress::-webkit-progress-bar {
+  background-color: var(--slate-200);
+  border-radius: 3px;
+}
+
+progress.skill-progress::-webkit-progress-value {
+  background: linear-gradient(90deg, currentcolor 0%, currentcolor 100%);
+  border-radius: 3px;
+  transition: width 1.5s ease-out;
+  animation: progress-glow 2s ease-in-out infinite alternate;
+}
+
+/* Firefox */
+progress.skill-progress::-moz-progress-bar {
+  background: linear-gradient(90deg, currentcolor 0%, currentcolor 100%);
+  border-radius: 3px;
+  transition: width 1.5s ease-out;
+  animation: progress-glow 2s ease-in-out infinite alternate;
+}
+
+/* Dark theme for progress elements */
+[data-theme='dark'] progress.skill-progress {
+  background-color: var(--slate-600);
+}
+
+[data-theme='dark'] progress.skill-progress::-webkit-progress-bar {
+  background-color: var(--slate-600);
+}
+
+/* Color variants for native progress elements */
+progress.skill-progress.bg-primary::-webkit-progress-value,
+progress.skill-progress.bg-primary::-moz-progress-bar {
+  background: linear-gradient(
+    90deg,
+    var(--primary-600) 0%,
+    var(--primary-600) 100%
+  );
+}
+
+progress.skill-progress.bg-success::-webkit-progress-value,
+progress.skill-progress.bg-success::-moz-progress-bar {
+  background: linear-gradient(90deg, #198754 0%, #157347 100%);
+}
+
+progress.skill-progress.bg-warning::-webkit-progress-value,
+progress.skill-progress.bg-warning::-moz-progress-bar {
+  background: linear-gradient(90deg, #ffc107 0%, #ffca2c 100%);
+}
+
+progress.skill-progress.bg-danger::-webkit-progress-value,
+progress.skill-progress.bg-danger::-moz-progress-bar {
+  background: linear-gradient(90deg, #dc3545 0%, #bb2d3b 100%);
+}
+
+progress.skill-progress.bg-info::-webkit-progress-value,
+progress.skill-progress.bg-info::-moz-progress-bar {
+  background: linear-gradient(90deg, #0dcaf0 0%, #3dd5f3 100%);
+}
+
+progress.skill-progress.bg-teal::-webkit-progress-value,
+progress.skill-progress.bg-teal::-moz-progress-bar {
+  background: linear-gradient(90deg, var(--teal-500) 0%, var(--teal-600) 100%);
+}
+
 /* Max width utilities */
 .max-w-800 {
   max-width: 800px !important;
