@@ -154,6 +154,14 @@ describe('ScrollManager', () => {
     ]
     mockNavLinks.forEach((link) => document.body.appendChild(link))
 
+    // Mock document.querySelectorAll to return our mock nav links
+    document.querySelectorAll = jest.fn().mockImplementation((selector) => {
+      if (selector === '.internal-nav') {
+        return mockNavLinks
+      }
+      return []
+    })
+
     mockSections = [
       TestUtils.createMockElement('section', { id: 'about' }),
       TestUtils.createMockElement('section', { id: 'skills' })
@@ -219,6 +227,15 @@ describe('ScrollManager', () => {
 
     test('should hide button when scrolled below threshold', () => {
       window.pageYOffset = 200
+
+      // Ensure the mock button has proper setAttribute/getAttribute spies
+      const attributes = {}
+      mockBackToTopBtn.setAttribute = jest.fn((name, value) => {
+        attributes[name] = value
+      })
+      mockBackToTopBtn.getAttribute = jest.fn(
+        (name) => attributes[name] || null
+      )
 
       scrollManager.toggleVisibility()
 
@@ -301,6 +318,19 @@ describe('ScrollManager', () => {
 
     test('should update active navigation link', () => {
       const activeLink = mockNavLinks[0]
+
+      // Mock all methods that will be called
+      mockNavLinks.forEach((link) => {
+        link.classList = {
+          add: jest.fn(),
+          remove: jest.fn(),
+          toggle: jest.fn(),
+          contains: jest.fn().mockReturnValue(false),
+          replace: jest.fn()
+        }
+        link.setAttribute = jest.fn()
+        link.removeAttribute = jest.fn()
+      })
 
       scrollManager.updateActiveNavLink(activeLink)
 
