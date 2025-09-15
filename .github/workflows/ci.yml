@@ -156,6 +156,7 @@ jobs:
         run: npm run lighthouse
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        if: env.LHCI_GITHUB_APP_TOKEN != ''
       
       - name: Upload Lighthouse results
         uses: actions/upload-artifact@v4
@@ -259,6 +260,7 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
+          app_location: "site"
 
   # Security Monitoring
   security_scan:
@@ -300,4 +302,4 @@ jobs:
           text: 'Portfolio deployment to production: ${{ job.status }}'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: env.SLACK_WEBHOOK_URL != null
+        if: env.SLACK_WEBHOOK_URL != ''
