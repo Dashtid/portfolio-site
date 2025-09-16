@@ -33,3 +33,5 @@ playwright-report/
 # Ignore temporary files
 *.tmp
 *.temp
+
+settings.local.json
