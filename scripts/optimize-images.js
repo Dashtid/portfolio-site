@@ -33,6 +33,11 @@ async function getImageFiles (dir, files = []) {
     const stats = await stat(fullPath)
 
     if (stats.isDirectory()) {
+      // Skip the optimized directory to prevent processing already optimized images
+      if (entry === 'optimized') {
+        console.log('⏭️  Skipping optimized directory to prevent duplicates')
+        continue
+      }
       await getImageFiles(fullPath, files)
     } else if (
       SUPPORTED_FORMATS.some((ext) => entry.toLowerCase().endsWith(ext))
@@ -177,6 +182,14 @@ async function updateHtmlReferences (siteDir, optimizedDir) {
  */
 async function generateResponsiveVariants (inputPath, outputDir) {
   const filename = path.basename(inputPath, path.extname(inputPath))
+
+  // Ensure we only process original files, not already-generated variants
+  if (filename.includes('-mobile') || filename.includes('-tablet') ||
+      filename.includes('-desktop') || filename.includes('-large')) {
+    console.log(`⏭️  Skipping variant generation for ${filename} (already a variant)`)
+    return []
+  }
+
   const sizes = [
     { width: 320, suffix: '-mobile' },
     { width: 768, suffix: '-tablet' },
@@ -189,6 +202,8 @@ async function generateResponsiveVariants (inputPath, outputDir) {
 
   const variants = []
 
+  console.log(`📐 Original image dimensions: ${metadata.width}x${metadata.height}`)
+
   for (const size of sizes) {
     if (metadata.width && metadata.width >= size.width) {
       // WebP variant
@@ -198,6 +213,9 @@ async function generateResponsiveVariants (inputPath, outputDir) {
           .resize(size.width)
           .webp(OUTPUT_FORMATS.webp)
           .toFile(webpPath)
+        console.log(`✅ Generated ${filename}${size.suffix}.webp (${size.width}px wide)`)
+      } else {
+        console.log(`⏭️  ${filename}${size.suffix}.webp already exists`)
       }
 
       // JPEG variant
@@ -207,6 +225,9 @@ async function generateResponsiveVariants (inputPath, outputDir) {
           .resize(size.width)
           .jpeg(OUTPUT_FORMATS.jpeg)
           .toFile(jpegPath)
+        console.log(`✅ Generated ${filename}${size.suffix}.jpg (${size.width}px wide)`)
+      } else {
+        console.log(`⏭️  ${filename}${size.suffix}.jpg already exists`)
       }
 
       variants.push({
@@ -214,6 +235,8 @@ async function generateResponsiveVariants (inputPath, outputDir) {
         webp: webpPath,
         jpeg: jpegPath
       })
+    } else {
+      console.log(`⏭️  Skipping ${size.suffix} variant (original width ${metadata.width}px < ${size.width}px)`)
     }
   }
 
@@ -255,12 +278,18 @@ async function optimizeImages () {
       const results = await optimizeImage(imagePath, outputDir)
       allResults.push(...results)
 
-      // Generate responsive variants for hero images
-      if (imagePath.includes('stockholm') || imagePath.includes('hero')) {
-        console.log(
-          `🖼️  Generating responsive variants for ${path.basename(imagePath)}...`
-        )
-        await generateResponsiveVariants(imagePath, outputDir)
+      // Generate responsive variants for hero images (only for original files)
+      if ((imagePath.includes('stockholm') || imagePath.includes('hero')) &&
+          !imagePath.includes(path.join('images', 'optimized'))) {
+        // Only generate variants for original source files, not generated ones
+        const baseName = path.basename(imagePath, path.extname(imagePath))
+        if (!baseName.includes('-mobile') && !baseName.includes('-tablet') &&
+            !baseName.includes('-desktop') && !baseName.includes('-large')) {
+          console.log(
+            `🖼️  Generating responsive variants for ${path.basename(imagePath)}...`
+          )
+          await generateResponsiveVariants(imagePath, outputDir)
+        }
       }
     }
 
