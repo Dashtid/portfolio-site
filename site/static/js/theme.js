@@ -4,7 +4,7 @@
  */
 
 class ThemeManager {
-  constructor () {
+  constructor() {
     this.storageKey = 'theme'
     this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     this.currentTheme = this.getInitialTheme()
@@ -12,12 +12,12 @@ class ThemeManager {
     this.init()
   }
 
-  getInitialTheme () {
+  getInitialTheme() {
     const saved = localStorage.getItem(this.storageKey)
     return saved || (this.mediaQuery.matches ? 'dark' : 'light')
   }
 
-  setTheme (theme) {
+  setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem(this.storageKey, theme)
     this.currentTheme = theme
@@ -30,7 +30,7 @@ class ThemeManager {
     )
   }
 
-  updateButton (button, theme) {
+  updateButton(button, theme) {
     const isDark = theme === 'dark'
     button.textContent = isDark ? 'Light' : 'Dark'
     button.classList.toggle('btn-outline-light', isDark)
@@ -41,13 +41,13 @@ class ThemeManager {
     )
   }
 
-  toggleTheme () {
+  toggleTheme() {
     const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark'
     this.setTheme(nextTheme)
     return nextTheme
   }
 
-  init () {
+  init() {
     // Set initial theme
     this.setTheme(this.currentTheme)
 
@@ -76,7 +76,7 @@ class ThemeManager {
 }
 
 class ScrollManager {
-  constructor () {
+  constructor() {
     this.threshold = 300
     this.isVisible = false
     this.button = document.getElementById('backToTopBtn')
@@ -88,7 +88,7 @@ class ScrollManager {
     this.initSmoothScrolling()
   }
 
-  toggleVisibility () {
+  toggleVisibility() {
     const shouldShow = window.pageYOffset > this.threshold
 
     if (shouldShow !== this.isVisible) {
@@ -98,7 +98,7 @@ class ScrollManager {
     }
   }
 
-  scrollToTop () {
+  scrollToTop() {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
@@ -110,7 +110,7 @@ class ScrollManager {
     }, 100)
   }
 
-  init () {
+  init() {
     // Use passive listener for better performance
     window.addEventListener(
       'scroll',
@@ -129,7 +129,7 @@ class ScrollManager {
     this.toggleVisibility()
   }
 
-  initSmoothScrolling () {
+  initSmoothScrolling() {
     // Handle internal navigation links
     const internalNavLinks = document.querySelectorAll(
       '.internal-nav[data-scroll]'
@@ -156,7 +156,7 @@ class ScrollManager {
     this.setupNavigationHighlighting()
   }
 
-  scrollToSection (targetId) {
+  scrollToSection(targetId) {
     const target = document.getElementById(targetId)
     if (!target) return
 
@@ -172,7 +172,7 @@ class ScrollManager {
     history.pushState(null, null, `#${targetId}`)
   }
 
-  updateActiveNavLink (activeLink) {
+  updateActiveNavLink(activeLink) {
     // Remove active class from all internal nav links
     document.querySelectorAll('.internal-nav').forEach((link) => {
       link.classList.remove('active')
@@ -184,7 +184,7 @@ class ScrollManager {
     activeLink.setAttribute('aria-current', 'page')
   }
 
-  setupNavigationHighlighting () {
+  setupNavigationHighlighting() {
     const sections = document.querySelectorAll('section[id]')
 
     const observer = new IntersectionObserver(
@@ -211,7 +211,7 @@ class ScrollManager {
 }
 
 class ProjectManager {
-  constructor () {
+  constructor() {
     this.projects = []
     this.currentFilter = 'all'
     this.currentSort = 'updated'
@@ -240,12 +240,12 @@ class ProjectManager {
     this.init()
   }
 
-  init () {
+  init() {
     this.setupEventListeners()
     this.interceptRepoWidget()
   }
 
-  setupEventListeners () {
+  setupEventListeners() {
     // Filter buttons
     const filterButtons = document.querySelectorAll('.filter-btn')
     filterButtons.forEach((btn) => {
@@ -265,12 +265,12 @@ class ProjectManager {
     }
   }
 
-  setFilter (filter) {
+  setFilter(filter) {
     this.currentFilter = filter
     this.applyFiltersAndSort()
   }
 
-  updateFilterButtons (activeButton) {
+  updateFilterButtons(activeButton) {
     document.querySelectorAll('.filter-btn').forEach((btn) => {
       btn.classList.remove('active')
       btn.setAttribute('aria-pressed', 'false')
@@ -280,7 +280,7 @@ class ProjectManager {
     activeButton.setAttribute('aria-pressed', 'true')
   }
 
-  categorizeProject (project) {
+  categorizeProject(project) {
     const text = `${project.name} ${project.description || ''}`.toLowerCase()
 
     for (const [category, keywords] of Object.entries(this.categories)) {
@@ -291,7 +291,7 @@ class ProjectManager {
     return 'other'
   }
 
-  filterProjects () {
+  filterProjects() {
     if (this.currentFilter === 'all') {
       return this.projects
     }
@@ -302,7 +302,7 @@ class ProjectManager {
     })
   }
 
-  sortProjects (projects) {
+  sortProjects(projects) {
     return [...projects].sort((a, b) => {
       switch (this.currentSort) {
         case 'name':
@@ -318,13 +318,13 @@ class ProjectManager {
     })
   }
 
-  applyFiltersAndSort () {
+  applyFiltersAndSort() {
     const filtered = this.filterProjects()
     const sorted = this.sortProjects(filtered)
     this.renderProjects(sorted)
   }
 
-  renderProjects (projects) {
+  renderProjects(projects) {
     const container = document.getElementById('repo-container')
     const noResults = document.getElementById('no-results')
 
@@ -347,7 +347,7 @@ class ProjectManager {
     }
   }
 
-  createProjectCard (project) {
+  createProjectCard(project) {
     const card = document.createElement('div')
     card.className = 'col-md-6 col-lg-4 mb-4'
 
@@ -381,7 +381,7 @@ class ProjectManager {
     return card
   }
 
-  interceptRepoWidget () {
+  interceptRepoWidget() {
     // Override the repoWidget to capture project data
     if (typeof window.createRepoWidget === 'undefined') {
       // If repoWidget isn't loaded yet, wait for it
@@ -398,7 +398,7 @@ class ProjectManager {
     }
   }
 
-  setupWidgetOverride () {
+  setupWidgetOverride() {
     const originalCreateRepoWidget = window.createRepoWidget
 
     window.createRepoWidget = (config) => {
@@ -424,7 +424,7 @@ class ProjectManager {
     }
   }
 
-  hideLoading () {
+  hideLoading() {
     const loading = document.getElementById('repo-loading')
     if (loading) {
       loading.style.display = 'none'
@@ -433,18 +433,18 @@ class ProjectManager {
 }
 
 class AnimationManager {
-  constructor () {
+  constructor() {
     this.animatedElements = new Set()
     this.init()
   }
 
-  init () {
+  init() {
     this.setupScrollAnimations()
     this.animateProgressBars()
     this.setupCardAnimations()
   }
 
-  setupScrollAnimations () {
+  setupScrollAnimations() {
     const sections = document.querySelectorAll('section')
 
     const observer = new IntersectionObserver(
@@ -472,7 +472,7 @@ class AnimationManager {
     })
   }
 
-  animateSkillsBars () {
+  animateSkillsBars() {
     const progressBars = document.querySelectorAll('#skills .progress-bar')
 
     progressBars.forEach((bar, index) => {
@@ -485,7 +485,7 @@ class AnimationManager {
     })
   }
 
-  animateProgressBars () {
+  animateProgressBars() {
     const progressBars = document.querySelectorAll('.progress-bar')
 
     const observer = new IntersectionObserver(
@@ -512,7 +512,7 @@ class AnimationManager {
     progressBars.forEach((bar) => observer.observe(bar))
   }
 
-  setupCardAnimations () {
+  setupCardAnimations() {
     const cards = document.querySelectorAll('.card')
 
     const observer = new IntersectionObserver(
@@ -534,7 +534,7 @@ class AnimationManager {
   }
 
   // Add loading state management
-  showLoading (element) {
+  showLoading(element) {
     if (element) {
       element.innerHTML = `
         <div class="d-flex justify-content-center align-items-center py-4">
@@ -547,7 +547,7 @@ class AnimationManager {
     }
   }
 
-  hideLoading (element) {
+  hideLoading(element) {
     if (element) {
       const spinner = element.querySelector('.spinner-border')
       if (spinner) {
@@ -557,7 +557,7 @@ class AnimationManager {
   }
 
   // Smooth reveal animation for dynamic content
-  revealContent (element, content) {
+  revealContent(element, content) {
     element.style.opacity = '0'
     element.innerHTML = content
 

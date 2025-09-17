@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * Initialize all trading widgets on the page
  */
-function initializeTradingWidgets () {
+function initializeTradingWidgets() {
   // Get current theme
   const theme = document.documentElement.getAttribute('data-theme') || 'light'
   const widgetTheme = theme === 'dark' ? 'dark' : 'light'
@@ -31,7 +31,7 @@ function initializeTradingWidgets () {
 /**
  * Initialize the main widget on the home page
  */
-function initializeHomeWidget (theme) {
+function initializeHomeWidget(theme) {
   const container = document.querySelector('.tradingview-widget-container')
   if (!container) return
 
@@ -114,7 +114,7 @@ function initializeHomeWidget (theme) {
 /**
  * Initialize widgets for market analysis page
  */
-function initializeMarketAnalysisWidgets (theme) {
+function initializeMarketAnalysisWidgets(theme) {
   // Market sections data
   const marketSections = [
     {
@@ -201,7 +201,7 @@ function initializeMarketAnalysisWidgets (theme) {
 /**
  * Create a market section with widget
  */
-function createMarketSection (section, theme) {
+function createMarketSection(section, theme) {
   const sectionDiv = document.createElement('section')
   sectionDiv.className = 'mb-5'
   sectionDiv.innerHTML = `
@@ -222,7 +222,7 @@ function createMarketSection (section, theme) {
 /**
  * Create a symbol overview widget using direct embed
  */
-function createSymbolOverviewWidget (container, symbols, theme) {
+function createSymbolOverviewWidget(container, symbols, theme) {
   if (!container) return
 
   // Clear container
@@ -286,7 +286,7 @@ function createSymbolOverviewWidget (container, symbols, theme) {
 /**
  * Observe theme changes and reload widgets
  */
-function observeThemeChanges () {
+function observeThemeChanges() {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (
@@ -310,7 +310,7 @@ function observeThemeChanges () {
 /**
  * Utility function to refresh all widgets
  */
-function refreshAllWidgets () {
+function refreshAllWidgets() {
   window.location.reload()
 }
 
