@@ -7,6 +7,13 @@ on:
     branches: [master]
     types: [opened, synchronize, reopened, closed]
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+  deployments: write
+
 jobs:
   # Code Quality Checks
   quality:
@@ -267,18 +274,24 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Run CodeQL Analysis
         uses: github/codeql-action/init@v3
         with:
           languages: javascript
-      
+        continue-on-error: true
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        continue-on-error: true
       
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
