@@ -8,7 +8,7 @@ module.exports = {
   testEnvironment: 'jsdom',
 
   // Root directories
-  rootDir: '.',
+  rootDir: '..',
   roots: [
     '<rootDir>/tests/unit',
     '<rootDir>/tests/integration',
@@ -44,7 +44,7 @@ module.exports = {
     '!**/*.config.js'
   ],
 
-  coverageDirectory: 'coverage',
+  coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
 
   coverageThreshold: {
