@@ -31,7 +31,7 @@ module.exports = {
     'object-shorthand': 'error',
 
     // Spacing and formatting (handled by Prettier mostly)
-    'space-before-function-paren': ['error', 'always'],
+    'space-before-function-paren': 'off', // Disabled to avoid conflict with Prettier
     'comma-dangle': ['error', 'never']
   },
   overrides: [

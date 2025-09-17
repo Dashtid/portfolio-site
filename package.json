@@ -8,11 +8,11 @@
     "dev": "node build/server.js --port=3000 --host=0.0.0.0 --no-open --root=site",
     "dev:open": "node build/server.js --port=3000 --host=0.0.0.0 --root=site",
     "lint": "npm run lint:js && npm run lint:html && npm run lint:css",
-    "lint:js": "eslint site/static/js/**/*.js",
+    "lint:js": "eslint site/static/js/**/*.js --ignore-pattern '**/*.min.js'",
     "lint:html": "htmlhint site/**/*.html",
     "lint:css": "stylelint site/static/css/**/*.css",
-    "format": "prettier --write site/**/*.{html,css,js,json}",
-    "format:check": "prettier --check site/**/*.{html,css,js,json}",
+    "format": "prettier --write \"site/**/*.{html,css,js}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"site/**/*.{html,css,js}\" --ignore-path .prettierignore",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
@@ -69,7 +69,7 @@
   },
   "lint-staged": {
     "*.{html,css,js,json}": [
-      "prettier --write"
+      "prettier --write --ignore-path .prettierignore"
     ],
     "*.js": [
       "eslint --fix"
@@ -80,24 +80,6 @@
     "*.css": [
       "stylelint --fix"
     ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "standard"
-    ],
-    "env": {
-      "browser": true,
-      "es2022": true
-    },
-    "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-console": "warn",
-      "prefer-const": "error",
-      "no-var": "error"
-    }
   },
   "prettier": {
     "semi": false,

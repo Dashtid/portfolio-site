@@ -1,0 +1,12 @@
+# Ignore minified files
+*.min.js
+*.min.css
+bundle.min.js
+
+# Ignore build artifacts
+.lighthouseci/
+playwright-report/
+node_modules/
+
+# Ignore generated files
+site/static/images/optimized/

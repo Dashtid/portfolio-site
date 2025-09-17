@@ -1,0 +1,6 @@
+# Ignore minified files
+*.min.css
+
+# Ignore build artifacts
+node_modules/
+.lighthouseci/
