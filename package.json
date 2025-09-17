@@ -11,8 +11,8 @@
     "lint:js": "eslint site/static/js/**/*.js --ignore-pattern '**/*.min.js'",
     "lint:html": "htmlhint site/**/*.html",
     "lint:css": "stylelint site/static/css/**/*.css",
-    "format": "prettier --write \"site/**/*.{html,css,js}\" --ignore-path .prettierignore",
-    "format:check": "prettier --check \"site/**/*.{html,css,js}\" --ignore-path .prettierignore",
+    "format": "prettier --write \"site/**/*.{html,css,js}\" --ignore-path config/.prettierignore",
+    "format:check": "prettier --check \"site/**/*.{html,css,js}\" --ignore-path config/.prettierignore",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
@@ -69,7 +69,7 @@
   },
   "lint-staged": {
     "*.{html,css,js,json}": [
-      "prettier --write --ignore-path .prettierignore"
+      "prettier --write --ignore-path config/.prettierignore"
     ],
     "*.js": [
       "eslint --fix"
