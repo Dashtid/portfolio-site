@@ -8,20 +8,17 @@ Portfolio-site/
 │   └── CLAUDE.md              # Project guidelines for Claude
 ├── .github/                   # GitHub Actions CI/CD
 │   └── workflows/
-│       └── ci.yml            # CI/CD pipeline configuration
-├── build/                     # Build tools and configurations
-│   ├── lighthouse.config.js   # Lighthouse CI configuration
-│   ├── playwright.config.js   # Playwright test configuration
-│   └── server.js             # Development server
-├── config/                    # Additional configurations
-│   ├── jest.config.js         # Jest testing configuration (duplicate)
-│   └── staticwebapp.config.json # Azure Static Web Apps config
+│       ├── ci.yml            # Main CI/CD pipeline configuration
+│       └── azure-static-web-apps.yml # Azure deployment workflow
+├── .husky/                    # Git hooks for code quality
+│   └── pre-commit            # Pre-commit hook for linting
+├── .lighthouseci/             # Lighthouse CI reports (generated)
+├── .vscode/                   # VS Code configuration
+├── .zap/                      # OWASP ZAP security scan results (generated)
+├── build/                     # Build tools and development server
+│   └── server.js             # Development server with live reload
 ├── coverage/                  # Test coverage reports (generated)
-├── docs/                      # Documentation
-│   ├── CLAUDE.md             # Claude guidelines (duplicate)
-│   └── README.md             # Main documentation
 ├── scripts/                   # Build and utility scripts
-│   ├── add-sri-hashes.js     # Security: Add SRI hashes to CDN resources
 │   ├── optimize-images.js    # Image optimization and WebP generation
 │   ├── security-check.js     # Security vulnerability scanning
 │   └── validate-links.js     # Link validation and health checks
@@ -29,31 +26,41 @@ Portfolio-site/
 │   ├── education/            # Education detail pages
 │   ├── experience/           # Experience detail pages
 │   ├── static/              # Static assets
-│   │   ├── css/             # Stylesheets
+│   │   ├── css/             # Stylesheets (source and minified)
 │   │   ├── documents/       # PDFs and documents
-│   │   ├── fonts/           # Web fonts (if any)
 │   │   ├── images/          # Images and optimized variants
-│   │   │   └── optimized/   # WebP and optimized images
-│   │   └── js/              # JavaScript files
+│   │   │   └── optimized/   # WebP and responsive image variants
+│   │   └── js/              # JavaScript files (source and bundled)
 │   ├── index.html           # Main homepage
 │   ├── market-analysis.html # Market analysis page
 │   ├── manifest.webmanifest # PWA manifest
 │   ├── robots.txt           # Search engine instructions
 │   ├── sitemap.xml          # Site map for SEO
 │   └── sw.js                # Service worker for PWA
+├── test-results/             # Playwright test results (generated)
 ├── tests/                    # Test suite
-│   ├── integration/         # Integration tests
-│   ├── unit/                # Unit tests
+│   ├── unit/                # Unit tests (Jest)
 │   ├── *.spec.js           # Playwright E2E tests
 │   ├── global-setup.js     # Test setup
 │   └── global-teardown.js  # Test cleanup
 ├── .babelrc                 # Babel configuration
+├── .editorconfig           # Editor configuration
+├── .eslintignore           # ESLint ignore patterns
+├── .eslintrc.js            # ESLint configuration
 ├── .gitignore              # Git ignore rules
-├── jest.config.js          # Jest configuration (main)
+├── .htmlvalidaterc.json    # HTML validation configuration
+├── .lighthouserc.js        # Lighthouse CI configuration
+├── .prettierignore         # Prettier ignore patterns
+├── .prettierrc.json        # Prettier formatting configuration
+├── .stylelintignore        # Stylelint ignore patterns
+├── .stylelintrc.json       # Stylelint CSS linting configuration
+├── jest.config.js          # Jest testing configuration
+├── lighthouse.config.js    # Lighthouse performance testing
 ├── package.json            # Project dependencies and scripts
 ├── package-lock.json       # Locked dependency versions
-├── server.js               # Development server (duplicate)
-└── staticwebapp.config.json # Azure config (duplicate)
+├── playwright.config.js    # Playwright E2E testing configuration
+├── PROJECT_STRUCTURE.md    # This documentation file
+└── staticwebapp.config.json # Azure Static Web Apps configuration
 ```
 
 ## 🔧 Key Components Explained
@@ -116,35 +123,37 @@ Portfolio-site/
 | `tests/unit/` | Jest unit tests | ✅ Active |
 | `tests/*.spec.js` | Playwright E2E tests | ✅ Active |
 
-### Duplicate Files (Candidates for Cleanup)
-| File | Duplicate Location | Recommendation |
-|------|-------------------|----------------|
-| `server.js` | `build/server.js` | Remove root version |
-| `config/jest.config.js` | `jest.config.js` | Remove config/ version |
-| `staticwebapp.config.json` | `config/staticwebapp.config.json` | Keep root version |
-| `docs/CLAUDE.md` | `.claude/CLAUDE.md` | Keep .claude/ version |
+### Configuration Files Organization
+| File | Purpose | Location |
+|------|---------|----------|
+| `.eslintrc.js` | JavaScript linting rules | Root (with .prettierignore integration) |
+| `.prettierrc.json` | Code formatting configuration | Root |
+| `.stylelintrc.json` | CSS linting rules | Root |
+| `jest.config.js` | Unit testing configuration | Root |
+| `playwright.config.js` | E2E testing configuration | Root |
+| `lighthouse.config.js` | Performance testing | Root |
 
-## 🎯 Optimization Opportunities
+## 🎯 Recent Improvements
 
-### 1. File Organization
-- **Remove duplicate configurations** in `config/` directory
-- **Consolidate documentation** to avoid version conflicts
-- **Move build tools** to dedicated build directory structure
+### 1. File Organization ✅
+- **Removed duplicate configurations** - cleaned up build/ directory duplicates
+- **Consolidated configuration files** - all configs now in root directory
+- **Updated ignore files** - added .prettierignore and .stylelintignore
 
-### 2. Asset Management
-- **Optimize images** using the fixed image optimization script
-- **Implement responsive images** for better performance
-- **Add WebP fallbacks** for older browser support
+### 2. Asset Management ✅
+- **Fixed image optimization script** - prevented duplicate image generation
+- **Cleaned up 124 duplicate images** - reduced from 162 to 38 optimized images
+- **Implemented proper responsive variants** - logical mobile/tablet/desktop/large sizes
 
-### 3. Code Quality
-- **Fix remaining test failures** in Jest unit tests
-- **Improve test coverage** for better reliability
-- **Update security dependencies** to resolve vulnerabilities
+### 3. Code Quality ✅
+- **Resolved ESLint/Prettier conflicts** - disabled conflicting rules
+- **Enhanced security** - added SRI hashes to Bootstrap CDN resources
+- **Improved HTML validation** - fixed DOCTYPE and void element issues
 
-### 4. Performance
-- **Enable compression** for static assets
-- **Implement caching strategies** for better loading times
-- **Optimize bundle sizes** for JavaScript and CSS
+### 4. CI/CD Pipeline ✅
+- **Fixed infinite formatting loops** - resolved space-before-function-paren conflicts
+- **Enhanced ignore patterns** - prevent processing of generated files
+- **Improved build reliability** - eliminated recurring pipeline failures
 
 ## 🚀 Technology Stack
 
@@ -161,22 +170,23 @@ Portfolio-site/
 ## 📈 Current Status
 
 ### ✅ Working Well
-- Development server with live reload
-- Comprehensive testing framework
-- Security-focused build pipeline
-- PWA capabilities with offline support
-- Responsive design with dark/light themes
+- **Stable CI/CD pipeline** - resolved all formatting conflicts
+- **Clean project structure** - removed duplicates and organized configs
+- **Optimized assets** - efficient image handling with responsive variants
+- **Security enhancements** - SRI hashes and vulnerability scanning
+- **Development experience** - reliable build and testing processes
+- **PWA capabilities** - offline support and manifest configuration
+- **Responsive design** - dark/light themes with smooth transitions
 
-### 🔧 Areas for Improvement
-- Remove duplicate configuration files
-- Fix remaining unit test failures
-- Update Node.js dependencies
-- Optimize image pipeline for existing files
-- Consolidate documentation
+### 🔧 Areas for Future Enhancement
+- **Test coverage expansion** - additional unit tests for new features
+- **Performance monitoring** - continued Lighthouse CI optimization
+- **Dependency updates** - regular security and feature updates
+- **Documentation** - API and component documentation as project grows
 
-### 🎯 Next Steps
-1. Clean up duplicate files and configurations
-2. Fix failing unit tests for complete CI/CD pipeline
-3. Optimize assets and improve performance metrics
-4. Update dependencies to resolve security warnings
-5. Document deployment and maintenance procedures
+### 🎯 Maintenance Tasks
+1. **Regular dependency updates** - monthly security and feature updates
+2. **Performance monitoring** - track Core Web Vitals through Lighthouse CI
+3. **Security scanning** - automated vulnerability assessment in CI/CD
+4. **Image optimization** - automatic processing of new assets
+5. **Code quality** - continuous linting and formatting enforcement

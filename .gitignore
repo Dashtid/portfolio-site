@@ -35,3 +35,7 @@ playwright-report/
 *.temp
 
 settings.local.json
+
+# Security scanning
+.zap/
+.lighthouseci/
