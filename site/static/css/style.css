@@ -47,12 +47,9 @@
   --border-secondary: var(--slate-300);
   --border-accent: var(--primary-200);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 5%);
-  --shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 10%), 0 2px 4px -1px rgba(0, 0, 0, 6%);
-  --shadow-lg:
-    0 10px 15px -3px rgba(0, 0, 0, 10%), 0 4px 6px -2px rgba(0, 0, 0, 5%);
-  --shadow-xl:
-    0 20px 25px -5px rgba(0, 0, 0, 10%), 0 10px 10px -5px rgba(0, 0, 0, 4%);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 10%), 0 2px 4px -1px rgba(0, 0, 0, 6%);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 10%), 0 4px 6px -2px rgba(0, 0, 0, 5%);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 10%), 0 10px 10px -5px rgba(0, 0, 0, 4%);
 
   /* Component Colors */
   --nav-bg: rgba(255, 255, 255, 95%);
@@ -71,8 +68,7 @@
 
   /* Typography */
   --font-family-base:
-    'Segoe UI', -apple-system, blinkmacsystemfont, 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', sans-serif;
+    'Segoe UI', -apple-system, blinkmacsystemfont, 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -137,12 +133,9 @@
   --border-secondary: var(--slate-600);
   --border-accent: var(--primary-700);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 30%);
-  --shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 40%), 0 2px 4px -1px rgba(0, 0, 0, 30%);
-  --shadow-lg:
-    0 10px 15px -3px rgba(0, 0, 0, 40%), 0 4px 6px -2px rgba(0, 0, 0, 30%);
-  --shadow-xl:
-    0 20px 25px -5px rgba(0, 0, 0, 40%), 0 10px 10px -5px rgba(0, 0, 0, 20%);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 40%), 0 2px 4px -1px rgba(0, 0, 0, 30%);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 40%), 0 4px 6px -2px rgba(0, 0, 0, 30%);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 40%), 0 10px 10px -5px rgba(0, 0, 0, 20%);
   --nav-bg: rgba(15, 23, 42, 95%);
   --nav-border: var(--border-primary);
   --nav-text: var(--text-primary);
@@ -188,11 +181,7 @@ body {
 ========================= */
 .stockholm-background {
   background:
-    linear-gradient(
-      135deg,
-      rgba(37, 99, 235, 10%) 0%,
-      rgba(20, 184, 166, 10%) 100%
-    ),
+    linear-gradient(135deg, rgba(37, 99, 235, 10%) 0%, rgba(20, 184, 166, 10%) 100%),
     url('/static/images/stockholm.webp') no-repeat center center;
   background-size: cover;
   background-attachment: fixed;
@@ -208,12 +197,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(37, 99, 235, 5%) 0%,
-    rgba(20, 184, 166, 5%) 50%,
-    rgba(15, 23, 42, 10%) 100%
-  );
+  background: linear-gradient(135deg, rgba(37, 99, 235, 5%) 0%, rgba(20, 184, 166, 5%) 50%, rgba(15, 23, 42, 10%) 100%);
   z-index: 1;
 }
 
@@ -539,12 +523,7 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 20%),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 20%), transparent);
   transition: left 0.5s;
 }
 
@@ -1191,11 +1170,7 @@ progress.skill-progress::-moz-progress-bar {
 /* Color variants for native progress elements */
 progress.skill-progress.bg-primary::-webkit-progress-value,
 progress.skill-progress.bg-primary::-moz-progress-bar {
-  background: linear-gradient(
-    90deg,
-    var(--primary-600) 0%,
-    var(--primary-600) 100%
-  );
+  background: linear-gradient(90deg, var(--primary-600) 0%, var(--primary-600) 100%);
 }
 
 progress.skill-progress.bg-success::-webkit-progress-value,

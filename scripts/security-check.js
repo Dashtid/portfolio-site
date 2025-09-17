@@ -22,7 +22,7 @@ async function runSecurityCheck() {
   
   try {
     // Check staticwebapp.config.json
-    const configPath = path.join(__dirname, '..', 'staticwebapp.config.json')
+    const configPath = path.join(__dirname, '..', 'config', 'staticwebapp.config.json')
     const config = JSON.parse(await readFile(configPath, 'utf8'))
     
     // Check CSP

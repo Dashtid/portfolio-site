@@ -1,21 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Market Analysis | David Dashti</title>
-    <meta
-      name="description"
-      content="Comprehensive market analysis and trading insights by David Dashti"
-    />
+    <meta name="description" content="Comprehensive market analysis and trading insights by David Dashti" />
     <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-9ndCyUaIbC/fTmkQZgTNYrFB4Gc7wV2Lk3qGCJ1Z7sK8Zd7l+yM7SuKF3B1oTa8Uq"
       crossorigin="anonymous"
-    >
+    />
     <!-- Custom Styles -->
     <link rel="stylesheet" href="static/css/style.css" />
     <link rel="icon" type="image/svg+xml" href="static/images/D.svg" />
@@ -27,53 +24,18 @@
       <div class="container">
         <a class="navbar-brand" href="index.html">David Dashti</a>
         <div class="d-flex gap-3">
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="index.html"
-            >Home</a
-          >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="scania.html"
-            >Scania</a
-          >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="fdf.html"
-            >FDF</a
-          >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="hermes.html"
-            >Hermes</a
-          >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="karolinska.html"
-            >Karolinska</a
-          >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center active"
-            href="market-analysis.html"
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="index.html">Home</a>
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="scania.html">Scania</a>
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="fdf.html">FDF</a>
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="hermes.html">Hermes</a>
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="karolinska.html">Karolinska</a>
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center active" href="market-analysis.html"
             >Markets</a
           >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="philips.html"
-            >Philips</a
-          >
-          <a
-            class="nav-link px-4 py-2 border rounded shadow-sm text-center"
-            href="sos.html"
-            >SÖS</a
-          >
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="philips.html">Philips</a>
+          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="sos.html">SÖS</a>
           <!-- Theme toggle button -->
-          <button
-            id="theme-toggle"
-            class="btn btn-sm btn-outline-dark ms-2"
-            type="button"
-            aria-label="Toggle theme"
-          >
+          <button id="theme-toggle" class="btn btn-sm btn-outline-dark ms-2" type="button" aria-label="Toggle theme">
             Dark
           </button>
         </div>
@@ -85,10 +47,9 @@
       <div class="text-center mb-5">
         <h1 class="display-4 fw-bold text-gradient mb-3">Market Analysis</h1>
         <p class="lead text-muted mx-auto w-75">
-          Comprehensive view of global equity performance and medtech sector
-          leadership over the past five years. Track major regional indices
-          across Americas, Europe, and Asia-Pacific alongside the world's
-          leading medical technology companies.
+          Comprehensive view of global equity performance and medtech sector leadership over the past five years. Track
+          major regional indices across Americas, Europe, and Asia-Pacific alongside the world's leading medical
+          technology companies.
         </p>
       </div>
 
@@ -97,17 +58,14 @@
         <div class="d-flex align-items-center mb-4">
           <div class="bg-primary rounded-circle p-2 me-3">
             <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-              <path
-                d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
-              />
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
             </svg>
           </div>
           <h2 class="mb-0 fw-bold">Global Market Indices</h2>
         </div>
         <p class="text-muted mb-4">
-          Interactive charts showing key trends, volatility patterns, and
-          comparative performance metrics that highlight regional market
-          dynamics across major financial centers.
+          Interactive charts showing key trends, volatility patterns, and comparative performance metrics that highlight
+          regional market dynamics across major financial centers.
         </p>
         <div id="market-widgets"></div>
       </section>
@@ -125,9 +83,8 @@
           <h2 class="mb-0 fw-bold">Top MedTech Companies</h2>
         </div>
         <p class="text-muted mb-4">
-          Leading medical technology companies and their 5-year performance,
-          showcasing sector-specific growth trajectories in the healthcare
-          technology landscape.
+          Leading medical technology companies and their 5-year performance, showcasing sector-specific growth
+          trajectories in the healthcare technology landscape.
         </p>
         <div id="medtech-widget" data-widget-type="symbol-overview"></div>
       </section>
@@ -145,9 +102,8 @@
           <h2 class="mb-0 fw-bold">Nuclear Medicine Manufacturers</h2>
         </div>
         <p class="text-muted mb-4">
-          Specialized focus on nuclear medicine camera manufacturers and their
-          market performance, relevant to nuclear medicine software development
-          and healthcare imaging technology.
+          Specialized focus on nuclear medicine camera manufacturers and their market performance, relevant to nuclear
+          medicine software development and healthcare imaging technology.
         </p>
         <div id="nuclear-widget" data-widget-type="symbol-overview"></div>
       </section>
@@ -156,35 +112,16 @@
       <section class="text-center py-4">
         <div class="d-flex gap-3 justify-content-center flex-wrap">
           <a href="index.html" class="btn btn-outline-primary">
-            <svg
-              width="16"
-              height="16"
-              fill="currentColor"
-              class="me-2"
-              viewBox="0 0 16 16"
-            >
+            <svg width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
               <path
                 d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z"
               />
             </svg>
             Back to Portfolio
           </a>
-          <button
-            type="button"
-            onclick="refreshAllWidgets()"
-            class="btn btn-outline-secondary"
-          >
-            <svg
-              width="16"
-              height="16"
-              fill="currentColor"
-              class="me-2"
-              viewBox="0 0 16 16"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"
-              />
+          <button type="button" onclick="refreshAllWidgets()" class="btn btn-outline-secondary">
+            <svg width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
               <path
                 d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"
               />
@@ -196,17 +133,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer-blend text-center py-3">
-      &copy; 2025 David Dashti. All rights reserved.
-    </footer>
+    <footer class="footer-blend text-center py-3">&copy; 2025 David Dashti. All rights reserved.</footer>
 
     <!-- Back to Top Button -->
-    <button
-      type="button"
-      class="btn btn-lg rounded-circle back-to-top"
-      id="backToTopBtn"
-      title="Back to Top"
-    >
+    <button type="button" class="btn btn-lg rounded-circle back-to-top" id="backToTopBtn" title="Back to Top">
       &uarr;
     </button>
 
@@ -226,14 +156,12 @@
         }
       })
 
-      document
-        .getElementById('backToTopBtn')
-        .addEventListener('click', function () {
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          })
+      document.getElementById('backToTopBtn').addEventListener('click', function () {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
         })
+      })
     </script>
   </body>
 </html>

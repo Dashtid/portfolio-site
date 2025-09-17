@@ -159,7 +159,7 @@ function initializeMarketAnalysisWidgets(theme) {
   const marketWidgetsContainer = document.getElementById('market-widgets')
   if (marketWidgetsContainer) {
     marketWidgetsContainer.innerHTML = ''
-    marketSections.forEach((section) => {
+    marketSections.forEach(section => {
       const sectionElement = createMarketSection(section, theme)
       marketWidgetsContainer.appendChild(sectionElement)
     })
@@ -287,8 +287,8 @@ function createSymbolOverviewWidget(container, symbols, theme) {
  * Observe theme changes and reload widgets
  */
 function observeThemeChanges() {
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
       if (
         mutation.type === 'attributes' &&
         mutation.attributeName === 'data-theme'

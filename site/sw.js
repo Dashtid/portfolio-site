@@ -19,11 +19,11 @@ const STATIC_CACHE_URLS = [
 ]
 
 // Install event - cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => {
+      .then(cache => {
         return cache.addAll(STATIC_CACHE_URLS)
       })
       .then(() => {
@@ -33,17 +33,17 @@ self.addEventListener('install', (event) => {
 })
 
 // Activate event - cleanup old caches
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   event.waitUntil(
     caches
       .keys()
-      .then((cacheNames) => {
+      .then(cacheNames => {
         return Promise.all(
           cacheNames
-            .filter((cacheName) => {
+            .filter(cacheName => {
               return cacheName !== CACHE_NAME
             })
-            .map((cacheName) => {
+            .map(cacheName => {
               return caches.delete(cacheName)
             })
         )
@@ -55,7 +55,7 @@ self.addEventListener('activate', (event) => {
 })
 
 // Fetch event - serve from cache with network fallback
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   // Only handle GET requests
   if (event.request.method !== 'GET') {
     return
@@ -67,14 +67,14 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request).then(cachedResponse => {
       // Return cached version or fetch from network
       if (cachedResponse) {
         return cachedResponse
       }
 
       return fetch(event.request)
-        .then((response) => {
+        .then(response => {
           // Don't cache if not a valid response
           if (
             !response ||
@@ -87,7 +87,7 @@ self.addEventListener('fetch', (event) => {
           // Clone the response
           const responseToCache = response.clone()
 
-          caches.open(CACHE_NAME).then((cache) => {
+          caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache)
           })
 
@@ -104,7 +104,7 @@ self.addEventListener('fetch', (event) => {
 })
 
 // Background sync for analytics or other tasks
-self.addEventListener('sync', (event) => {
+self.addEventListener('sync', event => {
   if (event.tag === 'portfolio-sync') {
     event.waitUntil(
       // Add any background sync logic here
