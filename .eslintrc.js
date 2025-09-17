@@ -67,31 +67,9 @@ module.exports = {
       }
     },
     {
-      files: ['scripts/**/*.js'],
+      files: ['scripts/**/*.js', 'tests/**/*.js'],
       env: {
         node: true
-      }
-    },
-    {
-      files: ['tests/**/*.js'],
-      env: {
-        node: true,
-        jest: true
-      },
-      parserOptions: {
-        sourceType: 'module'
-      },
-      rules: {
-        // Allow console statements in tests
-        'no-console': 'off',
-        // Relax unused vars for test files
-        'no-unused-vars': 'off',
-        // Allow new for side effects in tests (URL constructor, etc.)
-        'no-new': 'off',
-        // Relax promise parameter naming in tests
-        'promise/param-names': 'off',
-        // Allow escape characters in regex for tests
-        'no-useless-escape': 'off'
       }
     }
   ]

@@ -63,3 +63,4 @@ This is David Dashti's professional portfolio website showcasing his expertise i
 - Describe why specific approaches or technologies are chosen
 - Explain the purpose and functionality of code changes
 - Provide context about best practices and coding patterns used
+- Provide detailed explanations in the console when performing tasks, as many concepts may be new to the user
