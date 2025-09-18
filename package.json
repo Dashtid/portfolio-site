@@ -29,6 +29,7 @@
     "minify:js": "terser site/static/js/*.js -c -m -o site/static/js/bundle.min.js",
     "validate:html": "html-validate site/**/*.html --config config/.htmlvalidaterc.json",
     "validate:links": "node scripts/validate-links.js",
+    "security:enhance": "node scripts/add-sri-hashes.js && node scripts/add-csp-nonces.js && node scripts/update-csp-config.js",
     "security:audit": "npm audit --omit=dev || echo 'Dev dependency vulnerabilities found (non-critical)' && node scripts/security-check.js",
     "prepare": "husky install",
     "pre-commit": "lint-staged"
