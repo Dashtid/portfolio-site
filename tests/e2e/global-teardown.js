@@ -3,4 +3,4 @@ async function globalTeardown(config) {
   // Any cleanup logic here
 }
 
-export default globalTeardown
+module.exports = globalTeardown
