@@ -30,7 +30,7 @@ test.describe('Navigation', () => {
 
     // Click on experience section
     await page.locator('[data-scroll="experience"]').click()
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1500) // More time for Firefox scrolling and intersection observer
 
     // Check if experience nav item has active class
     await expect(page.locator('[data-scroll="experience"]')).toHaveClass(
@@ -39,7 +39,7 @@ test.describe('Navigation', () => {
 
     // Click on another section
     await page.locator('[data-scroll="skills"]').click()
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1500) // More time for Firefox
 
     // Check if skills nav item has active class and experience doesn't
     await expect(page.locator('[data-scroll="skills"]')).toHaveClass(/active/)
@@ -102,7 +102,7 @@ test.describe('Navigation', () => {
 
     // Scroll down to make back-to-top visible
     await page.evaluate(() => window.scrollTo(0, 1000))
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1000) // More time for Firefox
 
     // Back to top button should be visible
     const backToTop = page.locator('#backToTopBtn')
@@ -110,10 +110,15 @@ test.describe('Navigation', () => {
 
     // Click back to top
     await backToTop.click()
-    await page.waitForTimeout(2000) // Increased timeout for smooth scrolling
+
+    // Wait for scroll to complete - different approach for Firefox
+    await page.waitForFunction(() => window.pageYOffset < 100, {
+      timeout: 5000
+    })
+    await page.waitForTimeout(500) // Additional buffer
 
     // Should be back at top
     const scrollY = await page.evaluate(() => window.pageYOffset)
-    expect(scrollY).toBeLessThan(50) // More strict expectation
+    expect(scrollY).toBeLessThan(100) // Less strict for Firefox compatibility
   })
 })

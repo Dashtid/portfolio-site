@@ -38,16 +38,22 @@ test.describe('Theme System', () => {
   })
 
   test('should respect system theme preference', async ({ page, context }) => {
+    // Clear any existing theme preference
+    await page.goto('/')
+    await page.evaluate(() => localStorage.removeItem('theme'))
+
     // Set system to prefer dark mode
     await page.emulateMedia({ colorScheme: 'dark' })
-    await page.goto('/')
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.waitForTimeout(1000) // Extra time for Firefox
 
     // Should start with dark theme
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     // Switch to light theme preference
     await page.emulateMedia({ colorScheme: 'light' })
-    await page.reload()
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.waitForTimeout(1000) // Extra time for Firefox
 
     // Should start with light theme
     await expect(page.locator('html')).not.toHaveAttribute('data-theme', 'dark')

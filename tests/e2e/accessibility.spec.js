@@ -74,8 +74,11 @@ test.describe('Accessibility', () => {
 
     // Tab through navigation items - find the first internal nav that gets focus
     let internalNavFocused = false
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
+      // More attempts for Firefox
       await page.keyboard.press('Tab')
+      await page.waitForTimeout(100) // Small delay for Firefox focus events
+
       const focused = page.locator('.internal-nav').first()
       if (await focused.isVisible()) {
         const isFocused = await focused.evaluate(
