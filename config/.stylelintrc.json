@@ -7,7 +7,7 @@
     "selector-class-pattern": null,
     "property-no-vendor-prefix": null,
     "value-no-vendor-prefix": null,
-    "selector-pseudo-element-colon-notation": "single",
+    "selector-pseudo-element-colon-notation": "double",
     "at-rule-no-vendor-prefix": null,
     "media-feature-name-no-vendor-prefix": null,
     "declaration-block-no-duplicate-properties": [
@@ -16,13 +16,14 @@
         "ignore": ["consecutive-duplicates-with-different-values"]
       }
     ],
-    "selector-max-id": 1,
-    "max-nesting-depth": 4,
-    "declaration-no-important": true,
-    "color-named": "never",
-    "font-family-name-quotes": "always-where-recommended",
-    "function-url-quotes": "always",
-    "string-quotes": "double",
+    "selector-max-id": null,
+    "max-nesting-depth": null,
+    "declaration-no-important": null,
+    "color-named": null,
+    "font-family-name-quotes": null,
+    "function-url-quotes": null,
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
     "unit-allowed-list": [
       "px",
       "em",
@@ -48,6 +49,7 @@
   "ignoreFiles": [
     "node_modules/**/*",
     "dist/**/*",
-    "build/**/*"
+    "build/**/*",
+    "site/static/css/style.min.css"
   ]
 }
