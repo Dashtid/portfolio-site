@@ -418,7 +418,6 @@ class ProjectManager {
         // Call original function
         return originalCreateRepoWidget(config)
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.warn('Error setting up repo widget:', error)
         this.hideLoading()
       }

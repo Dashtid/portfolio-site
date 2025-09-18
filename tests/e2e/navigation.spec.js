@@ -61,12 +61,16 @@ test.describe('Navigation', () => {
     ]
 
     for (const external of externalLinks) {
-      const linkPromise = context.waitForEvent('page')
+      // Navigate to the page directly since these are same-tab navigation
       await page.locator(external.link).first().click()
-      const newPage = await linkPromise
+      await page.waitForLoadState('networkidle')
 
-      await expect(newPage).toHaveTitle(external.expectedTitle)
-      await newPage.close()
+      // Check the title
+      await expect(page).toHaveTitle(external.expectedTitle)
+
+      // Go back to main page for next test
+      await page.goBack()
+      await page.waitForLoadState('networkidle')
     }
   })
 

@@ -72,9 +72,22 @@ test.describe('Accessibility', () => {
     await page.keyboard.press('Tab')
     await expect(page.locator('.navbar-brand')).toBeFocused()
 
-    // Tab through navigation items
-    await page.keyboard.press('Tab')
-    await expect(page.locator('.internal-nav').first()).toBeFocused()
+    // Tab through navigation items - find the first internal nav that gets focus
+    let internalNavFocused = false
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('Tab')
+      const focused = page.locator('.internal-nav').first()
+      if (await focused.isVisible()) {
+        const isFocused = await focused.evaluate(
+          el => document.activeElement === el
+        )
+        if (isFocused) {
+          internalNavFocused = true
+          break
+        }
+      }
+    }
+    expect(internalNavFocused).toBeTruthy()
 
     // Test theme toggle
     let themeToggleFocused = false

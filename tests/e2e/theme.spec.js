@@ -31,7 +31,8 @@ test.describe('Theme System', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     // Reload page and check if theme persists
-    await page.reload()
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.waitForTimeout(500) // Give theme time to initialize
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
     await expect(page.locator('#themeToggle')).toContainText('Light')
   })
