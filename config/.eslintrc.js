@@ -70,6 +70,10 @@ module.exports = {
       files: ['scripts/**/*.js', 'tests/**/*.js'],
       env: {
         node: true
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module'
       }
     }
   ]

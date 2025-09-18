@@ -48,7 +48,7 @@ module.exports = defineConfig({
         port: 3000,
         reuseExistingServer: !process.env.CI,
         timeout: 30000
-      },
+      }
   // globalSetup: './global-setup.js',
   // globalTeardown: './global-teardown.js'
 })

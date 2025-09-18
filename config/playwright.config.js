@@ -84,9 +84,9 @@ module.exports = defineConfig({
         port: 3000,
         reuseExistingServer: !process.env.CI,
         timeout: 30000
-      },
+      }
 
   /* Global test settings */
-  globalSetup: './tests/e2e/global-setup.js',
-  globalTeardown: './tests/e2e/global-teardown.js'
+  // globalSetup: './tests/e2e/global-setup.js',
+  // globalTeardown: './tests/e2e/global-teardown.js'
 })

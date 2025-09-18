@@ -9,7 +9,7 @@ test.describe('Theme System', () => {
     await expect(html).not.toHaveAttribute('data-theme', 'dark')
 
     // Find and click theme toggle
-    const themeToggle = page.locator('#theme-toggle')
+    const themeToggle = page.locator('#themeToggle')
     await expect(themeToggle).toBeVisible()
 
     // Click to switch to dark theme
@@ -27,7 +27,7 @@ test.describe('Theme System', () => {
     await page.goto('/')
 
     // Switch to dark theme
-    await page.locator('#theme-toggle').click()
+    await page.locator('#themeToggle').click()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     // Reload page and check if theme persists
@@ -55,7 +55,7 @@ test.describe('Theme System', () => {
   test('should have proper ARIA attributes', async ({ page }) => {
     await page.goto('/')
 
-    const themeToggle = page.locator('#theme-toggle')
+    const themeToggle = page.locator('#themeToggle')
     await expect(themeToggle).toHaveAttribute(
       'aria-label',
       /Switch to .* theme/

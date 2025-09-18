@@ -73,13 +73,13 @@
       "prettier --write --ignore-path config/.prettierignore"
     ],
     "*.js": [
-      "eslint --fix"
+      "eslint --fix --config config/.eslintrc.js --ignore-path config/.eslintignore"
     ],
     "*.html": [
       "htmlhint"
     ],
     "*.css": [
-      "stylelint --fix"
+      "stylelint --fix --config config/.stylelintrc.json"
     ]
   },
   "prettier": {
