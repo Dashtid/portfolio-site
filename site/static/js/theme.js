@@ -64,7 +64,7 @@ class ThemeManager {
     }
 
     // Listen for system theme changes
-    this.mediaQuery.addEventListener('change', (e) => {
+    this.mediaQuery.addEventListener('change', e => {
       if (!localStorage.getItem(this.storageKey)) {
         const systemTheme = e.matches ? 'dark' : 'light'
         this.setTheme(systemTheme)
@@ -121,7 +121,7 @@ class ScrollManager {
       { passive: true }
     )
 
-    this.button.addEventListener('click', (e) => {
+    this.button.addEventListener('click', e => {
       e.preventDefault()
       this.scrollToTop()
     })
@@ -136,8 +136,8 @@ class ScrollManager {
       '.internal-nav[data-scroll]'
     )
 
-    internalNavLinks.forEach((link) => {
-      link.addEventListener('click', (e) => {
+    internalNavLinks.forEach(link => {
+      link.addEventListener('click', e => {
         e.preventDefault()
         const targetId = link.getAttribute('data-scroll')
         this.scrollToSection(targetId)
@@ -175,7 +175,7 @@ class ScrollManager {
 
   updateActiveNavLink(activeLink) {
     // Remove active class from all internal nav links
-    document.querySelectorAll('.internal-nav').forEach((link) => {
+    document.querySelectorAll('.internal-nav').forEach(link => {
       link.classList.remove('active')
       link.removeAttribute('aria-current')
     })
@@ -189,8 +189,8 @@ class ScrollManager {
     const sections = document.querySelectorAll('section[id]')
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             const currentNavLink = document.querySelector(
               `[data-scroll="${entry.target.id}"]`
@@ -207,7 +207,7 @@ class ScrollManager {
       }
     )
 
-    sections.forEach((section) => observer.observe(section))
+    sections.forEach(section => observer.observe(section))
   }
 }
 
@@ -249,8 +249,8 @@ class ProjectManager {
   setupEventListeners() {
     // Filter buttons
     const filterButtons = document.querySelectorAll('.filter-btn')
-    filterButtons.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', e => {
         this.setFilter(e.target.getAttribute('data-filter'))
         this.updateFilterButtons(e.target)
       })
@@ -259,7 +259,7 @@ class ProjectManager {
     // Sort dropdown
     const sortSelect = document.getElementById('repo-sort')
     if (sortSelect) {
-      sortSelect.addEventListener('change', (e) => {
+      sortSelect.addEventListener('change', e => {
         this.currentSort = e.target.value
         this.applyFiltersAndSort()
       })
@@ -272,7 +272,7 @@ class ProjectManager {
   }
 
   updateFilterButtons(activeButton) {
-    document.querySelectorAll('.filter-btn').forEach((btn) => {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.classList.remove('active')
       btn.setAttribute('aria-pressed', 'false')
     })
@@ -285,7 +285,7 @@ class ProjectManager {
     const text = `${project.name} ${project.description || ''}`.toLowerCase()
 
     for (const [category, keywords] of Object.entries(this.categories)) {
-      if (keywords.some((keyword) => text.includes(keyword))) {
+      if (keywords.some(keyword => text.includes(keyword))) {
         return category
       }
     }
@@ -297,7 +297,7 @@ class ProjectManager {
       return this.projects
     }
 
-    return this.projects.filter((project) => {
+    return this.projects.filter(project => {
       const category = this.categorizeProject(project)
       return category === this.currentFilter
     })
@@ -341,7 +341,7 @@ class ProjectManager {
       const projectsRow = container.querySelector('#projects-row')
 
       // Create project cards
-      projects.forEach((project) => {
+      projects.forEach(project => {
         const card = this.createProjectCard(project)
         projectsRow.appendChild(card)
       })
@@ -402,13 +402,13 @@ class ProjectManager {
   setupWidgetOverride() {
     const originalCreateRepoWidget = window.createRepoWidget
 
-    window.createRepoWidget = (config) => {
+    window.createRepoWidget = config => {
       try {
         // Store the original config
         const originalCallback = config.onLoad || (() => {})
 
         // Override onLoad to capture data
-        config.onLoad = (projects) => {
+        config.onLoad = projects => {
           this.projects = projects || []
           this.hideLoading()
           this.applyFiltersAndSort()
@@ -449,8 +449,8 @@ class AnimationManager {
     const sections = document.querySelectorAll('section')
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             entry.target.classList.add('section-animate', 'visible')
 
@@ -467,7 +467,7 @@ class AnimationManager {
       }
     )
 
-    sections.forEach((section) => {
+    sections.forEach(section => {
       section.classList.add('section-animate')
       observer.observe(section)
     })
@@ -490,8 +490,8 @@ class AnimationManager {
     const progressBars = document.querySelectorAll('.progress-bar')
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (
             entry.isIntersecting &&
             !this.animatedElements.has(entry.target)
@@ -510,15 +510,15 @@ class AnimationManager {
       { threshold: 0.5 }
     )
 
-    progressBars.forEach((bar) => observer.observe(bar))
+    progressBars.forEach(bar => observer.observe(bar))
   }
 
   setupCardAnimations() {
     const cards = document.querySelectorAll('.card')
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (
             entry.isIntersecting &&
             !this.animatedElements.has(entry.target)
@@ -531,7 +531,7 @@ class AnimationManager {
       { threshold: 0.1 }
     )
 
-    cards.forEach((card) => observer.observe(card))
+    cards.forEach(card => observer.observe(card))
   }
 
   // Add loading state management

@@ -70,7 +70,7 @@
   },
   "lint-staged": {
     "*.{html,css,js,json}": [
-      "prettier --write --ignore-path config/.prettierignore"
+      "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore"
     ],
     "*.js": [
       "eslint --fix --config config/.eslintrc.js --ignore-path config/.eslintignore"
@@ -81,14 +81,6 @@
     "*.css": [
       "stylelint --fix --config config/.stylelintrc.json"
     ]
-  },
-  "prettier": {
-    "semi": false,
-    "singleQuote": true,
-    "trailingComma": "none",
-    "tabWidth": 2,
-    "printWidth": 80,
-    "htmlWhitespaceSensitivity": "css"
   },
   "stylelint": {
     "extends": [
