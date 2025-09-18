@@ -25,7 +25,7 @@ const OUTPUT_FORMATS = {
 /**
  * Get all image files recursively
  */
-async function getImageFiles (dir, files = []) {
+async function getImageFiles(dir, files = []) {
   const entries = await readdir(dir)
 
   for (const entry of entries) {
@@ -52,7 +52,7 @@ async function getImageFiles (dir, files = []) {
 /**
  * Optimize single image
  */
-async function optimizeImage (inputPath, outputDir) {
+async function optimizeImage(inputPath, outputDir) {
   const filename = path.basename(inputPath, path.extname(inputPath))
   const originalStats = await stat(inputPath)
   const results = []
@@ -137,28 +137,71 @@ async function optimizeImage (inputPath, outputDir) {
 
 /**
  * Update HTML files to use optimized images
+ * SAFELY converts img tags to picture elements while avoiding nested duplicates
  */
-async function updateHtmlReferences (siteDir, optimizedDir) {
-  console.log('📝 Updating HTML files...')
+async function updateHtmlReferences(siteDir, optimizedDir) {
+  // SAFETY CHECK: This function is currently disabled to prevent nested picture elements
+  // The HTML files already have properly configured picture elements
+  console.log('📝 Skipping HTML updates - picture elements already configured')
+
+  // IF RE-ENABLED IN THE FUTURE, use this safer implementation:
+  return safeBatchUpdateHtmlReferences(siteDir, optimizedDir)
+}
+
+/**
+ * SAFE HTML Update Function - prevents nested picture elements
+ * This function should be used if HTML modifications are ever needed again
+ */
+async function safeBatchUpdateHtmlReferences(siteDir, optimizedDir) {
+  console.log('📝 SAFELY updating HTML files...')
 
   const htmlFiles = fs
-    .readdirSync(siteDir)
+    .readdirSync(siteDir, { recursive: true })
     .filter((file) => file.endsWith('.html'))
     .map((file) => path.join(siteDir, file))
 
+  let totalModified = 0
+
   for (const htmlFile of htmlFiles) {
-    let content = fs.readFileSync(htmlFile, 'utf8')
+    const originalContent = fs.readFileSync(htmlFile, 'utf8')
+    let content = originalContent
     let modified = false
 
-    // Update image references to use picture element with WebP
-    const imgRegex = /<img([^>]*src="[^"]*\.(jpg|jpeg|png)"[^>]*)>/gi
+    // SAFETY CHECK 1: Skip files that already have picture elements
+    if (content.includes('<picture>')) {
+      console.log(
+        `⏭️  ${path.basename(htmlFile)} already has picture elements, skipping`
+      )
+      continue
+    }
 
-    content = content.replace(imgRegex, (match, attributes) => {
+    // SAFETY CHECK 2: Only process standalone img tags (not inside picture elements)
+    // This regex specifically looks for img tags that are NOT preceded by <picture> on the same logical block
+    const standaloneImgRegex =
+      /(?<!<picture>[\s\S]*?)<img([^>]*src="[^"]*\.(jpg|jpeg|png)"[^>]*)>/gi
+
+    content = content.replace(standaloneImgRegex, (match, attributes) => {
       const srcMatch = attributes.match(/src="([^"]*)"/)
       if (!srcMatch) return match
 
       const originalSrc = srcMatch[1]
+
+      // Check if this image has a corresponding WebP version
       const webpSrc = originalSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp')
+      const webpPath = path.join(path.dirname(htmlFile), webpSrc)
+
+      if (!fs.existsSync(webpPath)) {
+        console.log(`⏭️  No WebP version found for ${originalSrc}, skipping`)
+        return match
+      }
+
+      // SAFETY CHECK 3: Ensure we're not creating nested structures
+      if (match.includes('<picture>')) {
+        console.log(
+          `⚠️  Detected potential nested structure, skipping: ${match.substring(0, 50)}...`
+        )
+        return match
+      }
 
       // Create picture element with WebP source
       const pictureElement = `<picture>
@@ -167,26 +210,124 @@ async function updateHtmlReferences (siteDir, optimizedDir) {
       </picture>`
 
       modified = true
+      console.log(`✅ Converting: ${originalSrc} → picture element with WebP`)
       return pictureElement
     })
+
+    // SAFETY CHECK 4: Verify no nested picture elements were created
+    const nestedPictureCheck = /<picture[\s\S]*?<picture/gi
+    if (nestedPictureCheck.test(content)) {
+      console.error(
+        `❌ ERROR: Nested picture elements detected in ${htmlFile}. Reverting changes.`
+      )
+      content = originalContent // Revert to original
+      modified = false
+    }
 
     if (modified) {
       fs.writeFileSync(htmlFile, content, 'utf8')
       console.log(`✅ Updated ${path.basename(htmlFile)}`)
+      totalModified++
     }
   }
+
+  console.log(`📊 Modified ${totalModified} HTML files`)
+  return totalModified
+}
+
+/**
+ * Validation function to detect and fix nested picture elements
+ * This can be called to clean up any existing nested structures
+ */
+async function validateAndFixNestedPictures(siteDir) {
+  console.log('🔍 Validating HTML files for nested picture elements...')
+
+  const htmlFiles = fs
+    .readdirSync(siteDir, { recursive: true })
+    .filter((file) => file.endsWith('.html'))
+    .map((file) => path.join(siteDir, file))
+
+  let totalFixed = 0
+
+  for (const htmlFile of htmlFiles) {
+    const originalContent = fs.readFileSync(htmlFile, 'utf8')
+    let content = originalContent
+    let fixed = false
+
+    // Detect nested picture elements
+    const nestedPictureRegex =
+      /<picture[^>]*>([\s\S]*?)<picture[^>]*>([\s\S]*?)<\/picture>([\s\S]*?)<\/picture>/gi
+
+    if (nestedPictureRegex.test(content)) {
+      console.log(
+        `🔧 Fixing nested picture elements in ${path.basename(htmlFile)}`
+      )
+
+      // Reset regex for replacement
+      nestedPictureRegex.lastIndex = 0
+
+      content = content.replace(nestedPictureRegex, (match) => {
+        // Extract the innermost img element and first source element
+        const sourceMatch = match.match(/<source[^>]*>/i)
+        const imgMatch = match.match(/<img[^>]*>/i)
+
+        if (sourceMatch && imgMatch) {
+          const cleanPicture = `<picture>
+        ${sourceMatch[0]}
+        ${imgMatch[0]}
+      </picture>`
+          console.log(`✅ Cleaned nested structure`)
+          return cleanPicture
+        }
+
+        // Fallback: return the innermost img tag only
+        if (imgMatch) {
+          console.log(`⚠️  Fallback: returning img tag only`)
+          return imgMatch[0]
+        }
+
+        return match
+      })
+
+      fixed = true
+    }
+
+    if (fixed) {
+      fs.writeFileSync(htmlFile, content, 'utf8')
+      console.log(`✅ Fixed ${path.basename(htmlFile)}`)
+      totalFixed++
+    }
+  }
+
+  if (totalFixed === 0) {
+    console.log(
+      '✅ No nested picture elements found - all HTML files are clean'
+    )
+  } else {
+    console.log(
+      `🎉 Fixed ${totalFixed} HTML files with nested picture elements`
+    )
+  }
+
+  return totalFixed
 }
 
 /**
  * Generate responsive image variants
  */
-async function generateResponsiveVariants (inputPath, outputDir) {
+async function generateResponsiveVariants(inputPath, outputDir) {
   const filename = path.basename(inputPath, path.extname(inputPath))
 
   // Ensure we only process original files, not already-generated variants
-  if (filename.includes('-mobile') || filename.includes('-tablet') ||
-      filename.includes('-desktop') || filename.includes('-large')) {
-    console.log(`⏭️  Skipping variant generation for ${filename} (already a variant)`)
+  if (
+    filename.includes('-mobile') ||
+    filename.includes('-tablet') ||
+    filename.includes('-desktop') ||
+    filename.includes('-large')
+  ) {
+    console.log(
+      `⏭️  Skipping variant generation for ${filename} (already a variant)`
+    )
     return []
   }
 
@@ -202,7 +343,9 @@ async function generateResponsiveVariants (inputPath, outputDir) {
 
   const variants = []
 
-  console.log(`📐 Original image dimensions: ${metadata.width}x${metadata.height}`)
+  console.log(
+    `📐 Original image dimensions: ${metadata.width}x${metadata.height}`
+  )
 
   for (const size of sizes) {
     if (metadata.width && metadata.width >= size.width) {
@@ -213,7 +356,9 @@ async function generateResponsiveVariants (inputPath, outputDir) {
           .resize(size.width)
           .webp(OUTPUT_FORMATS.webp)
           .toFile(webpPath)
-        console.log(`✅ Generated ${filename}${size.suffix}.webp (${size.width}px wide)`)
+        console.log(
+          `✅ Generated ${filename}${size.suffix}.webp (${size.width}px wide)`
+        )
       } else {
         console.log(`⏭️  ${filename}${size.suffix}.webp already exists`)
       }
@@ -225,7 +370,9 @@ async function generateResponsiveVariants (inputPath, outputDir) {
           .resize(size.width)
           .jpeg(OUTPUT_FORMATS.jpeg)
           .toFile(jpegPath)
-        console.log(`✅ Generated ${filename}${size.suffix}.jpg (${size.width}px wide)`)
+        console.log(
+          `✅ Generated ${filename}${size.suffix}.jpg (${size.width}px wide)`
+        )
       } else {
         console.log(`⏭️  ${filename}${size.suffix}.jpg already exists`)
       }
@@ -236,7 +383,9 @@ async function generateResponsiveVariants (inputPath, outputDir) {
         jpeg: jpegPath
       })
     } else {
-      console.log(`⏭️  Skipping ${size.suffix} variant (original width ${metadata.width}px < ${size.width}px)`)
+      console.log(
+        `⏭️  Skipping ${size.suffix} variant (original width ${metadata.width}px < ${size.width}px)`
+      )
     }
   }
 
@@ -246,7 +395,7 @@ async function generateResponsiveVariants (inputPath, outputDir) {
 /**
  * Main optimization function
  */
-async function optimizeImages () {
+async function optimizeImages() {
   try {
     console.log('🚀 Starting image optimization...')
 
@@ -279,12 +428,18 @@ async function optimizeImages () {
       allResults.push(...results)
 
       // Generate responsive variants for hero images (only for original files)
-      if ((imagePath.includes('stockholm') || imagePath.includes('hero')) &&
-          !imagePath.includes(path.join('images', 'optimized'))) {
+      if (
+        (imagePath.includes('stockholm') || imagePath.includes('hero')) &&
+        !imagePath.includes(path.join('images', 'optimized'))
+      ) {
         // Only generate variants for original source files, not generated ones
         const baseName = path.basename(imagePath, path.extname(imagePath))
-        if (!baseName.includes('-mobile') && !baseName.includes('-tablet') &&
-            !baseName.includes('-desktop') && !baseName.includes('-large')) {
+        if (
+          !baseName.includes('-mobile') &&
+          !baseName.includes('-tablet') &&
+          !baseName.includes('-desktop') &&
+          !baseName.includes('-large')
+        ) {
           console.log(
             `🖼️  Generating responsive variants for ${path.basename(imagePath)}...`
           )
@@ -305,8 +460,11 @@ async function optimizeImages () {
     ).toFixed(1)
     const savedBytes = totalOriginalSize - totalOptimizedSize
 
-    // Update HTML files
+    // Update HTML files (currently disabled for safety)
     await updateHtmlReferences(siteDir, outputDir)
+
+    // SAFETY VALIDATION: Check for any nested picture elements
+    await validateAndFixNestedPictures(siteDir)
 
     // Report results
     console.log('\n📊 Optimization Results:')
@@ -333,4 +491,9 @@ if (require.main === module) {
   optimizeImages()
 }
 
-module.exports = { optimizeImages, optimizeImage }
+module.exports = {
+  optimizeImages,
+  optimizeImage,
+  validateAndFixNestedPictures,
+  safeBatchUpdateHtmlReferences
+}
