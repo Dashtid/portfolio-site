@@ -418,7 +418,7 @@ class ProjectManager {
         // Call original function
         return originalCreateRepoWidget(config)
       } catch (error) {
-        console.warn('Error setting up repo widget:', error)
+        // Silently handle repo widget setup errors
         this.hideLoading()
       }
     }
