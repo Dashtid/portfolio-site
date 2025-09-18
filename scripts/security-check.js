@@ -102,9 +102,17 @@ async function runSecurityCheck() {
         content.match(/<script[^>]*src="https?:\/\/[^"]*"[^>]*>/g) || []
 
       for (const link of externalLinks) {
-        if (!link.includes('integrity=')) {
+        const url = link.match(/href="([^"]*)"/)?.[1]
+
+        // Skip self-referencing canonical URLs and known 404 resources
+        const skipSRI = [
+          'https://dashti.se', // Canonical self-reference
+          'https://fonts.gstatic.com/s/segoui/v1/segoui.woff2' // Known 404 font URL
+        ]
+
+        if (!link.includes('integrity=') && !skipSRI.includes(url)) {
           warnings.push(
-            `External resource without SRI in ${file}: ${link.match(/href="([^"]*)"/)?.[1]}`
+            `External resource without SRI in ${file}: ${url}`
           )
         }
       }
