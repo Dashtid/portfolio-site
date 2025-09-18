@@ -296,12 +296,18 @@ jobs:
         uses: github/codeql-action/analyze@v3
         continue-on-error: true
       
+      - name: Prepare ZAP workspace
+        run: |
+          mkdir -p zap-reports
+          chmod 777 zap-reports
+
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
           target: 'https://dashti.se'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
+          cmd_options: '-a -d'
+          allow_issue_writing: false
         continue-on-error: true
 
   # Notification
