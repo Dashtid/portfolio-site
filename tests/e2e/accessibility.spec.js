@@ -84,7 +84,7 @@ test.describe('Accessibility', () => {
       const focused = page.locator('#themeToggle')
       if ((await focused.count()) > 0) {
         const isFocused = await focused.evaluate(
-          (el) => document.activeElement === el
+          el => document.activeElement === el
         )
         if (isFocused) {
           themeToggleFocused = true
@@ -108,10 +108,10 @@ test.describe('Accessibility', () => {
       if (count > 0) {
         const firstElement = elements.first()
         const color = await firstElement.evaluate(
-          (el) => getComputedStyle(el).color
+          el => getComputedStyle(el).color
         )
         const backgroundColor = await firstElement.evaluate(
-          (el) => getComputedStyle(el).backgroundColor
+          el => getComputedStyle(el).backgroundColor
         )
 
         // Basic check that colors are defined
@@ -142,12 +142,12 @@ test.describe('Accessibility', () => {
   })
 
   test('should support reduced motion', async ({ page, context }) => {
-    await context.emulateMedia({ reducedMotion: 'reduce' })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/')
 
     // Check that animations are disabled with reduced motion
     const body = page.locator('body')
-    const animationDuration = await body.evaluate((el) =>
+    const animationDuration = await body.evaluate(el =>
       getComputedStyle(el).getPropertyValue('animation-duration')
     )
 

@@ -38,14 +38,14 @@ test.describe('Theme System', () => {
 
   test('should respect system theme preference', async ({ page, context }) => {
     // Set system to prefer dark mode
-    await context.emulateMedia({ colorScheme: 'dark' })
+    await page.emulateMedia({ colorScheme: 'dark' })
     await page.goto('/')
 
     // Should start with dark theme
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     // Switch to light theme preference
-    await context.emulateMedia({ colorScheme: 'light' })
+    await page.emulateMedia({ colorScheme: 'light' })
     await page.reload()
 
     // Should start with light theme

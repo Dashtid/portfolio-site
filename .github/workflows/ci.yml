@@ -311,9 +311,9 @@ jobs:
             zap-baseline.py \
             -t https://dashti.se \
             -c /zap/wrk/.zap/rules.tsv \
-            -J /zap/wrk/zap-results/report.json \
-            -w /zap/wrk/zap-results/report.md \
-            -r /zap/wrk/zap-results/report.html \
+            -J zap-results/report.json \
+            -w zap-results/report.md \
+            -r zap-results/report.html \
             -a || echo "ZAP scan completed with findings"
         continue-on-error: true
 

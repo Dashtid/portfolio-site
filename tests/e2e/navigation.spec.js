@@ -106,10 +106,10 @@ test.describe('Navigation', () => {
 
     // Click back to top
     await backToTop.click()
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000) // Increased timeout for smooth scrolling
 
     // Should be back at top
     const scrollY = await page.evaluate(() => window.pageYOffset)
-    expect(scrollY).toBeLessThan(100)
+    expect(scrollY).toBeLessThan(50) // More strict expectation
   })
 })
