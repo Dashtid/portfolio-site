@@ -34,6 +34,9 @@ playwright-report/
 *.tmp
 *.temp
 
+# Windows null device file (can be created accidentally)
+nul
+
 settings.local.json
 
 # Security scanning
