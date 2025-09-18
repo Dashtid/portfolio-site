@@ -296,15 +296,34 @@ jobs:
         uses: github/codeql-action/analyze@v3
         continue-on-error: true
       
+      - name: Prepare ZAP workspace
+        run: |
+          mkdir -p ${{ github.workspace }}/zap-results
+          chmod 777 ${{ github.workspace }}/zap-results
+          # Create empty yaml file to prevent permission error
+          touch ${{ github.workspace }}/zap.yaml
+          chmod 666 ${{ github.workspace }}/zap.yaml
+
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          target: 'https://dashti.se'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
-          artifact_name: 'zap-baseline-report'
-          fail_action: false
+        run: |
+          docker run -v ${{ github.workspace }}:/zap/wrk/:rw \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t https://dashti.se \
+            -c /zap/wrk/.zap/rules.tsv \
+            -J /zap/wrk/zap-results/report.json \
+            -w /zap/wrk/zap-results/report.md \
+            -r /zap/wrk/zap-results/report.html \
+            -a || echo "ZAP scan completed with findings"
         continue-on-error: true
+
+      - name: Upload ZAP scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-baseline-report
+          path: zap-results/
+          retention-days: 30
 
   # Notification
   notify:
