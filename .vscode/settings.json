@@ -1,7 +1,12 @@
 {
   "html.validate.scripts": false,
   "javascript.validate.enable": false,
-  "yaml.validate": false
+  "yaml.validate": false,
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+  },
+  "redhat.telemetry.enabled": false,
+  "yaml.customTags": ["!reference sequence"]
 }
 // This file is used to configure settings for the Visual Studio Code editor.
 // It disables HTML script validation, JavaScript validation, and YAML validation to avoid false positives in the code editor.
