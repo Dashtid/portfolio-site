@@ -160,6 +160,8 @@
 
 html {
   scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -171,9 +173,38 @@ body {
   background-color: var(--bg-primary);
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
+}
+
+/* Container fixes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Ensure sections use full width properly */
+section {
+  width: 100%;
+  overflow: hidden;
+  padding: var(--space-16) 0;
+}
+
+/* Fix for Bootstrap row gutters */
+.row {
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.col-md-4,
+.col-lg-6 {
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 /* =========================
@@ -311,6 +342,47 @@ body {
   transform: translateY(-1px);
 }
 
+/* Navigation base styles */
+.nav-link {
+  color: var(--nav-text) !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-secondary) !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--space-3) var(--space-4) !important;
+  margin: 0 var(--space-1) !important;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-link:hover {
+  background: var(--bg-accent) !important;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-link.active {
+  background: var(--nav-active-bg) !important;
+  color: var(--nav-active-text) !important;
+  border-color: var(--nav-active-bg) !important;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Navbar Layout Improvements */
+.navbar-nav {
+  gap: var(--space-2);
+}
+
+.navbar-nav .nav-item {
+  margin: 0;
+}
+
+.navbar-nav .nav-link {
+  margin: 0 !important;
+  display: inline-block;
+}
+
 /* Mobile Navigation Enhancements */
 @media (width <= 991.98px) {
   .navbar-collapse {
@@ -320,6 +392,17 @@ body {
     margin-top: var(--space-3);
     padding: var(--space-4);
     border: 1px solid var(--border-primary);
+  }
+
+  .navbar-nav {
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .navbar-nav .nav-link {
+    width: 100%;
+    text-align: center;
   }
 
   .internal-nav,
@@ -576,32 +659,6 @@ body {
   background: var(--bg-accent);
 }
 
-.nav-link {
-  color: var(--nav-text) !important;
-  background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-secondary) !important;
-  border-radius: var(--radius-md) !important;
-  padding: var(--space-3) var(--space-4) !important;
-  margin: 0 var(--space-1) !important;
-  font-weight: var(--font-weight-medium);
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-}
-
-.nav-link:hover {
-  background: var(--bg-accent) !important;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.nav-link.active {
-  background: var(--nav-active-bg) !important;
-  color: var(--nav-active-text) !important;
-  border-color: var(--nav-active-bg) !important;
-  box-shadow: var(--shadow-lg);
-}
-
 /* =========================
    Hero Section
 ========================= */
@@ -647,10 +704,6 @@ body {
 /* =========================
    Section Styling
 ========================= */
-section {
-  padding: var(--space-16) 0;
-}
-
 section h2 {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
