@@ -195,14 +195,14 @@ section {
   padding: var(--space-16) 0;
 }
 
-/* Fix for Bootstrap row gutters */
-.row {
+/* Fix for Bootstrap row gutters - only apply if not already handled by Bootstrap */
+.row:not(.g-0, [class*='g-']) {
   margin-left: -15px;
   margin-right: -15px;
 }
 
-.col-md-4,
-.col-lg-6 {
+.col-md-4:not([class*='p-']),
+.col-lg-6:not([class*='p-']) {
   padding-left: 15px;
   padding-right: 15px;
 }
@@ -371,7 +371,10 @@ section {
 
 /* Navbar Layout Improvements */
 .navbar-nav {
+  display: flex;
+  flex-direction: row;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .navbar-nav .nav-item {
@@ -415,6 +418,15 @@ section {
   .d-flex.gap-2 {
     flex-direction: column;
     gap: var(--space-2) !important;
+  }
+}
+
+/* Ensure external nav stays horizontal on desktop */
+@media (width > 991.98px) {
+  .d-flex.gap-2.flex-wrap.align-items-center {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
   }
 }
 
