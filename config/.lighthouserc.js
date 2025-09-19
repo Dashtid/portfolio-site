@@ -1,11 +1,8 @@
 module.exports = {
   ci: {
     collect: {
-      // URLs to test (for local development server)
+      // URLs to test (assumes server is already running)
       url: ['http://localhost:3000/'],
-      startServerCommand: 'npm run dev',
-      startServerReadyPattern: 'Server running at',
-      startServerReadyTimeout: 30000,
       numberOfRuns: 3,
       settings: {
         // Run in headless mode for CI
