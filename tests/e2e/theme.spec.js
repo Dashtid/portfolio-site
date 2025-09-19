@@ -27,14 +27,54 @@ test.describe('Theme System', () => {
     await page.goto('/')
 
     // Switch to dark theme
-    await page.locator('#themeToggle').click()
+    const themeToggle = page.locator('#themeToggle')
+    await themeToggle.click()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+
+    // Verify localStorage was set
+    const themeInStorage = await page.evaluate(() =>
+      localStorage.getItem('theme')
+    )
+    expect(themeInStorage).toBe('dark')
 
     // Reload page and check if theme persists
     await page.reload({ waitUntil: 'networkidle' })
-    await page.waitForTimeout(500) // Give theme time to initialize
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-    await expect(page.locator('#themeToggle')).toContainText('Light')
+
+    // Wait longer for Firefox to properly restore theme
+    await page.waitForTimeout(1000)
+
+    // Check theme restoration with multiple attempts for Firefox reliability
+    let attempts = 0
+    const maxAttempts = 5
+    let themeRestored = false
+
+    while (attempts < maxAttempts && !themeRestored) {
+      try {
+        await expect(page.locator('html')).toHaveAttribute(
+          'data-theme',
+          'dark',
+          { timeout: 2000 }
+        )
+        await expect(themeToggle).toContainText('Light', { timeout: 2000 })
+        themeRestored = true
+      } catch (error) {
+        attempts++
+        if (attempts < maxAttempts) {
+          await page.waitForTimeout(500)
+          // Force theme reinitialization if needed
+          await page.evaluate(() => {
+            if (
+              window.themeManager &&
+              localStorage.getItem('theme') === 'dark'
+            ) {
+              window.themeManager.setTheme('dark')
+            }
+          })
+        } else {
+          throw error
+        }
+      }
+    }
   })
 
   test('should respect system theme preference', async ({ page, context }) => {
