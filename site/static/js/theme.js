@@ -81,7 +81,7 @@ class ScrollManager {
     this.threshold = 300
     this.isVisible = false
     this.button = document.getElementById('backToTopBtn')
-    this.navHeight = 80 // Approximate navbar height
+    this.navHeight = 80
 
     if (this.button) {
       this.init()
@@ -142,8 +142,13 @@ class ScrollManager {
         const targetId = link.getAttribute('data-scroll')
         this.scrollToSection(targetId)
 
-        // Update active state
+        // Update active state immediately for manual navigation
         this.updateActiveNavLink(link)
+
+        // Force update after scrolling completes
+        setTimeout(() => {
+          this.updateActiveNavLink(link)
+        }, 500)
 
         // Close mobile menu if open
         const navbar = document.querySelector('.navbar-collapse')
@@ -187,23 +192,40 @@ class ScrollManager {
 
   setupNavigationHighlighting() {
     const sections = document.querySelectorAll('section[id]')
+    let currentActiveSection = null
 
     const observer = new IntersectionObserver(
       entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
+        // Sort entries by intersection ratio and position
+        const visibleEntries = entries
+          .filter(entry => entry.isIntersecting)
+          .sort((a, b) => {
+            // First by intersection ratio (higher is better)
+            const ratioDiff = b.intersectionRatio - a.intersectionRatio
+            if (Math.abs(ratioDiff) > 0.1) return ratioDiff
+
+            // Then by vertical position (higher on screen is better)
+            return a.boundingClientRect.top - b.boundingClientRect.top
+          })
+
+        if (visibleEntries.length > 0) {
+          const topSection = visibleEntries[0].target
+
+          // Only update if this is a different section
+          if (currentActiveSection !== topSection.id) {
+            currentActiveSection = topSection.id
             const currentNavLink = document.querySelector(
-              `[data-scroll="${entry.target.id}"]`
+              `[data-scroll="${topSection.id}"]`
             )
             if (currentNavLink) {
               this.updateActiveNavLink(currentNavLink)
             }
           }
-        })
+        }
       },
       {
-        threshold: 0.3,
-        rootMargin: `-${this.navHeight}px 0px -50% 0px`
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+        rootMargin: `-${this.navHeight}px 0px -30% 0px`
       }
     )
 
@@ -418,7 +440,7 @@ class ProjectManager {
         // Call original function
         return originalCreateRepoWidget(config)
       } catch (error) {
-        // Silently handle repo widget setup errors
+        // Handle repo widget setup errors
         this.hideLoading()
       }
     }
@@ -481,7 +503,7 @@ class AnimationManager {
 
       setTimeout(() => {
         bar.style.width = targetWidth
-      }, index * 100) // Stagger the animations
+      }, index * 100)
     })
   }
 

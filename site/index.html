@@ -16,14 +16,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dashti.se" />
     <meta property="og:image" content="https://dashti.se/static/images/preview.png" />
-    <!-- Additional SEO meta tags -->
     <meta name="author" content="David Dashti" />
     <meta name="robots" content="index, follow" />
-    <!-- Theme color for supported browsers (PWA/mobile) -->
-    <!-- Note: Limited Firefox/Opera support, but enhances PWA experience on Chrome/Safari -->
     <meta name="theme-color" content="#3b82f6" />
     <link rel="canonical" href="https://dashti.se" />
-    <!-- Twitter Card data -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="David Dashti | Cybersecurity in Healthcare" />
     <meta
@@ -32,16 +28,12 @@
     />
     <meta name="twitter:image" content="https://dashti.se/static/images/preview.png" />
     <link rel="icon" type="image/svg+xml" href="static/images/D.svg" />
-    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- iOS PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="David Dashti" />
     <link rel="apple-touch-icon" href="/static/images/cropped.png" />
-    <!-- Sitemap reference -->
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    <!-- Preload critical resources -->
     <link rel="preload" as="image" href="static/images/stockholm.webp" type="image/webp" />
     <link rel="preload" as="image" href="static/images/stockholm.jpg" type="image/jpeg" />
     <link
@@ -59,14 +51,11 @@
       crossorigin="anonymous"
     />
     <link rel="preload" as="style" href="static/css/style.css" />
-    <!-- Preload key scripts -->
     <link rel="preload" as="script" href="static/js/theme.js" />
     <link rel="preload" as="script" href="static/js/trading-widgets.js" />
-    <!-- DNS Prefetch for external resources -->
     <link rel="dns-prefetch" href="//repowidget.vercel.app" />
     <link rel="dns-prefetch" href="//s3.tradingview.com" />
     <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
-    <!-- Critical CSS Inline for Above-the-fold Performance -->
     <style nonce="TsSrHIuvMbuFrrfVNAgU9A==">
       :root {
         --primary-600: #2563eb;
@@ -164,17 +153,14 @@
       }
     </style>
 
-    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-9ndCyUaIbC/fTmkQZgTNYrFB4Gc7wV2Lk3qGCJ1Z7sK8Zd7l+yM7SuKF3B1oTa8Uq"
       crossorigin="anonymous"
     />
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="static/css/style.css" />
 
-    <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -226,12 +212,9 @@
   </head>
 
   <body>
-    <!-- Skip Navigation Link for Accessibility -->
     <a href="#main-heading" class="skip-nav" tabindex="1">Skip to main content</a>
 
-    <!-- Navigation Bar with Stockholm background -->
     <div class="stockholm-background">
-      <!-- Sticky Navigation Bar -->
       <nav
         class="navbar navbar-expand-lg navbar-light bg-light sticky-top"
         role="navigation"
@@ -239,7 +222,6 @@
       >
         <div class="container">
           <a class="navbar-brand" href="index.html" aria-label="David Dashti - Home">David Dashti</a>
-          <!-- Mobile Menu Toggle -->
           <button
             class="navbar-toggler d-lg-none"
             type="button"
@@ -253,47 +235,51 @@
           </button>
 
           <div class="collapse navbar-collapse" id="mainNavigation">
-            <!-- Internal Navigation -->
             <div class="d-flex gap-2 flex-wrap me-auto">
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#experience"
                 data-scroll="experience"
+                tabindex="0"
                 >Experience</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#education"
                 data-scroll="education"
+                tabindex="0"
                 >Education</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#github-repos"
                 data-scroll="github-repos"
+                tabindex="0"
                 >Projects</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#skills"
                 data-scroll="skills"
+                tabindex="0"
                 >Skills</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#about"
                 data-scroll="about"
+                tabindex="0"
                 >About</a
               >
               <a
                 class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                 href="#contact"
                 data-scroll="contact"
+                tabindex="0"
                 >Contact</a
               >
             </div>
 
-            <!-- External Pages -->
             <div class="d-flex gap-2 flex-wrap" role="group" aria-labelledby="experience-pages-label">
               <span id="experience-pages-label" class="visually-hidden">Experience pages</span>
               <a
@@ -335,13 +321,13 @@
               >
             </div>
 
-            <!-- Theme toggle button -->
             <button
               id="themeToggle"
               class="btn btn-sm btn-outline-dark ms-2"
               type="button"
               aria-label="Switch to dark theme"
               aria-pressed="false"
+              tabindex="0"
             >
               Dark
             </button>
@@ -349,7 +335,6 @@
         </div>
       </nav>
 
-      <!-- Hero/Header Section with background image -->
       <header class="hero">
         <div class="container">
           <div class="hero-content mx-auto custom-hero-width">
@@ -366,7 +351,6 @@
     </div>
 
     <main>
-      <!-- Experience Section -->
       <section id="experience" class="py-5">
         <div class="container">
           <h2 class="mb-4 d-flex align-items-center">
@@ -375,7 +359,6 @@
           </h2>
           <div class="row">
             <div class="col-md-4 mb-4 h-100">
-              <!-- Scania Card Content -->
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
@@ -397,7 +380,6 @@
               </div>
             </div>
             <div class="col-md-4 mb-4 h-100">
-              <!-- FDF Card Content -->
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
@@ -422,7 +404,6 @@
               </div>
             </div>
             <div class="col-md-4 mb-4 d-flex align-items-center justify-content-center">
-              <!-- Hermes Card Content -->
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
@@ -446,7 +427,6 @@
               </div>
             </div>
             <div class="col-md-4 mb-4 h-100">
-              <!-- SÖS Card Content -->
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
@@ -471,7 +451,6 @@
               </div>
             </div>
             <div class="col-md-4 mb-4 h-100">
-              <!-- SoftPro Medical Solutions Card -->
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
@@ -502,7 +481,6 @@
               </div>
             </div>
             <div class="col-md-4 mb-4 h-100">
-              <!-- Karolinska Card Content -->
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
@@ -550,7 +528,6 @@
         </div>
       </section>
 
-      <!-- Education Section -->
       <section id="education" class="py-5 bg-light" aria-labelledby="education-heading">
         <div class="container">
           <h2 id="education-heading" class="mb-4 d-flex align-items-center">
@@ -684,7 +661,6 @@
         </div>
       </section>
 
-      <!-- Github Repositories Section -->
       <section id="github-repos" class="py-5" aria-labelledby="github-heading">
         <div class="container">
           <h2 id="github-heading" class="mb-4 d-flex align-items-center">
@@ -780,7 +756,6 @@
         </div>
       </section>
 
-      <!-- About Section -->
       <section id="about" class="py-5 bg-light mt-5">
         <div class="container">
           <h2 class="d-flex align-items-center mb-4">
@@ -827,7 +802,6 @@
         </div>
       </section>
 
-      <!-- Skills Section -->
       <section id="skills" class="py-5 bg-light" aria-labelledby="skills-heading">
         <div class="container">
           <h2 id="skills-heading" class="d-flex align-items-center mb-4">
@@ -1130,7 +1104,6 @@
         </div>
       </section>
 
-      <!-- Contact Section -->
       <section id="contact" class="py-5" aria-labelledby="contact-heading">
         <div class="container">
           <h2 id="contact-heading" class="d-flex align-items-center mb-4">

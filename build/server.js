@@ -29,7 +29,7 @@ class DevServer {
       cors: options.cors !== false,
       ...options
     }
-    
+
     this.clients = new Set()
     this.wss = null
     this.server = null
@@ -42,47 +42,49 @@ class DevServer {
   async start() {
     try {
       console.log('🚀 Starting development server...')
-      
+
       // Create HTTP/HTTPS server
       if (this.options.https) {
         // Generate self-signed certificate for development
-        this.server = https.createServer(this.getHttpsOptions(), this.handleRequest.bind(this))
+        this.server = https.createServer(
+          this.getHttpsOptions(),
+          this.handleRequest.bind(this)
+        )
       } else {
         this.server = http.createServer(this.handleRequest.bind(this))
       }
-      
+
       // Setup WebSocket server for live reload
       if (this.options.livereload) {
         this.setupLiveReload()
       }
-      
+
       // Start server
       await new Promise((resolve, reject) => {
-        this.server.listen(this.options.port, this.options.host, (error) => {
+        this.server.listen(this.options.port, this.options.host, error => {
           if (error) reject(error)
           else resolve()
         })
       })
-      
+
       // Setup file watcher
       if (this.options.livereload) {
         this.setupFileWatcher()
       }
-      
+
       const protocol = this.options.https ? 'https' : 'http'
       const url = `${protocol}://${this.options.host}:${this.options.port}`
-      
+
       console.log(`✅ Server running at ${url}`)
       console.log(`📁 Serving files from ${path.resolve(this.options.root)}`)
-      
+
       if (this.options.livereload) {
         console.log('🔄 Live reload enabled')
       }
-      
+
       if (this.options.open) {
         this.openBrowser(url)
       }
-      
     } catch (error) {
       console.error('❌ Failed to start server:', error)
       process.exit(1)
@@ -96,20 +98,26 @@ class DevServer {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`)
       let filePath = this.resolveFilePath(url.pathname)
-      
+
       // Handle CORS
       if (this.options.cors) {
         res.setHeader('Access-Control-Allow-Origin', '*')
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        
+        res.setHeader(
+          'Access-Control-Allow-Methods',
+          'GET, POST, PUT, DELETE, OPTIONS'
+        )
+        res.setHeader(
+          'Access-Control-Allow-Headers',
+          'Content-Type, Authorization'
+        )
+
         if (req.method === 'OPTIONS') {
           res.writeHead(200)
           res.end()
           return
         }
       }
-      
+
       // Check if file exists
       if (!fs.existsSync(filePath)) {
         // SPA fallback - serve index.html for non-existent routes
@@ -120,9 +128,9 @@ class DevServer {
           return this.send404(res, url.pathname)
         }
       }
-      
+
       const stats = await stat(filePath)
-      
+
       if (stats.isDirectory()) {
         // Serve index.html from directory
         const indexPath = path.join(filePath, 'index.html')
@@ -132,10 +140,9 @@ class DevServer {
           return this.sendDirectoryListing(res, filePath, url.pathname)
         }
       }
-      
+
       // Serve file
       await this.serveFile(res, filePath)
-      
     } catch (error) {
       console.error('❌ Request error:', error)
       this.send500(res, error)
@@ -148,12 +155,12 @@ class DevServer {
   resolveFilePath(urlPath) {
     const rootPath = path.resolve(this.options.root)
     let filePath = path.join(rootPath, decodeURIComponent(urlPath))
-    
+
     // Prevent directory traversal
     if (!filePath.startsWith(rootPath)) {
       filePath = path.join(rootPath, 'index.html')
     }
-    
+
     return filePath
   }
 
@@ -164,17 +171,16 @@ class DevServer {
     const content = await readFile(filePath)
     const mimeType = mime.lookup(filePath) || 'application/octet-stream'
     const stats = await stat(filePath)
-    
+
     res.setHeader('Content-Type', mimeType)
     res.setHeader('Content-Length', stats.size)
     res.setHeader('Last-Modified', stats.mtime.toUTCString())
-    
-    // Add security headers for HTML files
+
+    // Add comprehensive security headers
+    this.setSecurityHeaders(res, mimeType, filePath)
+
+    // Special handling for HTML files
     if (mimeType === 'text/html') {
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN')
-      res.setHeader('X-Content-Type-Options', 'nosniff')
-      res.setHeader('X-XSS-Protection', '1; mode=block')
-      
       // Inject live reload script
       if (this.options.livereload) {
         const htmlContent = content.toString()
@@ -184,9 +190,63 @@ class DevServer {
         return
       }
     }
-    
+
     res.writeHead(200)
     res.end(content)
+  }
+
+  /**
+   * Set comprehensive security headers
+   */
+  setSecurityHeaders(res, mimeType, filePath) {
+    // Basic security headers
+    res.setHeader('X-Frame-Options', 'DENY')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('X-XSS-Protection', '1; mode=block')
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+
+    // HSTS header (for HTTPS in production)
+    if (this.options.https) {
+      res.setHeader(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains'
+      )
+    }
+
+    // Content Security Policy
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://repowidget.vercel.app https://s3.tradingview.com https://www.tradingview.com",
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+      "img-src 'self' data: https:",
+      "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com",
+      "connect-src 'self' https://api.github.com https://repowidget.vercel.app ws: wss:",
+      "frame-src 'self' https://www.tradingview.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ')
+    res.setHeader('Content-Security-Policy', csp)
+
+    // Permissions Policy
+    res.setHeader(
+      'Permissions-Policy',
+      'geolocation=(), microphone=(), camera=()'
+    )
+
+    // Cross-Origin Embedder Policy for Spectre protection
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+
+    // Cache Control
+    if (filePath.includes('/static/')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    } else if (mimeType === 'text/html') {
+      res.setHeader('Cache-Control', 'public, max-age=3600')
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=3600')
+    }
   }
 
   /**
@@ -210,7 +270,7 @@ class DevServer {
     })();
     </script>
     `
-    
+
     // Inject before closing body tag
     return html.replace('</body>', script + '</body>')
   }
@@ -220,11 +280,11 @@ class DevServer {
    */
   setupLiveReload() {
     this.wss = new WebSocket.Server({ server: this.server })
-    
-    this.wss.on('connection', (ws) => {
+
+    this.wss.on('connection', ws => {
       this.clients.add(ws)
       console.log(`🔌 Client connected (${this.clients.size} active)`)
-      
+
       ws.on('close', () => {
         this.clients.delete(ws)
         console.log(`🔌 Client disconnected (${this.clients.size} active)`)
@@ -237,28 +297,23 @@ class DevServer {
    */
   setupFileWatcher() {
     const watchPath = path.resolve(this.options.root)
-    
+
     this.watcher = chokidar.watch(watchPath, {
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/.*',
-        '**/*.log'
-      ],
+      ignored: ['**/node_modules/**', '**/.git/**', '**/.*', '**/*.log'],
       ignoreInitial: true
     })
-    
-    this.watcher.on('change', (filePath) => {
+
+    this.watcher.on('change', filePath => {
       console.log(`📝 File changed: ${path.relative(watchPath, filePath)}`)
       this.broadcastReload()
     })
-    
-    this.watcher.on('add', (filePath) => {
+
+    this.watcher.on('add', filePath => {
       console.log(`📄 File added: ${path.relative(watchPath, filePath)}`)
       this.broadcastReload()
     })
-    
-    this.watcher.on('unlink', (filePath) => {
+
+    this.watcher.on('unlink', filePath => {
       console.log(`🗑️  File deleted: ${path.relative(watchPath, filePath)}`)
       this.broadcastReload()
     })
@@ -269,8 +324,8 @@ class DevServer {
    */
   broadcastReload() {
     const message = JSON.stringify({ type: 'reload', timestamp: Date.now() })
-    
-    this.clients.forEach((client) => {
+
+    this.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message)
       }
@@ -298,7 +353,7 @@ class DevServer {
     </body>
     </html>
     `
-    
+
     res.setHeader('Content-Type', 'text/html')
     res.writeHead(404)
     res.end(html)
@@ -327,7 +382,7 @@ class DevServer {
     </body>
     </html>
     `
-    
+
     res.setHeader('Content-Type', 'text/html')
     res.writeHead(500)
     res.end(html)
@@ -340,7 +395,7 @@ class DevServer {
     try {
       const files = fs.readdirSync(dirPath)
       const fileList = await Promise.all(
-        files.map(async (file) => {
+        files.map(async file => {
           const filePath = path.join(dirPath, file)
           const stats = await stat(filePath)
           return {
@@ -352,14 +407,14 @@ class DevServer {
           }
         })
       )
-      
+
       // Sort directories first, then files
       fileList.sort((a, b) => {
         if (a.isDirectory && !b.isDirectory) return -1
         if (!a.isDirectory && b.isDirectory) return 1
         return a.name.localeCompare(b.name)
       })
-      
+
       const html = `
       <!DOCTYPE html>
       <html>
@@ -383,7 +438,9 @@ class DevServer {
             </tr>
           </thead>
           <tbody>
-            ${fileList.map(file => `
+            ${fileList
+              .map(
+                file => `
               <tr>
                 <td>
                   <a href="${file.path}" class="${file.isDirectory ? 'directory' : ''}">
@@ -393,17 +450,18 @@ class DevServer {
                 <td>${file.isDirectory ? '-' : this.formatFileSize(file.size)}</td>
                 <td>${file.modified.toISOString().split('T')[0]}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       </body>
       </html>
       `
-      
+
       res.setHeader('Content-Type', 'text/html')
       res.writeHead(200)
       res.end(html)
-      
     } catch (error) {
       this.send500(res, error)
     }
@@ -424,9 +482,13 @@ class DevServer {
    * Open browser
    */
   openBrowser(url) {
-    const start = process.platform === 'darwin' ? 'open' : 
-                  process.platform === 'win32' ? 'start' : 'xdg-open'
-    
+    const start =
+      process.platform === 'darwin'
+        ? 'open'
+        : process.platform === 'win32'
+          ? 'start'
+          : 'xdg-open'
+
     require('child_process').exec(`${start} ${url}`)
   }
 
@@ -447,21 +509,21 @@ class DevServer {
    */
   async stop() {
     console.log('🛑 Stopping development server...')
-    
+
     if (this.watcher) {
       await this.watcher.close()
     }
-    
+
     if (this.wss) {
       this.wss.close()
     }
-    
+
     if (this.server) {
-      await new Promise((resolve) => {
+      await new Promise(resolve => {
         this.server.close(resolve)
       })
     }
-    
+
     console.log('✅ Server stopped')
   }
 }
@@ -470,7 +532,7 @@ class DevServer {
 if (require.main === module) {
   const args = process.argv.slice(2)
   const options = {}
-  
+
   // Parse CLI arguments (support both --key=value and --key value formats)
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -520,20 +582,20 @@ if (require.main === module) {
         break
     }
   }
-  
+
   const server = new DevServer(options)
-  
+
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
     await server.stop()
     process.exit(0)
   })
-  
+
   process.on('SIGTERM', async () => {
     await server.stop()
     process.exit(0)
   })
-  
+
   server.start()
 }
 

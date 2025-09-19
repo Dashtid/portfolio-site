@@ -108,20 +108,30 @@ test.describe('Accessibility', () => {
     }
     expect(internalNavFocused).toBeTruthy()
 
-    // Test theme toggle
+    // Test theme toggle - navigate directly to it since we know it exists
+    const themeToggle = page.locator('#themeToggle')
+    await expect(themeToggle).toBeVisible()
+
+    // Focus the theme toggle directly to verify it's focusable
+    await themeToggle.focus()
+    await expect(themeToggle).toBeFocused()
+
+    // Also test keyboard navigation to theme toggle
+    await page.keyboard.press('Escape') // Clear any focus
+    await page.locator('.skip-nav').focus() // Start from beginning
+
     let themeToggleFocused = false
-    for (let i = 0; i < 10; i++) {
-      // Tab through several elements
+    for (let i = 0; i < 15; i++) {
       await page.keyboard.press('Tab')
-      const focused = page.locator('#themeToggle')
-      if ((await focused.count()) > 0) {
-        const isFocused = await focused.evaluate(
-          el => document.activeElement === el
-        )
-        if (isFocused) {
-          themeToggleFocused = true
-          break
-        }
+      await page.waitForTimeout(100) // Small delay for focus events
+
+      const isFocused = await page.evaluate(() => {
+        return document.activeElement?.id === 'themeToggle'
+      })
+
+      if (isFocused) {
+        themeToggleFocused = true
+        break
       }
     }
     expect(themeToggleFocused).toBeTruthy()
