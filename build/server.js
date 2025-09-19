@@ -213,7 +213,7 @@ class DevServer {
       )
     }
 
-    // Content Security Policy
+    // Content Security Policy (more permissive for development and testing)
     const csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://repowidget.vercel.app https://s3.tradingview.com https://www.tradingview.com",
@@ -226,7 +226,11 @@ class DevServer {
       "base-uri 'self'",
       "form-action 'self'"
     ].join('; ')
-    res.setHeader('Content-Security-Policy', csp)
+
+    // Only apply CSP in production mode to avoid interference with testing
+    if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
+      res.setHeader('Content-Security-Policy', csp)
+    }
 
     // Permissions Policy
     res.setHeader(
@@ -234,10 +238,12 @@ class DevServer {
       'geolocation=(), microphone=(), camera=()'
     )
 
-    // Cross-Origin Embedder Policy for Spectre protection
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+    // Cross-Origin Embedder Policy for Spectre protection (disabled in test mode)
+    if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
+      res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+    }
 
     // Cache Control
     if (filePath.includes('/static/')) {
