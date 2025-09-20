@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Accessibility', () => {
   test('should have proper heading hierarchy', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check main heading
     const h1 = page.locator('h1')
@@ -19,7 +19,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should have alt text for images', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     const images = page.locator('img')
     const count = await images.count()
@@ -35,7 +35,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should have proper form labels', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check theme toggle button
     const themeToggle = page.locator('#themeToggle')
@@ -61,7 +61,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should support keyboard navigation', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Test skip link
     await page.keyboard.press('Tab')
@@ -153,7 +153,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should have sufficient color contrast', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Test common elements for basic contrast
     const textElements = ['h1', 'h2', 'p', '.nav-link', '.btn']
@@ -179,7 +179,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should have proper ARIA attributes', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check navigation ARIA
     const nav = page.locator('nav[role="navigation"]')
@@ -200,7 +200,7 @@ test.describe('Accessibility', () => {
 
   test('should support reduced motion', async ({ page, context }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check that animations are disabled with reduced motion
     const body = page.locator('body')

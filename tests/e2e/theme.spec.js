@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Theme System', () => {
   test('should toggle between light and dark themes', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check initial state (should be light theme by default)
     const html = page.locator('html')
@@ -24,7 +24,7 @@ test.describe('Theme System', () => {
   })
 
   test('should persist theme preference', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Switch to dark theme
     const themeToggle = page.locator('#themeToggle')
@@ -79,7 +79,7 @@ test.describe('Theme System', () => {
 
   test('should respect system theme preference', async ({ page, context }) => {
     // Clear any existing theme preference and cookies
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
     await page.evaluate(() => {
       localStorage.clear()
       sessionStorage.clear()
@@ -87,7 +87,7 @@ test.describe('Theme System', () => {
 
     // Set system to prefer dark mode BEFORE navigation
     await page.emulateMedia({ colorScheme: 'dark' })
-    await page.goto('/', { waitUntil: 'networkidle' })
+    await page.goto('http://localhost:3000', { waitUntil: 'networkidle' })
 
     // Wait for theme initialization with multiple checks
     await page.waitForFunction(
@@ -105,7 +105,7 @@ test.describe('Theme System', () => {
       sessionStorage.clear()
     })
     await page.emulateMedia({ colorScheme: 'light' })
-    await page.goto('/', { waitUntil: 'networkidle' })
+    await page.goto('http://localhost:3000', { waitUntil: 'networkidle' })
 
     // Wait for theme initialization again
     await page.waitForFunction(
@@ -121,7 +121,7 @@ test.describe('Theme System', () => {
   })
 
   test('should have proper ARIA attributes', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     const themeToggle = page.locator('#themeToggle')
     await expect(themeToggle).toHaveAttribute(

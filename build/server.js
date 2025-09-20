@@ -220,7 +220,7 @@ class DevServer {
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
       "img-src 'self' data: https:",
       "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com",
-      "connect-src 'self' https://api.github.com https://repowidget.vercel.app ws: wss:",
+      "connect-src 'self' https://api.github.com https://repowidget.vercel.app https://cdn.jsdelivr.net ws: wss:",
       "frame-src 'self' https://www.tradingview.com",
       "object-src 'none'",
       "base-uri 'self'",

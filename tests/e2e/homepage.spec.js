@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Homepage', () => {
   test('should load successfully', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check that page loads
     await expect(page).toHaveTitle(/David Dashti/)
@@ -24,7 +24,7 @@ test.describe('Homepage', () => {
   })
 
   test('should have proper meta tags', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check essential meta tags
     const description = await page
@@ -50,7 +50,7 @@ test.describe('Homepage', () => {
   test('should be responsive', async ({ page }) => {
     // Test desktop
     await page.setViewportSize({ width: 1920, height: 1080 })
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
     await expect(page.locator('.hero')).toBeVisible()
 
     // Test tablet
@@ -64,7 +64,7 @@ test.describe('Homepage', () => {
   })
 
   test('should have accessible navigation', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('http://localhost:3000')
 
     // Check skip link
     const skipLink = page.locator('.skip-nav')
