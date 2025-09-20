@@ -11,7 +11,7 @@ test.describe('Accessibility', () => {
 
     // Check section headings
     const h2s = page.locator('h2')
-    await expect(h2s).toHaveCount(6) // Experience, Education, Projects, About, Skills, Contact
+    await expect(h2s).toHaveCount(5) // Experience, Education, Projects, About, Contact
 
     // Verify h2 content
     await expect(h2s.nth(0)).toContainText('Experience')

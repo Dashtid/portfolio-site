@@ -1,5 +1,5 @@
 {
-  "name": "David Dashti - Cybersecurity in Healthcare",
+  "name": "David Dashti",
   "short_name": "David Dashti",
   "description": "Biomedical Engineer and Cybersecurity Specialist focused on securing healthcare technology and patient data",
   "start_url": "/",
@@ -28,8 +28,7 @@
     {
       "src": "/static/images/stockholm.webp",
       "sizes": "1920x1080",
-      "type": "image/webp",
-      "form_factor": "wide"
+      "type": "image/webp"
     }
   ]
 }

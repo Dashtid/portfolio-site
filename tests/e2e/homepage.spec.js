@@ -18,7 +18,6 @@ test.describe('Homepage', () => {
     // Check main sections exist
     await expect(page.locator('#experience')).toBeVisible()
     await expect(page.locator('#education')).toBeVisible()
-    await expect(page.locator('#skills')).toBeVisible()
     await expect(page.locator('#about')).toBeVisible()
     await expect(page.locator('#contact')).toBeVisible()
   })

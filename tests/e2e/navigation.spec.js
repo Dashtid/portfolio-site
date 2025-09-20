@@ -8,7 +8,6 @@ test.describe('Navigation', () => {
       { link: '[data-scroll="experience"]', target: '#experience' },
       { link: '[data-scroll="education"]', target: '#education' },
       { link: '[data-scroll="github-repos"]', target: '#github-repos' },
-      { link: '[data-scroll="skills"]', target: '#skills' },
       { link: '[data-scroll="about"]', target: '#about' },
       { link: '[data-scroll="contact"]', target: '#contact' }
     ]
@@ -48,13 +47,13 @@ test.describe('Navigation', () => {
     )
 
     // Click on another section
-    await page.locator('[data-scroll="skills"]').click()
+    await page.locator('[data-scroll="about"]').click()
 
-    // Wait for scrolling to skills section
+    // Wait for scrolling to about section
     await page.waitForFunction(
       () => {
-        const skillsSection = document.getElementById('skills')
-        const rect = skillsSection?.getBoundingClientRect()
+        const aboutSection = document.getElementById('about')
+        const rect = aboutSection?.getBoundingClientRect()
         return rect && rect.top >= 0 && rect.top < window.innerHeight
       },
       { timeout: 5000 }
@@ -64,12 +63,12 @@ test.describe('Navigation', () => {
     // Check if navigation highlighting works (intersection observer functionality)
     // Note: Skip active class check in automated tests as intersection observer may not work reliably in headless mode
     const hasActiveClass = await page
-      .locator('[data-scroll="skills"]')
+      .locator('[data-scroll="about"]')
       .evaluate(el => el.classList.contains('active'))
 
     if (hasActiveClass) {
       // If active class is present, verify it's working correctly
-      await expect(page.locator('[data-scroll="skills"]')).toHaveClass(/active/)
+      await expect(page.locator('[data-scroll="about"]')).toHaveClass(/active/)
       await expect(page.locator('[data-scroll="experience"]')).not.toHaveClass(
         /active/
       )

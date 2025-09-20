@@ -19,7 +19,7 @@ test.describe('Theme System', () => {
 
     // Click to switch back to light theme
     await themeToggle.click()
-    await expect(html).not.toHaveAttribute('data-theme', 'dark')
+    await expect(html).toHaveAttribute('data-theme', 'light')
     await expect(themeToggle).toContainText('Dark')
   })
 
