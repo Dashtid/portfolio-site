@@ -20,9 +20,11 @@
     <meta name="robots" content="index, follow" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'nonce-TsSrHIuvMbuFrrfVNAgU9A==' https://cdn.jsdelivr.net https://repowidget.vercel.app https://s3.tradingview.com; style-src 'self' 'nonce-TsSrHIuvMbuFrrfVNAgU9A==' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://repowidget.vercel.app https://s3.tradingview.com; frame-src https://s3.tradingview.com; object-src 'none'; base-uri 'self';"
+      content="default-src 'self'; script-src 'self' 'nonce-TsSrHIuvMbuFrrfVNAgU9A==' https://cdn.jsdelivr.net https://repowidget.vercel.app https://s3.tradingview.com; style-src 'self' 'nonce-TsSrHIuvMbuFrrfVNAgU9A==' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://repowidget.vercel.app https://s3.tradingview.com; frame-src https://s3.tradingview.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <link rel="canonical" href="https://dashti.se" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="David Dashti | Cybersecurity in Healthcare" />
@@ -862,28 +864,43 @@
       })
     </script>
     <!-- GitHub Repo Widget -->
-    <script src="https://repowidget.vercel.app/assets/js/repoWidget.min.js" crossorigin="anonymous"></script>
+    <script src="https://repowidget.vercel.app/assets/js/repoWidget.min.js" crossorigin="anonymous" defer></script>
     <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
-      createRepoWidget({
-        username: 'dashtid',
-        containerId: 'repo-container',
-        columns: {
-          mobile: 1,
-          tablet: 2,
-          desktop: 3
-        },
-        maxRepos: 6,
-        sortBy: 'updated',
-        scaleOnHover: 1.05,
-        cardStyles: {
-          backgroundColor: '#ffffff'
-        },
-        textStyles: {
-          titleColor: '#333333',
-          descriptionColor: '#666666',
-          iconColor: '#888888'
+      // Safely initialize repo widget
+      if (typeof createRepoWidget === 'function') {
+        try {
+          createRepoWidget({
+            username: 'dashtid',
+            containerId: 'repo-container',
+            columns: {
+              mobile: 1,
+              tablet: 2,
+              desktop: 3
+            },
+            maxRepos: 6,
+            sortBy: 'updated',
+            scaleOnHover: 1.05,
+            cardStyles: {
+              backgroundColor: '#ffffff'
+            },
+            textStyles: {
+              titleColor: '#333333',
+              descriptionColor: '#666666',
+              iconColor: '#888888'
+            }
+          })
+        } catch (error) {
+          // Fallback: hide loading and show manual link
+          const container = document.getElementById('repo-container')
+          const loading = document.getElementById('repo-loading')
+          if (loading) loading.style.display = 'none'
+          if (container) {
+            container.innerHTML =
+              '<p class="text-center">Visit <a href="https://github.com/Dashtid" target="_blank" rel="noopener">GitHub profile</a> to view projects.</p>'
+            container.classList.remove('d-none')
+          }
         }
-      })
+      }
     </script>
     <!-- Back to Top Button -->
     <button type="button" class="btn btn-lg rounded-circle back-to-top" id="backToTopBtn" title="Back to Top">

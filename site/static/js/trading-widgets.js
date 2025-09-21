@@ -48,12 +48,24 @@ function initializeHomeWidget(theme) {
     </div>
   `
 
-  // Create and load script
+  // Create and load script with error handling
   const script = document.createElement('script')
   script.type = 'text/javascript'
   script.src =
     'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js'
   script.async = true
+  script.crossOrigin = 'anonymous'
+
+  // Add error handling
+  script.onerror = function () {
+    const fallback = document.createElement('div')
+    fallback.innerHTML =
+      '<p class="text-center text-muted">Market data temporarily unavailable.</p>'
+    container
+      .querySelector('.tradingview-widget-container__widget')
+      .appendChild(fallback)
+  }
+
   script.innerHTML = JSON.stringify({
     title: 'Stocks',
     tabs: [
@@ -242,12 +254,24 @@ function createSymbolOverviewWidget(container, symbols, theme) {
     </div>
   `
 
-  // Create script element
+  // Create script element with error handling
   const script = document.createElement('script')
   script.type = 'text/javascript'
   script.src =
     'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js'
   script.async = true
+  script.crossOrigin = 'anonymous'
+
+  // Add error handling
+  script.onerror = function () {
+    const fallback = document.createElement('div')
+    fallback.innerHTML =
+      '<p class="text-center text-muted">Market data temporarily unavailable.</p>'
+    container
+      .querySelector('.tradingview-widget-container__widget')
+      .appendChild(fallback)
+  }
+
   script.innerHTML = JSON.stringify({
     symbols,
     chartOnly: false,
