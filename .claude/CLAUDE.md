@@ -58,8 +58,43 @@ This is David Dashti's professional portfolio website showcasing his expertise i
 - Update skill levels based on experience growth
 - Add new technologies and frameworks as learned
 
+## Testing & Quality Assurance
+
+### E2E Testing with Playwright
+**IMPORTANT**: E2E tests are configured to auto-start the dev server. Do NOT start it manually.
+
+**Commands:**
+- `npm run test:e2e` - Run all E2E tests (auto-starts dev server)
+- `npm run test:e2e:headed` - Run tests with browser UI visible
+- `npm run test:e2e:debug` - Run tests in debug mode
+- `npm run test:report` - Open HTML test report
+
+**Test Configuration:**
+- **Main config**: `config/playwright.config.js` (used by npm scripts)
+- **E2E directory config**: `tests/e2e/playwright.config.js` (alternative config)
+- **Test files**: Located in `tests/e2e/` (*.spec.js)
+
+**Running Tests:**
+1. **From project root**: `npm run test:e2e` (recommended)
+2. **From e2e directory**: `cd tests/e2e && npx playwright test`
+
+**Debugging Failed Tests:**
+- Failed tests create screenshots in `test-results/`
+- Use `npm run test:report` to view detailed HTML reports
+- Run `npm run test:e2e:debug` for step-by-step debugging
+
+**Windows-Specific Notes:**
+- Playwright may need additional browser installations: `npx playwright install`
+- Test timeouts may need adjustment on slower Windows systems
+
+### Other Testing
+- Unit tests: `npm run test:unit`
+- Linting: `npm run lint`
+- Format check: `npm run format:check`
+
 ## Build and Deployment
 - Test all changes locally before deployment
+- Run E2E tests to ensure functionality: `npm run test:e2e`
 - Run accessibility and performance audits
 - Validate HTML and CSS
 - Check responsive design on multiple devices

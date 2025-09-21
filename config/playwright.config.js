@@ -47,17 +47,17 @@ module.exports = defineConfig({
   timeout: 30000,
   expect: {
     timeout: 5000
-  }
+  },
 
   /* Run your local dev server before starting the tests */
-  // webServer: process.env.CI
-  //   ? undefined
-  //   : {
-  //       command: 'npm run dev',
-  //       url: 'http://localhost:3000',
-  //       reuseExistingServer: !process.env.CI,
-  //       timeout: 30000
-  //     }
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 30000
+      }
 
   /* Global test settings */
   // globalSetup: './tests/e2e/global-setup.js',
