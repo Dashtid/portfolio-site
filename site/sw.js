@@ -2,6 +2,7 @@ const CACHE_NAME = 'dashti-portfolio-v1.0.0'
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
+  '/offline.html',
   '/static/css/style.css',
   '/static/js/theme.js',
   '/static/js/trading-widgets.js',
@@ -99,7 +100,7 @@ self.addEventListener('fetch', event => {
             event.request.headers.get('accept') &&
             event.request.headers.get('accept').includes('text/html')
           ) {
-            return caches.match('/index.html')
+            return caches.match('/offline.html')
           }
           // Return a default response for other requests
           return new Response('Offline', { status: 200, statusText: 'OK' })
