@@ -41,6 +41,33 @@ This is David Dashti's professional portfolio website showcasing his expertise i
 - Implement proper Content Security Policy
 - Regular dependency updates
 
+### 5. Critical Widgets - DO NOT REMOVE
+**IMPORTANT**: The following widgets are ESSENTIAL to the site functionality and must NEVER be removed or disabled:
+
+#### GitHub Repository Widget
+- **Location**: `site/index.html` (Projects section)
+- **Script**: `https://repowidget.vercel.app/assets/js/repoWidget.min.js`
+- **Purpose**: Displays live GitHub repositories in a responsive grid
+- **Configuration**: Shows 6 most recent repos for username 'dashtid'
+- **DO NOT**: Remove, disable, or replace with static content
+
+#### TradingView Market Widgets
+- **Location**: `site/static/js/trading-widgets.js` and home page Markets section
+- **Scripts**: Multiple TradingView embed widgets for market data
+- **Purpose**: Displays real-time financial market data and charts
+- **Sections**: Financial, Technology, Services stock tabs
+- **Market Analysis**: Americas, Europe, APAC indices
+- **MedTech Focus**: Medical device and healthcare company stocks
+- **DO NOT**: Remove, disable, or replace with static content
+
+#### Widget Maintenance Guidelines
+- Both widgets may cause some Lighthouse best practices warnings due to external dependencies
+- This is ACCEPTABLE - functionality over perfect Lighthouse scores
+- If Lighthouse CI fails due to widgets, adjust thresholds rather than removing widgets
+- Always maintain robust error handling and fallback mechanisms
+- Accept CSP violations from external widget scripts as necessary for functionality
+- Keep 'unsafe-inline' in CSP style-src to allow widget styling
+
 ## Key Sections to Maintain
 
 ### Profile Information
@@ -91,6 +118,22 @@ This is David Dashti's professional portfolio website showcasing his expertise i
 - Unit tests: `npm run test:unit`
 - Linting: `npm run lint`
 - Format check: `npm run format:check`
+
+### Lighthouse CI Configuration
+**IMPORTANT**: The site includes external widgets that may impact Lighthouse scores.
+
+**Current Thresholds (in `.lighthouserc.js`):**
+- Performance: ≥0.85
+- Accessibility: ≥0.95
+- Best Practices: ≥0.9 (may need adjustment to ≥0.85 due to widgets)
+- SEO: ≥0.9
+- PWA: ≥0.8
+
+**Widget Impact on Lighthouse:**
+- External widgets (GitHub repos, TradingView) may cause CSP violations
+- This can reduce Best Practices score to ~0.85-0.87
+- **SOLUTION**: Adjust thresholds if needed, NEVER remove widgets
+- Functionality and user experience take priority over perfect Lighthouse scores
 
 ## Build and Deployment
 - Test all changes locally before deployment
