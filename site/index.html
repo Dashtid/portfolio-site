@@ -862,10 +862,47 @@
         }
       })
     </script>
-    <!-- GitHub Repo Widget - Temporarily disabled for Lighthouse best practices -->
+    <!-- GitHub Repo Widget -->
+    <script src="https://repowidget.vercel.app/assets/js/repoWidget.min.js" crossorigin="anonymous" defer></script>
     <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
-      // Show fallback content for repos
+      // Initialize repo widget with enhanced error handling
       document.addEventListener('DOMContentLoaded', function () {
+        // Wait a moment for external script to load
+        setTimeout(() => {
+          if (typeof createRepoWidget === 'function') {
+            try {
+              createRepoWidget({
+                username: 'dashtid',
+                containerId: 'repo-container',
+                columns: {
+                  mobile: 1,
+                  tablet: 2,
+                  desktop: 3
+                },
+                maxRepos: 6,
+                sortBy: 'updated',
+                scaleOnHover: 1.05,
+                cardStyles: {
+                  backgroundColor: '#ffffff'
+                },
+                textStyles: {
+                  titleColor: '#333333',
+                  descriptionColor: '#666666',
+                  iconColor: '#888888'
+                }
+              })
+            } catch (error) {
+              // Silently fall back to manual link
+              showRepoFallback()
+            }
+          } else {
+            // External script didn't load, show fallback
+            showRepoFallback()
+          }
+        }, 500)
+      })
+
+      function showRepoFallback() {
         const container = document.getElementById('repo-container')
         const loading = document.getElementById('repo-loading')
         if (loading) loading.style.display = 'none'
@@ -874,7 +911,7 @@
             '<p class="text-center">Visit <a href="https://github.com/Dashtid" target="_blank" rel="noopener">GitHub profile</a> to view projects.</p>'
           container.classList.remove('d-none')
         }
-      })
+      }
     </script>
     <!-- Back to Top Button -->
     <button type="button" class="btn btn-lg rounded-circle back-to-top" id="backToTopBtn" title="Back to Top">
