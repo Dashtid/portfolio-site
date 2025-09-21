@@ -95,9 +95,14 @@ self.addEventListener('fetch', event => {
         })
         .catch(() => {
           // Return offline page for HTML requests
-          if (event.request.headers.get('accept').includes('text/html')) {
+          if (
+            event.request.headers.get('accept') &&
+            event.request.headers.get('accept').includes('text/html')
+          ) {
             return caches.match('/index.html')
           }
+          // Return a default response for other requests
+          return new Response('Offline', { status: 200, statusText: 'OK' })
         })
     })
   )
