@@ -925,6 +925,11 @@ section h2 {
   min-height: 500px;
 }
 
+/* Markets section specific styles */
+#markets .tradingview-widget-container {
+  height: 400px;
+}
+
 /* =========================
    Back to Top Button
 ========================= */

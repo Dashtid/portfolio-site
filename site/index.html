@@ -250,6 +250,15 @@
               <li class="nav-item">
                 <a
                   class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
+                  href="#markets"
+                  data-scroll="markets"
+                  tabindex="0"
+                  >Markets</a
+                >
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link px-3 py-2 border rounded shadow-sm text-center internal-nav"
                   href="#github-repos"
                   data-scroll="github-repos"
                   tabindex="0"
@@ -289,7 +298,7 @@
               >
               <a
                 class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="education/fdf.html"
+                href="experience/fdf.html"
                 aria-label="Finnish Defence Forces"
                 >FDF</a
               >
@@ -396,7 +405,7 @@
                     day-to-day command of 150 soldiers and field operation command of 30 soldiers, with intensive
                     training in leadership, stress resilience, and organizational skills.
                   </p>
-                  <a href="fdf.html" class="btn btn-outline-primary">Learn More</a>
+                  <a href="experience/fdf.html" class="btn btn-outline-primary">Learn More</a>
                 </div>
               </div>
             </div>
@@ -629,6 +638,33 @@
         </div>
       </section>
 
+      <section id="markets" class="py-5 bg-light" aria-labelledby="markets-heading">
+        <div class="container">
+          <h2 id="markets-heading" class="mb-4 d-flex align-items-center">
+            <img src="static/images/about.svg" alt="" class="section-icon" loading="lazy" role="presentation" />
+            Market Overview
+          </h2>
+          <p class="mb-4 text-muted">
+            Track major global markets across different sectors including Financial Services, Technology, and Healthcare.
+          </p>
+
+          <!-- TradingView Widget -->
+          <div class="tradingview-widget-container">
+            <!-- Widget will be populated by trading-widgets.js -->
+          </div>
+
+          <div class="mt-4 text-center">
+            <a
+              href="market-analysis.html"
+              class="btn btn-primary"
+              aria-label="View detailed market analysis"
+            >
+              Full Analysis
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section id="github-repos" class="py-5" aria-labelledby="github-heading">
         <div class="container">
           <h2 id="github-heading" class="mb-4 d-flex align-items-center">
@@ -821,7 +857,6 @@
     <!-- GitHub Repo Widget -->
     <script
       src="https://repowidget.vercel.app/assets/js/repoWidget.min.js"
-      integrity="sha384-syZEPfSz4TF1eXAayxH2O24jzZBomwyKlB+Lucfi7MWnjVGJdv5F+UyZacUu2RaA"
       crossorigin="anonymous"
     ></script>
     <script nonce="mkEcbGAFwSUBagQAEQwEnA==">

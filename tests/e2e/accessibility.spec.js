@@ -11,11 +11,12 @@ test.describe('Accessibility', () => {
 
     // Check section headings
     const h2s = page.locator('h2')
-    await expect(h2s).toHaveCount(5) // Experience, Education, Projects, About, Contact
+    await expect(h2s).toHaveCount(6) // Experience, Education, Markets, Projects, About, Contact
 
     // Verify h2 content
     await expect(h2s.nth(0)).toContainText('Experience')
     await expect(h2s.nth(1)).toContainText('Education')
+    await expect(h2s.nth(2)).toContainText('Market Overview')
   })
 
   test('should have alt text for images', async ({ page }) => {
