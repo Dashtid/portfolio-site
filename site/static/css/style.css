@@ -1017,6 +1017,7 @@ section h2 {
 @supports (-webkit-touch-callout: none) {
   .theme-switch {
     -webkit-appearance: none;
+    appearance: none;
     -webkit-tap-highlight-color: transparent;
   }
 
