@@ -65,17 +65,18 @@ test.describe('Homepage', () => {
   test('should have accessible navigation', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
-    // Check skip link
-    const skipLink = page.locator('.skip-nav')
-    await expect(skipLink).toHaveAttribute('href', '#main-heading')
-
-    // Test keyboard navigation
+    // Test keyboard navigation starts with navbar brand
     await page.keyboard.press('Tab')
-    await expect(skipLink).toBeFocused()
+    const navbarBrand = page.locator('.navbar-brand')
+    await expect(navbarBrand).toBeFocused()
 
     // Check ARIA attributes
     const nav = page.locator('.navbar')
     await expect(nav).toHaveAttribute('role', 'navigation')
     await expect(nav).toHaveAttribute('aria-label', 'Main navigation')
+
+    // Check main navigation links exist and are accessible
+    const navLinks = page.locator('.nav-link')
+    await expect(navLinks.first()).toBeVisible()
   })
 })

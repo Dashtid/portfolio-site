@@ -64,12 +64,7 @@ test.describe('Accessibility', () => {
   test('should support keyboard navigation', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
-    // Test skip link
-    await page.keyboard.press('Tab')
-    const skipLink = page.locator('.skip-nav')
-    await expect(skipLink).toBeFocused()
-
-    // Test main navigation
+    // Test main navigation (first focusable element)
     await page.keyboard.press('Tab')
     await expect(page.locator('.navbar-brand')).toBeFocused()
 
@@ -82,10 +77,10 @@ test.describe('Accessibility', () => {
       await page.keyboard.press('Tab')
       await page.waitForTimeout(200) // Longer delay for Firefox focus events
 
-      // Check if any internal nav element is focused
+      // Check if any nav element is focused
       const focusedElement = await page.evaluate(() => {
         const activeEl = document.activeElement
-        return activeEl?.classList.contains('internal-nav') || false
+        return activeEl?.classList.contains('nav-link') || false
       })
 
       if (focusedElement) {
@@ -186,17 +181,14 @@ test.describe('Accessibility', () => {
     const nav = page.locator('nav[role="navigation"]')
     await expect(nav).toHaveAttribute('aria-label')
 
-    // Check button states
+    // Check theme switch states
     const themeToggle = page.locator('#themeToggle')
-    await expect(themeToggle).toHaveAttribute('aria-pressed')
+    await expect(themeToggle).toHaveAttribute('aria-checked')
+    await expect(themeToggle).toHaveAttribute('role', 'switch')
 
     // Check section landmarks
     const main = page.locator('main')
     await expect(main).toBeVisible()
-
-    // Check skip navigation
-    const skipLink = page.locator('.skip-nav')
-    await expect(skipLink).toHaveAttribute('href', '#main-heading')
   })
 
   test('should support reduced motion', async ({ page, context }) => {

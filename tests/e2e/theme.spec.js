@@ -8,27 +8,38 @@ test.describe('Theme System', () => {
     const html = page.locator('html')
     await expect(html).not.toHaveAttribute('data-theme', 'dark')
 
-    // Find and click theme toggle
+    // Find system/manual toggle first
     const themeToggle = page.locator('#themeToggle')
     await expect(themeToggle).toBeVisible()
 
-    // Click to switch to dark theme
+    // Click to switch to manual mode
     await themeToggle.click()
+    await page.waitForTimeout(500) // Wait for animation
+
+    // Now find the light/dark toggle
+    const lightDarkToggle = page.locator('#lightDarkToggle')
+    await expect(lightDarkToggle).toBeVisible()
+
+    // Click to switch to dark theme
+    await lightDarkToggle.click()
     await expect(html).toHaveAttribute('data-theme', 'dark')
-    await expect(themeToggle).toContainText('Light')
 
     // Click to switch back to light theme
-    await themeToggle.click()
+    await lightDarkToggle.click()
     await expect(html).toHaveAttribute('data-theme', 'light')
-    await expect(themeToggle).toContainText('Dark')
   })
 
   test('should persist theme preference', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
-    // Switch to dark theme
+    // Switch to manual mode first
     const themeToggle = page.locator('#themeToggle')
     await themeToggle.click()
+    await page.waitForTimeout(500)
+
+    // Switch to dark theme
+    const lightDarkToggle = page.locator('#lightDarkToggle')
+    await lightDarkToggle.click()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     // Verify localStorage was set
@@ -37,104 +48,91 @@ test.describe('Theme System', () => {
     )
     expect(themeInStorage).toBe('dark')
 
+    // Verify manual mode was set
+    const modeInStorage = await page.evaluate(() =>
+      localStorage.getItem('theme-mode')
+    )
+    expect(modeInStorage).toBe('manual')
+
     // Reload page and check if theme persists
     await page.reload({ waitUntil: 'networkidle' })
-
-    // Wait longer for Firefox to properly restore theme
     await page.waitForTimeout(1000)
 
-    // Check theme restoration with multiple attempts for Firefox reliability
-    let attempts = 0
-    const maxAttempts = 5
-    let themeRestored = false
-
-    while (attempts < maxAttempts && !themeRestored) {
-      try {
-        await expect(page.locator('html')).toHaveAttribute(
-          'data-theme',
-          'dark',
-          { timeout: 2000 }
-        )
-        await expect(themeToggle).toContainText('Light', { timeout: 2000 })
-        themeRestored = true
-      } catch (error) {
-        attempts++
-        if (attempts < maxAttempts) {
-          await page.waitForTimeout(500)
-          // Force theme reinitialization if needed
-          await page.evaluate(() => {
-            if (
-              window.themeManager &&
-              localStorage.getItem('theme') === 'dark'
-            ) {
-              window.themeManager.setTheme('dark')
-            }
-          })
-        } else {
-          throw error
-        }
-      }
-    }
-  })
-
-  test('should respect system theme preference', async ({ page, context }) => {
-    // Clear any existing theme preference and cookies
-    await page.goto('http://localhost:3000')
-    await page.evaluate(() => {
-      localStorage.clear()
-      sessionStorage.clear()
-    })
-
-    // Set system to prefer dark mode BEFORE navigation
-    await page.emulateMedia({ colorScheme: 'dark' })
-    await page.goto('http://localhost:3000', { waitUntil: 'networkidle' })
-
-    // Wait for theme initialization with multiple checks
-    await page.waitForFunction(
-      () => document.documentElement.hasAttribute('data-theme'),
-      { timeout: 5000 }
-    )
-    await page.waitForTimeout(1500) // Extra time for Firefox
-
-    // Should start with dark theme
+    // Check theme restoration
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
-    // Clear storage again and switch to light theme preference
+    // Check that manual toggle is visible
+    await expect(page.locator('#manualThemeToggle')).toBeVisible()
+  })
+
+  test('should respect system theme preference', async ({ page }) => {
+    await page.goto('http://localhost:3000')
+
+    // Clear any existing preferences
     await page.evaluate(() => {
-      localStorage.clear()
-      sessionStorage.clear()
+      localStorage.removeItem('theme')
+      localStorage.removeItem('theme-mode')
     })
-    await page.emulateMedia({ colorScheme: 'light' })
-    await page.goto('http://localhost:3000', { waitUntil: 'networkidle' })
 
-    // Wait for theme initialization again
-    await page.waitForFunction(
-      () => document.documentElement.hasAttribute('data-theme'),
-      { timeout: 5000 }
-    )
-    await page.waitForTimeout(1500) // Extra time for Firefox
+    // Reload to reset to system mode
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.waitForTimeout(500)
 
-    // Should start with light theme (or no dark theme attribute)
-    const htmlElement = page.locator('html')
-    const hasDataTheme = await htmlElement.getAttribute('data-theme')
-    expect(hasDataTheme).not.toBe('dark')
+    // Should be in system mode by default
+    const themeToggle = page.locator('#themeToggle')
+    await expect(themeToggle).toHaveAttribute('aria-checked', 'false')
+
+    // Manual toggle should be hidden
+    const manualToggle = page.locator('#manualThemeToggle')
+    await expect(manualToggle).toHaveClass(/hidden/)
   })
 
   test('should have proper ARIA attributes', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
+    // Check system/manual toggle ARIA
     const themeToggle = page.locator('#themeToggle')
-    await expect(themeToggle).toHaveAttribute(
-      'aria-label',
-      /Switch to .* theme/
-    )
-    await expect(themeToggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(themeToggle).toHaveAttribute('role', 'switch')
+    await expect(themeToggle).toHaveAttribute('aria-checked')
+    await expect(themeToggle).toHaveAttribute('title')
 
-    // Click and check ARIA updates
+    // Switch to manual mode to test light/dark toggle
     await themeToggle.click()
-    await expect(themeToggle).toHaveAttribute(
-      'aria-label',
-      /Switch to .* theme/
-    )
+    await page.waitForTimeout(500)
+
+    // Check light/dark toggle ARIA
+    const lightDarkToggle = page.locator('#lightDarkToggle')
+    await expect(lightDarkToggle).toHaveAttribute('role', 'switch')
+    await expect(lightDarkToggle).toHaveAttribute('aria-checked')
+    await expect(lightDarkToggle).toHaveAttribute('title')
+  })
+
+  test('should support keyboard navigation', async ({ page }) => {
+    await page.goto('http://localhost:3000')
+
+    // Focus the system/manual toggle
+    const themeToggle = page.locator('#themeToggle')
+    await themeToggle.focus()
+    await expect(themeToggle).toBeFocused()
+
+    // Test keyboard activation with Enter
+    await page.keyboard.press('Enter')
+    await page.waitForTimeout(500)
+
+    // Manual toggle should now be visible
+    const lightDarkToggle = page.locator('#lightDarkToggle')
+    await expect(lightDarkToggle).toBeVisible()
+
+    // Focus and test the light/dark toggle
+    await lightDarkToggle.focus()
+    await expect(lightDarkToggle).toBeFocused()
+
+    // Test keyboard activation with Space
+    await page.keyboard.press(' ')
+    await page.waitForTimeout(200)
+
+    // Theme should have changed
+    const html = page.locator('html')
+    await expect(html).toHaveAttribute('data-theme', 'dark')
   })
 })
