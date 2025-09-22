@@ -68,17 +68,32 @@ test.describe('Accessibility', () => {
     await page.keyboard.press('Tab')
     await expect(page.locator('.navbar-brand')).toBeFocused()
 
-    // Tab through all navigation links sequentially
+    // Tab through all main navigation links sequentially
     const navLinks = [
-      'a[href="#experience"]',
-      'a[href="#education"]',
-      'a[href="#markets"]',
-      'a[href="#projects"]',
-      'a[href="#about"]',
-      'a[href="#contact"]'
+      '.navbar-nav a[href="#experience"]',
+      '.navbar-nav a[href="#education"]',
+      '.navbar-nav a[href="#markets"]',
+      '.navbar-nav a[href="#projects"]',
+      '.navbar-nav a[href="#about"]',
+      '.navbar-nav a[href="#contact"]'
     ]
 
     for (const linkSelector of navLinks) {
+      await page.keyboard.press('Tab')
+      await expect(page.locator(linkSelector)).toBeFocused()
+    }
+
+    // Tab through secondary navigation links (Experience pages)
+    const secondaryNavLinks = [
+      '[aria-labelledby="experience-pages-label"] a[href="#experience"]',
+      '[aria-labelledby="experience-pages-label"] a[href="#education"]',
+      '[aria-labelledby="experience-pages-label"] a[href="#markets"]',
+      '[aria-labelledby="experience-pages-label"] a[href="#projects"]',
+      '[aria-labelledby="experience-pages-label"] a[href="#about"]',
+      '[aria-labelledby="experience-pages-label"] a[href="#contact"]'
+    ]
+
+    for (const linkSelector of secondaryNavLinks) {
       await page.keyboard.press('Tab')
       await expect(page.locator(linkSelector)).toBeFocused()
     }

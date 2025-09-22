@@ -114,6 +114,47 @@ This is David Dashti's professional portfolio website showcasing his expertise i
 - Playwright may need additional browser installations: `npx playwright install`
 - Test timeouts may need adjustment on slower Windows systems
 
+**Common Windows Issues & Solutions:**
+
+1. **EPERM Error (test-results directory)**:
+   ```
+   Error: EPERM: operation not permitted, rmdir 'test-results'
+   ```
+   **Solution**: Clear test-results before running tests:
+   ```bash
+   # Use PowerShell to force remove
+   powershell -Command "if (Test-Path 'test-results') { Remove-Item -Recurse -Force 'test-results' }"
+   # Then run tests
+   npm run test:e2e
+   ```
+
+2. **"No tests found" Error**:
+   ```
+   Error: No tests found
+   ```
+   **Root Cause**: The main config (`config/playwright.config.js`) only includes Chromium project and looks for tests in `./tests/e2e`, but from project root this doesn't match the file structure properly.
+
+   **Solutions**:
+   - **Option A (Recommended)**: Run from e2e directory:
+     ```bash
+     cd tests/e2e && npx playwright test
+     ```
+   - **Option B**: Use the e2e config directly:
+     ```bash
+     npx playwright test --config tests/e2e/playwright.config.js
+     ```
+   - **Option C**: Run single browser from root (Chromium only):
+     ```bash
+     npm run test:e2e
+     ```
+
+3. **Multiple Browser Testing**:
+   The e2e directory config (`tests/e2e/playwright.config.js`) includes Firefox, WebKit, and mobile browsers. Use this for comprehensive testing:
+   ```bash
+   cd tests/e2e && npx playwright test --project=firefox
+   cd tests/e2e && npx playwright test --project=webkit
+   ```
+
 ### Other Testing
 - Unit tests: `npm run test:unit`
 - Linting: `npm run lint`
