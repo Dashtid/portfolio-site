@@ -65,7 +65,12 @@ test.describe('Homepage', () => {
   test('should have accessible navigation', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
-    // Test keyboard navigation starts with navbar brand
+    // Test keyboard navigation starts with skip-nav
+    await page.keyboard.press('Tab')
+    const skipNav = page.locator('.skip-nav')
+    await expect(skipNav).toBeFocused()
+
+    // Test keyboard navigation continues with navbar brand
     await page.keyboard.press('Tab')
     const navbarBrand = page.locator('.navbar-brand')
     await expect(navbarBrand).toBeFocused()

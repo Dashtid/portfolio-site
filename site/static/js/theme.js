@@ -149,6 +149,13 @@ class ThemeManager {
           }
         }
       })
+
+      // Mobile Safari focus fix
+      if (this.isMobileSafari()) {
+        themeSlider.addEventListener('touchstart', () => {
+          themeSlider.focus()
+        })
+      }
     }
 
     // Setup light/dark theme toggle (only visible in manual mode)
@@ -173,6 +180,13 @@ class ThemeManager {
           }
         }
       })
+
+      // Mobile Safari focus fix for light/dark toggle
+      if (this.isMobileSafari()) {
+        lightDarkToggle.addEventListener('touchstart', () => {
+          lightDarkToggle.focus()
+        })
+      }
     }
 
     // Show/hide manual toggle based on initial mode
@@ -189,6 +203,17 @@ class ThemeManager {
         this.setTheme(systemTheme)
       }
     })
+  }
+
+  /**
+   * Detect Mobile Safari for specific fixes
+   */
+  isMobileSafari() {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      /Safari/.test(navigator.userAgent) &&
+      !/Chrome/.test(navigator.userAgent)
+    )
   }
 }
 

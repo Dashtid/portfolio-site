@@ -1002,7 +1002,28 @@ section h2 {
 }
 
 .theme-switch:focus {
-  box-shadow: 0 0 0 2px var(--accent-color);
+  box-shadow: 0 0 0 2px var(--primary-600);
+  outline: none;
+}
+
+.theme-switch:focus-visible {
+  box-shadow: 0 0 0 2px var(--primary-600);
+  outline: 2px solid var(--primary-600);
+  outline-offset: 2px;
+}
+
+/* Mobile Safari focus fix */
+@supports (-webkit-touch-callout: none) {
+  .theme-switch {
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .theme-switch:focus {
+    box-shadow: 0 0 0 2px var(--primary-600) !important;
+    outline: 2px solid var(--primary-600) !important;
+    outline-offset: 2px !important;
+  }
 }
 
 /* General slider styling */

@@ -64,7 +64,11 @@ test.describe('Accessibility', () => {
   test('should support keyboard navigation', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
-    // Test main navigation (first focusable element)
+    // Test skip navigation (first focusable element)
+    await page.keyboard.press('Tab')
+    await expect(page.locator('.skip-nav')).toBeFocused()
+
+    // Test main navigation (second focusable element)
     await page.keyboard.press('Tab')
     await expect(page.locator('.navbar-brand')).toBeFocused()
 
@@ -83,20 +87,7 @@ test.describe('Accessibility', () => {
       await expect(page.locator(linkSelector)).toBeFocused()
     }
 
-    // Tab through secondary navigation links (Experience pages)
-    const secondaryNavLinks = [
-      '[aria-labelledby="experience-pages-label"] a[href="#experience"]',
-      '[aria-labelledby="experience-pages-label"] a[href="#education"]',
-      '[aria-labelledby="experience-pages-label"] a[href="#markets"]',
-      '[aria-labelledby="experience-pages-label"] a[href="#projects"]',
-      '[aria-labelledby="experience-pages-label"] a[href="#about"]',
-      '[aria-labelledby="experience-pages-label"] a[href="#contact"]'
-    ]
-
-    for (const linkSelector of secondaryNavLinks) {
-      await page.keyboard.press('Tab')
-      await expect(page.locator(linkSelector)).toBeFocused()
-    }
+    // Note: External page navigation links were removed from homepage per user request
 
     // Continue tabbing to reach theme toggle
     await page.keyboard.press('Tab')
