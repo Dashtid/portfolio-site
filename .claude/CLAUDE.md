@@ -155,6 +155,39 @@ This is David Dashti's professional portfolio website showcasing his expertise i
    cd tests/e2e && npx playwright test --project=webkit
    ```
 
+4. **Port Conflict in Test Report Viewer**:
+   ```
+   Error: listen EADDRINUSE: address already in use ::1:9323
+   ```
+   **Root Cause**: Previous test report viewer process still running on port 9323.
+
+   **Solutions**:
+   - **Check running processes**: `netstat -ano | findstr :9323`
+   - **Kill process**: `powershell -Command "Stop-Process -Id PROCESS_ID -Force"`
+   - **Alternative**: Use different port: `npx playwright show-report --port 9324`
+
+5. **Test Report Timeout Issue**:
+   ```
+   Error: Command timed out after 2m 0.0s
+   > portfolio-site@1.0.0 test:report
+   > playwright show-report
+   ```
+   **Root Cause**: `npm run test:report` command starts a web server that doesn't terminate, causing Bash tool to timeout.
+
+   **Solutions**:
+   - **Expected behavior**: Report opens in browser automatically, ignore timeout error
+   - **Alternative**: Use direct command: `npx playwright show-report --port 9324`
+   - **Kill hanging process**: `netstat -ano | findstr :9323` then `taskkill /PID PROCESS_ID /F`
+
+6. **Windows Command Compatibility**:
+   **Issue**: Commands like `dir test-results /s` fail in Git Bash context.
+
+   **Solutions**:
+   - **Use ls in Git Bash**: `ls -la test-results/`
+   - **Use Windows commands properly**: `cmd /c "dir test-results /s"`
+   - **PowerShell for complex operations**: `powershell -Command "Get-ChildItem test-results -Recurse"`
+   - **Avoid mixed command syntax**: Don't use `dir` with Unix flags
+
 ### Other Testing
 - Unit tests: `npm run test:unit`
 - Linting: `npm run lint`

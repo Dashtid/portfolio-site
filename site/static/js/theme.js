@@ -381,7 +381,7 @@ class ProjectManager {
 
   init() {
     this.setupEventListeners()
-    this.interceptRepoWidget()
+    // this.interceptRepoWidget() // Disabled to prevent conflicts with direct widget initialization
   }
 
   setupEventListeners() {

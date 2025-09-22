@@ -13,22 +13,78 @@
 
   <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+    <nav
+      class="navbar navbar-expand-lg navbar-light bg-light sticky-top"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       <div class="container">
-        <a class="navbar-brand" href="../index.html">David Dashti</a>
-        <div class="d-flex gap-3 align-items-center">
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="../index.html">Home</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="scania.html">Scania</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="fdf.html">FDF</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="hermes.html">Hermes</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="karolinska.html">Karolinska</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="../market-analysis.html">Markets</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center" href="philips.html">Philips</a>
-          <a class="nav-link px-4 py-2 border rounded shadow-sm text-center active" href="sos.html">SÖS</a>
-          <!-- Theme toggle button -->
-          <button id="theme-toggle" class="btn btn-sm btn-outline-dark ms-2" type="button" aria-label="Toggle theme">
-            Dark
-          </button>
+        <a class="navbar-brand" href="../index.html" aria-label="David Dashti - Home">David Dashti</a>
+        <button
+          class="navbar-toggler d-lg-none"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#mainNavigation"
+          aria-controls="mainNavigation"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNavigation">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link px-3 py-2 border rounded shadow-sm text-center" href="../index.html">Home</a>
+            </li>
+          </ul>
+
+          <div class="d-flex gap-2 flex-wrap align-items-center" role="group" aria-labelledby="experience-pages-label">
+            <span id="experience-pages-label" class="visually-hidden">Experience pages</span>
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="scania.html">Scania</a>
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="fdf.html">FDF</a>
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="hermes.html">Hermes</a>
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="karolinska.html">Karolinska</a>
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="../market-analysis.html"
+              >Markets</a
+            >
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="philips.html">Philips</a>
+            <a class="nav-link px-2 py-1 border rounded shadow-sm text-center active" href="sos.html">SÖS</a>
+
+            <div class="theme-switch-container ms-3" role="group" aria-labelledby="theme-switch-label">
+              <span id="theme-switch-label" class="visually-hidden">Theme controls</span>
+              <div class="theme-switch-wrapper">
+                <span class="theme-switch-label">System</span>
+                <div
+                  class="theme-switch"
+                  id="themeToggle"
+                  role="switch"
+                  aria-checked="false"
+                  tabindex="0"
+                  title="Switch between system and manual theme control"
+                >
+                  <div class="theme-switch-slider"></div>
+                </div>
+                <span class="theme-switch-label">Manual</span>
+              </div>
+              <div class="theme-toggle-manual ms-2 hidden" id="manualThemeToggle">
+                <div class="theme-switch-wrapper">
+                  <span class="theme-switch-label theme-switch-label-small">☀️</span>
+                  <div
+                    class="theme-switch theme-switch-small"
+                    id="lightDarkToggle"
+                    role="switch"
+                    aria-checked="false"
+                    tabindex="0"
+                    title="Switch between light and dark theme"
+                  >
+                    <div class="theme-switch-slider"></div>
+                  </div>
+                  <span class="theme-switch-label theme-switch-label-small">🌙</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -81,7 +137,12 @@
     <button type="button" class="btn btn-lg rounded-circle back-to-top" id="backToTopBtn" title="Back to Top">
       &uarr;
     </button>
-    <!-- Include theme script before </body> -->
+    <!-- Bootstrap JavaScript -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
     <script src="../static/js/theme.js"></script>
   </body>
 </html>

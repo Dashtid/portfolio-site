@@ -1,6 +1,6 @@
 /**
- * Trading Widgets Implementation
- * Restored with enhanced error handling and CSP compatibility
+ * Original Working TradingView Widgets Implementation
+ * Restoring your original market-overview widget from commit 420b707
  */
 
 // Initialize widgets when DOM is loaded
@@ -16,7 +16,7 @@ function initializeTradingWidgets() {
   const theme = document.documentElement.getAttribute('data-theme') || 'light'
   const widgetTheme = theme === 'dark' ? 'dark' : 'light'
 
-  // Initialize home page widget
+  // Initialize home page widget (your original working config)
   initializeHomeWidget(widgetTheme)
 
   // Initialize market analysis widgets
@@ -29,96 +29,63 @@ function initializeTradingWidgets() {
 }
 
 /**
- * Initialize the main widget on the home page
+ * Initialize the original single world index widget
+ * Large, simple widget tracking just one world index - your original working config
  */
 function initializeHomeWidget(theme) {
   const container = document.querySelector('.tradingview-widget-container')
   if (!container) return
 
   try {
-    // Clear existing content
-    container.innerHTML = ''
+    // Clear any existing scripts
+    const existingScripts = container.querySelectorAll('script')
+    existingScripts.forEach(script => script.remove())
 
-    // Create widget HTML
-    container.innerHTML = `
-      <div class="tradingview-widget-container__widget"></div>
-      <div class="tradingview-widget-copyright">
-        <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-          <span class="blue-text">Track all markets on TradingView</span>
-        </a>
-      </div>
-    `
+    // Set container height for the big widget
+    container.style.height = '500px'
 
-    // Create and load script with enhanced error handling
+    // Create and load script - Single Symbol Overview Widget for world index
     const script = document.createElement('script')
     script.type = 'text/javascript'
     script.src =
-      'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js'
+      'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js'
     script.async = true
-    script.crossOrigin = 'anonymous'
 
-    // Add error handling
-    script.onerror = function () {
-      showFallbackContent(container, 'Market data temporarily unavailable.')
-    }
-
+    // Configuration for single world index (MSCI World Index or S&P 500 Global)
     script.innerHTML = JSON.stringify({
-      title: 'Stocks',
-      tabs: [
-        {
-          title: 'Financial',
-          symbols: [
-            { s: 'NYSE:JPM', d: 'JPMorgan Chase' },
-            { s: 'NYSE:WFC', d: 'Wells Fargo Co New' },
-            { s: 'NYSE:BAC', d: 'Bank Amer Corp' },
-            { s: 'NYSE:HSBC', d: 'Hsbc Hldgs Plc' },
-            { s: 'NYSE:C', d: 'Citigroup Inc' },
-            { s: 'NYSE:MA', d: 'Mastercard Incorporated' }
-          ]
-        },
-        {
-          title: 'Technology',
-          symbols: [
-            { s: 'NASDAQ:AAPL', d: 'Apple' },
-            { s: 'NASDAQ:GOOGL', d: 'Alphabet' },
-            { s: 'NASDAQ:MSFT', d: 'Microsoft' },
-            { s: 'NASDAQ:META', d: 'Meta Platforms' },
-            { s: 'NYSE:ORCL', d: 'Oracle Corp' },
-            { s: 'NASDAQ:INTC', d: 'Intel Corp' }
-          ]
-        },
-        {
-          title: 'Services',
-          symbols: [
-            { s: 'NASDAQ:AMZN', d: 'Amazon' },
-            { s: 'NYSE:BABA', d: 'Alibaba Group Hldg Ltd' },
-            { s: 'NYSE:T', d: 'At&t Inc' },
-            { s: 'NYSE:WMT', d: 'Walmart' },
-            { s: 'NYSE:V', d: 'Visa' }
-          ]
-        }
+      symbols: [
+        ['FOREXCOM:SPXUSD', 'S&P 500'] // Major world index
       ],
+      chartOnly: false,
       width: '100%',
-      height: '100%',
-      showChart: true,
-      showFloatingTooltip: false,
+      height: '500',
       locale: 'en',
-      plotLineColorGrowing: '#2962FF',
-      plotLineColorFalling: '#2962FF',
-      belowLineFillColorGrowing: 'rgba(41, 98, 255, 0.12)',
-      belowLineFillColorFalling: 'rgba(41, 98, 255, 0.12)',
-      belowLineFillColorGrowingBottom: 'rgba(41, 98, 255, 0)',
-      belowLineFillColorFallingBottom: 'rgba(41, 98, 255, 0)',
-      gridLineColor: 'rgba(240, 243, 250, 0)',
-      scaleFontColor: 'rgba(120, 123, 134, 1)',
-      showSymbolLogo: true,
-      symbolActiveColor: 'rgba(41, 98, 255, 0.12)',
-      colorTheme: theme
+      colorTheme: theme,
+      autosize: true,
+      showVolume: true,
+      showMA: false,
+      hideDateRanges: false,
+      hideMarketStatus: false,
+      hideSymbolLogo: false,
+      scalePosition: 'right',
+      scaleMode: 'Normal',
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+      fontSize: '10',
+      noTimeScale: false,
+      valuesTracking: '1',
+      changeMode: 'price-and-percent',
+      chartType: 'area',
+      headerFontSize: 'medium',
+      lineWidth: 2,
+      lineType: 0,
+      dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M']
     })
 
     container.appendChild(script)
   } catch (error) {
-    showFallbackContent(container, 'Market data widgets currently unavailable.')
+    console.warn('TradingView widget error:', error)
+    showFallbackContent(container, 'Market data temporarily unavailable.')
   }
 }
 

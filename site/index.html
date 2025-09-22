@@ -216,6 +216,8 @@
   </head>
 
   <body>
+    <a href="#main-heading" class="skip-nav" tabindex="1">Skip to main content</a>
+
     <div class="stockholm-background">
       <nav
         class="navbar navbar-expand-lg navbar-light bg-light sticky-top"
@@ -294,19 +296,7 @@
               </li>
             </ul>
 
-            <div
-              class="d-flex gap-2 flex-wrap align-items-center"
-              role="group"
-              aria-labelledby="experience-pages-label"
-            >
-              <span id="experience-pages-label" class="visually-hidden">Experience pages</span>
-              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#experience">Experience</a>
-              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#education">Education</a>
-              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#markets">Markets</a>
-              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#projects">Projects</a>
-              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#about">About</a>
-              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#contact">Contact</a>
-
+            <div class="d-flex gap-2 flex-wrap align-items-center" role="group" aria-labelledby="theme-switch-label">
               <div class="theme-switch-container ms-3" role="group" aria-labelledby="theme-switch-label">
                 <span id="theme-switch-label" class="visually-hidden">Theme controls</span>
                 <div class="theme-switch-wrapper">
@@ -652,7 +642,12 @@
 
           <!-- TradingView Widget -->
           <div class="tradingview-widget-container">
-            <!-- Widget will be populated by trading-widgets.js -->
+            <div class="tradingview-widget-container__widget"></div>
+            <div class="tradingview-widget-copyright">
+              <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                <span class="blue-text">Track all markets on TradingView</span>
+              </a>
+            </div>
           </div>
 
           <div class="mt-4 text-center">
@@ -853,16 +848,10 @@
       })
     </script>
     <!-- GitHub Repo Widget -->
-    <script src="https://repowidget.vercel.app/assets/js/repoWidget.min.js" crossorigin="anonymous" defer></script>
+    <script src="https://repowidget.vercel.app/assets/js/repoWidget.min.js" crossorigin="anonymous"></script>
     <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
       // Initialize repo widget with enhanced error handling
-      let widgetInitialized = false
-      let retryCount = 0
-      const maxRetries = 3
-
-      function initRepoWidget() {
-        if (widgetInitialized) return
-
+      function initGitHubWidget() {
         if (typeof createRepoWidget === 'function') {
           try {
             createRepoWidget({
@@ -885,7 +874,6 @@
                 iconColor: '#888888'
               }
             })
-            widgetInitialized = true
 
             // Hide loading indicator when widget loads
             const loading = document.getElementById('repo-loading')
@@ -894,30 +882,16 @@
             const container = document.getElementById('repo-container')
             if (container) container.classList.remove('d-none')
           } catch (error) {
-            console.warn('Repo widget error:', error)
-            showRepoFallback()
+            console.warn('GitHub widget error:', error)
+            showGitHubFallback()
           }
-        } else if (retryCount < maxRetries) {
-          retryCount++
-          setTimeout(initRepoWidget, 1000 * retryCount)
         } else {
-          showRepoFallback()
+          // Retry after a short delay if createRepoWidget isn't available yet
+          setTimeout(initGitHubWidget, 500)
         }
       }
 
-      document.addEventListener('DOMContentLoaded', function () {
-        // Try immediate initialization
-        initRepoWidget()
-
-        // Also try after window load
-        window.addEventListener('load', () => {
-          if (!widgetInitialized) {
-            setTimeout(initRepoWidget, 500)
-          }
-        })
-      })
-
-      function showRepoFallback() {
+      function showGitHubFallback() {
         const container = document.getElementById('repo-container')
         const loading = document.getElementById('repo-loading')
         if (loading) loading.style.display = 'none'
@@ -927,6 +901,9 @@
           container.classList.remove('d-none')
         }
       }
+
+      // Initialize after DOM and scripts are ready
+      window.addEventListener('load', initGitHubWidget)
     </script>
     <!-- Back to Top Button -->
     <button type="button" class="btn btn-lg rounded-circle back-to-top" id="backToTopBtn" title="Back to Top">
