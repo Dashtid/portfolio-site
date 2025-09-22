@@ -68,84 +68,32 @@ test.describe('Accessibility', () => {
     await page.keyboard.press('Tab')
     await expect(page.locator('.navbar-brand')).toBeFocused()
 
-    // Tab through navigation items - find any internal nav that gets focus
-    let internalNavFocused = false
-    let attempts = 0
-    const maxAttempts = 15 // Even more attempts for Firefox
+    // Tab through all navigation links sequentially
+    const navLinks = [
+      'a[href="#experience"]',
+      'a[href="#education"]',
+      'a[href="#markets"]',
+      'a[href="#projects"]',
+      'a[href="#about"]',
+      'a[href="#contact"]'
+    ]
 
-    while (!internalNavFocused && attempts < maxAttempts) {
+    for (const linkSelector of navLinks) {
       await page.keyboard.press('Tab')
-      await page.waitForTimeout(200) // Longer delay for Firefox focus events
-
-      // Check if any nav element is focused
-      const focusedElement = await page.evaluate(() => {
-        const activeEl = document.activeElement
-        return activeEl?.classList.contains('nav-link') || false
-      })
-
-      if (focusedElement) {
-        internalNavFocused = true
-        break
-      }
-
-      // Also check if we've reached the theme toggle (means we passed internal nav)
-      const themeToggleFocused = await page.evaluate(() => {
-        return document.activeElement?.id === 'themeToggle'
-      })
-
-      if (themeToggleFocused) {
-        // If we reached theme toggle, at least one internal nav should have been focusable
-        // Let's be less strict and accept this as success
-        internalNavFocused = true
-        break
-      }
-
-      attempts++
+      await expect(page.locator(linkSelector)).toBeFocused()
     }
-    expect(internalNavFocused).toBeTruthy()
 
-    // Test theme toggle - verify it's focusable
+    // Continue tabbing to reach theme toggle
+    await page.keyboard.press('Tab')
+    await expect(page.locator('#themeToggle')).toBeFocused()
+
+    // Test that theme toggle responds to keyboard
+    await page.keyboard.press('Enter')
+    await page.waitForTimeout(200)
+
+    // Theme toggle should have switched mode (aria-checked should be true)
     const themeToggle = page.locator('#themeToggle')
-    await expect(themeToggle).toBeVisible()
-
-    // Focus the theme toggle directly to verify it's focusable
-    await themeToggle.focus()
-    await expect(themeToggle).toBeFocused()
-
-    // Test that theme toggle is reachable via keyboard navigation
-    // Reset focus to start of page
-    await page.locator('.skip-nav').focus()
-
-    // Test if theme toggle eventually receives focus via tab navigation
-    let themeToggleFocused = false
-    const maxTabs = 20 // Increased to account for all elements
-
-    for (let i = 0; i < maxTabs; i++) {
-      await page.keyboard.press('Tab')
-      await page.waitForTimeout(50) // Reduced delay but keep some timing
-
-      // Check if we've reached the theme toggle
-      const currentlyFocused = await page.evaluate(() => {
-        return document.activeElement?.id
-      })
-
-      if (currentlyFocused === 'themeToggle') {
-        themeToggleFocused = true
-        break
-      }
-    }
-
-    // Accept if theme toggle is focusable directly, even if tab order is complex
-    if (!themeToggleFocused) {
-      // Final check: can we focus it directly? If yes, keyboard navigation works
-      await themeToggle.focus()
-      const finalCheck = await themeToggle.evaluate(
-        el => document.activeElement === el
-      )
-      expect(finalCheck).toBeTruthy()
-    } else {
-      expect(themeToggleFocused).toBeTruthy()
-    }
+    await expect(themeToggle).toHaveAttribute('aria-checked', 'true')
   })
 
   test('should have sufficient color contrast', async ({ page }) => {
