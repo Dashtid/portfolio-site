@@ -6,40 +6,98 @@
 class ThemeManager {
   constructor() {
     this.storageKey = 'theme'
+    this.modeKey = 'theme-mode' // 'system' or 'manual'
     this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    this.currentMode = this.getInitialMode()
     this.currentTheme = this.getInitialTheme()
 
     this.init()
   }
 
+  getInitialMode() {
+    return localStorage.getItem(this.modeKey) || 'system'
+  }
+
   getInitialTheme() {
+    const mode = this.getInitialMode()
+    if (mode === 'system') {
+      return this.mediaQuery.matches ? 'dark' : 'light'
+    }
     const saved = localStorage.getItem(this.storageKey)
     return saved || (this.mediaQuery.matches ? 'dark' : 'light')
   }
 
   setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem(this.storageKey, theme)
+    if (this.currentMode === 'manual') {
+      localStorage.setItem(this.storageKey, theme)
+    }
     this.currentTheme = theme
 
     // Dispatch custom event for other components
     window.dispatchEvent(
       new CustomEvent('themechange', {
-        detail: { theme }
+        detail: { theme, mode: this.currentMode }
       })
     )
   }
 
-  updateButton(button, theme) {
-    const isDark = theme === 'dark'
-    button.textContent = isDark ? 'Light' : 'Dark'
-    button.classList.toggle('btn-outline-light', isDark)
-    button.classList.toggle('btn-outline-dark', !isDark)
-    button.setAttribute(
+  setMode(mode) {
+    this.currentMode = mode
+    localStorage.setItem(this.modeKey, mode)
+
+    if (mode === 'system') {
+      // Clear manual theme preference and use system
+      localStorage.removeItem(this.storageKey)
+      this.setTheme(this.mediaQuery.matches ? 'dark' : 'light')
+    } else {
+      // Switch to manual mode and keep current theme
+      this.setTheme(this.currentTheme)
+    }
+  }
+
+  updateSlider(slider) {
+    const isManualMode = this.currentMode === 'manual'
+    slider.setAttribute('aria-checked', isManualMode ? 'true' : 'false')
+    slider.setAttribute(
       'aria-label',
-      `Switch to ${isDark ? 'light' : 'dark'} theme`
+      `Theme mode: ${this.currentMode}. Click to switch to ${isManualMode ? 'system' : 'manual'} mode`
     )
-    button.setAttribute('aria-pressed', isDark ? 'true' : 'false')
+  }
+
+  updateLightDarkToggle(toggle) {
+    const isDark = this.currentTheme === 'dark'
+    toggle.setAttribute('aria-checked', isDark ? 'true' : 'false')
+    toggle.setAttribute(
+      'aria-label',
+      `Current theme: ${this.currentTheme}. Click to switch to ${isDark ? 'light' : 'dark'} theme`
+    )
+  }
+
+  showManualToggle() {
+    const manualToggle = document.getElementById('manualThemeToggle')
+    if (manualToggle) {
+      manualToggle.classList.remove('hidden')
+      setTimeout(() => {
+        manualToggle.classList.add('show')
+      }, 10)
+    }
+  }
+
+  hideManualToggle() {
+    const manualToggle = document.getElementById('manualThemeToggle')
+    if (manualToggle) {
+      manualToggle.classList.remove('show')
+      setTimeout(() => {
+        manualToggle.classList.add('hidden')
+      }, 300)
+    }
+  }
+
+  toggleMode() {
+    const nextMode = this.currentMode === 'system' ? 'manual' : 'system'
+    this.setMode(nextMode)
+    return nextMode
   }
 
   toggleTheme() {
@@ -52,25 +110,83 @@ class ThemeManager {
     // Set initial theme
     this.setTheme(this.currentTheme)
 
-    // Setup theme toggle button
-    const themeButton = document.getElementById('themeToggle')
-    if (themeButton) {
-      this.updateButton(themeButton, this.currentTheme)
+    // Setup theme toggle slider
+    const themeSlider = document.getElementById('themeToggle')
+    const lightDarkToggle = document.getElementById('lightDarkToggle')
 
-      themeButton.addEventListener('click', () => {
-        const newTheme = this.toggleTheme()
-        this.updateButton(themeButton, newTheme)
+    if (themeSlider) {
+      this.updateSlider(themeSlider)
+
+      // Handle mode switching (system/manual)
+      themeSlider.addEventListener('click', () => {
+        const newMode = this.toggleMode()
+        this.updateSlider(themeSlider)
+
+        if (newMode === 'manual') {
+          this.showManualToggle()
+          if (lightDarkToggle) {
+            this.updateLightDarkToggle(lightDarkToggle)
+          }
+        } else {
+          this.hideManualToggle()
+        }
       })
+
+      // Handle keyboard events for accessibility
+      themeSlider.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          const newMode = this.toggleMode()
+          this.updateSlider(themeSlider)
+
+          if (newMode === 'manual') {
+            this.showManualToggle()
+            if (lightDarkToggle) {
+              this.updateLightDarkToggle(lightDarkToggle)
+            }
+          } else {
+            this.hideManualToggle()
+          }
+        }
+      })
+    }
+
+    // Setup light/dark theme toggle (only visible in manual mode)
+    if (lightDarkToggle) {
+      this.updateLightDarkToggle(lightDarkToggle)
+
+      // Handle theme switching (light/dark)
+      lightDarkToggle.addEventListener('click', () => {
+        if (this.currentMode === 'manual') {
+          this.toggleTheme()
+          this.updateLightDarkToggle(lightDarkToggle)
+        }
+      })
+
+      // Handle keyboard events for accessibility
+      lightDarkToggle.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          if (this.currentMode === 'manual') {
+            this.toggleTheme()
+            this.updateLightDarkToggle(lightDarkToggle)
+          }
+        }
+      })
+    }
+
+    // Show/hide manual toggle based on initial mode
+    if (this.currentMode === 'manual') {
+      this.showManualToggle()
+    } else {
+      this.hideManualToggle()
     }
 
     // Listen for system theme changes
     this.mediaQuery.addEventListener('change', e => {
-      if (!localStorage.getItem(this.storageKey)) {
+      if (this.currentMode === 'system') {
         const systemTheme = e.matches ? 'dark' : 'light'
         this.setTheme(systemTheme)
-        if (themeButton) {
-          this.updateButton(themeButton, systemTheme)
-        }
       }
     })
   }

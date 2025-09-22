@@ -38,10 +38,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="David Dashti" />
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)" />
     <meta name="msapplication-TileColor" content="#2563eb" />
     <meta name="msapplication-navbutton-color" content="#2563eb" />
-    <link rel="apple-touch-icon" href="/static/images/cropped.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/static/images/cropped.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/static/images/cropped.png" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
@@ -216,8 +216,6 @@
   </head>
 
   <body>
-    <a href="#main-heading" class="skip-nav" tabindex="1">Skip to main content</a>
-
     <div class="stockholm-background">
       <nav
         class="navbar navbar-expand-lg navbar-light bg-light sticky-top"
@@ -302,54 +300,46 @@
               aria-labelledby="experience-pages-label"
             >
               <span id="experience-pages-label" class="visually-hidden">Experience pages</span>
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="experience/scania.html"
-                >Scania</a
-              >
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="experience/fdf.html"
-                aria-label="Finnish Defence Forces"
-                >FDF</a
-              >
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="experience/hermes.html"
-                >Hermes</a
-              >
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="experience/karolinska.html"
-                >Karolinska</a
-              >
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="market-analysis.html"
-                >Markets</a
-              >
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="experience/philips.html"
-                >Philips</a
-              >
-              <a
-                class="nav-link px-2 py-1 border rounded shadow-sm text-center external-nav"
-                href="experience/sos.html"
-                aria-label="Södersjukhuset"
-                >SÖS</a
-              >
+              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#experience">Experience</a>
+              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#education">Education</a>
+              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#markets">Markets</a>
+              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#projects">Projects</a>
+              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#about">About</a>
+              <a class="nav-link px-2 py-1 border rounded shadow-sm text-center" href="#contact">Contact</a>
 
-              <button
-                id="themeToggle"
-                class="btn btn-sm btn-outline-dark ms-3"
-                type="button"
-                aria-label="Switch to dark theme"
-                aria-pressed="false"
-                tabindex="0"
-              >
-                Dark
-              </button>
+              <div class="theme-switch-container ms-3" role="group" aria-labelledby="theme-switch-label">
+                <span id="theme-switch-label" class="visually-hidden">Theme controls</span>
+                <div class="theme-switch-wrapper">
+                  <span class="theme-switch-label">System</span>
+                  <div
+                    class="theme-switch"
+                    id="themeToggle"
+                    role="switch"
+                    aria-checked="false"
+                    tabindex="0"
+                    title="Switch between system and manual theme control"
+                  >
+                    <div class="theme-switch-slider"></div>
+                  </div>
+                  <span class="theme-switch-label">Manual</span>
+                </div>
+                <div class="theme-toggle-manual ms-2 hidden" id="manualThemeToggle">
+                  <div class="theme-switch-wrapper">
+                    <span class="theme-switch-label theme-switch-label-small">☀️</span>
+                    <div
+                      class="theme-switch theme-switch-small"
+                      id="lightDarkToggle"
+                      role="switch"
+                      aria-checked="false"
+                      tabindex="0"
+                      title="Switch between light and dark theme"
+                    >
+                      <div class="theme-switch-slider"></div>
+                    </div>
+                    <span class="theme-switch-label theme-switch-label-small">🌙</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -652,7 +642,7 @@
       <section id="markets" class="py-5 bg-light" aria-labelledby="markets-heading">
         <div class="container">
           <h2 id="markets-heading" class="mb-4 d-flex align-items-center">
-            <img src="static/images/about.svg" alt="" class="section-icon" loading="lazy" role="presentation" />
+            <img src="static/images/market.svg" alt="" class="section-icon" loading="lazy" role="presentation" />
             Market Overview
           </h2>
           <p class="mb-4 text-muted">
@@ -866,40 +856,65 @@
     <script src="https://repowidget.vercel.app/assets/js/repoWidget.min.js" crossorigin="anonymous" defer></script>
     <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
       // Initialize repo widget with enhanced error handling
-      document.addEventListener('DOMContentLoaded', function () {
-        // Wait a moment for external script to load
-        setTimeout(() => {
-          if (typeof createRepoWidget === 'function') {
-            try {
-              createRepoWidget({
-                username: 'dashtid',
-                containerId: 'repo-container',
-                columns: {
-                  mobile: 1,
-                  tablet: 2,
-                  desktop: 3
-                },
-                maxRepos: 6,
-                sortBy: 'updated',
-                scaleOnHover: 1.05,
-                cardStyles: {
-                  backgroundColor: '#ffffff'
-                },
-                textStyles: {
-                  titleColor: '#333333',
-                  descriptionColor: '#666666',
-                  iconColor: '#888888'
-                }
-              })
-            } catch (error) {
-              // Silently fall back to manual link
-              showRepoFallback()
-            }
-          } else {
-            // External script didn't load, show fallback
+      let widgetInitialized = false
+      let retryCount = 0
+      const maxRetries = 3
+
+      function initRepoWidget() {
+        if (widgetInitialized) return
+
+        if (typeof createRepoWidget === 'function') {
+          try {
+            createRepoWidget({
+              username: 'dashtid',
+              containerId: 'repo-container',
+              columns: {
+                mobile: 1,
+                tablet: 2,
+                desktop: 3
+              },
+              maxRepos: 6,
+              sortBy: 'updated',
+              scaleOnHover: 1.05,
+              cardStyles: {
+                backgroundColor: '#ffffff'
+              },
+              textStyles: {
+                titleColor: '#333333',
+                descriptionColor: '#666666',
+                iconColor: '#888888'
+              }
+            })
+            widgetInitialized = true
+
+            // Hide loading indicator when widget loads
+            const loading = document.getElementById('repo-loading')
+            if (loading) loading.style.display = 'none'
+
+            const container = document.getElementById('repo-container')
+            if (container) container.classList.remove('d-none')
+          } catch (error) {
+            console.warn('Repo widget error:', error)
             showRepoFallback()
           }
-        }, 500)
+        } else if (retryCount < maxRetries) {
+          retryCount++
+          setTimeout(initRepoWidget, 1000 * retryCount)
+        } else {
+          showRepoFallback()
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        // Try immediate initialization
+        initRepoWidget()
+
+        // Also try after window load
+        window.addEventListener('load', () => {
+          if (!widgetInitialized) {
+            setTimeout(initRepoWidget, 500)
+          }
+        })
       })
 
       function showRepoFallback() {
