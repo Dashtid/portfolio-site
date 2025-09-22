@@ -70,12 +70,12 @@ test.describe('Accessibility', () => {
 
     // Tab through all main navigation links sequentially
     const navLinks = [
-      '.navbar-nav a[href="#experience"]',
-      '.navbar-nav a[href="#education"]',
-      '.navbar-nav a[href="#markets"]',
-      '.navbar-nav a[href="#projects"]',
-      '.navbar-nav a[href="#about"]',
-      '.navbar-nav a[href="#contact"]'
+      '.navbar-nav .nav-link[href="#experience"]',
+      '.navbar-nav .nav-link[href="#education"]',
+      '.navbar-nav .nav-link[href="#markets"]',
+      '.navbar-nav .nav-link[href="#projects"]',
+      '.navbar-nav .nav-link[href="#about"]',
+      '.navbar-nav .nav-link[href="#contact"]'
     ]
 
     for (const linkSelector of navLinks) {
