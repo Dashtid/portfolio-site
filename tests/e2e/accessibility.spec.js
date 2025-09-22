@@ -11,12 +11,12 @@ test.describe('Accessibility', () => {
 
     // Check section headings
     const h2s = page.locator('h2')
-    await expect(h2s).toHaveCount(6) // Experience, Education, Markets, Projects, About, Contact
+    await expect(h2s).toHaveCount(5) // Experience, Education, Projects, About, Contact
 
     // Verify h2 content
     await expect(h2s.nth(0)).toContainText('Experience')
     await expect(h2s.nth(1)).toContainText('Education')
-    await expect(h2s.nth(2)).toContainText('Market Overview')
+    await expect(h2s.nth(2)).toContainText('GitHub Statistics')
   })
 
   test('should have alt text for images', async ({ page }) => {
@@ -76,7 +76,6 @@ test.describe('Accessibility', () => {
     const navLinks = [
       '.navbar-nav .nav-link[href="#experience"]',
       '.navbar-nav .nav-link[href="#education"]',
-      '.navbar-nav .nav-link[href="#markets"]',
       '.navbar-nav .nav-link[href="#projects"]',
       '.navbar-nav .nav-link[href="#about"]',
       '.navbar-nav .nav-link[href="#contact"]'

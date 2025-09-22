@@ -7,7 +7,6 @@ test.describe('Navigation', () => {
     const sections = [
       { link: '[data-scroll="experience"]', target: '#experience' },
       { link: '[data-scroll="education"]', target: '#education' },
-      { link: '[data-scroll="markets"]', target: '#markets' },
       { link: '[data-scroll="projects"]', target: '#projects' },
       { link: '[data-scroll="about"]', target: '#about' },
       { link: '[data-scroll="contact"]', target: '#contact' }
