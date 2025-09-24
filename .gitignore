@@ -42,3 +42,6 @@ settings.local.json
 # Security scanning
 .zap/
 .lighthouseci/
+
+# Claude Code configuration
+.claude/
