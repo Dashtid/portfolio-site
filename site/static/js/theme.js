@@ -36,8 +36,8 @@ class ThemeManager {
 
     // Dispatch custom event for other components
     window.dispatchEvent(
-      new CustomEvent('themechange', {
-        detail: { theme, mode: this.currentMode }
+      new CustomEvent('themeChanged', {
+        detail: { theme, mode: this.currentMode, isDark: theme === 'dark' }
       })
     )
   }

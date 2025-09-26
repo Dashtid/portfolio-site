@@ -335,14 +335,16 @@
               <div class="theme-switch-container ms-3" role="group" aria-labelledby="theme-switch-label">
                 <span id="theme-switch-label" class="visually-hidden">Theme controls</span>
                 <div class="theme-switch-wrapper">
-                  <span class="theme-switch-label">System</span>
+                  <span class="theme-switch-label">
+                    <small style="color: var(--bs-text-muted)">Theme:</small> System
+                  </span>
                   <div
                     class="theme-switch"
                     id="themeToggle"
                     role="switch"
                     aria-checked="false"
                     tabindex="0"
-                    title="Switch between system and manual theme control"
+                    title="Switch between automatic (system) and manual theme control"
                   >
                     <div class="theme-switch-slider"></div>
                   </div>
@@ -350,7 +352,9 @@
                 </div>
                 <div class="theme-toggle-manual ms-2 hidden" id="manualThemeToggle">
                   <div class="theme-switch-wrapper">
-                    <span class="theme-switch-label theme-switch-label-small">☀️</span>
+                    <span class="theme-switch-label theme-switch-label-small">
+                      <strong style="font-size: 14px">☀️ Light</strong>
+                    </span>
                     <div
                       class="theme-switch theme-switch-small"
                       id="lightDarkToggle"
@@ -361,7 +365,9 @@
                     >
                       <div class="theme-switch-slider"></div>
                     </div>
-                    <span class="theme-switch-label theme-switch-label-small">🌙</span>
+                    <span class="theme-switch-label theme-switch-label-small">
+                      <strong style="font-size: 14px">🌙 Dark</strong>
+                    </span>
                   </div>
                 </div>
               </div>
