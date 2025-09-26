@@ -1324,3 +1324,43 @@ section h2 {
 .hidden {
   display: none !important;
 }
+
+/* =========================
+   Dark Mode Icon Contrast Fixes
+========================= */
+
+/* Fix SVG icons visibility in dark mode */
+[data-theme='dark'] .section-icon,
+[data-theme='dark'] .contact-icon {
+  filter: invert(1) brightness(0.9) contrast(1.1);
+  transition: filter 0.3s ease;
+}
+
+/* Exception for GitHub icons that should remain their natural color */
+[data-theme='dark'] .contact-icon[src*='github'],
+[data-theme='dark'] .section-icon[src*='github'] {
+  filter: invert(1) brightness(0.8);
+}
+
+/* LinkedIn icon needs special handling to maintain brand color */
+[data-theme='dark'] .contact-icon[src*='LinkedIn'] {
+  filter: invert(1) hue-rotate(200deg) brightness(0.9);
+}
+
+/* Fix company logos - make them slightly more visible but keep branding */
+[data-theme='dark'] .card-logo {
+  filter: brightness(1.1) contrast(1.05);
+  background: rgba(255, 255, 255, 5%);
+  border-radius: var(--radius-md);
+  padding: 4px;
+}
+
+/* Hero background images should not be affected */
+[data-theme='dark'] .stockholm-background img {
+  filter: none !important;
+}
+
+/* GitHub stats cards get proper contrast from our existing theme switching */
+[data-theme='dark'] .github-stats-card img {
+  filter: none; /* These use URL theme parameter instead */
+}

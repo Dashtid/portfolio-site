@@ -3,6 +3,8 @@
  * Global test environment configuration and utilities
  */
 
+/* eslint-env jest, node */
+
 // Fix for JSDOM TextEncoder issue
 const { TextEncoder, TextDecoder } = require('util')
 global.TextEncoder = TextEncoder
@@ -11,7 +13,7 @@ global.TextDecoder = TextDecoder
 // Mock DOM APIs that JSDOM doesn't implement
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: jest.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
@@ -25,39 +27,39 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor (callback, options) {
+  constructor(callback, options) {
     this.callback = callback
     this.options = options
   }
 
-  observe () {
+  observe() {
     // Mock implementation
   }
 
-  unobserve () {
+  unobserve() {
     // Mock implementation
   }
 
-  disconnect () {
+  disconnect() {
     // Mock implementation
   }
 }
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor (callback) {
+  constructor(callback) {
     this.callback = callback
   }
 
-  observe () {
+  observe() {
     // Mock implementation
   }
 
-  unobserve () {
+  unobserve() {
     // Mock implementation
   }
 
-  disconnect () {
+  disconnect() {
     // Mock implementation
   }
 }
@@ -131,7 +133,7 @@ Object.defineProperty(window, 'history', {
 window.scrollTo = jest.fn()
 
 // Mock requestAnimationFrame
-global.requestAnimationFrame = jest.fn((cb) => setTimeout(cb, 16))
+global.requestAnimationFrame = jest.fn(cb => setTimeout(cb, 16))
 global.cancelAnimationFrame = jest.fn(clearTimeout)
 
 // Mock fetch for API tests
@@ -190,15 +192,15 @@ const TestUtils = {
         eventListeners[event].push(handler)
       })
     element.removeEventListener = jest.fn()
-    element.dispatchEvent = jest.fn().mockImplementation((event) => {
+    element.dispatchEvent = jest.fn().mockImplementation(event => {
       const handlers = eventListeners[event.type] || []
-      handlers.forEach((handler) => handler(event))
+      handlers.forEach(handler => handler(event))
       return true
     })
     element.focus = jest.fn()
     element.blur = jest.fn()
     element.click = jest.fn()
-    element.appendChild = jest.fn().mockImplementation((child) => {
+    element.appendChild = jest.fn().mockImplementation(child => {
       // Mock appendChild without modifying the actual children property
       return child
     })
@@ -214,13 +216,15 @@ const TestUtils = {
       height: 0
     })
 
-    // Mock classList with spy functions
+    // Mock classList with spy functions and proper return values
     element.classList = {
       add: jest.fn(),
       remove: jest.fn(),
-      toggle: jest.fn(),
+      toggle: jest.fn().mockReturnValue(false),
       contains: jest.fn().mockReturnValue(false),
-      replace: jest.fn()
+      replace: jest.fn(),
+      value: '',
+      length: 0
     }
 
     // Mock setAttribute and getAttribute with spies
@@ -237,7 +241,7 @@ const TestUtils = {
   },
 
   // Simulate user click
-  simulateClick: (element) => {
+  simulateClick: element => {
     const event = new MouseEvent('click', {
       bubbles: true,
       cancelable: true
@@ -273,7 +277,7 @@ const TestUtils = {
   },
 
   // Mock external script loading
-  mockScriptLoad: (src) => {
+  mockScriptLoad: src => {
     const script = document.createElement('script')
     script.src = src
     document.head.appendChild(script)
