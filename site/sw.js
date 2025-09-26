@@ -1,11 +1,10 @@
-const CACHE_NAME = 'dashti-portfolio-v1.0.0'
+const CACHE_NAME = 'dashti-portfolio-v2.0.0'
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
   '/offline.html',
   '/static/css/style.css',
   '/static/js/theme.js',
-  '/static/js/trading-widgets.js',
   '/static/images/stockholm.webp',
   '/static/images/stockholm.jpg',
   '/static/images/cropped.png',
