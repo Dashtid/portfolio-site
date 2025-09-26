@@ -649,19 +649,72 @@
             GitHub Statistics
           </h2>
 
-          <!-- GitHub Stats Cards -->
+          <!-- Pinned Repositories -->
           <div class="row g-4 mb-4">
-            <div class="col-lg-6">
+            <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  id="github-stats"
-                  src="https://github-readme-stats.vercel.app/api?username=dashtid&show_icons=true&theme=default&hide_border=true&card_width=400"
-                  alt="David's GitHub Statistics"
+                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=daily-maintenance-scripts&theme=default&hide_border=true"
+                  alt="Daily Maintenance Scripts Repository"
                   class="img-fluid"
                   loading="lazy"
                 />
               </div>
             </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="github-stats-card">
+                <img
+                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Deep-Learning&theme=default&hide_border=true"
+                  alt="Deep Learning Repository"
+                  class="img-fluid"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="github-stats-card">
+                <img
+                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Image-Vision&theme=default&hide_border=true"
+                  alt="Image Vision Repository"
+                  class="img-fluid"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="github-stats-card">
+                <img
+                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=portfolio-site&theme=default&hide_border=true"
+                  alt="Portfolio Site Repository"
+                  class="img-fluid"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="github-stats-card">
+                <img
+                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Python-CT&theme=default&hide_border=true"
+                  alt="Python CT Repository"
+                  class="img-fluid"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="github-stats-card">
+                <img
+                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Simulation_Methods&theme=default&hide_border=true"
+                  alt="Simulation Methods Repository"
+                  class="img-fluid"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Languages Card -->
+          <div class="row justify-content-center mb-4">
             <div class="col-lg-6">
               <div class="github-stats-card">
                 <img
@@ -787,21 +840,16 @@
     <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
       // Update GitHub stats images based on theme
       function updateGitHubStatsTheme(isDark) {
-        const statsImg = document.getElementById('github-stats')
-        const languagesImg = document.getElementById('github-languages')
         const theme = isDark ? 'dark' : 'default'
 
-        if (statsImg) {
-          const currentSrc = statsImg.src
-          const newSrc = currentSrc.replace(/theme=\w+/, `theme=${theme}`)
-          statsImg.src = newSrc
-        }
+        // Find all images from github-readme-stats.vercel.app
+        const githubImages = document.querySelectorAll('img[src*="github-readme-stats.vercel.app"]')
 
-        if (languagesImg) {
-          const currentSrc = languagesImg.src
+        githubImages.forEach(img => {
+          const currentSrc = img.src
           const newSrc = currentSrc.replace(/theme=\w+/, `theme=${theme}`)
-          languagesImg.src = newSrc
-        }
+          img.src = newSrc
+        })
       }
 
       // Listen for theme changes
