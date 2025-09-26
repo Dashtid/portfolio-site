@@ -177,6 +177,12 @@
         max-width: 100%;
         height: auto;
       }
+
+      /* Skip Navigation */
+      .skip-nav:focus {
+        transform: translateY(0) !important;
+        z-index: 9999;
+      }
     </style>
 
     <link
@@ -238,6 +244,13 @@
   </head>
 
   <body>
+    <a
+      href="#main-heading"
+      class="skip-nav position-absolute top-0 start-0 bg-primary text-white px-3 py-2 rounded-bottom-2 text-decoration-none"
+      style="transform: translateY(-100%); transition: transform 0.3s"
+      >Skip to main content</a
+    >
+
     <div class="stockholm-background">
       <nav
         class="navbar navbar-expand-lg navbar-light bg-light sticky-top"

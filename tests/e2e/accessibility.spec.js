@@ -16,7 +16,7 @@ test.describe('Accessibility', () => {
     // Verify h2 content
     await expect(h2s.nth(0)).toContainText('Experience')
     await expect(h2s.nth(1)).toContainText('Education')
-    await expect(h2s.nth(2)).toContainText('GitHub Statistics')
+    await expect(h2s.nth(2)).toContainText('GitHub')
   })
 
   test('should have alt text for images', async ({ page }) => {
@@ -87,6 +87,12 @@ test.describe('Accessibility', () => {
     }
 
     // Note: External page navigation links were removed from homepage per user request
+
+    // Continue tabbing to reach GitHub button
+    await page.keyboard.press('Tab')
+    await expect(
+      page.locator('a[aria-label="Visit GitHub profile"]')
+    ).toBeFocused()
 
     // Continue tabbing to reach theme toggle
     await page.keyboard.press('Tab')
