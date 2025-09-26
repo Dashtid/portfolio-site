@@ -4,7 +4,7 @@ const { defineConfig, devices } = require('@playwright/test')
  * @see https://playwright.dev/docs/test-configuration
  */
 module.exports = defineConfig({
-  testDir: './tests/e2e', // Only run E2E tests, separate from Jest unit tests
+  testDir: '../tests/e2e', // Only run E2E tests, separate from Jest unit tests
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
