@@ -45,19 +45,70 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/static/images/cropped.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/static/images/cropped.png" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    <link rel="preload" as="image" href="static/images/stockholm.webp" type="image/webp" />
-    <link rel="preload" as="image" href="static/images/stockholm.jpg" type="image/jpeg" />
+    <!-- Responsive image preloading -->
+    <link
+      rel="preload"
+      as="image"
+      href="static/images/optimized/stockholm-mobile.webp"
+      type="image/webp"
+      media="(max-width: 480px)"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="static/images/optimized/stockholm-tablet.webp"
+      type="image/webp"
+      media="(min-width: 481px) and (max-width: 768px)"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="static/images/optimized/stockholm-desktop.webp"
+      type="image/webp"
+      media="(min-width: 769px) and (max-width: 1200px)"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="static/images/optimized/stockholm-large.webp"
+      type="image/webp"
+      media="(min-width: 1201px)"
+    />
+    <!-- Fallback for older browsers -->
+    <link rel="preload" as="image" href="static/images/optimized/stockholm-desktop.jpg" type="image/jpeg" />
     <link
       rel="preload"
       as="style"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+        crossorigin="anonymous"
+      />
+    </noscript>
     <link rel="preload" as="style" href="static/css/style.css" />
     <link rel="preload" as="script" href="static/js/theme.js" />
+
+    <!-- Optimize external connections -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://github-readme-stats.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="//github-readme-stats.vercel.app" />
-    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="//api.github.com" />
+
+    <!-- Preload critical external resources -->
+    <link
+      rel="preload"
+      as="script"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    />
     <style nonce="TsSrHIuvMbuFrrfVNAgU9A==">
       :root {
         --primary-600: #2563eb;
@@ -77,13 +128,20 @@
       }
 
       .stockholm-background {
+        --bg-image: url('/static/images/stockholm.webp'); /* Default fallback */
         background:
           linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
-          url('/static/images/stockholm.webp') no-repeat center center;
+          var(--bg-image) no-repeat center center;
         background-size: cover;
         background-attachment: fixed;
         position: relative;
         min-height: 100vh;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      .stockholm-background.loaded {
+        opacity: 1;
       }
 
       .stockholm-background::before {
@@ -184,12 +242,7 @@
       }
     </style>
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
+    <!-- Bootstrap CSS loaded via preload above -->
     <link rel="stylesheet" href="static/css/style.css" />
 
     <script type="application/ld+json">
@@ -444,12 +497,15 @@
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
-                    <img
-                      src="static/images/hermes.jpg"
-                      alt="Hermes Medical Solutions Logo"
-                      class="card-logo"
-                      loading="lazy"
-                    />
+                    <picture>
+                      <source srcset="static/images/optimized/hermes.webp" type="image/webp" />
+                      <img
+                        src="static/images/optimized/hermes.jpg"
+                        alt="Hermes Medical Solutions Logo"
+                        class="card-logo"
+                        loading="lazy"
+                      />
+                    </picture>
                     <h5 class="card-title mb-0">Hermes Medical Solutions</h5>
                   </div>
                   <p class="card-text">
@@ -534,7 +590,15 @@
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
-                    <img src="static/images/philips.jpeg" alt="Philips Logo" class="card-logo" loading="lazy" />
+                    <picture>
+                      <source srcset="static/images/optimized/philips.webp" type="image/webp" />
+                      <img
+                        src="static/images/optimized/philips.jpg"
+                        alt="Philips Logo"
+                        class="card-logo"
+                        loading="lazy"
+                      />
+                    </picture>
                     <h5 class="card-title mb-0">Philips Healthcare</h5>
                   </div>
                   <p class="card-text">
@@ -592,7 +656,15 @@
               <div class="card experience-card h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-center mb-2">
-                    <img src="static/images/KTH.png" alt="KTH Logo" class="card-logo card-logo-medium" loading="lazy" />
+                    <picture>
+                      <source srcset="static/images/optimized/KTH.webp" type="image/webp" />
+                      <img
+                        src="static/images/optimized/KTH.png"
+                        alt="KTH Logo"
+                        class="card-logo card-logo-medium"
+                        loading="lazy"
+                      />
+                    </picture>
                     <h5 class="card-title mb-0">KTH Royal Institute of Technology</h5>
                   </div>
                   <p class="card-text">
@@ -681,9 +753,9 @@
             <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=daily-maintenance-scripts&theme=default&hide_border=true"
+                  data-src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=daily-maintenance-scripts&theme=default&hide_border=true"
                   alt="Daily Maintenance Scripts Repository"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -691,9 +763,9 @@
             <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Deep-Learning&theme=default&hide_border=true"
+                  data-src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Deep-Learning&theme=default&hide_border=true"
                   alt="Deep Learning Repository"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -701,9 +773,9 @@
             <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Image-Vision&theme=default&hide_border=true"
+                  data-src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Image-Vision&theme=default&hide_border=true"
                   alt="Image Vision Repository"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -711,9 +783,9 @@
             <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=portfolio-site&theme=default&hide_border=true"
+                  data-src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=portfolio-site&theme=default&hide_border=true"
                   alt="Portfolio Site Repository"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -721,9 +793,9 @@
             <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Python-CT&theme=default&hide_border=true"
+                  data-src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Python-CT&theme=default&hide_border=true"
                   alt="Python CT Repository"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -731,9 +803,9 @@
             <div class="col-lg-4 col-md-6">
               <div class="github-stats-card">
                 <img
-                  src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Simulation_Methods&theme=default&hide_border=true"
+                  data-src="https://github-readme-stats.vercel.app/api/pin/?username=dashtid&repo=Simulation_Methods&theme=default&hide_border=true"
                   alt="Simulation Methods Repository"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -746,9 +818,9 @@
               <div class="github-stats-card">
                 <img
                   id="github-languages"
-                  src="https://github-readme-stats.vercel.app/api/top-langs/?username=dashtid&layout=compact&theme=default&hide_border=true&card_width=400"
+                  data-src="https://github-readme-stats.vercel.app/api/top-langs/?username=dashtid&layout=compact&theme=default&hide_border=true&card_width=400"
                   alt="David's Most Used Languages"
-                  class="img-fluid"
+                  class="img-fluid github-widget"
                   loading="lazy"
                 />
               </div>
@@ -843,24 +915,75 @@
 
     <!-- Footer -->
     <footer class="footer-blend text-center py-3">&copy; 2025 David Dashti. All rights reserved.</footer>
-    <!-- Bootstrap JavaScript -->
+    <!-- Bootstrap JavaScript - Deferred loading -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
+      defer
     ></script>
-    <!-- Include theme script before </body> -->
-    <script src="static/js/theme.js"></script>
+    <!-- Theme script - Critical for initial theme application -->
+    <script src="static/js/theme.js" defer></script>
 
-    <!-- Background image loader -->
+    <!-- Responsive background image loader -->
     <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
       window.addEventListener('DOMContentLoaded', function () {
         var bg = document.querySelector('.stockholm-background')
-        var img = new Image()
-        img.src = 'static/images/stockholm.jpg'
-        img.onload = function () {
-          bg.classList.add('loaded')
+
+        // Determine best image based on screen size and device pixel ratio
+        function getOptimalImage() {
+          var screenWidth = window.innerWidth
+          var dpr = window.devicePixelRatio || 1
+          var effectiveWidth = screenWidth * dpr
+
+          // Choose image based on effective screen width
+          if (effectiveWidth <= 480) {
+            return 'static/images/optimized/stockholm-mobile.webp'
+          } else if (effectiveWidth <= 768) {
+            return 'static/images/optimized/stockholm-tablet.webp'
+          } else if (effectiveWidth <= 1200) {
+            return 'static/images/optimized/stockholm-desktop.webp'
+          } else {
+            return 'static/images/optimized/stockholm-large.webp'
+          }
         }
+
+        // Load optimal image with fallback
+        function loadBackgroundImage() {
+          var img = new Image()
+          var webpSrc = getOptimalImage()
+          var jpgFallback = webpSrc.replace('.webp', '.jpg')
+
+          // Check WebP support
+          img.onload = function () {
+            bg.style.setProperty('--bg-image', 'url(' + webpSrc + ')')
+            bg.classList.add('loaded')
+          }
+
+          img.onerror = function () {
+            // Fallback to JPG
+            var fallbackImg = new Image()
+            fallbackImg.onload = function () {
+              bg.style.setProperty('--bg-image', 'url(' + jpgFallback + ')')
+              bg.classList.add('loaded')
+            }
+            fallbackImg.src = jpgFallback
+          }
+
+          img.src = webpSrc
+        }
+
+        loadBackgroundImage()
+
+        // Reload on resize (throttled)
+        let resizeTimeout
+        window.addEventListener('resize', function () {
+          clearTimeout(resizeTimeout)
+          resizeTimeout = setTimeout(function () {
+            if (!bg.classList.contains('loaded')) return
+            loadBackgroundImage()
+          }, 250)
+        })
       })
     </script>
     <!-- GitHub Stats Theme Switching -->
@@ -889,6 +1012,193 @@
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
         updateGitHubStatsTheme(isDark)
       })
+    </script>
+    <!-- Advanced Lazy Loading for GitHub Widgets -->
+    <script nonce="TsSrHIuvMbuFrrfVNAgU9A==">
+      // Advanced lazy loading system for GitHub widgets
+      class LazyGitHubLoader {
+        constructor() {
+          this.widgets = document.querySelectorAll('.github-widget')
+          this.loadedWidgets = new Set()
+          this.cache = new Map()
+          this.observer = null
+          this.init()
+        }
+
+        init() {
+          // Create intersection observer
+          if ('IntersectionObserver' in window) {
+            this.observer = new IntersectionObserver(this.handleIntersection.bind(this), {
+              root: null,
+              rootMargin: '200px', // Load 200px before widget enters viewport
+              threshold: 0.1
+            })
+
+            // Add loading placeholders and observe widgets
+            this.widgets.forEach(widget => {
+              this.addLoadingPlaceholder(widget)
+              this.observer.observe(widget)
+            })
+          } else {
+            // Fallback for older browsers
+            this.loadAllWidgets()
+          }
+        }
+
+        addLoadingPlaceholder(widget) {
+          // Add a subtle loading animation
+          widget.style.background = 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)'
+          widget.style.backgroundSize = '200% 100%'
+          widget.style.animation = 'loading 1.5s infinite'
+          widget.style.minHeight = '120px'
+          widget.style.borderRadius = '8px'
+
+          // Add loading animation CSS if not already added
+          if (!document.getElementById('lazy-loading-styles')) {
+            const style = document.createElement('style')
+            style.id = 'lazy-loading-styles'
+            style.textContent = `
+              @keyframes loading {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+              }
+              .github-widget.loaded {
+                animation: none !important;
+                background: none !important;
+                min-height: auto !important;
+              }
+            `
+            document.head.appendChild(style)
+          }
+        }
+
+        handleIntersection(entries) {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && !this.loadedWidgets.has(entry.target)) {
+              this.loadWidget(entry.target)
+              this.observer.unobserve(entry.target)
+            }
+          })
+        }
+
+        async loadWidget(widget) {
+          const dataSrc = widget.getAttribute('data-src')
+          if (!dataSrc) return
+
+          this.loadedWidgets.add(widget)
+
+          try {
+            // Check cache first
+            if (this.cache.has(dataSrc)) {
+              this.setWidgetSrc(widget, this.cache.get(dataSrc))
+              return
+            }
+
+            // Apply current theme to URL
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+            const theme = isDark ? 'dark' : 'default'
+            const themedUrl = dataSrc.replace(/theme=\w+/, `theme=${theme}`)
+
+            // Preload the image
+            const img = new Image()
+            img.onload = () => {
+              this.cache.set(dataSrc, themedUrl)
+              this.setWidgetSrc(widget, themedUrl)
+            }
+
+            img.onerror = () => {
+              // Retry with original URL if themed URL fails
+              const retryImg = new Image()
+              retryImg.onload = () => {
+                this.setWidgetSrc(widget, dataSrc)
+              }
+              retryImg.onerror = () => {
+                this.showErrorPlaceholder(widget)
+              }
+              retryImg.src = dataSrc
+            }
+
+            img.src = themedUrl
+          } catch (error) {
+            console.warn('Failed to load GitHub widget:', error)
+            this.showErrorPlaceholder(widget)
+          }
+        }
+
+        setWidgetSrc(widget, src) {
+          widget.src = src
+          widget.classList.add('loaded')
+          widget.style.opacity = '0'
+
+          // Fade in effect
+          widget.onload = () => {
+            widget.style.transition = 'opacity 0.3s ease-in-out'
+            widget.style.opacity = '1'
+          }
+        }
+
+        showErrorPlaceholder(widget) {
+          widget.style.background = '#f8f9fa'
+          widget.style.border = '1px solid #dee2e6'
+          widget.style.display = 'flex'
+          widget.style.alignItems = 'center'
+          widget.style.justifyContent = 'center'
+          widget.style.color = '#6c757d'
+          widget.style.fontSize = '14px'
+          widget.textContent = 'Unable to load GitHub widget'
+          widget.classList.add('loaded')
+        }
+
+        loadAllWidgets() {
+          // Fallback: load all widgets immediately
+          this.widgets.forEach(widget => {
+            const dataSrc = widget.getAttribute('data-src')
+            if (dataSrc) {
+              widget.src = dataSrc
+              widget.classList.add('loaded')
+            }
+          })
+        }
+
+        // Method to update themes for all loaded widgets
+        updateTheme(isDark) {
+          const theme = isDark ? 'dark' : 'default'
+
+          this.widgets.forEach(widget => {
+            if (this.loadedWidgets.has(widget) && widget.src) {
+              const newSrc = widget.src.replace(/theme=\w+/, `theme=${theme}`)
+              if (newSrc !== widget.src) {
+                widget.src = newSrc
+              }
+            }
+          })
+        }
+      }
+
+      // Initialize lazy loader when DOM is ready
+      let githubLoader
+      document.addEventListener('DOMContentLoaded', function () {
+        githubLoader = new LazyGitHubLoader()
+      })
+
+      // Update the existing GitHub theme update function to work with lazy loader
+      function updateGitHubStatsTheme(isDark) {
+        if (githubLoader) {
+          githubLoader.updateTheme(isDark)
+        }
+
+        // Still handle any widgets that might have been loaded differently
+        const theme = isDark ? 'dark' : 'default'
+        const githubImages = document.querySelectorAll('img[src*="github-readme-stats.vercel.app"]')
+
+        githubImages.forEach(img => {
+          const currentSrc = img.src
+          const newSrc = currentSrc.replace(/theme=\w+/, `theme=${theme}`)
+          if (newSrc !== currentSrc) {
+            img.src = newSrc
+          }
+        })
+      }
     </script>
     <!-- Back to Top Button -->
     <button type="button" class="btn btn-lg rounded-circle back-to-top" id="backToTopBtn" title="Back to Top">
