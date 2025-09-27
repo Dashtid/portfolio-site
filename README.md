@@ -17,7 +17,7 @@ This portfolio website showcases my professional experience as a QA/RA & Securit
 - **Cybersecurity Governance** for medical software systems
 - **Regulatory Compliance** (NIS2, ISO 27001, AI Act preparation)
 - **Medical Device Software** quality assurance and validation
-- **Trading & Market Analysis** with interactive widgets
+- **Interactive Development Portfolio** with GitHub integration
 
 ## 🛠️ Technology Stack
 
@@ -139,10 +139,6 @@ npm run test:report         # View test report
 - **PWA Support**: Offline capability and installable
 - **SEO Optimized**: Meta tags, structured data, sitemap
 
-### Market Analysis
-- **TradingView Widgets**: Real-time market data integration
-- **Interactive Charts**: Financial market analysis tools
-- **Responsive Charts**: Optimized for all device sizes
 
 ### Performance Optimizations
 - **Image Optimization**: Automatic WebP conversion and responsive variants

@@ -56,7 +56,6 @@ This document outlines comprehensive improvements for David Dashti's portfolio w
 
 **Issues**:
 - ⚠️ Multiple large images not optimized for different screen sizes
-- ⚠️ TradingView widgets load without performance budgets
 - ⚠️ GitHub stats images reload unnecessarily
 - ⚠️ No service worker caching strategy for external APIs
 

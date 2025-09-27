@@ -25,15 +25,15 @@ async function addCSPNonces(siteDir) {
 
   const htmlFiles = fs
     .readdirSync(siteDir, { recursive: true })
-    .filter((file) => file.endsWith('.html'))
-    .map((file) => path.join(siteDir, file))
+    .filter(file => file.endsWith('.html'))
+    .map(file => path.join(siteDir, file))
 
   const nonces = {
     style: generateNonce(),
     script: generateNonce()
   }
 
-  console.log(`🔑 Generated nonces:`)
+  console.log('🔑 Generated nonces:')
   console.log(`   Style nonce: ${nonces.style}`)
   console.log(`   Script nonce: ${nonces.script}`)
 
@@ -43,46 +43,40 @@ async function addCSPNonces(siteDir) {
     let modified = false
 
     // Add nonce to inline style tags
-    content = content.replace(
-      /<style(\s[^>]*)?>/gi,
-      (match, attributes) => {
-        // Replace existing nonce or add new one
-        if (match.includes('nonce=')) {
-          const withoutNonce = match.replace(/\s*nonce="[^"]*"/, '')
-          modified = true
-          return withoutNonce.replace('>', ` nonce="${nonces.style}">`)
-        }
+    content = content.replace(/<style(\s[^>]*)?>/gi, (match, attributes) => {
+      // Replace existing nonce or add new one
+      if (match.includes('nonce=')) {
+        const withoutNonce = match.replace(/\s*nonce="[^"]*"/, '')
         modified = true
-        const attrs = attributes || ''
-        return `<style${attrs} nonce="${nonces.style}">`
+        return withoutNonce.replace('>', ` nonce="${nonces.style}">`)
       }
-    )
+      modified = true
+      const attrs = attributes || ''
+      return `<style${attrs} nonce="${nonces.style}">`
+    })
 
     // Add nonce to inline script tags (but not external scripts or JSON-LD)
-    content = content.replace(
-      /<script(\s[^>]*)?>/gi,
-      (match, attributes) => {
-        // Replace existing nonce or add new one
-        if (match.includes('nonce=')) {
-          const withoutNonce = match.replace(/\s*nonce="[^"]*"/, '')
-          return withoutNonce.replace('>', ` nonce="${nonces.script}">`)
-        }
-
-        // Skip external scripts (those with src attribute)
-        if (match.includes('src=')) {
-          return match
-        }
-
-        // Skip JSON-LD scripts (structured data)
-        if (match.includes('type="application/ld+json"')) {
-          return match
-        }
-
-        modified = true
-        const attrs = attributes || ''
-        return `<script${attrs} nonce="${nonces.script}">`
+    content = content.replace(/<script(\s[^>]*)?>/gi, (match, attributes) => {
+      // Replace existing nonce or add new one
+      if (match.includes('nonce=')) {
+        const withoutNonce = match.replace(/\s*nonce="[^"]*"/, '')
+        return withoutNonce.replace('>', ` nonce="${nonces.script}">`)
       }
-    )
+
+      // Skip external scripts (those with src attribute)
+      if (match.includes('src=')) {
+        return match
+      }
+
+      // Skip JSON-LD scripts (structured data)
+      if (match.includes('type="application/ld+json"')) {
+        return match
+      }
+
+      modified = true
+      const attrs = attributes || ''
+      return `<script${attrs} nonce="${nonces.script}">`
+    })
 
     if (modified) {
       fs.writeFileSync(htmlFile, content, 'utf8')
@@ -95,7 +89,7 @@ async function addCSPNonces(siteDir) {
   // Create a nonce configuration file for reference
   const nonceConfig = {
     generated: new Date().toISOString(),
-    nonces: nonces,
+    nonces,
     note: 'These nonces should be used in your CSP headers'
   }
 
@@ -103,9 +97,13 @@ async function addCSPNonces(siteDir) {
   fs.mkdirSync(path.dirname(configPath), { recursive: true })
   fs.writeFileSync(configPath, JSON.stringify(nonceConfig, null, 2))
 
-  console.log(`📄 Nonce configuration saved to: ${path.relative(process.cwd(), configPath)}`)
+  console.log(
+    `📄 Nonce configuration saved to: ${path.relative(process.cwd(), configPath)}`
+  )
   console.log('\n💡 CSP Header Example:')
-  console.log(`Content-Security-Policy: script-src 'self' 'nonce-${nonces.script}' https://repowidget.vercel.app https://s3.tradingview.com; style-src 'self' 'nonce-${nonces.style}' https://cdn.jsdelivr.net https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com;`)
+  console.log(
+    `Content-Security-Policy: script-src 'self' 'nonce-${nonces.script}' https://repowidget.vercel.app; style-src 'self' 'nonce-${nonces.style}' https://cdn.jsdelivr.net https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com;`
+  )
 
   return nonces
 }

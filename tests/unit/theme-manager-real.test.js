@@ -15,9 +15,7 @@ const themePath = path.join(__dirname, '../../site/static/js/theme.js')
 const themeCode = fs.readFileSync(themePath, 'utf8')
 
 // Setup DOM before evaluating the code
-document.documentElement = document.createElement('html')
-document.head = document.createElement('head')
-document.body = document.createElement('body')
+// Note: documentElement, head, body are read-only in JSDOM, use existing structure
 
 // Evaluate the theme.js code in our test environment
 // eslint-disable-next-line no-eval

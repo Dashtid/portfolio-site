@@ -13,7 +13,6 @@ const STATIC_CACHE_URLS = [
   '/static/images/experience.svg',
   '/static/images/education.svg',
   '/static/images/github.svg',
-  '/static/images/market.svg',
   '/static/images/about.svg',
   '/static/images/contact.svg'
 ]

@@ -595,6 +595,199 @@ class ProjectManager {
   }
 }
 
+class IconManager {
+  constructor() {
+    this.iconMappings = {
+      // Define mappings from original icons to their white variants
+      'static/images/D.svg': 'static/images/D-white.svg',
+      'static/images/github.svg': 'static/images/github-white.svg',
+      'static/images/experience.svg': 'static/images/experience-white.svg',
+      'static/images/education.svg': 'static/images/education-white.svg',
+      'static/images/about.svg': 'static/images/about-white.svg',
+      'static/images/contact.svg': 'static/images/contact-white.svg',
+      'static/images/LinkedIn.svg': 'static/images/LinkedIn-white.svg',
+      '../static/images/D.svg': '../static/images/D-white.svg'
+    }
+
+    this.currentTheme = null
+    this.managedIcons = new Map() // Cache for managed icon elements
+    this.faviconElement = null
+
+    this.init()
+  }
+
+  init() {
+    // Find and cache all manageable icons
+    this.discoverIcons()
+
+    // Find favicon element
+    this.faviconElement = document.querySelector('link[rel="icon"]')
+
+    // Listen for theme changes
+    window.addEventListener('themeChanged', event => {
+      this.handleThemeChange(event.detail)
+    })
+
+    // Set initial state based on current theme
+    const currentTheme =
+      document.documentElement.getAttribute('data-theme') || 'light'
+    this.handleThemeChange({
+      theme: currentTheme,
+      isDark: currentTheme === 'dark'
+    })
+  }
+
+  discoverIcons() {
+    // Find all img elements with section-icon or contact-icon classes
+    const sectionIcons = document.querySelectorAll('.section-icon')
+    const contactIcons = document.querySelectorAll('.contact-icon')
+    const githubIcons = document.querySelectorAll('img[src*="github.svg"]')
+
+    // Combine all icon sets
+    const allIcons = [...sectionIcons, ...contactIcons, ...githubIcons]
+
+    allIcons.forEach(icon => {
+      const src = icon.getAttribute('src')
+      if (src && this.iconMappings[src]) {
+        // Store original src and element reference
+        this.managedIcons.set(icon, {
+          originalSrc: src,
+          whiteSrc: this.iconMappings[src],
+          element: icon
+        })
+      }
+    })
+
+    console.log(
+      `IconManager: Discovered ${this.managedIcons.size} manageable icons`
+    )
+  }
+
+  handleThemeChange(themeData) {
+    const { theme, isDark } = themeData
+
+    if (this.currentTheme === theme) return // No change needed
+
+    this.currentTheme = theme
+    console.log(`IconManager: Switching to ${theme} theme`)
+
+    // Update favicon
+    this.updateFavicon(isDark)
+
+    // Update all managed icons
+    this.updateIcons(isDark)
+
+    // Remove CSS filters since we're now using proper icon variants
+    this.removeCSSFilters()
+  }
+
+  updateFavicon(isDark) {
+    if (!this.faviconElement) return
+
+    const faviconSrc = isDark
+      ? 'static/images/D-white.svg'
+      : 'static/images/D.svg'
+
+    // Only update if different
+    if (this.faviconElement.getAttribute('href') !== faviconSrc) {
+      this.faviconElement.setAttribute('href', faviconSrc)
+      console.log(`IconManager: Updated favicon to ${faviconSrc}`)
+    }
+  }
+
+  updateIcons(isDark) {
+    this.managedIcons.forEach((iconData, element) => {
+      const targetSrc = isDark ? iconData.whiteSrc : iconData.originalSrc
+
+      // Only update if different (performance optimization)
+      if (element.getAttribute('src') !== targetSrc) {
+        element.setAttribute('src', targetSrc)
+
+        // Update alt text for accessibility
+        if (isDark && !element.getAttribute('alt').includes('(dark mode)')) {
+          const currentAlt = element.getAttribute('alt') || ''
+          element.setAttribute('alt', `${currentAlt} (dark mode variant)`)
+        } else if (
+          !isDark &&
+          element.getAttribute('alt').includes('(dark mode)')
+        ) {
+          const currentAlt = element.getAttribute('alt') || ''
+          element.setAttribute(
+            'alt',
+            currentAlt.replace(' (dark mode variant)', '')
+          )
+        }
+      }
+    })
+
+    console.log(
+      `IconManager: Updated ${this.managedIcons.size} icons for ${isDark ? 'dark' : 'light'} theme`
+    )
+  }
+
+  removeCSSFilters() {
+    // Remove the CSS filter rules that were used for dark mode icon conversion
+    const styleSheets = document.styleSheets
+
+    for (let i = 0; i < styleSheets.length; i++) {
+      try {
+        const rules = styleSheets[i].cssRules || styleSheets[i].rules
+        if (!rules) continue
+
+        for (let j = rules.length - 1; j >= 0; j--) {
+          const rule = rules[j]
+          if (
+            rule.selectorText &&
+            rule.selectorText.includes("[data-theme='dark']") &&
+            rule.style &&
+            rule.style.filter &&
+            rule.style.filter.includes('invert')
+          ) {
+            console.log(
+              `IconManager: Removing CSS filter rule: ${rule.selectorText}`
+            )
+            styleSheets[i].deleteRule(j)
+          }
+        }
+      } catch (e) {
+        // Skip stylesheets we can't access (CORS)
+        continue
+      }
+    }
+  }
+
+  // Method to add new icons dynamically (for future use)
+  addIcon(element, originalSrc) {
+    if (this.iconMappings[originalSrc]) {
+      this.managedIcons.set(element, {
+        originalSrc,
+        whiteSrc: this.iconMappings[originalSrc],
+        element
+      })
+
+      // Apply current theme immediately
+      this.updateIcons(this.currentTheme === 'dark')
+    }
+  }
+
+  // Performance method: preload all icon variants
+  preloadIcons() {
+    const iconSources = new Set()
+
+    // Collect all unique icon sources
+    Object.values(this.iconMappings).forEach(src => iconSources.add(src))
+    Object.keys(this.iconMappings).forEach(src => iconSources.add(src))
+
+    // Preload each icon
+    iconSources.forEach(src => {
+      const img = new Image()
+      img.src = src
+    })
+
+    console.log(`IconManager: Preloaded ${iconSources.size} icon variants`)
+  }
+}
+
 class AnimationManager {
   constructor() {
     this.animatedElements = new Set()
@@ -737,12 +930,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollManager = new ScrollManager()
   const projectManager = new ProjectManager()
   const animationManager = new AnimationManager()
+  const iconManager = new IconManager()
+
+  // Preload icon variants for better performance
+  iconManager.preloadIcons()
 
   // Export for potential use by other scripts
   window.portfolioUtils = {
     themeManager,
     scrollManager,
     projectManager,
-    animationManager
+    animationManager,
+    iconManager
   }
 })

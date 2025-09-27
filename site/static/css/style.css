@@ -872,63 +872,7 @@ section h2 {
   margin-top: var(--space-16);
 }
 
-/* =========================
-   Trading Widget Styles
-========================= */
-.trading-widget-container {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  margin-bottom: var(--space-8);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-}
-
-.trading-widget-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: var(--font-size-lg);
-}
-
-.trading-widget-error {
-  background: rgba(239, 68, 68, 10%);
-  border: 1px solid rgba(239, 68, 68, 20%);
-  color: #dc2626;
-  padding: var(--space-6);
-  border-radius: var(--radius-md);
-  text-align: center;
-}
-
-/* Legacy TradingView Widget Compatibility */
-.tradingview-widget-container {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--card-shadow);
-}
-
-.tradingview-responsive-widget {
-  width: 100%;
-  min-height: 500px;
-  height: 500px;
-}
-
-.tradingview-widget-container__widget {
-  height: 100% !important;
-  min-height: 500px;
-}
-
-/* Markets section specific styles */
-#markets .tradingview-widget-container {
-  height: 400px;
-}
+/* Trading widget styles removed - no longer needed */
 
 /* =========================
    Back to Top Button
@@ -1329,23 +1273,7 @@ section h2 {
    Dark Mode Icon Contrast Fixes
 ========================= */
 
-/* Fix SVG icons visibility in dark mode */
-[data-theme='dark'] .section-icon,
-[data-theme='dark'] .contact-icon {
-  filter: invert(1) brightness(0.9) contrast(1.1);
-  transition: filter 0.3s ease;
-}
-
-/* Exception for GitHub icons that should remain their natural color */
-[data-theme='dark'] .contact-icon[src*='github'],
-[data-theme='dark'] .section-icon[src*='github'] {
-  filter: invert(1) brightness(0.8);
-}
-
-/* LinkedIn icon needs special handling to maintain brand color */
-[data-theme='dark'] .contact-icon[src*='LinkedIn'] {
-  filter: invert(1) hue-rotate(200deg) brightness(0.9);
-}
+/* Icon theming is now handled by IconManager class in theme.js */
 
 /* Fix company logos - make them slightly more visible but keep branding */
 [data-theme='dark'] .card-logo {

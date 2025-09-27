@@ -45,3 +45,6 @@ settings.local.json
 
 # Claude Code configuration
 .claude/
+
+# Planning documents (not needed in repository)
+IMPROVEMENT_ROADMAP.md
