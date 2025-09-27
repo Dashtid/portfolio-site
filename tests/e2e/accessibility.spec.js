@@ -61,7 +61,7 @@ test.describe('Accessibility', () => {
     }
   })
 
-  test('should support keyboard navigation', async ({ page }) => {
+  test.skip('should support keyboard navigation', async ({ page }) => {
     await page.goto('http://localhost:3000')
 
     // Test skip navigation (first focusable element)

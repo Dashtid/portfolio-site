@@ -30,7 +30,7 @@ test.describe('Homepage', () => {
       .locator('meta[name="description"]')
       .getAttribute('content')
     expect(description).toContain(
-      'Biomedical Engineer and Cybersecurity Specialist'
+      'Expert Biomedical Engineer & Cybersecurity Specialist'
     )
 
     // Check Open Graph tags
@@ -43,7 +43,7 @@ test.describe('Homepage', () => {
     const jsonLd = await page
       .locator('script[type="application/ld+json"]')
       .textContent()
-    expect(jsonLd).toContain('"@type": "Person"')
+    expect(jsonLd).toContain('"@type": ["Person", "ITWorker"]')
   })
 
   test('should be responsive', async ({ page }) => {
