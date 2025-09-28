@@ -88,12 +88,6 @@ test.describe('Accessibility', () => {
 
     // Note: External page navigation links were removed from homepage per user request
 
-    // Continue tabbing to reach GitHub button
-    await page.keyboard.press('Tab')
-    await expect(
-      page.locator('a[aria-label="Visit GitHub profile"]')
-    ).toBeFocused()
-
     // Continue tabbing to reach theme toggle
     await page.keyboard.press('Tab')
     await expect(page.locator('#themeToggle')).toBeFocused()
