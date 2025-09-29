@@ -216,16 +216,22 @@ const TestUtils = {
       height: 0
     })
 
-    // Mock classList with spy functions and proper return values
-    element.classList = {
-      add: jest.fn(),
-      remove: jest.fn(),
-      toggle: jest.fn().mockReturnValue(false),
-      contains: jest.fn().mockReturnValue(false),
-      replace: jest.fn(),
-      value: '',
-      length: 0
-    }
+    // Spy on classList methods (classList is read-only in JSDOM)
+    element.classList.add = jest.fn(
+      element.classList.add.bind(element.classList)
+    )
+    element.classList.remove = jest.fn(
+      element.classList.remove.bind(element.classList)
+    )
+    element.classList.toggle = jest.fn(
+      element.classList.toggle.bind(element.classList)
+    )
+    element.classList.contains = jest.fn(
+      element.classList.contains.bind(element.classList)
+    )
+    element.classList.replace = jest.fn(
+      element.classList.replace.bind(element.classList)
+    )
 
     // Mock setAttribute and getAttribute with spies
     const originalSetAttribute = element.setAttribute.bind(element)

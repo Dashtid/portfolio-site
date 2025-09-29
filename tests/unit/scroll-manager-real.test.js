@@ -45,16 +45,20 @@ describe('ScrollManager (Real Implementation)', () => {
   let observer
 
   beforeEach(() => {
+    // Clear mocks FIRST, before creating any mock elements
+    jest.clearAllMocks()
+
     // Reset DOM
     document.documentElement.innerHTML = ''
     document.head.innerHTML = ''
     document.body.innerHTML = ''
 
-    // Create real DOM elements that ScrollManager expects
-    mockBackToTopBtn = document.createElement('button')
-    mockBackToTopBtn.id = 'backToTopBtn'
+    // Create mock DOM elements with Jest spies that ScrollManager expects
+    mockBackToTopBtn = TestUtils.createMockElement('button', {
+      id: 'backToTopBtn',
+      'aria-hidden': 'true'
+    })
     mockBackToTopBtn.style.display = 'none'
-    mockBackToTopBtn.setAttribute('aria-hidden', 'true')
     document.body.appendChild(mockBackToTopBtn)
 
     // Create navigation links
@@ -115,9 +119,6 @@ describe('ScrollManager (Real Implementation)', () => {
     window.history = {
       pushState: jest.fn()
     }
-
-    // Reset IntersectionObserver mock
-    jest.clearAllMocks()
   })
 
   afterEach(() => {
