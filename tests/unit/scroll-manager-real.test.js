@@ -547,17 +547,25 @@ describe('ScrollManager (Real Implementation)', () => {
     })
 
     test('should handle getBoundingClientRect errors', () => {
-      mockSections[0].getBoundingClientRect = jest
-        .fn()
-        .mockImplementation(() => {
-          throw new Error('getBoundingClientRect failed')
-        })
-
+      // Ensure fresh ScrollManager instance
       scrollManager = new ScrollManager()
 
+      // Create a fresh mock section to avoid interference
+      const testSection = TestUtils.createMockElement('section', {
+        id: 'test-error-section'
+      })
+      testSection.getBoundingClientRect = jest.fn().mockImplementation(() => {
+        throw new Error('getBoundingClientRect failed')
+      })
+      document.body.appendChild(testSection)
+
+      // Test that scrollToSection handles getBoundingClientRect errors gracefully
       expect(() => {
-        scrollManager.scrollToSection('about')
+        scrollManager.scrollToSection('test-error-section')
       }).not.toThrow()
+
+      // Clean up
+      document.body.removeChild(testSection)
     })
   })
 
