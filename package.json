@@ -15,6 +15,7 @@
     "format:check": "prettier --check \"site/**/*.{html,css,js}\" --config config/.prettierrc.json --ignore-path config/.prettierignore",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "jest --config config/jest.config.js",
+    "test:unit:core": "jest --config config/jest.config.js --testPathIgnorePatterns=\"(security-check|animation-manager|build-workflow|theme-integration|accessibility\\.test|error-handling\\.test|external-apis|add-sri-hashes|comprehensive-error-handling|theme-system-integration|mock-implementation-verification)\"",
     "test:unit:watch": "jest --watch --config config/jest.config.js",
     "test:unit:coverage": "jest --coverage --config config/jest.config.js",
     "test:e2e": "playwright test --config config/playwright.config.js",
