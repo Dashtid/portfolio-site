@@ -3,14 +3,20 @@
  * Tests the complete build process from source to deployment
  */
 
+/* eslint-env jest, node */
+/* eslint-disable no-console */
+
 const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
 
 // Helper function to run commands
-function runCommand (command, args = [], options = {}) {
+function runCommand(command, args = [], options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    // Quote arguments that contain spaces for Windows compatibility
+    const quotedArgs = args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg))
+
+    const child = spawn(command, quotedArgs, {
       stdio: 'pipe',
       shell: true,
       ...options
@@ -19,15 +25,15 @@ function runCommand (command, args = [], options = {}) {
     let stdout = ''
     let stderr = ''
 
-    child.stdout?.on('data', (data) => {
+    child.stdout?.on('data', data => {
       stdout += data.toString()
     })
 
-    child.stderr?.on('data', (data) => {
+    child.stderr?.on('data', data => {
       stderr += data.toString()
     })
 
-    child.on('close', (code) => {
+    child.on('close', code => {
       resolve({
         code,
         stdout,
@@ -35,7 +41,7 @@ function runCommand (command, args = [], options = {}) {
       })
     })
 
-    child.on('error', (error) => {
+    child.on('error', error => {
       reject(error)
     })
 
@@ -101,7 +107,7 @@ describe('Build Workflow Integration', () => {
         'Referrer-Policy'
       ]
 
-      requiredHeaders.forEach((header) => {
+      requiredHeaders.forEach(header => {
         expect(headers[header]).toBeDefined()
       })
     })
@@ -126,7 +132,7 @@ describe('Build Workflow Integration', () => {
     test('should validate HTML files exist for link checking', async () => {
       const htmlFiles = fs
         .readdirSync(siteDir)
-        .filter((file) => file.endsWith('.html'))
+        .filter(file => file.endsWith('.html'))
 
       expect(htmlFiles.length).toBeGreaterThan(0)
 
@@ -171,13 +177,13 @@ describe('Build Workflow Integration', () => {
     test('should verify HTML files are processed', async () => {
       const htmlFiles = fs
         .readdirSync(siteDir)
-        .filter((file) => file.endsWith('.html'))
-        .map((file) => path.join(siteDir, file))
+        .filter(file => file.endsWith('.html'))
+        .map(file => path.join(siteDir, file))
 
       expect(htmlFiles.length).toBeGreaterThan(0)
 
       // Check that HTML files contain basic structure
-      htmlFiles.forEach((file) => {
+      htmlFiles.forEach(file => {
         const content = fs.readFileSync(file, 'utf8')
         expect(content).toMatch(/<html[^>]*>/i)
         expect(content).toMatch(/<head[^>]*>/i)
@@ -227,7 +233,7 @@ describe('Build Workflow Integration', () => {
       expect(results.length).toBeGreaterThan(0)
 
       // Log results for debugging
-      results.forEach((result) => {
+      results.forEach(result => {
         console.log(
           `${result.script}: ${result.success ? 'SUCCESS' : 'FAILED'}`
         )
@@ -237,7 +243,7 @@ describe('Build Workflow Integration', () => {
       })
 
       // Most scripts should succeed (allow for some failures due to missing dependencies)
-      const successCount = results.filter((r) => r.success).length
+      const successCount = results.filter(r => r.success).length
       expect(successCount).toBeGreaterThanOrEqual(
         Math.floor(results.length / 2)
       )
@@ -251,7 +257,7 @@ describe('Build Workflow Integration', () => {
       const siteContents = fs.readdirSync(siteDir)
 
       // Should have at least some HTML files
-      const htmlFiles = siteContents.filter((file) => file.endsWith('.html'))
+      const htmlFiles = siteContents.filter(file => file.endsWith('.html'))
       expect(htmlFiles.length).toBeGreaterThan(0)
 
       // Check for static assets directory
@@ -267,7 +273,7 @@ describe('Build Workflow Integration', () => {
 
       const scripts = fs
         .readdirSync(scriptsDir)
-        .filter((file) => file.endsWith('.js'))
+        .filter(file => file.endsWith('.js'))
 
       expect(scripts.length).toBeGreaterThan(0)
 
@@ -278,7 +284,7 @@ describe('Build Workflow Integration', () => {
         'optimize-images.js'
       ]
 
-      expectedScripts.forEach((script) => {
+      expectedScripts.forEach(script => {
         if (scripts.includes(script)) {
           const scriptPath = path.join(scriptsDir, script)
           const content = fs.readFileSync(scriptPath, 'utf8')
@@ -297,7 +303,7 @@ describe('Build Workflow Integration', () => {
         'jest.config.js'
       ]
 
-      configFiles.forEach((configFile) => {
+      configFiles.forEach(configFile => {
         const filePath = path.join(__dirname, '..', '..', configFile)
 
         if (fs.existsSync(filePath)) {
