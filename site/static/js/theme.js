@@ -568,7 +568,11 @@ class ProjectManager {
     window.createRepoWidget = config => {
       try {
         // Store the original config
-        const originalCallback = config.onLoad || (() => {})
+        const originalCallback =
+          config.onLoad ||
+          function () {
+            return undefined
+          }
 
         // Override onLoad to capture data
         config.onLoad = projects => {
@@ -583,6 +587,7 @@ class ProjectManager {
       } catch (error) {
         // Handle repo widget setup errors
         this.hideLoading()
+        return null
       }
     }
   }
@@ -657,10 +662,6 @@ class IconManager {
         })
       }
     })
-
-    console.log(
-      `IconManager: Discovered ${this.managedIcons.size} manageable icons`
-    )
   }
 
   handleThemeChange(themeData) {
@@ -669,7 +670,6 @@ class IconManager {
     if (this.currentTheme === theme) return // No change needed
 
     this.currentTheme = theme
-    console.log(`IconManager: Switching to ${theme} theme`)
 
     // Update favicon
     this.updateFavicon(isDark)
@@ -691,7 +691,6 @@ class IconManager {
     // Only update if different
     if (this.faviconElement.getAttribute('href') !== faviconSrc) {
       this.faviconElement.setAttribute('href', faviconSrc)
-      console.log(`IconManager: Updated favicon to ${faviconSrc}`)
     }
   }
 
@@ -719,15 +718,11 @@ class IconManager {
         }
       }
     })
-
-    console.log(
-      `IconManager: Updated ${this.managedIcons.size} icons for ${isDark ? 'dark' : 'light'} theme`
-    )
   }
 
   removeCSSFilters() {
     // Remove the CSS filter rules that were used for dark mode icon conversion
-    const styleSheets = document.styleSheets
+    const { styleSheets } = document
 
     for (let i = 0; i < styleSheets.length; i++) {
       try {
@@ -743,9 +738,6 @@ class IconManager {
             rule.style.filter &&
             rule.style.filter.includes('invert')
           ) {
-            console.log(
-              `IconManager: Removing CSS filter rule: ${rule.selectorText}`
-            )
             styleSheets[i].deleteRule(j)
           }
         }
@@ -783,8 +775,6 @@ class IconManager {
       const img = new Image()
       img.src = src
     })
-
-    console.log(`IconManager: Preloaded ${iconSources.size} icon variants`)
   }
 }
 

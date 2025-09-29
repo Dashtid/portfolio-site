@@ -10,7 +10,7 @@
     "lint": "npm run lint:js && npm run lint:html && npm run lint:css",
     "lint:js": "eslint site/static/js/**/*.js --config config/.eslintrc.js --ignore-path config/.eslintignore",
     "lint:html": "htmlhint site/**/*.html",
-    "lint:css": "stylelint site/static/css/**/*.css --config config/.stylelintrc.json",
+    "lint:css": "stylelint site/static/css/**/*.css --config config/.stylelintrc.json --ignore-path config/.stylelintignore",
     "format": "prettier --write \"site/**/*.{html,css,js}\" --config config/.prettierrc.json --ignore-path config/.prettierignore",
     "format:check": "prettier --check \"site/**/*.{html,css,js}\" --config config/.prettierrc.json --ignore-path config/.prettierignore",
     "test": "npm run test:unit && npm run test:e2e",
@@ -88,8 +88,8 @@
       "npm run validate:html -- --files"
     ],
     "*.css": [
-      "stylelint --fix --config config/.stylelintrc.json",
-      "stylelint --config config/.stylelintrc.json --max-warnings 0",
+      "stylelint --fix --config config/.stylelintrc.json --ignore-path config/.stylelintignore",
+      "stylelint --config config/.stylelintrc.json --ignore-path config/.stylelintignore --max-warnings 0",
       "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore"
     ],
     "*.{json,md}": [
