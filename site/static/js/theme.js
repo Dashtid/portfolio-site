@@ -914,6 +914,15 @@ class AnimationManager {
   }
 }
 
+// Export classes globally for testing
+if (typeof window !== 'undefined') {
+  window.ThemeManager = ThemeManager
+  window.ScrollManager = ScrollManager
+  window.ProjectManager = ProjectManager
+  window.IconManager = IconManager
+  window.AnimationManager = AnimationManager
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const themeManager = new ThemeManager()
