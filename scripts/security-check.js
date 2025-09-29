@@ -5,11 +5,11 @@
  * Validates security headers, checks for vulnerabilities, etc.
  */
 
-const fs = require('fs')
-const path = require('path')
-const { promisify } = require('util')
+/* eslint-disable no-console */
 
-const readFile = promisify(fs.readFile)
+const fs = require('fs').promises
+const fsSync = require('fs')
+const path = require('path')
 
 /**
  * Check for potential security issues
@@ -28,7 +28,7 @@ async function runSecurityCheck() {
       'config',
       'staticwebapp.config.json'
     )
-    const config = JSON.parse(await readFile(configPath, 'utf8'))
+    const config = JSON.parse(await fs.readFile(configPath, 'utf8'))
 
     // Check CSP
     const csp = config.globalHeaders['Content-Security-Policy']
@@ -69,12 +69,12 @@ async function runSecurityCheck() {
 
     // Check HTML files for security issues
     const siteDir = path.join(__dirname, '..', 'site')
-    const htmlFiles = fs
+    const htmlFiles = fsSync
       .readdirSync(siteDir)
-      .filter((file) => file.endsWith('.html'))
+      .filter(file => file.endsWith('.html'))
 
     for (const file of htmlFiles) {
-      const content = await readFile(path.join(siteDir, file), 'utf8')
+      const content = await fs.readFile(path.join(siteDir, file), 'utf8')
 
       // Check for inline scripts without nonce
       const inlineScripts = content.match(/<script(?![^>]*src=)[^>]*>/g) || []
@@ -111,9 +111,7 @@ async function runSecurityCheck() {
         ]
 
         if (!link.includes('integrity=') && !skipSRI.includes(url)) {
-          warnings.push(
-            `External resource without SRI in ${file}: ${url}`
-          )
+          warnings.push(`External resource without SRI in ${file}: ${url}`)
         }
       }
 
@@ -128,8 +126,8 @@ async function runSecurityCheck() {
 
     // Check package.json for vulnerable dependencies
     const packagePath = path.join(__dirname, '..', 'package.json')
-    if (fs.existsSync(packagePath)) {
-      const pkg = JSON.parse(await readFile(packagePath, 'utf8'))
+    if (fsSync.existsSync(packagePath)) {
+      const pkg = JSON.parse(await fs.readFile(packagePath, 'utf8'))
 
       // Check for dev dependencies in production
       if (pkg.dependencies) {
@@ -152,12 +150,12 @@ async function runSecurityCheck() {
     } else {
       if (issues.length > 0) {
         console.log('\n🚨 Critical Issues:')
-        issues.forEach((issue) => console.log(`  ❌ ${issue}`))
+        issues.forEach(issue => console.log(`  ❌ ${issue}`))
       }
 
       if (warnings.length > 0) {
         console.log('\n⚠️  Warnings:')
-        warnings.forEach((warning) => console.log(`  ⚠️  ${warning}`))
+        warnings.forEach(warning => console.log(`  ⚠️  ${warning}`))
       }
     }
 

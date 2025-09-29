@@ -3,13 +3,26 @@
  * Tests security validation, header checking, and vulnerability detection
  */
 
-const fs = require('fs')
-const path = require('path')
-const { runSecurityCheck } = require('../../scripts/security-check.js')
+/* eslint-env jest, node */
 
-// Mock dependencies
-jest.mock('fs')
+const path = require('path')
+
+// Mock fs before requiring security-check
+const mockReadFile = jest.fn()
+const mockReaddirSync = jest.fn()
+const mockExistsSync = jest.fn()
+
+jest.mock('fs', () => ({
+  promises: {
+    readFile: mockReadFile
+  },
+  readdirSync: mockReaddirSync,
+  existsSync: mockExistsSync
+}))
+
 jest.mock('path')
+
+const { runSecurityCheck } = require('../../scripts/security-check.js')
 
 describe('Security Check Script', () => {
   let mockConsoleLog
@@ -47,10 +60,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -68,10 +79,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -96,10 +105,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -123,10 +130,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -150,10 +155,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -175,10 +178,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -210,13 +211,10 @@ describe('Security Check Script', () => {
       `
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockResolvedValueOnce(htmlContent)
-      }
-      fs.readdirSync = jest.fn().mockReturnValue(['index.html'])
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockResolvedValueOnce(htmlContent)
+      mockReaddirSync.mockReturnValue(['index.html'])
 
       await runSecurityCheck()
 
@@ -247,13 +245,10 @@ describe('Security Check Script', () => {
       `
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockResolvedValueOnce(htmlContent)
-      }
-      fs.readdirSync = jest.fn().mockReturnValue(['index.html'])
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockResolvedValueOnce(htmlContent)
+      mockReaddirSync.mockReturnValue(['index.html'])
 
       await runSecurityCheck()
 
@@ -283,13 +278,11 @@ describe('Security Check Script', () => {
       `
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockResolvedValueOnce(htmlContent)
-      }
-      fs.readdirSync = jest.fn().mockReturnValue(['index.html'])
+
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockResolvedValueOnce(htmlContent)
+      mockReaddirSync.mockReturnValue(['index.html'])
 
       await runSecurityCheck()
 
@@ -321,13 +314,11 @@ describe('Security Check Script', () => {
       `
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockResolvedValueOnce(htmlContent)
-      }
-      fs.readdirSync = jest.fn().mockReturnValue(['index.html'])
+
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockResolvedValueOnce(htmlContent)
+      mockReaddirSync.mockReturnValue(['index.html'])
 
       await runSecurityCheck()
 
@@ -360,14 +351,12 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockResolvedValueOnce(JSON.stringify(mockPackage))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
-      fs.existsSync = jest.fn().mockReturnValue(true)
+
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockResolvedValueOnce(JSON.stringify(mockPackage))
+      mockReaddirSync.mockReturnValue([])
+      mockExistsSync.mockReturnValue(true)
 
       await runSecurityCheck()
 
@@ -390,11 +379,9 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
-      fs.existsSync = jest.fn().mockReturnValue(false)
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
+      mockExistsSync.mockReturnValue(true)
 
       await runSecurityCheck()
 
@@ -405,9 +392,7 @@ describe('Security Check Script', () => {
   describe('Error Handling', () => {
     test('should handle missing config file', async () => {
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockRejectedValue(new Error('File not found'))
-      }
+      mockReadFile.mockRejectedValue(new Error('File not found'))
 
       await runSecurityCheck()
 
@@ -420,9 +405,7 @@ describe('Security Check Script', () => {
 
     test('should handle malformed JSON config', async () => {
       path.join.mockReturnValue('/mock/path/staticwebapp.config.json')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue('invalid json {')
-      }
+      mockReadFile.mockResolvedValue('invalid json {')
 
       await runSecurityCheck()
 
@@ -445,13 +428,11 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockRejectedValueOnce(new Error('Cannot read HTML file'))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue(['index.html'])
+
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockRejectedValueOnce(new Error('Cannot read HTML file'))
+      mockReaddirSync.mockReturnValue(['index.html'])
 
       await runSecurityCheck()
 
@@ -474,10 +455,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -501,10 +480,8 @@ describe('Security Check Script', () => {
       }
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest.fn().mockResolvedValue(JSON.stringify(mockConfig))
-      }
-      fs.readdirSync = jest.fn().mockReturnValue([])
+      mockReadFile.mockResolvedValue(JSON.stringify(mockConfig))
+      mockReaddirSync.mockReturnValue([])
 
       await runSecurityCheck()
 
@@ -543,13 +520,11 @@ describe('Security Check Script', () => {
       `
 
       path.join.mockReturnValue('/mock/path')
-      fs.promises = {
-        readFile: jest
-          .fn()
-          .mockResolvedValueOnce(JSON.stringify(mockConfig))
-          .mockResolvedValueOnce(htmlContent)
-      }
-      fs.readdirSync = jest.fn().mockReturnValue(['index.html'])
+
+      mockReadFile
+        .mockResolvedValueOnce(JSON.stringify(mockConfig))
+        .mockResolvedValueOnce(htmlContent)
+      mockReaddirSync.mockReturnValue(['index.html'])
 
       await runSecurityCheck()
 
