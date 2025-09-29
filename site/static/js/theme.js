@@ -339,7 +339,12 @@ class ScrollManager {
     }
 
     // Update URL without triggering page reload
-    history.pushState(null, null, `#${targetId}`)
+    try {
+      history.pushState(null, null, `#${targetId}`)
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('Error updating URL hash:', error)
+    }
   }
 
   updateActiveNavLink(activeLink) {
