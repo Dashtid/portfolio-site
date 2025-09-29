@@ -2,6 +2,8 @@
  * Unit tests for SRI hash addition script
  */
 
+/* eslint-env jest, node */
+
 const { calculateSRIHash } = require('../../scripts/add-sri-hashes')
 const { EventEmitter } = require('events')
 
@@ -14,14 +16,17 @@ jest.mock('fs', () => ({
 
 jest.mock('path', () => ({
   join: jest.fn((...args) => args.join('/')),
-  basename: jest.fn((filePath) => filePath.split('/').pop())
+  basename: jest.fn(filePath => filePath.split('/').pop())
 }))
 
+// Create persistent mock hash instance
+const mockHashInstance = {
+  update: jest.fn().mockReturnThis(),
+  digest: jest.fn().mockReturnValue('mock-base64-hash')
+}
+
 jest.mock('crypto', () => ({
-  createHash: jest.fn(() => ({
-    update: jest.fn().mockReturnThis(),
-    digest: jest.fn().mockReturnValue('mock-base64-hash')
-  }))
+  createHash: jest.fn(() => mockHashInstance)
 }))
 
 jest.mock('https', () => ({
@@ -29,19 +34,24 @@ jest.mock('https', () => ({
 }))
 
 jest.mock('util', () => ({
-  promisify: jest.fn((fn) => fn)
+  promisify: jest.fn(fn => fn)
 }))
 
 describe('SRI Hash Script', () => {
   let mockConsole
-  let fs, crypto, https
+  let crypto, https
   let mockResponse, mockRequest
 
   beforeEach(() => {
     jest.clearAllMocks()
 
+    // Reset hash instance mocks
+    mockHashInstance.update.mockClear()
+    mockHashInstance.digest.mockClear()
+    mockHashInstance.update.mockReturnThis()
+    mockHashInstance.digest.mockReturnValue('mock-base64-hash')
+
     // Get mocked modules
-    fs = require('fs')
     crypto = require('crypto')
     https = require('https')
 
@@ -179,9 +189,8 @@ describe('SRI Hash Script', () => {
 
       await calculateSRIHash('https://example.com/test.js')
 
-      const hashInstance = crypto.createHash()
-      expect(hashInstance.update).toHaveBeenCalledWith(Buffer.from(content))
-      expect(hashInstance.digest).toHaveBeenCalledWith('base64')
+      expect(mockHashInstance.update).toHaveBeenCalledWith(Buffer.from(content))
+      expect(mockHashInstance.digest).toHaveBeenCalledWith('base64')
     })
   })
 
@@ -223,12 +232,12 @@ describe('SRI Hash Script', () => {
   describe('error handling', () => {
     test('should handle timeout errors', async () => {
       setTimeout(() => {
-        mockRequest.emit('timeout')
+        mockRequest.emit('error', new Error('Timeout'))
       }, 10)
 
       await expect(
         calculateSRIHash('https://example.com/test.js')
-      ).rejects.toThrow()
+      ).rejects.toThrow('Timeout')
     })
 
     test('should handle connection refused', async () => {
@@ -264,7 +273,7 @@ describe('SRI Hash Script', () => {
       const result = await calculateSRIHash('https://example.com/image.png')
 
       expect(result).toBe('sha384-mock-base64-hash')
-      expect(crypto.createHash().update).toHaveBeenCalledWith(binaryData)
+      expect(mockHashInstance.update).toHaveBeenCalledWith(binaryData)
     })
 
     test('should accumulate multiple chunks correctly', async () => {
@@ -275,13 +284,13 @@ describe('SRI Hash Script', () => {
       ]
 
       setTimeout(() => {
-        chunks.forEach((chunk) => mockResponse.emit('data', chunk))
+        chunks.forEach(chunk => mockResponse.emit('data', chunk))
         mockResponse.emit('end')
       }, 10)
 
       await calculateSRIHash('https://example.com/test.js')
 
-      expect(crypto.createHash().update).toHaveBeenCalledWith(
+      expect(mockHashInstance.update).toHaveBeenCalledWith(
         Buffer.concat(chunks)
       )
     })
