@@ -85,7 +85,7 @@
     "*.html": [
       "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore",
       "htmlhint",
-      "npm run validate:html -- --files"
+      "html-validate --config config/.htmlvalidaterc.json"
     ],
     "*.css": [
       "stylelint --fix --config config/.stylelintrc.json --ignore-path config/.stylelintignore",
