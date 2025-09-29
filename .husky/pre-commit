@@ -3,7 +3,72 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Run lint-staged
-npx lint-staged
+# Create backup stash to restore if needed
+echo "📁 Backing up original state..."
+STASH_NAME="pre-commit-backup-$(date +%s)"
+git stash push -u -m "$STASH_NAME" --quiet || echo "No changes to stash"
+STASH_RESULT=$?
+
+# Function to restore on failure
+restore_on_failure() {
+    if [ $STASH_RESULT -eq 0 ]; then
+        echo "⚠️  Restoring original state due to failure..."
+        git stash pop --quiet 2>/dev/null || true
+    fi
+    exit 1
+}
+
+# Trap to restore on any failure
+trap restore_on_failure ERR
+
+echo "🎯 Running tasks for staged files..."
+
+# Run lint-staged (auto-fixes and validates)
+echo "📝 Auto-fixing and validating staged files..."
+npx lint-staged || {
+    echo "❌ Lint-staged failed"
+    restore_on_failure
+}
+
+echo "🔄 Applying modifications from tasks..."
+
+# Add any files that were modified by the formatters
+git add -A
+
+echo "🧹 Cleaning up temporary files..."
+
+# Final validation - ensure staged files are properly formatted
+echo "✅ Running final validation checks on staged files..."
+
+# Get list of staged files for targeted validation
+STAGED_JS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js)$' || true)
+STAGED_HTML_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(html)$' || true)
+STAGED_CSS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(css)$' || true)
+
+# Check staged JavaScript files
+if [ ! -z "$STAGED_JS_FILES" ]; then
+    echo "🔍 Validating staged JavaScript files..."
+    echo "$STAGED_JS_FILES" | xargs npx eslint --config config/.eslintrc.js --ignore-path config/.eslintignore --max-warnings 0 || {
+        echo "❌ JavaScript validation failed on staged files"
+        restore_on_failure
+    }
+fi
+
+# Check staged files formatting with prettier
+STAGED_FORMAT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|html|css|json|md)$' || true)
+if [ ! -z "$STAGED_FORMAT_FILES" ]; then
+    echo "🎨 Verifying formatting of staged files..."
+    echo "$STAGED_FORMAT_FILES" | xargs npx prettier --check --config config/.prettierrc.json --ignore-path config/.prettierignore || {
+        echo "❌ Format check failed on staged files"
+        restore_on_failure
+    }
+fi
+
+# Clean up successful stash
+if [ $STASH_RESULT -eq 0 ]; then
+    echo "🗑️  Cleaning up backup stash..."
+    git stash drop "$STASH_NAME" --quiet 2>/dev/null || true
+fi
 
 echo "✅ Pre-commit checks passed!"
+echo "📋 All staged files are properly formatted and validated"

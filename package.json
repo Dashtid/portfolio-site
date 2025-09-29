@@ -28,6 +28,7 @@
     "minify:css": "cleancss -o site/static/css/style.min.css site/static/css/style.css",
     "minify:js": "terser site/static/js/*.js -c -m -o site/static/js/bundle.min.js",
     "validate:html": "html-validate site/**/*.html --config config/.htmlvalidaterc.json",
+    "validate:package": "npm ls --depth=0 2>/dev/null || echo 'Package validation warning'",
     "validate:links": "node scripts/validate-links.js",
     "security:enhance": "node scripts/add-sri-hashes.js && node scripts/add-csp-nonces.js && node scripts/update-csp-config.js",
     "security:audit": "npm audit --omit=dev || echo 'Dev dependency vulnerabilities found (non-critical)' && node scripts/security-check.js",
@@ -70,17 +71,29 @@
     "ws": "^8.15.0"
   },
   "lint-staged": {
-    "*.{html,css,js,json}": [
+    "package.json": [
+      "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore",
+      "npm run validate:package"
+    ],
+    "*.{html,css,js,json,md}": [
       "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore"
     ],
     "*.js": [
-      "eslint --fix --config config/.eslintrc.js --ignore-path config/.eslintignore"
+      "eslint --fix --config config/.eslintrc.js --ignore-path config/.eslintignore",
+      "eslint --config config/.eslintrc.js --ignore-path config/.eslintignore --max-warnings 0"
     ],
     "*.html": [
-      "htmlhint"
+      "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore",
+      "htmlhint",
+      "npm run validate:html -- --files"
     ],
     "*.css": [
-      "stylelint --fix --config config/.stylelintrc.json"
+      "stylelint --fix --config config/.stylelintrc.json",
+      "stylelint --config config/.stylelintrc.json --max-warnings 0",
+      "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore"
+    ],
+    "*.{json,md}": [
+      "prettier --write --config config/.prettierrc.json --ignore-path config/.prettierignore"
     ]
   },
   "stylelint": {

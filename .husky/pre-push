@@ -1,0 +1,55 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push validation..."
+
+# Only run pre-push checks when pushing to master or develop
+protected_branch_regex="^(refs/heads/)?(master|main|develop)$"
+
+# Get the branch being pushed to
+while read local_ref local_sha remote_ref remote_sha; do
+    if [[ "$remote_ref" =~ $protected_branch_regex ]]; then
+        echo "🔒 Pushing to protected branch: $remote_ref"
+        echo "🧪 Running comprehensive validation..."
+
+        # Run all CI checks locally to ensure they'll pass
+        echo "1️⃣ Checking code formatting..."
+        npm run format:check || {
+            echo "❌ Format check failed - run 'npm run format' to fix"
+            exit 1
+        }
+
+        echo "2️⃣ Validating JavaScript..."
+        npm run lint:js || {
+            echo "❌ JavaScript linting failed"
+            exit 1
+        }
+
+        echo "3️⃣ Validating HTML..."
+        npm run lint:html || {
+            echo "❌ HTML validation failed"
+            exit 1
+        }
+
+        echo "4️⃣ Validating CSS..."
+        npm run lint:css || {
+            echo "⚠️ CSS validation failed (may be non-critical)"
+            # Don't exit on CSS failures as CI allows this
+        }
+
+        echo "5️⃣ Running unit tests..."
+        npm run test:unit || {
+            echo "❌ Unit tests failed"
+            exit 1
+        }
+
+        echo "✅ All pre-push validations passed!"
+        echo "🎯 Code is ready for CI pipeline"
+
+        break
+    else
+        echo "📋 Pushing to feature branch: $remote_ref (skipping extensive validation)"
+    fi
+done
+
+echo "🚀 Pre-push checks completed successfully"
