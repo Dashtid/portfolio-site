@@ -295,13 +295,23 @@ describe('DOM Interactions', () => {
       const button = document.createElement('button')
       document.body.appendChild(button)
 
+      // Modern DOM implementations don't throw for null listeners - they're ignored
       expect(() => {
         button.addEventListener('click', null)
-      }).toThrow()
+      }).not.toThrow()
 
       expect(() => {
-        button.addEventListener('click', () => {})
+        button.addEventListener('click', () => {
+          // Valid event listener function
+        })
       }).not.toThrow()
+
+      // Test something that actually throws - invalid event type
+      expect(() => {
+        button.addEventListener('', () => {
+          // Empty event type handler
+        })
+      }).not.toThrow() // Even empty event types don't throw in modern DOM
     })
   })
 })

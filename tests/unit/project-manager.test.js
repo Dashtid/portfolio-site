@@ -3,6 +3,8 @@
  * Tests project filtering, sorting, and rendering functionality
  */
 
+/* eslint-env jest, node */
+
 const { TestUtils } = require('./setup.js')
 
 describe('ProjectManager', () => {
@@ -31,13 +33,13 @@ describe('ProjectManager', () => {
         'data-filter': 'healthcare'
       })
     ]
-    ;[mockContainer, mockNoResults, ...mockFilterButtons].forEach((el) => {
+    ;[mockContainer, mockNoResults, ...mockFilterButtons].forEach(el => {
       document.body.appendChild(el)
     })
   })
 
   afterEach(() => {
-    ;[mockContainer, mockNoResults, ...mockFilterButtons].forEach((el) => {
+    [mockContainer, mockNoResults, ...mockFilterButtons].forEach(el => {
       if (el.parentNode) el.parentNode.removeChild(el)
     })
     jest.clearAllMocks()
@@ -79,10 +81,10 @@ describe('ProjectManager', () => {
         tools: ['tool', 'utility', 'helper', 'cli', 'api', 'framework']
       }
 
-      const categorizeProject = (proj) => {
+      const categorizeProject = proj => {
         const text = `${proj.name} ${proj.description || ''}`.toLowerCase()
         for (const [category, keywords] of Object.entries(categories)) {
-          if (keywords.some((keyword) => text.includes(keyword))) {
+          if (keywords.some(keyword => text.includes(keyword))) {
             return category
           }
         }
@@ -128,10 +130,10 @@ describe('ProjectManager', () => {
         tools: ['tool', 'utility', 'helper', 'cli', 'api', 'framework']
       }
 
-      const categorizeProject = (proj) => {
+      const categorizeProject = proj => {
         const text = `${proj.name} ${proj.description || ''}`.toLowerCase()
         for (const [category, keywords] of Object.entries(categories)) {
-          if (keywords.some((keyword) => text.includes(keyword))) {
+          if (keywords.some(keyword => text.includes(keyword))) {
             return category
           }
         }
@@ -177,10 +179,10 @@ describe('ProjectManager', () => {
         tools: ['tool', 'utility', 'helper', 'cli', 'api', 'framework']
       }
 
-      const categorizeProject = (proj) => {
+      const categorizeProject = proj => {
         const text = `${proj.name} ${proj.description || ''}`.toLowerCase()
         for (const [category, keywords] of Object.entries(categories)) {
-          if (keywords.some((keyword) => text.includes(keyword))) {
+          if (keywords.some(keyword => text.includes(keyword))) {
             return category
           }
         }
@@ -297,7 +299,7 @@ describe('ProjectManager', () => {
         stargazers_count: 25
       }
 
-      const createProjectCard = (proj) => {
+      const createProjectCard = proj => {
         const card = document.createElement('div')
         card.className = 'col-md-6 col-lg-4 mb-4'
 
@@ -312,11 +314,11 @@ describe('ProjectManager', () => {
           ]
         }
 
-        const categorizeProject = (project) => {
+        const categorizeProject = project => {
           const text =
             `${project.name} ${project.description || ''}`.toLowerCase()
           for (const [category, keywords] of Object.entries(categories)) {
-            if (keywords.some((keyword) => text.includes(keyword))) {
+            if (keywords.some(keyword => text.includes(keyword))) {
               return category
             }
           }
@@ -371,7 +373,7 @@ describe('ProjectManager', () => {
         html_url: 'https://github.com/user/test'
       }
 
-      const createProjectCard = (proj) => {
+      const createProjectCard = proj => {
         const card = document.createElement('div')
         card.innerHTML = `<p>${proj.description || 'No description available'}</p>`
         return card
@@ -391,10 +393,10 @@ describe('ProjectManager', () => {
         cybersecurity: ['security', 'cyber', 'vulnerability']
       }
 
-      const categorizeProject = (proj) => {
+      const categorizeProject = proj => {
         const text = `${proj.name} ${proj.description || ''}`.toLowerCase()
         for (const [category, keywords] of Object.entries(categories)) {
-          if (keywords.some((keyword) => text.includes(keyword))) {
+          if (keywords.some(keyword => text.includes(keyword))) {
             return category
           }
         }
@@ -415,8 +417,8 @@ describe('ProjectManager', () => {
 
   describe('Filter Button Management', () => {
     test('should update filter button states', () => {
-      const updateFilterButtons = (activeButton) => {
-        document.querySelectorAll('.filter-btn').forEach((btn) => {
+      const updateFilterButtons = activeButton => {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
           btn.classList.remove('active')
           btn.setAttribute('aria-pressed', 'false')
         })
@@ -424,6 +426,16 @@ describe('ProjectManager', () => {
         activeButton.classList.add('active')
         activeButton.setAttribute('aria-pressed', 'true')
       }
+
+      // Recreate classList spies after jest.clearAllMocks() in afterEach
+<<<<<<< Updated upstream
+      mockFilterButtons.forEach(btn => {
+=======
+      mockFilterButtons.forEach((btn) => {
+>>>>>>> Stashed changes
+        btn.classList.add = jest.fn()
+        btn.classList.remove = jest.fn()
+      })
 
       // Mock querySelectorAll to return our mock buttons
       const mockQuerySelectorAll = jest.fn().mockReturnValue(mockFilterButtons)
@@ -436,7 +448,7 @@ describe('ProjectManager', () => {
         'aria-pressed',
         'true'
       )
-      ;[mockFilterButtons[0], mockFilterButtons[2]].forEach((btn) => {
+      ;[mockFilterButtons[0], mockFilterButtons[2]].forEach(btn => {
         expect(btn.classList.remove).toHaveBeenCalledWith('active')
         expect(btn.setAttribute).toHaveBeenCalledWith('aria-pressed', 'false')
       })
@@ -468,7 +480,7 @@ describe('ProjectManager', () => {
 
   describe('Error Handling and Edge Cases', () => {
     test('should handle missing DOM elements gracefully', () => {
-      ;[mockContainer, mockNoResults, ...mockFilterButtons].forEach((el) => {
+      [mockContainer, mockNoResults, ...mockFilterButtons].forEach(el => {
         if (el.parentNode) el.parentNode.removeChild(el)
       })
 
@@ -485,7 +497,7 @@ describe('ProjectManager', () => {
         html_url: 'https://github.com/test'
       }
 
-      const createProjectCard = (proj) => {
+      const createProjectCard = proj => {
         const card = document.createElement('div')
         card.innerHTML = `
           <h5>${proj.name}</h5>
@@ -503,7 +515,7 @@ describe('ProjectManager', () => {
     })
 
     test('should handle null or undefined project arrays', () => {
-      const renderProjects = (projects) => {
+      const renderProjects = projects => {
         if (!projects || projects.length === 0) {
           mockContainer.style.display = 'none'
           mockNoResults.style.display = 'block'

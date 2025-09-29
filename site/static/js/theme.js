@@ -257,7 +257,15 @@ class ScrollManager {
     window.addEventListener(
       'scroll',
       () => {
-        requestAnimationFrame(() => this.toggleVisibility())
+        requestAnimationFrame(() => {
+          try {
+            this.toggleVisibility()
+          } catch (error) {
+            // Gracefully handle scroll visibility errors
+            // eslint-disable-next-line no-console
+            console.warn('Error in scroll visibility toggle:', error)
+          }
+        })
       },
       { passive: true }
     )
@@ -307,13 +315,28 @@ class ScrollManager {
     const target = document.getElementById(targetId)
     if (!target) return
 
-    const targetPosition =
-      target.getBoundingClientRect().top + window.pageYOffset - this.navHeight
+    try {
+      const targetPosition =
+        target.getBoundingClientRect().top + window.pageYOffset - this.navHeight
 
-    window.scrollTo({
-      top: targetPosition,
-      behavior: 'smooth'
-    })
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      })
+    } catch (error) {
+      // Gracefully handle getBoundingClientRect errors
+      // eslint-disable-next-line no-console
+      console.warn('Error getting target position for scroll:', error)
+      // Fallback: scroll to top of element without precise positioning
+      if (typeof target.scrollIntoView === 'function') {
+        try {
+          target.scrollIntoView({ behavior: 'smooth' })
+        } catch (fallbackError) {
+          // eslint-disable-next-line no-console
+          console.warn('Error with scrollIntoView fallback:', fallbackError)
+        }
+      }
+    }
 
     // Update URL without triggering page reload
     history.pushState(null, null, `#${targetId}`)
@@ -352,8 +375,8 @@ class ScrollManager {
         if (visibleEntries.length > 0) {
           const topSection = visibleEntries[0].target
 
-          // Only update if this is a different section
-          if (currentActiveSection !== topSection.id) {
+          // Only update if this is a different section and target exists
+          if (topSection && currentActiveSection !== topSection.id) {
             currentActiveSection = topSection.id
             const currentNavLink = document.querySelector(
               `[data-scroll="${topSection.id}"]`
@@ -800,7 +823,7 @@ class AnimationManager {
             entry.target.classList.add('section-animate', 'visible')
 
             // Animate skills progress bars when skills section comes into view
-            if (entry.target.id === 'skills') {
+            if (entry.target && entry.target.id === 'skills') {
               this.animateSkillsBars()
             }
           }

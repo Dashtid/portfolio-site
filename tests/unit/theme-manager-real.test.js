@@ -98,9 +98,18 @@ describe('ThemeManager (Real Implementation)', () => {
     })
 
     test('should use saved manual theme preference', () => {
+      // Mock localStorage to actually store and return values
+      const storage = {}
+      localStorage.setItem.mockImplementation((key, value) => {
+        storage[key] = value
+      })
+      localStorage.getItem.mockImplementation(key => storage[key] || null)
+
+      // Set values first
       localStorage.setItem('theme-mode', 'manual')
       localStorage.setItem('theme', 'light')
 
+      // Create new ThemeManager instance which should read from localStorage
       themeManager = new ThemeManager()
       expect(themeManager.currentMode).toBe('manual')
       expect(themeManager.currentTheme).toBe('light')

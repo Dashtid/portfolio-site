@@ -3,11 +3,13 @@
  * Tests scroll-to-top functionality and smooth scrolling navigation
  */
 
+/* eslint-env jest, node */
+
 const { TestUtils } = require('./setup.js')
 
 // Mock ScrollManager class
 class ScrollManager {
-  constructor () {
+  constructor() {
     this.threshold = 300
     this.isVisible = false
     this.button = document.getElementById('backToTopBtn')
@@ -19,7 +21,7 @@ class ScrollManager {
     this.initSmoothScrolling()
   }
 
-  toggleVisibility () {
+  toggleVisibility() {
     const shouldShow = window.pageYOffset > this.threshold
 
     if (shouldShow !== this.isVisible) {
@@ -29,7 +31,7 @@ class ScrollManager {
     }
   }
 
-  scrollToTop () {
+  scrollToTop() {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
@@ -40,7 +42,7 @@ class ScrollManager {
     }, 100)
   }
 
-  init () {
+  init() {
     window.addEventListener(
       'scroll',
       () => {
@@ -49,7 +51,7 @@ class ScrollManager {
       { passive: true }
     )
 
-    this.button.addEventListener('click', (e) => {
+    this.button.addEventListener('click', e => {
       e.preventDefault()
       this.scrollToTop()
     })
@@ -57,13 +59,13 @@ class ScrollManager {
     this.toggleVisibility()
   }
 
-  initSmoothScrolling () {
+  initSmoothScrolling() {
     const internalNavLinks = document.querySelectorAll(
       '.internal-nav[data-scroll]'
     )
 
-    internalNavLinks.forEach((link) => {
-      link.addEventListener('click', (e) => {
+    internalNavLinks.forEach(link => {
+      link.addEventListener('click', e => {
         e.preventDefault()
         const targetId = link.getAttribute('data-scroll')
         this.scrollToSection(targetId)
@@ -79,7 +81,7 @@ class ScrollManager {
     this.setupNavigationHighlighting()
   }
 
-  scrollToSection (targetId) {
+  scrollToSection(targetId) {
     const target = document.getElementById(targetId)
     if (!target) return
 
@@ -94,8 +96,8 @@ class ScrollManager {
     history.pushState(null, null, `#${targetId}`)
   }
 
-  updateActiveNavLink (activeLink) {
-    document.querySelectorAll('.internal-nav').forEach((link) => {
+  updateActiveNavLink(activeLink) {
+    document.querySelectorAll('.internal-nav').forEach(link => {
       link.classList.remove('active')
       link.removeAttribute('aria-current')
     })
@@ -104,11 +106,11 @@ class ScrollManager {
     activeLink.setAttribute('aria-current', 'page')
   }
 
-  setupNavigationHighlighting () {
+  setupNavigationHighlighting() {
     const sections = document.querySelectorAll('section[id]')
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             const currentNavLink = document.querySelector(
               `[data-scroll="${entry.target.id}"]`
@@ -125,7 +127,7 @@ class ScrollManager {
       }
     )
 
-    sections.forEach((section) => observer.observe(section))
+    sections.forEach(section => observer.observe(section))
   }
 }
 
@@ -152,10 +154,10 @@ describe('ScrollManager', () => {
         'data-scroll': 'skills'
       })
     ]
-    mockNavLinks.forEach((link) => document.body.appendChild(link))
+    mockNavLinks.forEach(link => document.body.appendChild(link))
 
     // Mock document.querySelectorAll to return our mock nav links
-    document.querySelectorAll = jest.fn().mockImplementation((selector) => {
+    document.querySelectorAll = jest.fn().mockImplementation(selector => {
       if (selector === '.internal-nav') {
         return mockNavLinks
       }
@@ -166,7 +168,7 @@ describe('ScrollManager', () => {
       TestUtils.createMockElement('section', { id: 'about' }),
       TestUtils.createMockElement('section', { id: 'skills' })
     ]
-    mockSections.forEach((section) => document.body.appendChild(section))
+    mockSections.forEach(section => document.body.appendChild(section))
 
     mockSections.forEach((section, index) => {
       section.getBoundingClientRect = jest.fn().mockReturnValue({
@@ -181,11 +183,11 @@ describe('ScrollManager', () => {
     })
 
     window.scrollTo = jest.fn()
-    window.requestAnimationFrame = jest.fn((cb) => setTimeout(cb, 16))
+    window.requestAnimationFrame = jest.fn(cb => setTimeout(cb, 16))
   })
 
   afterEach(() => {
-    ;[mockBackToTopBtn, ...mockNavLinks, ...mockSections].forEach((el) => {
+    [mockBackToTopBtn, ...mockNavLinks, ...mockSections].forEach(el => {
       if (el.parentNode) el.parentNode.removeChild(el)
     })
 
@@ -226,17 +228,12 @@ describe('ScrollManager', () => {
     })
 
     test('should hide button when scrolled below threshold', () => {
+      // First make the button visible (set initial state)
+      window.pageYOffset = 400
+      scrollManager.toggleVisibility()
+
+      // Then hide it by scrolling below threshold
       window.pageYOffset = 200
-
-      // Ensure the mock button has proper setAttribute/getAttribute spies
-      const attributes = {}
-      mockBackToTopBtn.setAttribute = jest.fn((name, value) => {
-        attributes[name] = value
-      })
-      mockBackToTopBtn.getAttribute = jest.fn(
-        (name) => attributes[name] || null
-      )
-
       scrollManager.toggleVisibility()
 
       expect(mockBackToTopBtn.style.display).toBe('none')
@@ -319,15 +316,16 @@ describe('ScrollManager', () => {
     test('should update active navigation link', () => {
       const activeLink = mockNavLinks[0]
 
-      // Mock all methods that will be called
+      // Recreate classList spies after jest.clearAllMocks() in afterEach
+<<<<<<< Updated upstream
+      mockNavLinks.forEach(link => {
+=======
       mockNavLinks.forEach((link) => {
-        link.classList = {
-          add: jest.fn(),
-          remove: jest.fn(),
-          toggle: jest.fn(),
-          contains: jest.fn().mockReturnValue(false),
-          replace: jest.fn()
-        }
+>>>>>>> Stashed changes
+        link.classList.add = jest.fn()
+        link.classList.remove = jest.fn()
+        link.classList.toggle = jest.fn()
+        link.classList.contains = jest.fn().mockReturnValue(false)
         link.setAttribute = jest.fn()
         link.removeAttribute = jest.fn()
       })
@@ -340,7 +338,7 @@ describe('ScrollManager', () => {
         'page'
       )
 
-      mockNavLinks.slice(1).forEach((link) => {
+      mockNavLinks.slice(1).forEach(link => {
         expect(link.classList.remove).toHaveBeenCalledWith('active')
         expect(link.removeAttribute).toHaveBeenCalledWith('aria-current')
       })
