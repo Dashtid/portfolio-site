@@ -177,10 +177,51 @@
         height: auto;
       }
 
-      /* Skip Navigation */
+      /* Skip Navigation - Accessible but visually hidden */
+      .skip-nav {
+        position: absolute !important;
+        left: -10000px !important;
+        top: auto !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(1px, 1px, 1px, 1px) !important;
+        white-space: nowrap !important;
+      }
+
       .skip-nav:focus {
-        transform: translateY(0) !important;
-        z-index: 9999;
+        position: fixed !important;
+        left: 10px !important;
+        top: 10px !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        clip: auto !important;
+        white-space: normal !important;
+        z-index: 9999 !important;
+        padding: 8px 16px !important;
+        background: var(--primary-600) !important;
+        color: white !important;
+        border-radius: 4px !important;
+        text-decoration: none !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+      }
+
+      /* Ensure Experience section is properly positioned when skipped to */
+      #experience {
+        scroll-margin-top: 80px; /* Account for sticky navbar */
+      }
+
+      /* Smooth scrolling for better UX */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Additional padding to ensure Experience section can be centered properly */
+      #experience.py-5 {
+        padding-top: 120px !important;
+        padding-bottom: 120px !important;
       }
     </style>
 
@@ -243,12 +284,7 @@
   </head>
 
   <body>
-    <a
-      href="#main-heading"
-      class="skip-nav position-absolute top-0 start-0 bg-primary text-white px-3 py-2 rounded-bottom-2 text-decoration-none"
-      style="transform: translateY(-100%); transition: transform 0.3s"
-      >Skip to main content</a
-    >
+    <a href="#experience" class="skip-nav">Skip to main content</a>
 
     <div class="stockholm-background">
       <nav
