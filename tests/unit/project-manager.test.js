@@ -428,11 +428,7 @@ describe('ProjectManager', () => {
       }
 
       // Recreate classList spies after jest.clearAllMocks() in afterEach
-<<<<<<< Updated upstream
-      mockFilterButtons.forEach(btn => {
-=======
       mockFilterButtons.forEach((btn) => {
->>>>>>> Stashed changes
         btn.classList.add = jest.fn()
         btn.classList.remove = jest.fn()
       })

@@ -317,11 +317,7 @@ describe('ScrollManager', () => {
       const activeLink = mockNavLinks[0]
 
       // Recreate classList spies after jest.clearAllMocks() in afterEach
-<<<<<<< Updated upstream
-      mockNavLinks.forEach(link => {
-=======
       mockNavLinks.forEach((link) => {
->>>>>>> Stashed changes
         link.classList.add = jest.fn()
         link.classList.remove = jest.fn()
         link.classList.toggle = jest.fn()
