@@ -3,6 +3,8 @@
  * Tests WCAG guidelines, ARIA attributes, keyboard navigation, screen reader support
  */
 
+/* eslint-env jest, node */
+
 const { JSDOM } = require('jsdom')
 
 describe('Accessibility and Standards Compliance', () => {
@@ -289,9 +291,8 @@ describe('Accessibility and Standards Compliance', () => {
       pretendToBeVisual: true,
       resources: 'usable'
     })
-
-    window = dom.window
-    document = window.document
+    ;({ window } = dom)
+    ;({ document } = window)
 
     // Mock console for accessibility warnings
     global.console = {
@@ -333,8 +334,8 @@ describe('Accessibility and Standards Compliance', () => {
     test('should have proper heading hierarchy', () => {
       const headings = Array.from(
         document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-      ).map((h) => ({
-        level: parseInt(h.tagName.charAt(1)),
+      ).map(h => ({
+        level: parseInt(h.tagName.charAt(1), 10),
         text: h.textContent.trim()
       }))
 
@@ -360,7 +361,7 @@ describe('Accessibility and Standards Compliance', () => {
 
       // Check all form inputs have labels
       const inputs = form.querySelectorAll('input, textarea, select')
-      inputs.forEach((input) => {
+      inputs.forEach(input => {
         const id = input.getAttribute('id')
         const label = document.querySelector(`label[for="${id}"]`)
         expect(label).toBeTruthy()
@@ -373,7 +374,7 @@ describe('Accessibility and Standards Compliance', () => {
         'ul[role="list"], ol[role="list"]'
       )
 
-      lists.forEach((list) => {
+      lists.forEach(list => {
         const items = list.querySelectorAll('li[role="listitem"]')
         expect(items.length).toBeGreaterThan(0)
       })
@@ -434,7 +435,7 @@ describe('Accessibility and Standards Compliance', () => {
 
     test('should have proper button states with aria-pressed', () => {
       const filterButtons = document.querySelectorAll('.filter-btn')
-      filterButtons.forEach((button) => {
+      filterButtons.forEach(button => {
         expect(button.hasAttribute('aria-pressed')).toBe(true)
       })
 
@@ -460,7 +461,7 @@ describe('Accessibility and Standards Compliance', () => {
       const navToggle = document.getElementById('nav-toggle')
       let toggleTriggered = false
 
-      const handleKeydown = (event) => {
+      const handleKeydown = event => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           toggleTriggered = true
@@ -493,7 +494,7 @@ describe('Accessibility and Standards Compliance', () => {
       const modal = document.getElementById('project-modal')
       let modalClosed = false
 
-      const handleKeydown = (event) => {
+      const handleKeydown = event => {
         if (
           event.key === 'Escape' &&
           modal.getAttribute('aria-hidden') === 'false'
@@ -533,7 +534,7 @@ describe('Accessibility and Standards Compliance', () => {
       expect(lastFocusable).toBeTruthy()
 
       // Mock focus trap logic
-      const handleTabKey = (event) => {
+      const handleTabKey = event => {
         if (event.key === 'Tab') {
           if (event.shiftKey) {
             // Shift + Tab - moving backwards
@@ -563,8 +564,12 @@ describe('Accessibility and Standards Compliance', () => {
       const srOnlyElements = document.querySelectorAll('.sr-only')
       expect(srOnlyElements.length).toBeGreaterThan(0)
 
-      srOnlyElements.forEach((element) => {
-        expect(element.textContent.trim()).toBeTruthy()
+      // Check that sr-only elements have content (excluding aria-live regions which start empty)
+      srOnlyElements.forEach(element => {
+        // Skip aria-live regions that are meant to be populated dynamically
+        if (!element.hasAttribute('aria-live')) {
+          expect(element.textContent.trim()).toBeTruthy()
+        }
       })
 
       // Check specific sr-only content
@@ -597,7 +602,7 @@ describe('Accessibility and Standards Compliance', () => {
     test('should have proper announcements for dynamic content', () => {
       const liveRegion = document.getElementById('live-region')
 
-      const announce = (message) => {
+      const announce = message => {
         liveRegion.textContent = message
         setTimeout(() => {
           liveRegion.textContent = ''
@@ -627,7 +632,7 @@ describe('Accessibility and Standards Compliance', () => {
     test('should not rely solely on color for information', () => {
       // Check that required fields have text indicators, not just color
       const requiredFields = document.querySelectorAll('.required')
-      requiredFields.forEach((field) => {
+      requiredFields.forEach(field => {
         const indicator = field.querySelector('.required-indicator')
         expect(indicator).toBeTruthy()
         expect(indicator.textContent).toContain('*')
@@ -641,7 +646,7 @@ describe('Accessibility and Standards Compliance', () => {
 
     test('should support high contrast mode', () => {
       const contrastToggle = document.getElementById('contrast-toggle')
-      const body = document.body
+      const { body } = document
 
       const toggleHighContrast = () => {
         const isHighContrast = body.classList.toggle('high-contrast')
@@ -666,11 +671,11 @@ describe('Accessibility and Standards Compliance', () => {
     test('should handle focus visibility', () => {
       const focusableElement = document.querySelector('.cta-button')
 
-      const handleFocus = (element) => {
+      const handleFocus = element => {
         element.classList.add('focus-visible')
       }
 
-      const handleBlur = (element) => {
+      const handleBlur = element => {
         element.classList.remove('focus-visible')
       }
 
@@ -685,12 +690,12 @@ describe('Accessibility and Standards Compliance', () => {
   describe('Motion and Animation Accessibility', () => {
     test('should respect reduced motion preferences', () => {
       const motionToggle = document.getElementById('motion-toggle')
-      const body = document.body
+      const { body } = document
 
       // Mock matchMedia for prefers-reduced-motion
       Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: jest.fn().mockImplementation((query) => ({
+        value: jest.fn().mockImplementation(query => ({
           matches: query === '(prefers-reduced-motion: reduce)',
           media: query,
           onchange: null,
@@ -722,7 +727,7 @@ describe('Accessibility and Standards Compliance', () => {
 
     test('should provide motion control toggle', () => {
       const motionToggle = document.getElementById('motion-toggle')
-      const body = document.body
+      const { body } = document
 
       const toggleMotion = () => {
         const reducedMotion = body.classList.toggle('reduced-motion')
@@ -751,16 +756,16 @@ describe('Accessibility and Standards Compliance', () => {
 
       // Check that all text content is in the declared language
       const title = document.querySelector('title')
-      expect(title.textContent).toMatch(/^[a-zA-Z\s\-]+$/) // English text pattern
+      expect(title.textContent).toMatch(/^[a-zA-Z\s-]+$/) // English text pattern
     })
 
     test('should handle text direction properly', () => {
       // Test would be more relevant for RTL languages, but checking structure
-      const body = document.body
+      const { body } = document
       expect(body.getAttribute('dir')).toBeFalsy() // Default LTR
 
       // Mock RTL support
-      const setDirection = (dir) => {
+      const setDirection = dir => {
         body.setAttribute('dir', dir)
         if (dir === 'rtl') {
           body.classList.add('rtl')
@@ -777,11 +782,10 @@ describe('Accessibility and Standards Compliance', () => {
 
   describe('Form Accessibility', () => {
     test('should have proper form validation with accessibility', () => {
-      const form = document.getElementById('contact-form')
       const nameInput = document.getElementById('name')
       const nameError = document.getElementById('name-error')
 
-      const validateField = (input) => {
+      const validateField = input => {
         const errorElement = document.getElementById(
           input.getAttribute('aria-describedby').split(' ')[0]
         )
@@ -794,11 +798,10 @@ describe('Accessibility and Standards Compliance', () => {
           errorElement.textContent = `${fieldName} is required`
           input.setAttribute('aria-invalid', 'true')
           return false
-        } else {
-          errorElement.textContent = ''
-          input.setAttribute('aria-invalid', 'false')
-          return true
         }
+        errorElement.textContent = ''
+        input.setAttribute('aria-invalid', 'false')
+        return true
       }
 
       // Test validation
@@ -843,11 +846,11 @@ describe('Accessibility and Standards Compliance', () => {
     test('should provide helpful form instructions', () => {
       const inputs = document.querySelectorAll('input, textarea')
 
-      inputs.forEach((input) => {
+      inputs.forEach(input => {
         const helpId = input
           .getAttribute('aria-describedby')
           ?.split(' ')
-          .find((id) => id.includes('help'))
+          .find(id => id.includes('help'))
         if (helpId) {
           const helpText = document.getElementById(helpId)
           expect(helpText).toBeTruthy()
@@ -861,7 +864,7 @@ describe('Accessibility and Standards Compliance', () => {
     test('should have proper alt text for images', () => {
       const images = document.querySelectorAll('img')
 
-      images.forEach((img) => {
+      images.forEach(img => {
         const alt = img.getAttribute('alt')
         expect(alt).toBeTruthy()
 
@@ -881,8 +884,6 @@ describe('Accessibility and Standards Compliance', () => {
     })
 
     test('should have proper loading attributes for performance', () => {
-      const images = document.querySelectorAll('img')
-
       // Images below the fold should have loading="lazy"
       const profileImg = document.querySelector('.profile-image')
       expect(profileImg.getAttribute('loading')).toBe('lazy')
@@ -893,7 +894,7 @@ describe('Accessibility and Standards Compliance', () => {
     test('should have descriptive link text', () => {
       const links = document.querySelectorAll('a')
 
-      links.forEach((link) => {
+      links.forEach(link => {
         const linkText = link.textContent.trim()
         const ariaLabel = link.getAttribute('aria-label')
 
@@ -912,7 +913,7 @@ describe('Accessibility and Standards Compliance', () => {
     test('should handle external links properly', () => {
       const externalLinks = document.querySelectorAll('a[target="_blank"]')
 
-      externalLinks.forEach((link) => {
+      externalLinks.forEach(link => {
         // Should have rel="noopener noreferrer" for security
         const rel = link.getAttribute('rel')
         expect(rel).toContain('noopener')
@@ -930,7 +931,7 @@ describe('Accessibility and Standards Compliance', () => {
       )
 
       // All focusable elements should be able to receive focus
-      focusableElements.forEach((element) => {
+      focusableElements.forEach(element => {
         expect(element.tabIndex).not.toBe(-1)
       })
 
