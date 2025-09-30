@@ -3,13 +3,16 @@
  * Tests GitHub API, social media widgets, analytics, and third-party services
  */
 
+/* eslint-env jest, node */
+/* eslint-disable prefer-destructuring, consistent-return, promise/param-names */
+
 const { JSDOM } = require('jsdom')
 
 // Mock fetch globally
 global.fetch = jest.fn()
 
 describe('External API Integrations', () => {
-  let dom, window, document
+  let dom, window, document, originalCreateElement
 
   beforeEach(() => {
     const html = `
@@ -64,6 +67,9 @@ describe('External API Integrations', () => {
     window = dom.window
     document = window.document
 
+    // Save original createElement for restoration after each test
+    originalCreateElement = document.createElement.bind(document)
+
     // Mock console methods
     window.console = {
       log: jest.fn(),
@@ -89,6 +95,14 @@ describe('External API Integrations', () => {
   })
 
   afterEach(() => {
+    // Restore all mocks to prevent test pollution
+    jest.restoreAllMocks()
+
+    // Restore original document.createElement
+    if (document && originalCreateElement) {
+      document.createElement = originalCreateElement
+    }
+
     if (dom) {
       dom.window.close()
     }
@@ -132,13 +146,13 @@ describe('External API Integrations', () => {
       })
 
       // Simulate GitHub API call
-      const fetchGitHubUser = async (username) => {
+      const fetchGitHubUser = async username => {
         const response = await fetch(`https://api.github.com/users/${username}`)
         if (!response.ok) throw new Error('Failed to fetch user')
         return response.json()
       }
 
-      const updateUserStats = (userData) => {
+      const updateUserStats = userData => {
         document.getElementById('followers-count').textContent =
           userData.followers
         document.getElementById('repos-count').textContent =
@@ -169,11 +183,11 @@ describe('External API Integrations', () => {
         return response.json()
       }
 
-      const displayRepositories = (repos) => {
+      const displayRepositories = repos => {
         const container = document.getElementById('repos-container')
         container.innerHTML = ''
 
-        repos.forEach((repo) => {
+        repos.forEach(repo => {
           const repoElement = document.createElement('div')
           repoElement.className = 'repo-card'
           repoElement.innerHTML = `
@@ -214,7 +228,7 @@ describe('External API Integrations', () => {
         })
       })
 
-      const fetchWithRateLimit = async (url) => {
+      const fetchWithRateLimit = async url => {
         const response = await fetch(url)
 
         if (response.status === 403) {
@@ -243,7 +257,7 @@ describe('External API Integrations', () => {
       const cache = new Map()
       const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-      const fetchWithCache = async (url) => {
+      const fetchWithCache = async url => {
         const cached = cache.get(url)
         const now = Date.now()
 
@@ -279,7 +293,8 @@ describe('External API Integrations', () => {
     test('should handle network errors gracefully', async () => {
       fetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const handleApiError = (error) => {
+      const handleApiError = error => {
+        // eslint-disable-next-line no-console
         console.error('GitHub API Error:', error.message)
         document.getElementById('loading').style.display = 'none'
         document.getElementById('error-message').classList.remove('hidden')
@@ -291,6 +306,7 @@ describe('External API Integrations', () => {
         handleApiError(error)
       }
 
+      // eslint-disable-next-line no-console
       expect(console.error).toHaveBeenCalledWith(
         'GitHub API Error:',
         'Network error'
@@ -314,27 +330,17 @@ describe('External API Integrations', () => {
         })
       }
 
-      // Mock script loading
-      const mockScript = {
-        src: '',
-        async: false,
-        onload: null,
-        onerror: null,
-        addEventListener: jest.fn()
-      }
+      // Execute function to create script element
+      loadTwitterWidget()
 
-      document.createElement = jest.fn((tag) => {
-        if (tag === 'script') return mockScript
-        return dom.window.document.createElement(tag)
-      })
+      // Find the added script element
+      const addedScript = document.querySelector(
+        'script[src="https://platform.twitter.com/widgets.js"]'
+      )
 
-      const scriptPromise = loadTwitterWidget()
-
-      // Simulate successful load
-      if (mockScript.onload) mockScript.onload()
-
-      expect(mockScript.src).toBe('https://platform.twitter.com/widgets.js')
-      expect(mockScript.async).toBe(true)
+      expect(addedScript).toBeTruthy()
+      expect(addedScript.src).toBe('https://platform.twitter.com/widgets.js')
+      expect(addedScript.async).toBe(true)
     })
 
     test('should handle Twitter widget loading failure', async () => {
@@ -348,17 +354,17 @@ describe('External API Integrations', () => {
         })
       }
 
-      const mockScript = {
-        src: '',
-        onerror: null
-      }
-
-      document.createElement = jest.fn(() => mockScript)
-
       const promise = loadTwitterWidget()
 
-      // Simulate loading error
-      if (mockScript.onerror) mockScript.onerror()
+      // Find the added script and manually trigger error
+      const addedScript = document.querySelector(
+        'script[src="https://platform.twitter.com/widgets.js"]'
+      )
+
+      // Manually trigger the onerror callback
+      if (addedScript && addedScript.onerror) {
+        addedScript.onerror()
+      }
 
       await expect(promise).rejects.toThrow('Failed to load Twitter widgets')
     })
@@ -392,11 +398,12 @@ describe('External API Integrations', () => {
 
   describe('Analytics integration', () => {
     test('should initialize Google Analytics', () => {
-      const initGA = (trackingId) => {
+      const initGA = trackingId => {
         // Simulate GA initialization
         window.dataLayer = window.dataLayer || []
         window.gtag = function () {
-          window.dataLayer.push(arguments)
+          // Convert arguments to array and push
+          window.dataLayer.push(Array.from(arguments))
         }
 
         window.gtag('config', trackingId)
@@ -412,10 +419,11 @@ describe('External API Integrations', () => {
     test('should track page views', () => {
       window.dataLayer = []
       window.gtag = function () {
-        window.dataLayer.push(arguments)
+        // Convert arguments to array and push
+        window.dataLayer.push(Array.from(arguments))
       }
 
-      const trackPageView = (path) => {
+      const trackPageView = path => {
         window.gtag('event', 'page_view', {
           page_location: `${window.location.origin}${path}`,
           page_path: path
@@ -437,7 +445,8 @@ describe('External API Integrations', () => {
     test('should track custom events', () => {
       window.dataLayer = []
       window.gtag = function () {
-        window.dataLayer.push(arguments)
+        // Convert arguments to array and push
+        window.dataLayer.push(Array.from(arguments))
       }
 
       const trackEvent = (action, category, label, value) => {
@@ -462,19 +471,20 @@ describe('External API Integrations', () => {
     })
 
     test('should handle analytics opt-out', () => {
+      // Mock navigator.doNotTrack BEFORE defining the function
+      Object.defineProperty(window.navigator, 'doNotTrack', {
+        value: '1',
+        writable: true,
+        configurable: true
+      })
+
       const handleAnalyticsOptOut = () => {
         // Check for DNT header or user preference
-        const dntEnabled = navigator.doNotTrack === '1'
+        const dntEnabled = window.navigator.doNotTrack === '1'
         const optedOut = localStorage.getItem('analytics-opt-out') === 'true'
 
         return dntEnabled || optedOut
       }
-
-      // Mock navigator.doNotTrack
-      Object.defineProperty(window.navigator, 'doNotTrack', {
-        value: '1',
-        writable: true
-      })
 
       const shouldSkipAnalytics = handleAnalyticsOptOut()
       expect(shouldSkipAnalytics).toBe(true)
@@ -494,7 +504,7 @@ describe('External API Integrations', () => {
         json: async () => ({ success: true, id: 'msg-123' })
       })
 
-      const submitContactForm = async (formData) => {
+      const submitContactForm = async formData => {
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: {
@@ -528,7 +538,7 @@ describe('External API Integrations', () => {
         json: async () => ({ error: 'Invalid email format' })
       })
 
-      const submitForm = async (formData) => {
+      const submitForm = async formData => {
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -576,9 +586,7 @@ describe('External API Integrations', () => {
           } catch (error) {
             lastError = error
             if (i < maxRetries - 1) {
-              await new Promise((resolve) =>
-                setTimeout(resolve, 1000 * (i + 1))
-              )
+              await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)))
             }
           }
         }
@@ -613,27 +621,22 @@ describe('External API Integrations', () => {
         })
       }
 
-      const mockScript = {
-        src: '',
-        async: false,
-        defer: false,
-        onload: null,
-        onerror: null,
-        setAttribute: jest.fn()
-      }
-
-      document.createElement = jest.fn(() => mockScript)
-
       loadScript('https://example.com/widget.js', {
         async: true,
         defer: true,
         attributes: { 'data-key': 'abc123' }
       })
 
-      expect(mockScript.src).toBe('https://example.com/widget.js')
-      expect(mockScript.async).toBe(true)
-      expect(mockScript.defer).toBe(true)
-      expect(mockScript.setAttribute).toHaveBeenCalledWith('data-key', 'abc123')
+      // Find the added script element
+      const addedScript = document.querySelector(
+        'script[src="https://example.com/widget.js"]'
+      )
+
+      expect(addedScript).toBeTruthy()
+      expect(addedScript.src).toBe('https://example.com/widget.js')
+      expect(addedScript.async).toBe(true)
+      expect(addedScript.defer).toBe(true)
+      expect(addedScript.getAttribute('data-key')).toBe('abc123')
     })
 
     test('should handle script loading timeouts', async () => {
@@ -652,20 +655,12 @@ describe('External API Integrations', () => {
         ])
       }
 
-      const mockScript = {
-        src: '',
-        onload: null,
-        onerror: null
-      }
-
-      document.createElement = jest.fn(() => mockScript)
-
       const promise = loadScriptWithTimeout(
         'https://slow-script.com/widget.js',
         100
       )
 
-      // Don't trigger onload, let it timeout
+      // Don't trigger onload/onerror, let the timeout promise win the race
       await expect(promise).rejects.toThrow('Script load timeout')
     })
 
@@ -674,7 +669,7 @@ describe('External API Integrations', () => {
         loaded: new Set(),
         loading: new Map(),
 
-        async load (src, dependencies = []) {
+        async load(src, dependencies = []) {
           if (this.loaded.has(src)) return
 
           if (this.loading.has(src)) {
@@ -682,7 +677,7 @@ describe('External API Integrations', () => {
           }
 
           // Wait for dependencies
-          await Promise.all(dependencies.map((dep) => this.load(dep)))
+          await Promise.all(dependencies.map(dep => this.load(dep)))
 
           const promise = new Promise((resolve, reject) => {
             const script = document.createElement('script')
@@ -704,22 +699,37 @@ describe('External API Integrations', () => {
         }
       }
 
-      const mockScript = {
-        src: '',
-        onload: null,
-        onerror: null
-      }
-
-      document.createElement = jest.fn(() => mockScript)
-
+      // Start loading (this will create jquery script first due to dependency)
       const loadPromise = scriptManager.load('https://example.com/widget.js', [
         'https://example.com/jquery.js'
       ])
 
-      // Simulate successful loads
-      if (mockScript.onload) mockScript.onload()
+      // Wait a bit for the jquery dependency script to be created
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      // Manually trigger onload for jquery dependency first
+      const jqueryScript = document.querySelector(
+        'script[src="https://example.com/jquery.js"]'
+      )
+      if (jqueryScript && jqueryScript.onload) {
+        jqueryScript.onload()
+      }
+
+      // Wait for widget script to be created (after jquery loads)
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      // Then trigger onload for the main widget script
+      const widgetScript = document.querySelector(
+        'script[src="https://example.com/widget.js"]'
+      )
+      if (widgetScript && widgetScript.onload) {
+        widgetScript.onload()
+      }
 
       await loadPromise
+      expect(scriptManager.loaded.has('https://example.com/jquery.js')).toBe(
+        true
+      )
       expect(scriptManager.loaded.has('https://example.com/widget.js')).toBe(
         true
       )
@@ -745,7 +755,7 @@ describe('External API Integrations', () => {
 
             const delay = Math.pow(2, i) * 1000 // Exponential backoff
             delays.push(delay)
-            await new Promise((resolve) => setTimeout(resolve, delay))
+            await new Promise(resolve => setTimeout(resolve, delay))
           }
         }
       }
@@ -766,7 +776,7 @@ describe('External API Integrations', () => {
         state: 'CLOSED', // CLOSED, OPEN, HALF_OPEN
         lastFailureTime: null,
 
-        async call (fn) {
+        async call(fn) {
           if (this.state === 'OPEN') {
             if (Date.now() - this.lastFailureTime > this.timeout) {
               this.state = 'HALF_OPEN'
