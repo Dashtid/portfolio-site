@@ -46,13 +46,8 @@ describe('AnimationManager', () => {
     skillsProgressBars[0].style.width = '90%'
     skillsProgressBars[1].style.width = '80%'
 
-<<<<<<< Updated upstream
-    skillsProgressBars.forEach(bar => mockSections[1].appendChild(bar))
-    mockProgressBars.forEach(bar => document.body.appendChild(bar))
-=======
     skillsProgressBars.forEach((bar) => mockSections[1].appendChild(bar))
     mockProgressBars.forEach((bar) => document.body.appendChild(bar))
->>>>>>> Stashed changes
 
     mockCards = [
       TestUtils.createMockElement('div', { class: 'card' }),
@@ -197,11 +192,7 @@ describe('AnimationManager', () => {
       expect(skillsBars.length).toBeGreaterThanOrEqual(2)
 
       // All found bars should be reset to 0% initially
-<<<<<<< Updated upstream
-      Array.from(skillsBars).forEach(bar => {
-=======
       Array.from(skillsBars).forEach((bar) => {
->>>>>>> Stashed changes
         expect(bar.style.width).toBe('0%')
       })
 
@@ -490,16 +481,10 @@ describe('AnimationManager', () => {
 
       expect(() => {
         // Query for elements that definitely don't exist
-<<<<<<< Updated upstream
-        emptyList = document.querySelectorAll(
-          '.xyz-definitely-not-exists-12345'
-        )
-=======
         emptyList = document.querySelectorAll('.xyz-definitely-not-exists-12345')
->>>>>>> Stashed changes
 
         // Iterating over empty NodeList should not throw
-        emptyList.forEach(el => {
+        emptyList.forEach((el) => {
           el.classList.add('test')
           el.style.width = '100%'
         })
