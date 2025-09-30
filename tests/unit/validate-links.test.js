@@ -3,17 +3,13 @@
  * Tests link checking, URL validation, and HTML parsing
  */
 
-// Temporarily disabled complex async tests to prevent worker crashes
-describe.skip('Link Validation Script (temporarily disabled)', () => {
-  test('placeholder test', () => {
-    expect(true).toBe(true)
-  })
-})
+/* eslint-env jest, node */
 
-describe('Link Validation Script (simplified tests)', () => {
+describe('Link Validation Script', () => {
   test('should validate URL format', () => {
-    const isValidUrl = (url) => {
+    const isValidUrl = url => {
       try {
+        // eslint-disable-next-line no-new
         new URL(url)
         return true
       } catch {

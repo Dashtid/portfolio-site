@@ -511,23 +511,6 @@ describe('Theme System Integration Tests', () => {
       expect(setItemSpy).toHaveBeenCalledWith('theme', 'dark')
     })
 
-    test.skip('should propagate errors from event listeners', () => {
-      // Mock an error in IconManager - real implementation doesn't isolate event listener errors
-      const handleThemeChangeSpy = jest
-        .spyOn(iconManager, 'handleThemeChange')
-        .mockImplementation(() => {
-          throw new Error('Icon manager error')
-        })
-
-      // Error propagates through event system
-      expect(() => {
-        themeManager.setTheme('dark')
-      }).toThrow('Icon manager error')
-
-      // Restore original implementation
-      handleThemeChangeSpy.mockRestore()
-    })
-
     test('should support dynamic icon addition through IconManager', () => {
       const newIcon = TestUtils.createMockElement('img', {
         class: 'section-icon',

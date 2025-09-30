@@ -841,12 +841,6 @@ describe('Comprehensive Error Handling Tests', () => {
       window.dispatchEvent = originalDispatchEvent
     })
 
-    test.skip('should handle memory and resource constraints', () => {
-      // Skipped: Mocking window.Set breaks Jest's internal dependencies
-      // This scenario (Set constructor failing) is extremely rare and unrealistic
-      // Real memory constraints would manifest differently in production
-    })
-
     test('should handle browser compatibility issues', () => {
       // Remove modern APIs
       const originalRequestAnimationFrame = window.requestAnimationFrame
