@@ -3,6 +3,9 @@
  * Tests theme switching, persistence, and visual consistency
  */
 
+/* eslint-env jest, node */
+/* eslint-disable no-console */
+
 const fs = require('fs')
 const path = require('path')
 const { JSDOM } = require('jsdom')
@@ -44,20 +47,36 @@ describe('Theme Integration', () => {
       pretendToBeVisual: true,
       resources: 'usable'
     })
+    ;({ window } = dom)
+    ;({ document } = window)
 
-    window = dom.window
-    document = window.document
-    localStorage = window.localStorage
-
-    // Mock localStorage
+    // Create mock localStorage object
     const storage = {}
-    localStorage.getItem = jest.fn((key) => storage[key] || null)
-    localStorage.setItem = jest.fn((key, value) => {
-      storage[key] = value
-    })
-    localStorage.removeItem = jest.fn((key) => {
-      delete storage[key]
-    })
+    localStorage = {
+      getItem: jest.fn(key => storage[key] || null),
+      setItem: jest.fn((key, value) => {
+        storage[key] = value
+      }),
+      removeItem: jest.fn(key => {
+        delete storage[key]
+      }),
+      // eslint-disable-next-line no-empty-function
+      clear: jest.fn(() => {
+        Object.keys(storage).forEach(key => delete storage[key])
+      })
+    }
+
+    // Mock window.matchMedia
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn()
+    }))
 
     // Set up global objects
     global.window = window
@@ -69,6 +88,7 @@ describe('Theme Integration', () => {
     if (dom) {
       dom.window.close()
     }
+    jest.restoreAllMocks()
   })
 
   describe('Theme initialization', () => {
@@ -97,7 +117,7 @@ describe('Theme Integration', () => {
 
     test('should initialize with default theme', () => {
       // Simulate theme initialization
-      const body = document.body
+      const { body } = document
 
       // Should not have dark theme initially (light theme default)
       expect(body.classList.contains('dark-theme')).toBe(false)
@@ -125,8 +145,7 @@ describe('Theme Integration', () => {
 
   describe('Theme switching', () => {
     test('should toggle between light and dark themes', () => {
-      const body = document.body
-      const themeToggle = document.getElementById('theme-toggle')
+      const { body } = document
 
       // Start with light theme
       expect(body.classList.contains('dark-theme')).toBe(false)
@@ -219,7 +238,7 @@ describe('Theme Integration', () => {
         '--color-secondary'
       ]
 
-      expectedVariables.forEach((variable) => {
+      expectedVariables.forEach(variable => {
         if (cssContent.includes(variable)) {
           expect(cssContent).toContain(variable)
         }
@@ -250,7 +269,7 @@ describe('Theme Integration', () => {
         /@media.*prefers-color-scheme.*dark/
       ]
 
-      const hasAnyDarkTheme = darkThemePatterns.some((pattern) =>
+      const hasAnyDarkTheme = darkThemePatterns.some(pattern =>
         pattern.test(cssContent)
       )
 
@@ -281,7 +300,7 @@ describe('Theme Integration', () => {
         // Should not have negative tabindex
         const tabIndex = themeToggle.getAttribute('tabindex')
         if (tabIndex) {
-          expect(parseInt(tabIndex)).toBeGreaterThanOrEqual(0)
+          expect(parseInt(tabIndex, 10)).toBeGreaterThanOrEqual(0)
         }
       }
     })
@@ -321,7 +340,7 @@ describe('Theme Integration', () => {
       document.body.classList.add('dark-theme')
 
       // All elements should inherit theme through CSS cascade
-      elements.forEach((element) => {
+      elements.forEach(element => {
         // Elements should be present and can be styled
         expect(element).toBeTruthy()
         expect(element.nodeType).toBe(1) // Element node
@@ -392,6 +411,7 @@ describe('Theme Integration', () => {
       expect(() => {
         const toggle = document.getElementById('theme-toggle')
         if (toggle) {
+          // eslint-disable-next-line no-empty-function
           toggle.addEventListener('click', () => {})
         }
       }).not.toThrow()
