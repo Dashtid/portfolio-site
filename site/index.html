@@ -42,11 +42,11 @@
     <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)" />
     <meta name="msapplication-TileColor" content="#2563eb" />
     <meta name="msapplication-navbutton-color" content="#2563eb" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/static/images/cropped.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/static/images/cropped.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/images/optimized/cropped.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/images/optimized/cropped.png" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    <link rel="preload" as="image" href="static/images/stockholm.webp" type="image/webp" />
-    <link rel="preload" as="image" href="static/images/stockholm.jpg" type="image/jpeg" />
+    <link rel="preload" as="image" href="static/images/optimized/stockholm-desktop.webp" type="image/webp" />
+    <link rel="preload" as="image" href="static/images/optimized/stockholm-desktop.jpg" type="image/jpeg" />
     <link
       rel="preload"
       as="style"
@@ -79,7 +79,7 @@
       .stockholm-background {
         background:
           linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
-          url('/static/images/stockholm.webp') no-repeat center center;
+          url('/static/images/optimized/stockholm-desktop.webp') no-repeat center center;
         background-size: cover;
         background-attachment: fixed;
         position: relative;
@@ -882,7 +882,7 @@
       window.addEventListener('DOMContentLoaded', function () {
         var bg = document.querySelector('.stockholm-background')
         var img = new Image()
-        img.src = 'static/images/stockholm.jpg'
+        img.src = 'static/images/optimized/stockholm-desktop.jpg'
         img.onload = function () {
           bg.classList.add('loaded')
         }

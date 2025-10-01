@@ -17,9 +17,9 @@ const mkdir = promisify(fs.mkdir)
 
 const SUPPORTED_FORMATS = ['.jpg', '.jpeg', '.png', '.tiff', '.gif']
 const OUTPUT_FORMATS = {
-  webp: { quality: 85, effort: 6 },
-  jpeg: { quality: 85, progressive: true },
-  png: { compressionLevel: 9, progressive: true }
+  webp: { quality: 80, effort: 6 },
+  jpeg: { quality: 80, progressive: true, mozjpeg: true },
+  png: { compressionLevel: 9, quality: 80, progressive: true }
 }
 
 /**
@@ -40,7 +40,7 @@ async function getImageFiles(dir, files = []) {
       }
       await getImageFiles(fullPath, files)
     } else if (
-      SUPPORTED_FORMATS.some((ext) => entry.toLowerCase().endsWith(ext))
+      SUPPORTED_FORMATS.some(ext => entry.toLowerCase().endsWith(ext))
     ) {
       files.push(fullPath)
     }
@@ -157,8 +157,8 @@ async function safeBatchUpdateHtmlReferences(siteDir, optimizedDir) {
 
   const htmlFiles = fs
     .readdirSync(siteDir, { recursive: true })
-    .filter((file) => file.endsWith('.html'))
-    .map((file) => path.join(siteDir, file))
+    .filter(file => file.endsWith('.html'))
+    .map(file => path.join(siteDir, file))
 
   let totalModified = 0
 
@@ -244,8 +244,8 @@ async function validateAndFixNestedPictures(siteDir) {
 
   const htmlFiles = fs
     .readdirSync(siteDir, { recursive: true })
-    .filter((file) => file.endsWith('.html'))
-    .map((file) => path.join(siteDir, file))
+    .filter(file => file.endsWith('.html'))
+    .map(file => path.join(siteDir, file))
 
   let totalFixed = 0
 
@@ -266,7 +266,7 @@ async function validateAndFixNestedPictures(siteDir) {
       // Reset regex for replacement
       nestedPictureRegex.lastIndex = 0
 
-      content = content.replace(nestedPictureRegex, (match) => {
+      content = content.replace(nestedPictureRegex, match => {
         // Extract the innermost img element and first source element
         const sourceMatch = match.match(/<source[^>]*>/i)
         const imgMatch = match.match(/<img[^>]*>/i)
@@ -276,13 +276,13 @@ async function validateAndFixNestedPictures(siteDir) {
         ${sourceMatch[0]}
         ${imgMatch[0]}
       </picture>`
-          console.log(`✅ Cleaned nested structure`)
+          console.log('✅ Cleaned nested structure')
           return cleanPicture
         }
 
         // Fallback: return the innermost img tag only
         if (imgMatch) {
-          console.log(`⚠️  Fallback: returning img tag only`)
+          console.log('⚠️  Fallback: returning img tag only')
           return imgMatch[0]
         }
 
@@ -449,7 +449,7 @@ async function optimizeImages() {
     }
 
     // Calculate total savings
-    allResults.forEach((result) => {
+    allResults.forEach(result => {
       totalOriginalSize += result.originalSize
       totalOptimizedSize += result.newSize
     })
