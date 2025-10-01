@@ -1,12 +1,18 @@
 /* eslint-disable no-console */
 // Console statements are intentional for service worker debugging
-const CACHE_NAME = 'dashti-portfolio-v2.0.0'
+const CACHE_VERSION = '2.1.0'
+const CACHE_NAME = `dashti-portfolio-v${CACHE_VERSION}`
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
   '/offline.html',
   '/static/css/style.css',
+  '/static/css/style.min.css',
   '/static/js/theme.js',
+  '/static/js/bundle.min.js',
+  '/static/js/dist/content-D48O2rLc.js',
+  '/static/js/dist/core-DOf8aIKG.js',
+  '/static/js/dist/ui-CAeZwmDR.js',
   '/static/images/stockholm.webp',
   '/static/images/stockholm.jpg',
   '/static/images/cropped.png',
@@ -60,6 +66,10 @@ self.addEventListener('activate', event => {
         )
       })
       .then(() => {
+        console.log('[ServiceWorker] Cleaning up current cache')
+        return cleanupCache(CACHE_NAME)
+      })
+      .then(() => {
         console.log('[ServiceWorker] Activation complete, claiming clients')
         return self.clients.claim()
       })
@@ -70,7 +80,60 @@ self.addEventListener('activate', event => {
   )
 })
 
-// Fetch event - serve from cache with network fallback
+// Cache management constants
+const MAX_CACHE_SIZE = 50 // Maximum number of cached items
+const MAX_CACHE_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+
+// Helper function to clean up old cache entries
+async function cleanupCache(cacheName) {
+  const cache = await caches.open(cacheName)
+  const keys = await cache.keys()
+
+  // Remove excess items if cache is too large
+  if (keys.length > MAX_CACHE_SIZE) {
+    const deleteCount = keys.length - MAX_CACHE_SIZE
+    console.log(
+      `[ServiceWorker] Cache size (${keys.length}) exceeds limit (${MAX_CACHE_SIZE}), removing ${deleteCount} oldest items`
+    )
+    // Delete oldest items first (FIFO)
+    for (let i = 0; i < deleteCount; i++) {
+      await cache.delete(keys[i])
+    }
+  }
+
+  // Remove items older than MAX_CACHE_AGE
+  const now = Date.now()
+  for (const request of keys) {
+    const response = await cache.match(request)
+    if (response) {
+      const dateHeader = response.headers.get('date')
+      if (dateHeader) {
+        const cacheDate = new Date(dateHeader).getTime()
+        const age = now - cacheDate
+        if (age > MAX_CACHE_AGE) {
+          console.log(
+            `[ServiceWorker] Removing expired cache entry (${Math.floor(age / (24 * 60 * 60 * 1000))} days old):`,
+            request.url
+          )
+          await cache.delete(request)
+        }
+      }
+    }
+  }
+}
+
+// Helper function to determine if request is for HTML
+function isHTMLRequest(request) {
+  const acceptHeader = request.headers.get('accept')
+  return (
+    acceptHeader &&
+    (acceptHeader.includes('text/html') ||
+      request.url.endsWith('/') ||
+      request.url.endsWith('.html'))
+  )
+}
+
+// Fetch event - network-first for HTML, cache-first for assets
 self.addEventListener('fetch', event => {
   // Only handle GET requests
   if (event.request.method !== 'GET') {
@@ -82,6 +145,62 @@ self.addEventListener('fetch', event => {
     return
   }
 
+  // Network-first strategy for HTML to ensure fresh content
+  if (isHTMLRequest(event.request)) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache the fresh HTML response
+          if (
+            response &&
+            response.status === 200 &&
+            response.type === 'basic'
+          ) {
+            const responseToCache = response.clone()
+            caches
+              .open(CACHE_NAME)
+              .then(cache => {
+                console.log(
+                  '[ServiceWorker] Caching fresh HTML:',
+                  event.request.url
+                )
+                return cache.put(event.request, responseToCache)
+              })
+              .catch(error => {
+                console.error(
+                  '[ServiceWorker] Failed to cache HTML:',
+                  event.request.url,
+                  error
+                )
+              })
+          }
+          return response
+        })
+        .catch(error => {
+          console.error(
+            '[ServiceWorker] Network fetch failed for HTML:',
+            event.request.url,
+            error
+          )
+          // Fallback to cached version if network fails
+          return caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+              console.log(
+                '[ServiceWorker] Serving cached HTML (offline):',
+                event.request.url
+              )
+              return cachedResponse
+            }
+            // If no cache, serve offline page
+            console.log('[ServiceWorker] Serving offline page')
+            return caches.match('/offline.html')
+          })
+        })
+    )
+    return
+  }
+
+  // Cache-first strategy for static assets (CSS, JS, images)
   event.respondWith(
     caches
       .match(event.request)
@@ -138,15 +257,7 @@ self.addEventListener('fetch', event => {
               event.request.url,
               error
             )
-            // Return offline page for HTML requests
-            if (
-              event.request.headers.get('accept') &&
-              event.request.headers.get('accept').includes('text/html')
-            ) {
-              console.log('[ServiceWorker] Serving offline page')
-              return caches.match('/offline.html')
-            }
-            // Return a default response for other requests
+            // Return offline response for failed asset requests
             console.log('[ServiceWorker] Serving offline response')
             return new Response('Offline', { status: 200, statusText: 'OK' })
           })
