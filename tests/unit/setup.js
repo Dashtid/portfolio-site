@@ -162,14 +162,18 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  // Clean up DOM
-  document.body.innerHTML = ''
-  document.head.innerHTML = ''
+  // Clean up DOM (only in jsdom environment)
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.innerHTML = ''
+    document.head.innerHTML = ''
+  }
 
-  // Reset window properties
-  window.location.pathname = '/'
-  window.location.search = ''
-  window.location.hash = ''
+  // Reset window properties (only in jsdom environment)
+  if (typeof window !== 'undefined' && window.location) {
+    window.location.pathname = '/'
+    window.location.search = ''
+    window.location.hash = ''
+  }
 })
 
 // Test utilities
