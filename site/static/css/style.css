@@ -160,6 +160,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
   width: 100%;
   overflow-x: hidden;
 }
@@ -900,12 +901,22 @@ section h2 {
 ========================= */
 .contact-list {
   font-size: var(--font-size-lg);
+  line-height: 1.6;
+}
+
+.contact-list li {
+  padding: var(--space-2) 0;
+  transition: opacity 0.2s ease;
+}
+
+.contact-list li:hover {
+  opacity: 0.8;
 }
 
 .contact-list a {
   color: var(--primary-600);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .contact-list a:hover {
