@@ -35,17 +35,17 @@
   --amber-600: #d97706;
 
   /* Semantic Colors - Light Theme */
-  --bg-primary: var(--slate-50);
+  --bg-primary: var(--primary-50);
   --bg-secondary: #fff;
-  --bg-tertiary: var(--slate-100);
-  --bg-accent: var(--primary-50);
+  --bg-tertiary: var(--primary-100);
+  --bg-accent: var(--primary-200);
   --text-primary: var(--slate-800);
   --text-secondary: var(--slate-600);
   --text-tertiary: var(--slate-500);
   --text-inverse: #fff;
-  --border-primary: var(--slate-200);
-  --border-secondary: var(--slate-300);
-  --border-accent: var(--primary-200);
+  --border-primary: var(--primary-200);
+  --border-secondary: var(--primary-300);
+  --border-accent: var(--primary-400);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 5%);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 10%), 0 2px 4px -1px rgba(0, 0, 0, 6%);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 10%), 0 4px 6px -2px rgba(0, 0, 0, 5%);
@@ -667,6 +667,7 @@ section {
   box-shadow: var(--shadow-xl);
   max-width: 950px;
   transition: all 0.3s ease;
+  animation: fade-in-up 0.8s ease-out;
 }
 
 [data-theme='dark'] .hero-content {
@@ -688,12 +689,53 @@ section {
   color: var(--text-secondary);
 }
 
+.hero-accent-primary {
+  color: #1e3a8a;
+}
+
+.hero-accent-secondary {
+  color: #1e3a8a;
+}
+
+[data-theme='dark'] .hero-accent-primary {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .hero-accent-secondary {
+  color: #93c5fd;
+}
+
+/* Hero Animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle fade-in for sections on scroll */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 /* =========================
    Section Styling
 ========================= */
 section h2 {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
+  animation: fade-in 1s ease-out;
   color: var(--text-primary);
   margin-bottom: var(--space-8);
 }
@@ -731,6 +773,7 @@ section h2 {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   border-color: var(--btn-primary-bg);
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
@@ -744,6 +787,7 @@ section h2 {
   background: var(--btn-secondary-bg);
   color: var(--btn-secondary-text);
   border-color: var(--btn-secondary-border);
+  transition: all 0.2s ease;
 }
 
 .btn-outline-primary:hover {
@@ -758,6 +802,7 @@ section h2 {
   background: transparent;
   color: var(--emerald-600);
   border-color: var(--emerald-600);
+  transition: all 0.2s ease;
 }
 
 .btn-outline-success:hover {
@@ -772,6 +817,7 @@ section h2 {
   background: var(--slate-800);
   color: var(--text-inverse);
   border-color: var(--slate-800);
+  transition: all 0.2s ease;
 }
 
 .btn-dark:hover {
@@ -785,6 +831,7 @@ section h2 {
   background: var(--slate-600);
   color: var(--text-inverse);
   border-color: var(--slate-600);
+  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
@@ -911,13 +958,13 @@ section h2 {
 .theme-switch-container {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .theme-switch-wrapper {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .theme-switch-label {
@@ -929,13 +976,26 @@ section h2 {
   transition: color 0.2s ease;
 }
 
+.theme-switch-label-compact {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.theme-switch-title {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  margin-right: var(--space-3);
+}
+
 .theme-switch {
   position: relative;
-  width: 48px;
-  height: 24px;
+  width: 40px;
+  height: 20px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-secondary);
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
   outline: none;
@@ -977,8 +1037,8 @@ section h2 {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   background: var(--text-primary);
   border-radius: 50%;
   transition: transform 0.3s ease;
@@ -995,7 +1055,7 @@ section h2 {
 
 /* Manual mode (right position) */
 .theme-switch[aria-checked='true'] .theme-switch-slider {
-  transform: translateX(24px);
+  transform: translateX(20px);
 }
 
 /* Label highlighting based on mode */
