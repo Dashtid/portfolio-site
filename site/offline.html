@@ -48,7 +48,38 @@
       <p>
         It looks like you're not connected to the internet. Some features may not be available until you're back online.
       </p>
+      <p id="status" style="font-weight: 500; color: #2563eb"></p>
       <button onclick="window.location.reload()">Try Again</button>
     </div>
+
+    <script>
+      // Auto-retry when connection is restored
+      function checkConnection() {
+        const status = document.getElementById('status')
+
+        if (navigator.onLine) {
+          status.textContent = 'Connection restored! Reloading...'
+          setTimeout(() => {
+            window.location.reload()
+          }, 1000)
+        } else {
+          status.textContent = 'Waiting for connection...'
+        }
+      }
+
+      // Check connection every 3 seconds
+      setInterval(checkConnection, 3000)
+
+      // Also listen for online event
+      window.addEventListener('online', () => {
+        document.getElementById('status').textContent = 'Connection restored! Reloading...'
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      })
+
+      // Initial check
+      checkConnection()
+    </script>
   </body>
 </html>

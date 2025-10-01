@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 // Console statements are intentional for service worker debugging
-const CACHE_VERSION = '2.1.0'
+const CACHE_VERSION = '2.2.0'
 const CACHE_NAME = `dashti-portfolio-v${CACHE_VERSION}`
 const STATIC_CACHE_URLS = [
   '/',
@@ -200,7 +200,58 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // Cache-first strategy for static assets (CSS, JS, images)
+  // Stale-while-revalidate for CSS/JS, cache-first for images
+  const url = new URL(event.request.url)
+  const isStyleOrScript =
+    url.pathname.endsWith('.css') || url.pathname.endsWith('.js')
+
+  // Stale-while-revalidate for CSS/JS - serve cached, update in background
+  if (isStyleOrScript) {
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        const fetchPromise = fetch(event.request)
+          .then(response => {
+            // Update cache in background
+            if (
+              response &&
+              response.status === 200 &&
+              response.type === 'basic'
+            ) {
+              const responseToCache = response.clone()
+              caches.open(CACHE_NAME).then(cache => {
+                console.log(
+                  '[ServiceWorker] Background update:',
+                  event.request.url
+                )
+                cache.put(event.request, responseToCache)
+              })
+            }
+            return response
+          })
+          .catch(error => {
+            console.warn(
+              '[ServiceWorker] Background fetch failed:',
+              event.request.url,
+              error
+            )
+            return cachedResponse // Fallback to cached if update fails
+          })
+
+        // Return cached immediately, or wait for network if no cache
+        if (cachedResponse) {
+          console.log(
+            '[ServiceWorker] Serving cached (revalidating):',
+            event.request.url
+          )
+          return cachedResponse
+        }
+        return fetchPromise
+      })
+    )
+    return
+  }
+
+  // Cache-first strategy for images and other static assets
   event.respondWith(
     caches
       .match(event.request)
@@ -274,6 +325,21 @@ self.addEventListener('fetch', event => {
         })
       })
   )
+})
+
+// Message handler for skip waiting
+self.addEventListener('message', event => {
+  console.log('[ServiceWorker] Message received:', event.data)
+
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[ServiceWorker] Skip waiting requested')
+    self.skipWaiting()
+  }
+
+  // Respond to client
+  if (event.ports && event.ports[0]) {
+    event.ports[0].postMessage({ type: 'ACK' })
+  }
 })
 
 // Background sync for analytics or other tasks
