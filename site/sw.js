@@ -1,7 +1,10 @@
 /* eslint-disable no-console */
 // Console statements are intentional for service worker debugging
-const CACHE_VERSION = '2.2.0'
+const CACHE_VERSION = '2.3.0'
 const CACHE_NAME = `dashti-portfolio-v${CACHE_VERSION}`
+
+// Request coalescing - prevent duplicate network requests
+const pendingRequests = new Map()
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
@@ -70,6 +73,14 @@ self.addEventListener('activate', event => {
         return cleanupCache(CACHE_NAME)
       })
       .then(() => {
+        console.log('[ServiceWorker] Enabling navigation preload')
+        // Enable navigation preload if available
+        if (self.registration.navigationPreload) {
+          return self.registration.navigationPreload.enable()
+        }
+        return Promise.resolve()
+      })
+      .then(() => {
         console.log('[ServiceWorker] Activation complete, claiming clients')
         return self.clients.claim()
       })
@@ -122,6 +133,31 @@ async function cleanupCache(cacheName) {
   }
 }
 
+// Helper function to coalesce duplicate requests
+function coalescedFetch(request) {
+  const key = request.url
+
+  // If request is already pending, return the existing promise
+  if (pendingRequests.has(key)) {
+    console.log('[ServiceWorker] Coalescing duplicate request:', key)
+    return pendingRequests.get(key)
+  }
+
+  // Create new fetch promise
+  const fetchPromise = fetch(request)
+    .then(response => {
+      pendingRequests.delete(key)
+      return response
+    })
+    .catch(error => {
+      pendingRequests.delete(key)
+      throw error
+    })
+
+  pendingRequests.set(key, fetchPromise)
+  return fetchPromise
+}
+
 // Helper function to determine if request is for HTML
 function isHTMLRequest(request) {
   const acceptHeader = request.headers.get('accept')
@@ -148,7 +184,18 @@ self.addEventListener('fetch', event => {
   // Network-first strategy for HTML to ensure fresh content
   if (isHTMLRequest(event.request)) {
     event.respondWith(
-      fetch(event.request)
+      // Use preloaded response if available, otherwise fetch
+      (async () => {
+        const preloadResponse = await event.preloadResponse
+        if (preloadResponse) {
+          console.log(
+            '[ServiceWorker] Using preloaded response:',
+            event.request.url
+          )
+          return preloadResponse
+        }
+        return fetch(event.request)
+      })()
         .then(response => {
           // Cache the fresh HTML response
           if (
@@ -209,7 +256,7 @@ self.addEventListener('fetch', event => {
   if (isStyleOrScript) {
     event.respondWith(
       caches.match(event.request).then(cachedResponse => {
-        const fetchPromise = fetch(event.request)
+        const fetchPromise = coalescedFetch(event.request)
           .then(response => {
             // Update cache in background
             if (
