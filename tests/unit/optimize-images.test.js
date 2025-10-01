@@ -1,5 +1,8 @@
 /**
  * @jest-environment node
+ */
+
+/**
  * Unit tests for image optimization script
  */
 
