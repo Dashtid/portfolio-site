@@ -1,4 +1,5 @@
 /**
+ * @jest-environment node
  * Unit tests for image optimization script
  */
 
@@ -21,7 +22,7 @@ jest.mock('path', () => ({
     const base = filePath.split('/').pop()
     return ext ? base.replace(ext, '') : base
   }),
-  extname: jest.fn((filePath) => {
+  extname: jest.fn(filePath => {
     const parts = filePath.split('.')
     return parts.length > 1 ? `.${parts.pop()}` : ''
   })
@@ -42,7 +43,7 @@ jest.mock('sharp', () => {
 })
 
 jest.mock('util', () => ({
-  promisify: jest.fn((fn) => fn)
+  promisify: jest.fn(fn => fn)
 }))
 
 describe('Image Optimization Script', () => {
@@ -126,6 +127,7 @@ describe('Image Optimization Script', () => {
       const sharpInstance = sharp()
       expect(sharpInstance.png).toHaveBeenCalledWith({
         compressionLevel: 9,
+        quality: 80,
         progressive: true
       })
     })
@@ -193,12 +195,14 @@ describe('Image Optimization Script', () => {
 
         if (format.expectedCall === 'jpeg') {
           expect(sharp.mockSharpInstance.jpeg).toHaveBeenCalledWith({
-            quality: 85,
-            progressive: true
+            quality: 80,
+            progressive: true,
+            mozjpeg: true
           })
         } else if (format.expectedCall === 'png') {
           expect(sharp.mockSharpInstance.png).toHaveBeenCalledWith({
             compressionLevel: 9,
+            quality: 80,
             progressive: true
           })
         } else {
@@ -218,7 +222,7 @@ describe('Image Optimization Script', () => {
       await optimizeImage('/test/image.jpg', '/test/output')
 
       expect(sharp.mockSharpInstance.webp).toHaveBeenCalledWith({
-        quality: 85,
+        quality: 80,
         effort: 6
       })
     })
@@ -230,8 +234,9 @@ describe('Image Optimization Script', () => {
       await optimizeImage('/test/image.jpg', '/test/output')
 
       expect(sharp.mockSharpInstance.jpeg).toHaveBeenCalledWith({
-        quality: 85,
-        progressive: true
+        quality: 80,
+        progressive: true,
+        mozjpeg: true
       })
     })
 
