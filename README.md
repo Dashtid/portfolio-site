@@ -1,6 +1,7 @@
 # David Dashti - Portfolio Website
 
-> Professional portfolio showcasing expertise in cybersecurity and regulatory compliance for medical software and AI systems.
+> Professional portfolio showcasing expertise in cybersecurity and regulatory
+> compliance for medical software and AI systems.
 
 [![CI/CD Pipeline](https://github.com/Dashtid/portfolio-site/workflows/CI/badge.svg)](https://github.com/Dashtid/portfolio-site/actions)
 [![Lighthouse CI](https://img.shields.io/badge/Lighthouse-CI-brightgreen)](https://github.com/Dashtid/portfolio-site/actions)
@@ -12,7 +13,8 @@
 
 ## 📋 About
 
-This portfolio website showcases my professional experience as a QA/RA & Security Specialist at Hermes Medical Solutions, focusing on:
+This portfolio website showcases my professional experience as a QA/RA &
+Security Specialist at Hermes Medical Solutions, focusing on:
 
 - **Cybersecurity Governance** for medical software systems
 - **Regulatory Compliance** (NIS2, ISO 27001, AI Act preparation)
@@ -96,36 +98,71 @@ npm run security:audit   # Security vulnerability audit
 
 ## 🧪 Testing
 
+**Current Test Coverage**: 47/47 unit tests passing ✅
+
 ### Unit Tests (Jest)
+
 ```bash
-npm run test:unit
-npm run test:unit:watch     # Watch mode
-npm run test:unit:coverage  # With coverage report
+npm run test:unit              # Run all 47 unit tests
+npm run test:unit:core         # Run core tests only (blocking CI)
+npm run test:unit:watch        # Watch mode
+npm run test:unit:coverage     # With coverage report
 ```
 
+**Test Suites**:
+
+- DOM interactions and accessibility
+- Theme management (light/dark mode)
+- Project filtering and categorization
+- Scroll behavior and navigation
+- Image optimization scripts
+- Security monitoring
+- Error handling and recovery
+
 ### E2E Tests (Playwright)
+
 ```bash
-npm run test:e2e
-npm run test:e2e:headed     # Headed mode
-npm run test:e2e:debug      # Debug mode
-npm run test:report         # View test report
+npm run test:e2e               # Auto-starts dev server
+npm run test:e2e:headed        # Headed mode (visible browser)
+npm run test:e2e:debug         # Debug mode with step-through
+npm run test:report            # View HTML test report
 ```
+
+**E2E Coverage**:
+
+- Full page navigation and routing
+- Theme switching functionality
+- Project filtering interactions
+- Responsive design (mobile/tablet/desktop)
+- Accessibility (keyboard navigation, ARIA)
 
 ## 📊 Performance & Quality
 
 ### Lighthouse CI
+
 - **Performance**: Automated monitoring of Core Web Vitals
 - **Accessibility**: WCAG compliance testing
 - **SEO**: Search engine optimization validation
 - **Best Practices**: Security and modern web standards
 
 ### Code Quality
-- **ESLint**: JavaScript linting with Standard config
-- **Prettier**: Consistent code formatting
+
+- **ESLint**: JavaScript linting with comprehensive rule set (40+ rules)
+- **Prettier**: Consistent code formatting across all files
 - **Stylelint**: CSS linting and best practices
-- **HTML Validation**: W3C compliance checking
+- **HTML Validation**: W3C compliance checking (HTMLHint + html-validate)
+- **Pre-commit Hooks**: Automatic formatting and validation
+  - Auto-fixes with Prettier, ESLint, Stylelint
+  - Zero-tolerance for warnings (max-warnings: 0)
+  - Automatic backup and rollback on failure
+  - Staged-files-only for fast commits
+- **Pre-push Protection**: Comprehensive checks for master/develop branches
+  - Format verification, linting, HTML/CSS validation
+  - Core unit tests execution
+  - Simulates full CI pipeline locally
 
 ### Security
+
 - **SRI Hashes**: Subresource Integrity for CDN resources
 - **OWASP ZAP**: Automated security vulnerability scanning
 - **Dependency Audit**: Regular npm security auditing
@@ -134,17 +171,28 @@ npm run test:report         # View test report
 ## 🌟 Features
 
 ### Core Website
+
 - **Responsive Design**: Mobile-first approach with Bootstrap
 - **Dark/Light Theme**: User preference with system detection
 - **PWA Support**: Offline capability and installable
 - **SEO Optimized**: Meta tags, structured data, sitemap
 
-
 ### Performance Optimizations
-- **Image Optimization**: Automatic WebP conversion and responsive variants
+
+- **Image Optimization**: Automatic WebP conversion with quality 80 compression
+  - Responsive variants (mobile/tablet/desktop/large)
+  - 95% reduction in hero image size (2.9MB → 135KB)
+  - 60% reduction in favicon size (835KB → 336KB)
+- **Service Worker**: v2.3.0 with advanced caching strategies
+  - Network-first for HTML (always fresh content)
+  - Stale-while-revalidate for CSS/JS (fast + fresh)
+  - Navigation preload for faster page loads
+  - Request coalescing to prevent duplicate fetches
+  - Smart offline page with auto-retry
 - **Asset Minification**: CSS and JavaScript compression
 - **Lazy Loading**: Efficient resource loading
-- **Caching Strategy**: Optimized for fast load times
+- **Caching Strategy**: Intelligent multi-tier caching (max 50 items, 7-day
+  expiration)
 
 ## 🔧 Configuration
 
@@ -159,11 +207,13 @@ Configuration files are organized in the `/config` directory:
 ## 🚀 Deployment
 
 ### Automatic Deployment
+
 - **Production**: Deploys automatically on push to `master`
 - **Staging**: Deploys automatically on pull requests
 - **Quality Gates**: All tests and quality checks must pass
 
 ### Manual Deployment
+
 ```bash
 npm run build           # Build optimized assets
 # Deploy to your hosting provider
@@ -172,11 +222,13 @@ npm run build           # Build optimized assets
 ## 📈 Monitoring
 
 ### Continuous Integration
+
 - **GitHub Actions**: Automated testing and quality checks
 - **Quality Gates**: Linting, testing, security, performance
 - **Artifact Storage**: Test results and performance reports
 
 ### Performance Monitoring
+
 - **Lighthouse CI**: Automated performance auditing
 - **Core Web Vitals**: LCP, FID, CLS tracking
 - **Bundle Analysis**: JavaScript and CSS optimization
@@ -191,15 +243,17 @@ npm run build           # Build optimized assets
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
 
 ## 📧 Contact
 
 **David Dashti**
+
 - LinkedIn: [David Dashti](https://linkedin.com/in/daviddashti)
 - Email: [contact@dashti.se](mailto:contact@dashti.se)
 - Website: [https://dashti.se](https://dashti.se)
 
 ---
 
-*Built with ❤️ and modern web technologies*
+_Built with ❤️ and modern web technologies_

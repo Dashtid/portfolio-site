@@ -33,6 +33,7 @@ playwright-report/
 # Ignore temporary files
 *.tmp
 *.temp
+.cache/
 
 # Windows null device file (can be created accidentally)
 nul
