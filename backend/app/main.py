@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import engine, Base
-from app.api.v1 import companies, skills, projects, auth
+from app.api.v1 import companies, skills, projects, auth, github
 from app.api import education
 # Import models to ensure they're registered with Base
 from app.models import company, skill, project, user, contact, education as education_model
@@ -48,6 +48,7 @@ app.include_router(companies.router, prefix="/api/v1")
 app.include_router(skills.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
 app.include_router(education.router, prefix="/api/v1")
+app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
 
 # Root endpoint
 @app.get("/")
@@ -79,24 +80,6 @@ async def test_endpoint():
             "framework": "FastAPI",
             "version": settings.APP_VERSION,
             "description": "Your portfolio backend is ready!"
-        }
-    }
-
-
-# GitHub stats endpoint (placeholder)
-@app.get("/api/v1/github/stats")
-async def get_github_stats():
-    return {
-        "status": "success",
-        "data": {
-            "followers": 42,
-            "public_repos": 15,
-            "total_stars": 128,
-            "languages": {
-                "Python": 45,
-                "JavaScript": 30,
-                "TypeScript": 25
-            }
         }
     }
 
