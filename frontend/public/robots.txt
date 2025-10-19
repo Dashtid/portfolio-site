@@ -1,0 +1,25 @@
+# Robots.txt for dashti.se
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin areas
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://dashti.se/sitemap.xml
+
+# Crawl delay (be respectful)
+Crawl-delay: 1
+
+# Allow specific search engines priority
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0

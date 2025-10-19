@@ -1,0 +1,58 @@
+{
+  "name": "David Dashti - Portfolio",
+  "short_name": "David Dashti",
+  "description": "Biomedical Engineer and Cybersecurity Specialist specializing in regulatory compliance for medical software and AI systems.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "categories": ["portfolio", "cybersecurity", "healthcare"],
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop view of portfolio"
+    },
+    {
+      "src": "/images/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile view of portfolio"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Experience",
+      "url": "/#experience",
+      "description": "View professional experience"
+    },
+    {
+      "name": "Projects",
+      "url": "/#projects",
+      "description": "View GitHub projects"
+    },
+    {
+      "name": "Contact",
+      "url": "/#contact",
+      "description": "Get in touch"
+    }
+  ]
+}
