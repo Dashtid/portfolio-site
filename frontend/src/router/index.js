@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import analytics from '../services/analytics'
 
 // Views
 import HomeView from '../views/HomeView.vue'
@@ -73,6 +74,12 @@ router.beforeEach(async (to, from, next) => {
   } else {
     next()
   }
+})
+
+// Track page views after navigation
+router.afterEach((to, from) => {
+  // Track the page view
+  analytics.trackPageView(to.path, to.name)
 })
 
 export default router

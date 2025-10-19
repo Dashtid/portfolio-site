@@ -63,6 +63,10 @@
     <section id="projects" class="portfolio-section">
       <div class="container">
         <h2 class="section-title">GitHub Projects</h2>
+
+        <!-- GitHub Stats Component -->
+        <GitHubStats username="Dashtid" />
+
         <div class="projects-grid">
           <div v-for="project in displayProjects" :key="project.id || project.name" class="project-card fade-in">
             <div class="project-content">
@@ -126,6 +130,7 @@ import { ref, computed, onMounted } from 'vue'
 import { usePortfolioStore } from '../stores/portfolio'
 import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
+import GitHubStats from '../components/GitHubStats.vue'
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)

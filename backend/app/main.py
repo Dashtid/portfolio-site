@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import engine, Base
-from app.api.v1 import companies, skills, projects, auth, github
+from app.api.v1 import companies, skills, projects, auth, github, analytics
 from app.api import education
 # Import models to ensure they're registered with Base
-from app.models import company, skill, project, user, contact, education as education_model
+from app.models import company, skill, project, user, contact, education as education_model, analytics
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
@@ -49,6 +49,7 @@ app.include_router(skills.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
 app.include_router(education.router, prefix="/api/v1")
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
+app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 
 # Root endpoint
 @app.get("/")
