@@ -63,17 +63,19 @@
           Education
         </h2>
         <div class="education-grid">
-          <div v-for="edu in educationList" :key="edu.id" class="education-card fade-in">
+          <div v-for="edu in education" :key="edu.id" class="education-card fade-in">
             <h3 class="education-institution">{{ edu.institution }}</h3>
-            <p class="education-degree">{{ edu.degree }}</p>
-            <p class="education-dates">{{ edu.dates }}</p>
+            <p class="education-degree"><strong>{{ edu.degree }}</strong></p>
+            <p class="education-field" v-if="edu.field_of_study">{{ edu.field_of_study }}</p>
+            <p class="education-description" v-if="edu.description">{{ edu.description }}</p>
+            <p class="education-dates">{{ formatDate(edu.start_date) }} - {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Projects Section -->
-    <section id="projects" class="portfolio-section">
+    <section id="projects" class="portfolio-section bg-light">
       <div class="container">
         <h2 class="section-title">
           <img src="/images/github.svg" alt="GitHub Icon" class="section-icon" loading="lazy" />
@@ -104,7 +106,7 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="portfolio-section bg-light">
+    <section id="about" class="portfolio-section">
       <div class="container">
         <h2 class="section-title">
           <img src="/images/about.svg" alt="About Icon" class="section-icon" loading="lazy" />
@@ -179,14 +181,6 @@ const loading = ref(false)
 
 // Computed properties for education from API
 const education = computed(() => portfolioStore.education || [])
-const educationList = computed(() => {
-  return education.value.map(edu => ({
-    id: edu.id,
-    institution: edu.institution,
-    degree: edu.degree,
-    dates: `${formatDate(edu.start_date)} - ${edu.end_date ? formatDate(edu.end_date) : 'Present'}`
-  }))
-})
 
 // Static projects data as fallback
 const staticProjects = [

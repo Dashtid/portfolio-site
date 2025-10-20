@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Portfolio API"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = True
+    ENVIRONMENT: str = "development"  # development, production
 
     # Server
     HOST: str = "0.0.0.0"

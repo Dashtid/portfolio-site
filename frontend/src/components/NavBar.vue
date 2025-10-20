@@ -1,12 +1,12 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom" :class="{ 'navbar-scrolled': scrolled }">
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom" :class="{ 'navbar-scrolled': scrolled }" role="navigation" aria-label="Main navigation">
     <div class="container">
-      <a class="navbar-brand" href="#hero" @click="scrollToSection('hero')">
-        <img src="/images/D-dark.svg" alt="David Dashti" height="30" class="d-inline-block align-text-top me-2">
+      <a class="navbar-brand" href="#hero" @click="scrollToSection('hero')" aria-label="David Dashti - Home">
+        <img src="/images/D-dark.svg" alt="David Dashti Logo" height="30" class="d-inline-block align-text-top me-2" loading="lazy">
         David Dashti
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation menu">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
@@ -14,14 +14,18 @@
           <li class="nav-item" v-for="item in navItems" :key="item.href">
             <a class="nav-link" :class="{ active: activeSection === item.href }"
                :href="`#${item.href}`"
+               :aria-label="`Navigate to ${item.name} section`"
+               :aria-current="activeSection === item.href ? 'page' : undefined"
                @click.prevent="scrollToSection(item.href)">
               {{ item.name }}
             </a>
           </li>
           <li class="nav-item ms-2">
-            <button class="btn btn-sm btn-outline-primary theme-toggle" @click="toggleTheme">
-              <i v-if="isDark" class="bi bi-sun"></i>
-              <i v-else class="bi bi-moon"></i>
+            <button class="btn btn-sm btn-outline-primary theme-toggle"
+                    @click="toggleTheme"
+                    :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+              <i v-if="isDark" class="bi bi-sun" aria-hidden="true"></i>
+              <i v-else class="bi bi-moon" aria-hidden="true"></i>
             </button>
           </li>
         </ul>
