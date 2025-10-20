@@ -4,13 +4,20 @@
     <NavBar />
 
     <!-- Hero Section with Stockholm Background -->
-    <section id="hero" class="hero-section">
-      <div class="hero-content">
-        <h1 class="hero-title fade-in">David Dashti</h1>
-        <p class="hero-subtitle fade-in">Security & Technology Professional</p>
-        <p class="hero-subtitle fade-in">Bridging Healthcare Innovation with Cybersecurity Excellence</p>
-      </div>
-    </section>
+    <div class="stockholm-background">
+      <section id="hero" class="hero-section">
+        <div class="hero-content">
+          <h1 class="custom-hero-title fade-in">
+            <span class="hero-accent-primary">Cybersecurity</span> and
+            <span class="hero-accent-secondary">Artificial Intelligence</span><br />
+            in Medical Software Development
+          </h1>
+          <p class="custom-hero-lead fade-in">
+            <strong>Biomedical Engineer | QA/RA & Security Specialist | Stockholm, Sweden</strong>
+          </p>
+        </div>
+      </section>
+    </div>
 
     <!-- Experience Section -->
     <section id="experience" class="portfolio-section">
@@ -88,33 +95,53 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="portfolio-section">
+    <section id="about" class="portfolio-section bg-light">
       <div class="container">
         <h2 class="section-title">About Me</h2>
         <div class="about-content">
           <p>
-            I am a Security Specialist and System Developer at Hermes Medical Solutions, where I combine my expertise
-            in cybersecurity with medical technology innovation. With a Master's degree in Medical Engineering from KTH
-            and hands-on experience across healthcare institutions, I bridge the gap between technology and healthcare.
+            I am a biomedical engineer specializing in cybersecurity and regulatory compliance for medical software
+            and AI systems. As a QA/RA & Security Specialist at Hermes Medical Solutions, I ensure that our
+            software and digital health solutions meet the highest standards of security, privacy, and regulatory
+            alignment (NIS2, ISO 27001, EU AI Act).
+          </p>
+          <p><strong>Current focus areas:</strong></p>
+          <ul style="text-align: left; max-width: 600px; margin: 0 auto 2rem;">
+            <li>Cybersecurity governance in medical software development</li>
+            <li>Ensuring compliance with NIS2 and ISO 27001</li>
+            <li>Supporting market clearance for medical software (MDR, GDPR)</li>
+            <li>Preparing frameworks for AI Act compliance in healthcare AI systems</li>
+          </ul>
+          <p>
+            <strong>Technical skills:</strong> Windows Server, Unix/Linux, Docker, PowerShell scripting, Bash
+            scripting, Python, Git
           </p>
           <p>
-            My focus areas include vulnerability management, DevSecOps practices, and building secure healthcare solutions.
-            I'm passionate about leveraging technology to improve healthcare delivery while maintaining the highest security standards.
+            I am passionate about making healthcare technology safer and more trustworthy by protecting patient
+            data, ensuring system integrity, and helping organizations navigate the new AI regulatory landscape.
           </p>
         </div>
       </div>
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="portfolio-section contact-section">
+    <section id="contact" class="portfolio-section">
       <div class="container">
         <div class="contact-content">
-          <h2 class="section-title">Get In Touch</h2>
-          <p>Feel free to reach out for collaborations or opportunities</p>
-          <div class="contact-links">
-            <a href="https://github.com/Dashtid" target="_blank" class="contact-link">GitHub</a>
-            <a href="https://linkedin.com/in/david-dashti" target="_blank" class="contact-link">LinkedIn</a>
-            <a href="mailto:david@dashti.se" class="contact-link">Email</a>
+          <h2 class="section-title">Contact</h2>
+          <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+            <p style="display: flex; align-items: center; margin-bottom: 1rem;">
+              <strong>LinkedIn:</strong>
+              <span style="margin-left: 1rem;">
+                <a href="https://www.linkedin.com/in/david-dashti/" target="_blank" rel="noopener" style="color: var(--primary-600); text-decoration: none;">David Dashti</a>
+              </span>
+            </p>
+            <p style="display: flex; align-items: center; margin-bottom: 1rem;">
+              <strong>GitHub:</strong>
+              <span style="margin-left: 1rem;">
+                <a href="https://github.com/Dashtid" target="_blank" rel="noopener" style="color: var(--primary-600); text-decoration: none;">Dashtid</a>
+              </span>
+            </p>
           </div>
         </div>
       </div>
@@ -135,33 +162,16 @@ import GitHubStats from '../components/GitHubStats.vue'
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
 
-// Static education data
-const educationList = [
-  {
-    id: 1,
-    institution: "KTH Royal Institute of Technology",
-    degree: "M.Sc. Medical Engineering",
-    dates: "2017 - 2022"
-  },
-  {
-    id: 2,
-    institution: "Lund University (LTH)",
-    degree: "B.Sc. Biomedical Engineering (Exchange)",
-    dates: "2020 - 2021"
-  },
-  {
-    id: 3,
-    institution: "Företagsuniversitetet",
-    degree: "Business Management Certificate",
-    dates: "2023"
-  },
-  {
-    id: 4,
-    institution: "CompTIA",
-    degree: "Security+ Certification",
-    dates: "2024"
-  }
-]
+// Computed properties for education from API
+const education = computed(() => portfolioStore.education || [])
+const educationList = computed(() => {
+  return education.value.map(edu => ({
+    id: edu.id,
+    institution: edu.institution,
+    degree: edu.degree,
+    dates: `${formatDate(edu.start_date)} - ${edu.end_date ? formatDate(edu.end_date) : 'Present'}`
+  }))
+})
 
 // Static projects data as fallback
 const staticProjects = [

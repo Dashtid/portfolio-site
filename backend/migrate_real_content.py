@@ -32,6 +32,8 @@ async def clear_existing_data():
 
 async def populate_companies():
     """Populate companies/experience from original portfolio"""
+    from datetime import date
+
     async with AsyncSessionLocal() as db:
         try:
             companies = [
@@ -40,7 +42,7 @@ async def populate_companies():
                     "title": "QA/RA & Security Specialist",
                     "description": "QA/RA & Security Specialist at Hermes Medical Solutions, ensuring NIS2/ISO 27001 compliance, regulatory clearance, and V&V processes for nuclear medicine software solutions.",
                     "location": "Stockholm, Sweden",
-                    "start_date": "2022-01-01",
+                    "start_date": date(2022, 1, 1),
                     "end_date": None,
                     "website": "https://hermesmedical.com",
                     "order_index": 1
@@ -50,8 +52,8 @@ async def populate_companies():
                     "title": "Engineering Role",
                     "description": "Contributed to troubleshooting processes in an engineering role at Scania Södertälje, addressing cases, communicating with production teams including manufacturing and construction, and assisting with the creation of documentation and work routines.",
                     "location": "Södertälje, Sweden",
-                    "start_date": "2020-01-01",
-                    "end_date": "2021-12-31",
+                    "start_date": date(2020, 1, 1),
+                    "end_date": date(2021, 12, 31),
                     "website": "https://www.scania.com",
                     "order_index": 2
                 },
@@ -60,8 +62,8 @@ async def populate_companies():
                     "title": "Platoon Leader (2nd Lieutenant)",
                     "description": "Platoon Leader (2nd Lieutenant) in the Finnish Defence Forces' marine commandos, responsible for the day-to-day command of 150 soldiers and field operation command of 30 soldiers, with intensive training in leadership, stress resilience, and organizational skills.",
                     "location": "Finland",
-                    "start_date": "2018-06-01",
-                    "end_date": "2019-06-01",
+                    "start_date": date(2018, 6, 1),
+                    "end_date": date(2019, 6, 1),
                     "website": None,
                     "order_index": 3
                 },
@@ -70,8 +72,8 @@ async def populate_companies():
                     "title": "Radiology Support",
                     "description": "Supported radiology equipment and IT system management in a radiology department, contributing to contract evaluations, participating in workgroups, analyzing IT systems for operational improvements, assisting with workflow optimization, and maintaining system documentation.",
                     "location": "Stockholm, Sweden",
-                    "start_date": "2019-01-01",
-                    "end_date": "2020-06-01",
+                    "start_date": date(2019, 1, 1),
+                    "end_date": date(2020, 6, 1),
                     "website": None,
                     "order_index": 4
                 },
@@ -80,8 +82,8 @@ async def populate_companies():
                     "title": "Master Thesis Student",
                     "description": "Master Thesis Student at SoftPro Medical Solutions, integrating Medusa inventory management with radiology workflows and optimizing quality assurance processes for medical equipment.",
                     "location": "Stockholm, Sweden",
-                    "start_date": "2020-01-01",
-                    "end_date": "2020-06-01",
+                    "start_date": date(2020, 1, 1),
+                    "end_date": date(2020, 6, 1),
                     "website": None,
                     "order_index": 5
                 },
@@ -90,8 +92,8 @@ async def populate_companies():
                     "title": "Biomedical Engineer",
                     "description": "Biomedical Engineer at Karolinska University Hospital, providing first-line support for imaging equipment and managing RIS/PACS incidents, gaining expertise in clinical workflows, system architecture, DICOM/HL7, Active Directory, and ITIL.",
                     "location": "Stockholm, Sweden",
-                    "start_date": "2017-06-01",
-                    "end_date": "2018-12-31",
+                    "start_date": date(2017, 6, 1),
+                    "end_date": date(2018, 12, 31),
                     "website": None,
                     "order_index": 6
                 },
@@ -100,8 +102,8 @@ async def populate_companies():
                     "title": "Remote Service Engineer",
                     "description": "Remote Service Engineer providing Level 1 support for Intellispace Portal (ISP) and Intellispace Cardiovascular (ISCV) in the Nordics and UK/Ireland, troubleshooting incidents and supporting system deployments.",
                     "location": "Stockholm, Sweden",
-                    "start_date": "2016-01-01",
-                    "end_date": "2017-05-31",
+                    "start_date": date(2016, 1, 1),
+                    "end_date": date(2017, 5, 31),
                     "website": "https://www.philips.com",
                     "order_index": 7
                 }
@@ -120,6 +122,8 @@ async def populate_companies():
 
 async def populate_education():
     """Populate education from original portfolio"""
+    from datetime import date
+
     async with AsyncSessionLocal() as db:
         try:
             education_entries = [
@@ -128,36 +132,36 @@ async def populate_education():
                     "degree": "Bachelor of Science - BS",
                     "field_of_study": "Biomedical Engineering",
                     "description": "Bachelor's Thesis - 'Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers'",
-                    "start_date": "2011-09-01",
-                    "end_date": "2014-06-01",
-                    "order_index": 1
+                    "start_date": date(2011, 9, 1),
+                    "end_date": date(2014, 6, 1),
+                    "order": 1
                 },
                 {
                     "institution": "KTH Royal Institute of Technology",
                     "degree": "Master of Science - MS",
                     "field_of_study": "Biomedical Engineering - Computer Science",
                     "description": "Master's Thesis - 'Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis'",
-                    "start_date": "2014-09-01",
-                    "end_date": "2016-06-01",
-                    "order_index": 2
+                    "start_date": date(2014, 9, 1),
+                    "end_date": date(2016, 6, 1),
+                    "order": 2
                 },
                 {
                     "institution": "Företagsuniversitet",
                     "degree": "Certificate",
                     "field_of_study": "Cybersecurity Fundamentals Course",
                     "description": "10 weeks of intensive training in cybersecurity fundamentals, including: Introduction to Cybersecurity, Threat Actors, Threat Landscapes, and Influence Operations, Systematic Cybersecurity Work, Incident Management, Digital Transformations and Secure Ecosystems",
-                    "start_date": "2023-01-01",
-                    "end_date": "2023-03-01",
-                    "order_index": 3
+                    "start_date": date(2023, 1, 1),
+                    "end_date": date(2023, 3, 1),
+                    "order": 3
                 },
                 {
                     "institution": "CompTIA",
                     "degree": "Security+ Certification",
                     "field_of_study": "Cybersecurity",
                     "description": "12 weeks intensive Cybersecurity Course. Ongoing.",
-                    "start_date": "2024-01-01",
+                    "start_date": date(2024, 1, 1),
                     "end_date": None,
-                    "order_index": 4
+                    "order": 4
                 }
             ]
 
