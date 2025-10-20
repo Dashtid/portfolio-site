@@ -139,10 +139,19 @@ onUnmounted(() => {
   text-decoration: none;
   display: flex;
   align-items: center;
+  background: var(--bg-secondary, #fff);
+  border: 1px solid var(--border-secondary, #93c5fd);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .navbar-brand:hover {
   color: var(--primary-700, #1d4ed8);
+  background: var(--bg-accent, #dbeafe);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .nav-link {
