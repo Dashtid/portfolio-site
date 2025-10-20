@@ -146,29 +146,29 @@ onUnmounted(() => {
 }
 
 .nav-link {
-  color: var(--slate-700, #334155);
+  color: var(--slate-700, #334155) !important;
   font-weight: 500;
-  margin: 0 0.5rem;
-  position: relative;
-  transition: color 0.3s ease;
+  background: var(--bg-secondary, #fff) !important;
+  border: 1px solid var(--border-secondary, #93c5fd) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 1rem !important;
+  margin: 0 0.25rem !important;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .nav-link:hover {
-  color: var(--primary-600, #2563eb);
+  background: var(--bg-accent, #dbeafe) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .nav-link.active {
-  color: var(--primary-600, #2563eb);
-}
-
-.nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--primary-600, #2563eb);
+  background: var(--primary-600, #2563eb) !important;
+  color: white !important;
+  border-color: var(--primary-600, #2563eb) !important;
+  box-shadow: 0 10px 15px rgba(37, 99, 235, 0.2);
 }
 
 .theme-toggle {

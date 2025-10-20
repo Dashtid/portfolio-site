@@ -22,7 +22,10 @@
     <!-- Experience Section -->
     <section id="experience" class="portfolio-section">
       <div class="container">
-        <h2 class="section-title">Professional Experience</h2>
+        <h2 class="section-title">
+          <img src="/images/experience.svg" alt="Experience Icon" class="section-icon" loading="lazy" />
+          Experience
+        </h2>
         <div class="experience-list">
           <!-- Dynamic content from backend or static fallback -->
           <template v-if="companies.length">
@@ -53,9 +56,12 @@
     </section>
 
     <!-- Education Section -->
-    <section id="education" class="portfolio-section">
+    <section id="education" class="portfolio-section bg-light">
       <div class="container">
-        <h2 class="section-title">Education</h2>
+        <h2 class="section-title">
+          <img src="/images/education.svg" alt="Education Icon" class="section-icon" loading="lazy" />
+          Education
+        </h2>
         <div class="education-grid">
           <div v-for="edu in educationList" :key="edu.id" class="education-card fade-in">
             <h3 class="education-institution">{{ edu.institution }}</h3>
@@ -69,7 +75,10 @@
     <!-- Projects Section -->
     <section id="projects" class="portfolio-section">
       <div class="container">
-        <h2 class="section-title">GitHub Projects</h2>
+        <h2 class="section-title">
+          <img src="/images/github.svg" alt="GitHub Icon" class="section-icon" loading="lazy" />
+          GitHub
+        </h2>
 
         <!-- GitHub Stats Component -->
         <GitHubStats username="Dashtid" />
@@ -97,7 +106,10 @@
     <!-- About Section -->
     <section id="about" class="portfolio-section bg-light">
       <div class="container">
-        <h2 class="section-title">About Me</h2>
+        <h2 class="section-title">
+          <img src="/images/about.svg" alt="About Icon" class="section-icon" loading="lazy" />
+          About Me
+        </h2>
         <div class="about-content">
           <p>
             I am a biomedical engineer specializing in cybersecurity and regulatory compliance for medical software
@@ -128,7 +140,10 @@
     <section id="contact" class="portfolio-section">
       <div class="container">
         <div class="contact-content">
-          <h2 class="section-title">Contact</h2>
+          <h2 class="section-title">
+            <img src="/images/contact.svg" alt="Contact Icon" class="section-icon" loading="lazy" />
+            Contact
+          </h2>
           <div style="text-align: left; max-width: 400px; margin: 0 auto;">
             <p style="display: flex; align-items: center; margin-bottom: 1rem;">
               <strong>LinkedIn:</strong>
