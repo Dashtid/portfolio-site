@@ -7,7 +7,7 @@ import HomeView from '../views/HomeView.vue'
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 import AdminLogin from '../views/admin/AdminLogin.vue'
 import AdminCompanies from '../views/admin/AdminCompanies.vue'
-import AdminSkills from '../views/admin/AdminSkills.vue'
+import AdminEducation from '../views/admin/AdminEducation.vue'
 import AdminProjects from '../views/admin/AdminProjects.vue'
 
 const routes = [
@@ -34,9 +34,9 @@ const routes = [
         component: AdminCompanies
       },
       {
-        path: 'skills',
-        name: 'admin-skills',
-        component: AdminSkills
+        path: 'education',
+        name: 'admin-education',
+        component: AdminEducation
       },
       {
         path: 'projects',

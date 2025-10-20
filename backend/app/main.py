@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import engine, Base
-from app.api.v1 import companies, skills, projects, auth, github  # , analytics
+from app.api.v1 import companies, projects, auth, github  # , analytics
 from app.api import education
 # Import models to ensure they're registered with Base
-from app.models import company, skill, project, user, contact, education as education_model
+from app.models import company, project, user, contact, education as education_model
 from app.models import analytics as analytics_model
 
 # Lifespan context manager for startup/shutdown
@@ -46,7 +46,6 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
-app.include_router(skills.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
 app.include_router(education.router, prefix="/api/v1")
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
