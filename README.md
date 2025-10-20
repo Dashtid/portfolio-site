@@ -32,16 +32,20 @@ This is a complete portfolio migration featuring:
 ## [+] Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Git
+- **Python 3.13** (recommended for package compatibility)
+- **UV Package Manager** (10-100x faster than pip) - Install: `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
+- **Node.js 18+**
+- **Git**
 
-### Backend Setup
+### Backend Setup (Modern UV Method - Recommended)
 ```bash
 cd backend
-python -m venv venv
-source venv/Scripts/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# Create virtual environment with UV (Python 3.13)
+uv venv --python 3.13
+source .venv/Scripts/activate  # Windows Git Bash: source .venv/Scripts/activate
+
+# Install dependencies with UV (10-100x faster)
+uv pip install -r requirements.txt
 
 # Create .env file with your credentials
 cp .env.example .env

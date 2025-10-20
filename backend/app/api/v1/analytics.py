@@ -7,7 +7,7 @@ from sqlalchemy import select, func, desc
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from app.database import get_db
-from app.models.analytics import PageView, VisitorSession
+from app.models.analytics import PageView
 from app.schemas.analytics import PageViewCreate, AnalyticsStats
 import hashlib
 import logging
