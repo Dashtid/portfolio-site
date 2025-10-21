@@ -26,6 +26,10 @@ share/
 # Ignore node_modules if any
 node_modules/
 
+# Future migration planning (not part of current static site)
+MIGRATION_PLAN.md
+api_docs.html
+
 # Ignore build output
 dist/
 build/
