@@ -9,7 +9,7 @@ test.describe('Homepage', () => {
 
     // Check hero section
     await expect(page.locator('h1')).toContainText(
-      'Cybersecurity and Quality Assurance'
+      'Cybersecurity and Artificial Intelligence'
     )
 
     // Check navigation is present
