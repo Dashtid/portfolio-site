@@ -90,6 +90,9 @@ $RECYCLE.BIN/
 *.backup
 *~
 .#*
+*.old
+*.old.*
+*.old[0-9]
 
 # Temporary files
 *.tmp
@@ -137,6 +140,8 @@ out/
 backend/venv/
 backend/env/
 backend/.venv/
+backend/.venv-new/
+backend/.venv-pip/
 
 # Frontend specific
 frontend/node_modules/
