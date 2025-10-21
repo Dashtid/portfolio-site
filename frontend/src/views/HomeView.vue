@@ -30,9 +30,20 @@
           <!-- Dynamic content from backend or static fallback -->
           <template v-if="companies.length">
             <div v-for="company in companiesByDate" :key="company.id" class="experience-card fade-in">
-              <div class="company-header">
-                <h3 class="company-name">{{ company.name }}</h3>
-                <span class="company-dates">{{ formatDate(company.start_date) }} - {{ company.end_date ? formatDate(company.end_date) : 'Present' }}</span>
+              <div class="company-header-with-logo">
+                <img
+                  v-if="company.logo_url"
+                  :src="company.logo_url"
+                  :alt="`${company.name} Logo`"
+                  class="card-logo"
+                  loading="lazy"
+                />
+                <div class="company-header-content">
+                  <div class="company-header">
+                    <h3 class="company-name">{{ company.name }}</h3>
+                    <span class="company-dates">{{ formatDate(company.start_date) }} - {{ company.end_date ? formatDate(company.end_date) : 'Present' }}</span>
+                  </div>
+                </div>
               </div>
               <p class="job-title">{{ company.title }}</p>
               <p class="company-location">{{ company.location }}</p>
@@ -64,8 +75,19 @@
         </h2>
         <div class="education-grid">
           <div v-for="edu in education" :key="edu.id" class="education-card fade-in">
-            <h3 class="education-institution">{{ edu.institution }}</h3>
-            <p class="education-degree"><strong>{{ edu.degree }}</strong></p>
+            <div class="education-header-with-logo">
+              <img
+                v-if="edu.logo_url"
+                :src="edu.logo_url"
+                :alt="`${edu.institution} Logo`"
+                class="card-logo"
+                loading="lazy"
+              />
+              <div>
+                <h3 class="education-institution">{{ edu.institution }}</h3>
+                <p class="education-degree"><strong>{{ edu.degree }}</strong></p>
+              </div>
+            </div>
             <p class="education-field" v-if="edu.field_of_study">{{ edu.field_of_study }}</p>
             <p class="education-description" v-if="edu.description">{{ edu.description }}</p>
             <p class="education-dates">{{ formatDate(edu.start_date) }} - {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}</p>
@@ -267,6 +289,28 @@ html {
 /* Ensure navbar is above content */
 :deep(.navbar-custom) {
   z-index: 1000;
+}
+
+/* Company and Education logo layout */
+.company-header-with-logo,
+.education-header-with-logo {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.card-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-right: 1rem;
+  min-width: 48px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.company-header-content {
+  flex: 1;
 }
 
 /* Contact section specific styling */

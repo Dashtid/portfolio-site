@@ -10,6 +10,7 @@ class EducationBase(BaseModel):
     end_date: Optional[date] = None
     location: Optional[str] = None
     description: Optional[str] = None
+    logo_url: Optional[str] = None
     is_certification: bool = False
     certificate_number: Optional[str] = None
     order: int = 0
@@ -25,6 +26,7 @@ class EducationUpdate(BaseModel):
     end_date: Optional[date] = None
     location: Optional[str] = None
     description: Optional[str] = None
+    logo_url: Optional[str] = None
     is_certification: Optional[bool] = None
     certificate_number: Optional[str] = None
     order: Optional[int] = None
