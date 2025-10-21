@@ -44,6 +44,7 @@ async def populate_companies():
                     "location": "Stockholm, Sweden",
                     "start_date": date(2022, 1, 1),
                     "end_date": None,
+                    "logo_url": "/images/hermes.jpg",
                     "website": "https://hermesmedical.com",
                     "order_index": 1
                 },
@@ -54,6 +55,7 @@ async def populate_companies():
                     "location": "Södertälje, Sweden",
                     "start_date": date(2020, 1, 1),
                     "end_date": date(2021, 12, 31),
+                    "logo_url": "/images/scania.svg",
                     "website": "https://www.scania.com",
                     "order_index": 2
                 },
@@ -64,6 +66,7 @@ async def populate_companies():
                     "location": "Finland",
                     "start_date": date(2018, 6, 1),
                     "end_date": date(2019, 6, 1),
+                    "logo_url": "/images/FDF.png",
                     "website": None,
                     "order_index": 3
                 },
@@ -74,6 +77,7 @@ async def populate_companies():
                     "location": "Stockholm, Sweden",
                     "start_date": date(2019, 1, 1),
                     "end_date": date(2020, 6, 1),
+                    "logo_url": "/images/sös.png",
                     "website": None,
                     "order_index": 4
                 },
@@ -84,6 +88,7 @@ async def populate_companies():
                     "location": "Stockholm, Sweden",
                     "start_date": date(2020, 1, 1),
                     "end_date": date(2020, 6, 1),
+                    "logo_url": "/images/softpro.jpg",
                     "website": None,
                     "order_index": 5
                 },
@@ -94,6 +99,7 @@ async def populate_companies():
                     "location": "Stockholm, Sweden",
                     "start_date": date(2017, 6, 1),
                     "end_date": date(2018, 12, 31),
+                    "logo_url": "/images/karolinska.jpg",
                     "website": None,
                     "order_index": 6
                 },
@@ -104,6 +110,7 @@ async def populate_companies():
                     "location": "Stockholm, Sweden",
                     "start_date": date(2016, 1, 1),
                     "end_date": date(2017, 5, 31),
+                    "logo_url": "/images/philips.jpeg",
                     "website": "https://www.philips.com",
                     "order_index": 7
                 }
@@ -132,6 +139,7 @@ async def populate_education():
                     "degree": "Bachelor of Science - BS",
                     "field_of_study": "Biomedical Engineering",
                     "description": "Bachelor's Thesis - 'Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers'",
+                    "logo_url": "/images/LTH.png",
                     "start_date": date(2011, 9, 1),
                     "end_date": date(2014, 6, 1),
                     "order": 1
@@ -141,6 +149,7 @@ async def populate_education():
                     "degree": "Master of Science - MS",
                     "field_of_study": "Biomedical Engineering - Computer Science",
                     "description": "Master's Thesis - 'Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis'",
+                    "logo_url": "/images/KTH.png",
                     "start_date": date(2014, 9, 1),
                     "end_date": date(2016, 6, 1),
                     "order": 2
@@ -150,6 +159,7 @@ async def populate_education():
                     "degree": "Certificate",
                     "field_of_study": "Cybersecurity Fundamentals Course",
                     "description": "10 weeks of intensive training in cybersecurity fundamentals, including: Introduction to Cybersecurity, Threat Actors, Threat Landscapes, and Influence Operations, Systematic Cybersecurity Work, Incident Management, Digital Transformations and Secure Ecosystems",
+                    "logo_url": "/images/foretagsuniversitet.png",
                     "start_date": date(2023, 1, 1),
                     "end_date": date(2023, 3, 1),
                     "order": 3
@@ -159,6 +169,7 @@ async def populate_education():
                     "degree": "Security+ Certification",
                     "field_of_study": "Cybersecurity",
                     "description": "12 weeks intensive Cybersecurity Course. Ongoing.",
+                    "logo_url": "/images/CompTIA.png",
                     "start_date": date(2024, 1, 1),
                     "end_date": None,
                     "order": 4

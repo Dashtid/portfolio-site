@@ -12,6 +12,7 @@ class Education(Base):
     end_date = Column(Date)
     location = Column(String(200))
     description = Column(Text)
+    logo_url = Column(String(500))  # Institution logo
     is_certification = Column(Boolean, default=False)
     certificate_number = Column(String(100))
     order = Column(Integer, default=0)  # For custom sorting
