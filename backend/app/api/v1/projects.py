@@ -7,7 +7,9 @@ from sqlalchemy import select, delete
 from typing import List
 from app.database import get_db
 from app.models.project import Project
+from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.core.deps import get_current_admin_user
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -36,8 +38,12 @@ async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
-async def create_project(project: ProjectCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new project"""
+async def create_project(
+    project: ProjectCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Create a new project (requires admin authentication)"""
     db_project = Project(**project.dict())
     db.add(db_project)
     await db.commit()
@@ -49,9 +55,10 @@ async def create_project(project: ProjectCreate, db: AsyncSession = Depends(get_
 async def update_project(
     project_id: str,
     project_update: ProjectUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Update a project"""
+    """Update a project (requires admin authentication)"""
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
 
@@ -71,8 +78,12 @@ async def update_project(
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project(project_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete a project"""
+async def delete_project(
+    project_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Delete a project (requires admin authentication)"""
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
 

@@ -7,7 +7,9 @@ from sqlalchemy import select, delete
 from typing import List
 from app.database import get_db
 from app.models.company import Company
+from app.models.user import User
 from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyResponse
+from app.core.deps import get_current_admin_user
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -36,8 +38,12 @@ async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED)
-async def create_company(company: CompanyCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new company"""
+async def create_company(
+    company: CompanyCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Create a new company (requires admin authentication)"""
     db_company = Company(**company.dict())
     db.add(db_company)
     await db.commit()
@@ -49,9 +55,10 @@ async def create_company(company: CompanyCreate, db: AsyncSession = Depends(get_
 async def update_company(
     company_id: str,
     company_update: CompanyUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Update a company"""
+    """Update a company (requires admin authentication)"""
     result = await db.execute(select(Company).where(Company.id == company_id))
     company = result.scalar_one_or_none()
 
@@ -71,8 +78,12 @@ async def update_company(
 
 
 @router.delete("/{company_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_company(company_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete a company"""
+async def delete_company(
+    company_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Delete a company (requires admin authentication)"""
     result = await db.execute(select(Company).where(Company.id == company_id))
     company = result.scalar_one_or_none()
 

@@ -7,7 +7,9 @@ from sqlalchemy import select, delete
 from typing import List
 from app.database import get_db
 from app.models.skill import Skill
+from app.models.user import User
 from app.schemas.skill import SkillCreate, SkillUpdate, SkillResponse
+from app.core.deps import get_current_admin_user
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
@@ -36,8 +38,12 @@ async def get_skill(skill_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
-async def create_skill(skill: SkillCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new skill"""
+async def create_skill(
+    skill: SkillCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Create a new skill (requires admin authentication)"""
     db_skill = Skill(**skill.dict())
     db.add(db_skill)
     await db.commit()
@@ -49,9 +55,10 @@ async def create_skill(skill: SkillCreate, db: AsyncSession = Depends(get_db)):
 async def update_skill(
     skill_id: str,
     skill_update: SkillUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Update a skill"""
+    """Update a skill (requires admin authentication)"""
     result = await db.execute(select(Skill).where(Skill.id == skill_id))
     skill = result.scalar_one_or_none()
 
@@ -71,8 +78,12 @@ async def update_skill(
 
 
 @router.delete("/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_skill(skill_id: str, db: AsyncSession = Depends(get_db)):
-    """Delete a skill"""
+async def delete_skill(
+    skill_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Delete a skill (requires admin authentication)"""
     result = await db.execute(select(Skill).where(Skill.id == skill_id))
     skill = result.scalar_one_or_none()
 

@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from app.database import get_db
 from app.models.education import Education
+from app.models.user import User
 from app.schemas.education import Education as EducationSchema, EducationCreate, EducationUpdate
+from app.core.deps import get_current_admin_user
 
 router = APIRouter(
     prefix="/education",
@@ -52,8 +54,12 @@ async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):
     return education
 
 @router.post("/", response_model=EducationSchema)
-async def create_education(education: EducationCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new education record"""
+async def create_education(
+    education: EducationCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Create a new education record (requires admin authentication)"""
     db_education = Education(**education.dict())
     db.add(db_education)
     await db.commit()
@@ -64,9 +70,10 @@ async def create_education(education: EducationCreate, db: AsyncSession = Depend
 async def update_education(
     education_id: int,
     education_update: EducationUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Update an education record"""
+    """Update an education record (requires admin authentication)"""
     # Check if education exists
     result = await db.execute(select(Education).where(Education.id == education_id))
     db_education = result.scalar_one_or_none()
@@ -83,8 +90,12 @@ async def update_education(
     return db_education
 
 @router.delete("/{education_id}/")
-async def delete_education(education_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete an education record"""
+async def delete_education(
+    education_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Delete an education record (requires admin authentication)"""
     result = await db.execute(select(Education).where(Education.id == education_id))
     db_education = result.scalar_one_or_none()
     if not db_education:
