@@ -4,7 +4,24 @@ __pycache__/
 *.pyo
 *.pyd
 .env
-.venv
+
+# Python virtual environments (all common patterns)
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python virtual environment files (when venv created in project root)
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+lib/
+lib64/
+bin/
+share/
 
 # Ignore node_modules if any
 node_modules/
