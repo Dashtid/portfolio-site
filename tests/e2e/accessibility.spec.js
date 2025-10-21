@@ -7,7 +7,7 @@ test.describe('Accessibility', () => {
     // Check main heading
     const h1 = page.locator('h1')
     await expect(h1).toHaveCount(1)
-    await expect(h1).toContainText('Cybersecurity and Quality Assurance')
+    await expect(h1).toContainText('Cybersecurity and Artificial Intelligence')
 
     // Check section headings
     const h2s = page.locator('h2')
