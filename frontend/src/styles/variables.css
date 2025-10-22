@@ -103,6 +103,28 @@
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-blur: 10px;
+
+  /* Interactive Elements */
+  --color-border: #e2e8f0;
+  --color-hover-bg: rgba(37, 99, 235, 0.1);
+  --color-icon: #64748b;
+  --color-warning: #fbbf24;
+
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+
+  /* Text Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+
+  /* Component Specific */
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --navbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --card-bg: #ffffff;
+  --card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Dark Mode Variables */
@@ -122,4 +144,25 @@
 
   --glass-bg: rgba(0, 0, 0, 0.2);
   --glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Interactive Elements - Dark Mode */
+  --color-border-dark: #334155;
+  --color-hover-bg-dark: rgba(251, 191, 36, 0.1);
+  --color-icon-dark: #94a3b8;
+
+  /* Background Colors - Dark Mode */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+
+  /* Text Colors - Dark Mode */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+
+  /* Component Specific - Dark Mode */
+  --navbar-bg: rgba(15, 23, 42, 0.95);
+  --navbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --card-bg: #1e293b;
+  --card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }

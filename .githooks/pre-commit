@@ -1,0 +1,40 @@
+#!/bin/bash
+# Pre-commit hook for security checks
+# Install: git config core.hooksPath .githooks
+
+echo "[Security] Running pre-commit security checks..."
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Check for common secrets patterns
+echo "[+] Checking for potential secrets..."
+if git diff --cached --name-only | xargs grep -E -i '(password|secret|api_key|token|private_key).*=.*["\047]' 2>/dev/null; then
+    echo -e "${YELLOW}[!] Warning: Potential secrets detected in staged files${NC}"
+    echo "    Review the matches above and ensure no actual secrets are being committed"
+fi
+
+# Check for .env files
+if git diff --cached --name-only | grep -E '\.env$|\.env\.production$' 2>/dev/null; then
+    echo -e "${RED}[X] Error: .env files should not be committed${NC}"
+    echo "    Found .env files in staged changes. Add them to .gitignore"
+    exit 1
+fi
+
+# Check for hardcoded localhost URLs in production files
+if git diff --cached --name-only | grep -E '\.env\.production|config\.prod' | xargs grep -E 'localhost|127\.0\.0\.1' 2>/dev/null; then
+    echo -e "${YELLOW}[!] Warning: localhost URLs found in production configuration${NC}"
+fi
+
+# Check for console.log statements (optional - can be noisy)
+# Uncomment if you want strict console.log checking
+# if git diff --cached --name-only | grep -E '\.(js|vue)$' | xargs grep -E 'console\.(log|debug|info)' 2>/dev/null; then
+#     echo -e "${YELLOW}[!] Warning: console.log statements found${NC}"
+#     echo "    Consider removing console statements before committing"
+# fi
+
+echo -e "${GREEN}[OK] Pre-commit security checks passed${NC}"
+exit 0

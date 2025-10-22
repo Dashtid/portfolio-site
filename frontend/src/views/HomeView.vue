@@ -188,6 +188,9 @@
 
     <!-- Footer Section -->
     <FooterSection />
+
+    <!-- Back to Top Button -->
+    <BackToTop />
   </div>
 </template>
 
@@ -197,6 +200,8 @@ import { usePortfolioStore } from '../stores/portfolio'
 import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 import GitHubStats from '../components/GitHubStats.vue'
+import BackToTop from '../components/BackToTop.vue'
+import { useBatchAnimation } from '../composables/useScrollAnimations'
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
@@ -269,6 +274,38 @@ onMounted(async () => {
       console.error('Service Worker registration failed:', error)
     }
   }
+
+  // Apply scroll animations to cards with staggered effect
+  useBatchAnimation('.experience-card', {
+    animation: 'slideUp',
+    duration: 600,
+    delay: 0,
+    stagger: 150,
+    threshold: 0.1
+  })
+
+  useBatchAnimation('.education-card', {
+    animation: 'slideUp',
+    duration: 600,
+    delay: 0,
+    stagger: 150,
+    threshold: 0.1
+  })
+
+  useBatchAnimation('.project-card', {
+    animation: 'slideUp',
+    duration: 600,
+    delay: 0,
+    stagger: 150,
+    threshold: 0.1
+  })
+
+  useBatchAnimation('.section-title', {
+    animation: 'fadeIn',
+    duration: 800,
+    delay: 0,
+    threshold: 0.2
+  })
 })
 </script>
 

@@ -1,0 +1,231 @@
+/**
+ * Scroll Animations Composable
+ * Provides scroll-triggered animations using Intersection Observer
+ * Supports fade-in, slide-up, slide-in-left, slide-in-right effects
+ */
+import { useIntersectionObserver } from '@vueuse/core'
+import { ref, onMounted } from 'vue'
+
+/**
+ * Animation configurations
+ * Each animation has a CSS class that will be applied when element is visible
+ */
+const ANIMATIONS = {
+  fadeIn: {
+    initial: {
+      opacity: '0',
+      transform: 'none'
+    },
+    animate: {
+      opacity: '1',
+      transform: 'none'
+    }
+  },
+  slideUp: {
+    initial: {
+      opacity: '0',
+      transform: 'translateY(30px)'
+    },
+    animate: {
+      opacity: '1',
+      transform: 'translateY(0)'
+    }
+  },
+  slideInLeft: {
+    initial: {
+      opacity: '0',
+      transform: 'translateX(-30px)'
+    },
+    animate: {
+      opacity: '1',
+      transform: 'translateX(0)'
+    }
+  },
+  slideInRight: {
+    initial: {
+      opacity: '0',
+      transform: 'translateX(30px)'
+    },
+    animate: {
+      opacity: '1',
+      transform: 'translateX(0)'
+    }
+  },
+  scaleIn: {
+    initial: {
+      opacity: '0',
+      transform: 'scale(0.9)'
+    },
+    animate: {
+      opacity: '1',
+      transform: 'scale(1)'
+    }
+  }
+}
+
+/**
+ * Apply scroll animation to an element
+ * @param {Ref<HTMLElement>} target - Element ref to observe
+ * @param {Object} options - Animation options
+ * @param {string} options.animation - Animation type (fadeIn, slideUp, etc.)
+ * @param {number} options.duration - Animation duration in ms (default: 600)
+ * @param {number} options.delay - Animation delay in ms (default: 0)
+ * @param {string} options.easing - CSS easing function (default: 'ease-out')
+ * @param {number} options.threshold - Intersection threshold (default: 0.1)
+ * @param {boolean} options.once - Trigger animation only once (default: true)
+ */
+export function useScrollAnimation(target, options = {}) {
+  const {
+    animation = 'fadeIn',
+    duration = 600,
+    delay = 0,
+    easing = 'ease-out',
+    threshold = 0.1,
+    once = true
+  } = options
+
+  const isVisible = ref(false)
+  const hasAnimated = ref(false)
+
+  // Get animation config
+  const animationConfig = ANIMATIONS[animation] || ANIMATIONS.fadeIn
+
+  // Apply initial styles
+  const applyInitialStyles = () => {
+    if (!target.value) return
+
+    Object.assign(target.value.style, {
+      ...animationConfig.initial,
+      transition: `all ${duration}ms ${easing} ${delay}ms`
+    })
+  }
+
+  // Apply animation styles
+  const applyAnimationStyles = () => {
+    if (!target.value) return
+
+    Object.assign(target.value.style, animationConfig.animate)
+    hasAnimated.value = true
+  }
+
+  // Setup intersection observer
+  const { stop } = useIntersectionObserver(
+    target,
+    ([{ isIntersecting }]) => {
+      if (isIntersecting && (!once || !hasAnimated.value)) {
+        isVisible.value = true
+        applyAnimationStyles()
+
+        if (once) {
+          stop()
+        }
+      } else if (!isIntersecting && !once && hasAnimated.value) {
+        // Reset animation if not "once" mode
+        isVisible.value = false
+        applyInitialStyles()
+      }
+    },
+    {
+      threshold
+    }
+  )
+
+  onMounted(() => {
+    applyInitialStyles()
+  })
+
+  return {
+    isVisible,
+    hasAnimated
+  }
+}
+
+/**
+ * Apply animations to multiple elements with stagger effect
+ * @param {Array<Ref<HTMLElement>>} targets - Array of element refs
+ * @param {Object} options - Animation options (same as useScrollAnimation)
+ * @param {number} options.stagger - Delay between each element animation in ms (default: 100)
+ */
+export function useStaggeredAnimation(targets, options = {}) {
+  const { stagger = 100, ...animationOptions } = options
+  const animations = []
+
+  targets.forEach((target, index) => {
+    const animation = useScrollAnimation(target, {
+      ...animationOptions,
+      delay: (animationOptions.delay || 0) + (index * stagger)
+    })
+    animations.push(animation)
+  })
+
+  return animations
+}
+
+/**
+ * Batch animate elements with a selector
+ * Useful for animating multiple cards, list items, etc.
+ * @param {string} selector - CSS selector for elements to animate
+ * @param {Object} options - Animation options
+ */
+export function useBatchAnimation(selector, options = {}) {
+  const elements = ref([])
+  const animations = ref([])
+
+  onMounted(() => {
+    elements.value = Array.from(document.querySelectorAll(selector))
+
+    elements.value.forEach((element, index) => {
+      const elementRef = ref(element)
+      const animation = useScrollAnimation(elementRef, {
+        ...options,
+        delay: (options.delay || 0) + (index * (options.stagger || 100))
+      })
+      animations.value.push(animation)
+    })
+  })
+
+  return {
+    elements,
+    animations
+  }
+}
+
+/**
+ * Parallax scroll effect
+ * @param {Ref<HTMLElement>} target - Element ref to apply parallax
+ * @param {Object} options - Parallax options
+ * @param {number} options.speed - Parallax speed multiplier (default: 0.5)
+ */
+export function useParallax(target, options = {}) {
+  const { speed = 0.5 } = options
+
+  onMounted(() => {
+    const handleScroll = () => {
+      if (!target.value) return
+
+      const rect = target.value.getBoundingClientRect()
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop
+      const parallax = (scrolled - rect.top) * speed
+
+      target.value.style.transform = `translateY(${parallax}px)`
+    }
+
+    // Throttle scroll events for performance
+    let ticking = false
+    const scrollListener = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', scrollListener, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', scrollListener)
+    }
+  })
+}

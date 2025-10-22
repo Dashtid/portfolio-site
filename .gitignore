@@ -41,6 +41,16 @@ portfolio.db
 .env.development
 *.env
 
+# Secrets and certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets/
+nginx/ssl/
+
 # IDE
 .vscode/
 .idea/

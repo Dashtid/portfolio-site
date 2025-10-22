@@ -38,6 +38,21 @@ class Settings(BaseSettings):
     # Admin
     ADMIN_GITHUB_ID: Optional[str] = None  # Your GitHub user ID
 
+    # Logging
+    LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+    # Analytics (Privacy-compliant)
+    ANALYTICS_ENABLED: bool = True
+    ANALYTICS_SITE_ID: Optional[str] = None  # Plausible/Umami site ID
+    ANALYTICS_URL: Optional[str] = None  # Analytics server URL
+
+    # Error Tracking
+    ERROR_TRACKING_ENABLED: bool = True
+    ERROR_TRACKING_DSN: Optional[str] = None  # Sentry DSN (optional)
+
+    # Performance Monitoring
+    METRICS_ENABLED: bool = True
+
     class Config:
         env_file = ".env"
         case_sensitive = True

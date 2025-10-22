@@ -30,8 +30,15 @@
         </div>
       </div>
 
-      <div v-if="company.website" class="card-actions">
+      <div class="card-actions">
+        <router-link
+          :to="`/experience/${company.id}`"
+          class="company-link detail-link"
+        >
+          View Details →
+        </router-link>
         <a
+          v-if="company.website"
           :href="company.website"
           target="_blank"
           rel="noopener noreferrer"
@@ -166,7 +173,10 @@ const formatDuration = computed(() => {
 }
 
 .card-actions {
+  display: flex;
+  gap: var(--spacing-4);
   padding-top: var(--spacing-4);
+  flex-wrap: wrap;
 }
 
 .company-link {
@@ -180,6 +190,10 @@ const formatDuration = computed(() => {
 
 .company-link:hover {
   color: var(--color-primary-dark);
+}
+
+.detail-link {
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Dark mode adjustments */

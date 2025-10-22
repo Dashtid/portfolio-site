@@ -21,12 +21,7 @@
             </a>
           </li>
           <li class="nav-item ms-2">
-            <button class="btn btn-sm btn-outline-primary theme-toggle"
-                    @click="toggleTheme"
-                    :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
-              <i v-if="isDark" class="bi bi-sun" aria-hidden="true"></i>
-              <i v-else class="bi bi-moon" aria-hidden="true"></i>
-            </button>
+            <ThemeToggle />
           </li>
         </ul>
       </div>
@@ -36,10 +31,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import ThemeToggle from './ThemeToggle.vue'
 
 const scrolled = ref(false)
 const activeSection = ref('hero')
-const isDark = ref(false)
 
 const navItems = [
   { name: 'Home', href: 'hero' },
@@ -95,24 +90,7 @@ const handleScroll = () => {
   }
 }
 
-// Toggle theme
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
-// Load theme preference
-const loadTheme = () => {
-  const savedTheme = localStorage.getItem('theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-
-  isDark.value = savedTheme ? savedTheme === 'dark' : prefersDark
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-}
-
 onMounted(() => {
-  loadTheme()
   window.addEventListener('scroll', handleScroll)
   handleScroll() // Initial check
 })
@@ -184,15 +162,6 @@ onUnmounted(() => {
   box-shadow: 0 10px 15px rgba(37, 99, 235, 0.2);
 }
 
-.theme-toggle {
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
 
 /* Dark theme styles */
 [data-theme="dark"] .navbar-custom {
@@ -210,17 +179,6 @@ onUnmounted(() => {
 [data-theme="dark"] .nav-link:hover,
 [data-theme="dark"] .nav-link.active {
   color: #60a5fa;
-}
-
-/* Bootstrap Icons - inline for simplicity */
-.bi-sun::before {
-  content: "☀";
-  font-size: 1.2rem;
-}
-
-.bi-moon::before {
-  content: "🌙";
-  font-size: 1.2rem;
 }
 
 @media (max-width: 768px) {

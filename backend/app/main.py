@@ -8,10 +8,22 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import engine, Base
 from app.api.v1 import companies, projects, auth, github  # , analytics
+from app.api.v1.endpoints import health, metrics
 from app.api import education
 # Import models to ensure they're registered with Base
 from app.models import company, project, user, contact, education as education_model
 from app.models import analytics as analytics_model
+# Import new middleware
+from app.middleware import (
+    LoggingMiddleware,
+    ErrorTrackingMiddleware,
+    PerformanceMiddleware,
+    CompressionMiddleware,
+    CacheControlMiddleware
+)
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 # Security Headers Middleware
@@ -33,13 +45,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    logger.info("Starting up application", extra={"version": settings.APP_VERSION})
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("[OK] Database tables created/verified")
+    logger.info("Database tables created/verified")
     yield
     # Shutdown
+    logger.info("Shutting down application")
     await engine.dispose()
-    print("[OK] Database connection closed")
+    logger.info("Database connection closed")
 
 # Create FastAPI instance
 app = FastAPI(
@@ -51,10 +65,28 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add security headers middleware
+# Add middleware (order matters: first added = outermost layer)
+# Compression should be outermost to compress final response
+app.add_middleware(CompressionMiddleware, minimum_size=1000)
+
+# Cache control headers
+app.add_middleware(CacheControlMiddleware, max_age=3600)
+
+# Security headers
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Configure CORS
+# Performance monitoring
+if settings.METRICS_ENABLED:
+    app.add_middleware(PerformanceMiddleware)
+
+# Error tracking
+if settings.ERROR_TRACKING_ENABLED:
+    app.add_middleware(ErrorTrackingMiddleware)
+
+# Request/response logging
+app.add_middleware(LoggingMiddleware)
+
+# CORS (should be close to the app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -64,6 +96,8 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(health.router, prefix="/api/v1", tags=["Health"])
+app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
