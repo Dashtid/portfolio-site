@@ -13,6 +13,7 @@ class Project(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(255), nullable=False)
     description = Column(Text)
+    detailed_description = Column(Text, nullable=True)
     technologies = Column(JSON)  # List of technologies used
     github_url = Column(String(500))
     live_url = Column(String(500))
@@ -20,6 +21,13 @@ class Project(Base):
     company_id = Column(String, ForeignKey("companies.id", ondelete="CASCADE"))
     featured = Column(Boolean, default=False)
     order_index = Column(Integer, default=0)
+
+    # Additional media fields
+    video_url = Column(String(500), nullable=True)
+    video_title = Column(String(255), nullable=True)
+    map_url = Column(String(500), nullable=True)
+    map_title = Column(String(255), nullable=True)
+    responsibilities = Column(JSON, nullable=True)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
