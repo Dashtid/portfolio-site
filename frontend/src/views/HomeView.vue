@@ -105,6 +105,21 @@
       </div>
     </section>
 
+    <!-- Publications/Research Section -->
+    <section id="publications" class="portfolio-section bg-dark">
+      <div class="container">
+        <h2 class="section-title">
+          <img src="/images/document.svg" alt="Publications Icon" class="section-icon" loading="lazy" />
+          Publications & Research
+        </h2>
+        <div v-if="documentsLoading" class="loading-state">Loading publications...</div>
+        <div v-else-if="documentsError" class="error-state">{{ documentsError }}</div>
+        <div v-else class="documents-grid">
+          <DocumentCard v-for="document in documents" :key="document.id" :document="document" />
+        </div>
+      </div>
+    </section>
+
     <!-- Projects Section -->
     <section id="projects" class="portfolio-section bg-light">
       <div class="container">
@@ -210,13 +225,21 @@ import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 import GitHubStats from '../components/GitHubStats.vue'
 import BackToTop from '../components/BackToTop.vue'
+import DocumentCard from '../components/DocumentCard.vue'
 import { useBatchAnimation } from '../composables/useScrollAnimations'
+import { getDocuments } from '../api/services'
+import type { Document } from '../types/api'
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
 
 // Computed properties for education from API
 const education = computed(() => portfolioStore.education || [])
+
+// Documents state
+const documents = ref<Document[]>([])
+const documentsLoading = ref(false)
+const documentsError = ref<string | null>(null)
 
 // Static projects data as fallback
 const staticProjects = [
@@ -272,6 +295,17 @@ onMounted(async () => {
     console.error('Error loading portfolio data:', error)
   } finally {
     loading.value = false
+  }
+
+  // Fetch documents
+  documentsLoading.value = true
+  try {
+    documents.value = await getDocuments()
+  } catch (error) {
+    console.error('Error loading documents:', error)
+    documentsError.value = 'Failed to load publications'
+  } finally {
+    documentsLoading.value = false
   }
 
   // Register service worker for PWA
@@ -392,5 +426,32 @@ html {
 .contact-section .contact-link:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Documents grid */
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Loading and error states */
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+.error-state {
+  color: #ff6b6b;
+}
+
+@media (max-width: 768px) {
+  .documents-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
 </style>

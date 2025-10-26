@@ -94,6 +94,21 @@ export interface HealthResponse {
 }
 
 /**
+ * Document Entry
+ */
+export interface Document {
+  id: string
+  title: string
+  description?: string | null
+  document_type: string
+  file_path: string
+  file_size: number
+  file_url: string
+  published_date?: string | null
+  created_at: string
+}
+
+/**
  * API Error Response
  */
 export interface ErrorResponse {

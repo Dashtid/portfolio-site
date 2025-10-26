@@ -4,6 +4,7 @@ import type {
   Education,
   Project,
   Skill,
+  Document,
   LoginRequest,
   LoginResponse,
   HealthResponse
@@ -130,6 +131,19 @@ export const updateSkill = async (id: string, skill: Partial<Skill>): Promise<Sk
 
 export const deleteSkill = async (id: string): Promise<void> => {
   await apiClient.delete(`/api/v1/skills/${id}`)
+}
+
+/**
+ * Document APIs
+ */
+export const getDocuments = async (): Promise<Document[]> => {
+  const response = await apiClient.get<Document[]>('/api/v1/documents/')
+  return response.data
+}
+
+export const getDocumentById = async (id: string): Promise<Document> => {
+  const response = await apiClient.get<Document>(`/api/v1/documents/${id}`)
+  return response.data
 }
 
 /**

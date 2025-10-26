@@ -34,4 +34,4 @@ python-json-logger==2.0.7
 
 # Azure Functions (for later deployment)
 # azure-functions==1.22.0
-# nest-asyncio==1.6.0
+# nest-asyncio==1.6.0aiofiles
