@@ -4,6 +4,7 @@ import analytics from '../services/analytics'
 
 // Views
 import HomeView from '../views/HomeView.vue'
+import CompanyDetailView from '../views/CompanyDetailView.vue'
 import ExperienceDetail from '../views/experience/ExperienceDetail.vue'
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 import AdminLogin from '../views/admin/AdminLogin.vue'
@@ -16,6 +17,12 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView
+  },
+  {
+    path: '/company/:id',
+    name: 'company-detail',
+    component: CompanyDetailView,
+    props: true
   },
   {
     path: '/experience/:id',

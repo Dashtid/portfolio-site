@@ -48,6 +48,15 @@
               <p class="job-title">{{ company.title }}</p>
               <p class="company-location">{{ company.location }}</p>
               <p class="company-description">{{ company.description }}</p>
+
+              <!-- Learn More Button (show if company has detailed content) -->
+              <router-link
+                v-if="company.detailed_description || company.video_url || company.map_url"
+                :to="{ name: 'company-detail', params: { id: company.id } }"
+                class="btn btn-outline-primary btn-sm mt-3"
+              >
+                Learn More
+              </router-link>
             </div>
           </template>
           <template v-else>
