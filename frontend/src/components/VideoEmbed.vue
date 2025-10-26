@@ -15,25 +15,23 @@
   </div>
 </template>
 
-<script setup>
-import { defineProps } from 'vue'
+<script setup lang="ts">
+/**
+ * VideoEmbed Component
+ *
+ * Responsive YouTube video embed with lazy loading and accessibility features.
+ * Uses 16:9 aspect ratio and Bootstrap styling.
+ */
 
-const props = defineProps({
-  url: {
-    type: String,
-    required: true,
-    default: null
-  },
-  title: {
-    type: String,
-    required: true,
-    default: 'Video content'
-  },
-  heading: {
-    type: String,
-    required: false,
-    default: null
-  }
+interface Props {
+  url: string
+  title: string
+  heading?: string | null
+}
+
+withDefaults(defineProps<Props>(), {
+  title: 'Video content',
+  heading: null
 })
 </script>
 

@@ -1,8 +1,21 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
+import type { Company, Skill, Project } from '@/types'
+
+interface PortfolioState {
+  companies: Company[]
+  skills: Skill[]
+  projects: Project[]
+  loading: boolean
+  error: string | null
+}
+
+interface SkillsByCategory {
+  [category: string]: Skill[]
+}
 
 export const usePortfolioStore = defineStore('portfolio', {
-  state: () => ({
+  state: (): PortfolioState => ({
     companies: [],
     skills: [],
     projects: [],
@@ -11,20 +24,20 @@ export const usePortfolioStore = defineStore('portfolio', {
   }),
 
   getters: {
-    currentCompany: (state) => {
+    currentCompany: (state): Company | undefined => {
       return state.companies.find(c => c.end_date === null) || state.companies[0]
     },
 
-    companiesByDate: (state) => {
+    companiesByDate: (state): Company[] => {
       return [...state.companies].sort((a, b) => {
         if (!a.start_date) return 1
         if (!b.start_date) return -1
-        return new Date(b.start_date) - new Date(a.start_date)
+        return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
       })
     },
 
-    skillsByCategory: (state) => {
-      const grouped = {}
+    skillsByCategory: (state): SkillsByCategory => {
+      const grouped: SkillsByCategory = {}
       state.skills.forEach(skill => {
         const category = skill.category || 'other'
         if (!grouped[category]) {
@@ -35,45 +48,46 @@ export const usePortfolioStore = defineStore('portfolio', {
       return grouped
     },
 
-    featuredProjects: (state) => {
+    featuredProjects: (state): Project[] => {
       return state.projects.filter(p => p.featured)
     }
   },
 
   actions: {
-    async fetchCompanies() {
+    async fetchCompanies(): Promise<void> {
       this.loading = true
       this.error = null
       try {
-        const response = await apiClient.get('/api/v1/companies')
+        const response = await apiClient.get<Company[]>('/api/v1/companies')
         this.companies = response.data
       } catch (error) {
-        this.error = error.message
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        this.error = errorMessage
         console.error('Error fetching companies:', error)
       } finally {
         this.loading = false
       }
     },
 
-    async fetchSkills() {
+    async fetchSkills(): Promise<void> {
       try {
-        const response = await apiClient.get('/api/v1/skills')
+        const response = await apiClient.get<Skill[]>('/api/v1/skills')
         this.skills = response.data
       } catch (error) {
         console.error('Error fetching skills:', error)
       }
     },
 
-    async fetchProjects() {
+    async fetchProjects(): Promise<void> {
       try {
-        const response = await apiClient.get('/api/v1/projects')
+        const response = await apiClient.get<Project[]>('/api/v1/projects')
         this.projects = response.data
       } catch (error) {
         console.error('Error fetching projects:', error)
       }
     },
 
-    async fetchAllData() {
+    async fetchAllData(): Promise<void> {
       await Promise.all([
         this.fetchCompanies(),
         this.fetchSkills(),

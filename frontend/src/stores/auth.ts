@@ -1,8 +1,23 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
+import type { LoginResponse } from '@/types'
+
+interface User {
+  id: string
+  username: string
+  email?: string
+}
+
+interface AuthState {
+  user: User | null
+  accessToken: string | null
+  refreshToken: string | null
+  isLoading: boolean
+  error: string | null
+}
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
+  state: (): AuthState => ({
     user: null,
     accessToken: localStorage.getItem('accessToken') || null,
     refreshToken: localStorage.getItem('refreshToken') || null,
@@ -11,13 +26,13 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.accessToken,
-    currentUser: (state) => state.user
+    isAuthenticated: (state): boolean => !!state.accessToken,
+    currentUser: (state): User | null => state.user
   },
 
   actions: {
     // Initialize auth from URL params (after GitHub OAuth callback)
-    initializeFromCallback() {
+    initializeFromCallback(): boolean {
       const params = new URLSearchParams(window.location.search)
       const token = params.get('token')
       const refresh = params.get('refresh')
@@ -32,7 +47,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Set tokens and configure axios
-    setTokens(accessToken, refreshToken) {
+    setTokens(accessToken: string, refreshToken: string): void {
       this.accessToken = accessToken
       this.refreshToken = refreshToken
 
@@ -41,20 +56,22 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('refreshToken', refreshToken)
 
       // Configure axios default header
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+      if (apiClient.defaults.headers.common) {
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+      }
 
       // Fetch user info
       this.fetchUser()
     },
 
     // Fetch current user info
-    async fetchUser() {
+    async fetchUser(): Promise<void> {
       if (!this.accessToken) return
 
       try {
-        const response = await apiClient.get('/api/v1/auth/me')
+        const response = await apiClient.get<User>('/api/v1/auth/me')
         this.user = response.data
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to fetch user:', error)
         if (error.response?.status === 401) {
           await this.refreshAccessToken()
@@ -63,18 +80,18 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Refresh access token
-    async refreshAccessToken() {
+    async refreshAccessToken(): Promise<void> {
       if (!this.refreshToken) {
         this.logout()
         return
       }
 
       try {
-        const response = await apiClient.post('/api/v1/auth/refresh', {
+        const response = await apiClient.post<LoginResponse>('/api/v1/auth/refresh', {
           refresh_token: this.refreshToken
         })
 
-        this.setTokens(response.data.access_token, response.data.refresh_token)
+        this.setTokens(response.data.access_token, response.data.access_token)
       } catch (error) {
         console.error('Failed to refresh token:', error)
         this.logout()
@@ -82,12 +99,12 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Login with GitHub
-    loginWithGitHub() {
+    loginWithGitHub(): void {
       window.location.href = 'http://localhost:8001/api/v1/auth/github'
     },
 
     // Logout
-    async logout() {
+    async logout(): Promise<void> {
       try {
         await apiClient.post('/api/v1/auth/logout')
       } catch (error) {
@@ -103,15 +120,19 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('refreshToken')
 
         // Clear axios header
-        delete apiClient.defaults.headers.common['Authorization']
+        if (apiClient.defaults.headers.common) {
+          delete apiClient.defaults.headers.common['Authorization']
+        }
       }
     },
 
     // Check auth status on app start
-    async checkAuth() {
+    async checkAuth(): Promise<void> {
       if (this.accessToken) {
         // Set axios header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.accessToken}`
+        if (apiClient.defaults.headers.common) {
+          apiClient.defaults.headers.common['Authorization'] = `Bearer ${this.accessToken}`
+        }
 
         // Fetch user info
         await this.fetchUser()

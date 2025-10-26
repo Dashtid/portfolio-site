@@ -1,7 +1,16 @@
-import axios from 'axios'
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios'
+
+/**
+ * Axios API Client with Authentication
+ *
+ * Configured with interceptors for:
+ * - Adding auth tokens to requests
+ * - Handling 401 errors and token refresh
+ * - Automatic logout on refresh failure
+ */
 
 // Create axios instance with default configuration
-const apiClient = axios.create({
+const apiClient: AxiosInstance = axios.create({
   baseURL: 'http://localhost:8001',  // Backend running on port 8001
   headers: {
     'Content-Type': 'application/json'
@@ -10,23 +19,23 @@ const apiClient = axios.create({
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
-  config => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const token = localStorage.getItem('accessToken')
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
-  error => {
+  (error: AxiosError) => {
     return Promise.reject(error)
   }
 )
 
 // Response interceptor to handle auth errors
 apiClient.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config
+  (response: AxiosResponse): AxiosResponse => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
@@ -34,15 +43,18 @@ apiClient.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken')
       if (refreshToken) {
         try {
-          const response = await axios.post('http://localhost:8001/api/v1/auth/refresh', {
-            refresh_token: refreshToken
-          })
+          const response = await axios.post<{ access_token: string; refresh_token: string }>(
+            'http://localhost:8001/api/v1/auth/refresh',
+            { refresh_token: refreshToken }
+          )
 
           localStorage.setItem('accessToken', response.data.access_token)
           localStorage.setItem('refreshToken', response.data.refresh_token)
 
           // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
+          }
           return apiClient(originalRequest)
         } catch (refreshError) {
           // Refresh failed, logout user

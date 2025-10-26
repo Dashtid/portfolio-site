@@ -14,25 +14,23 @@
   </div>
 </template>
 
-<script setup>
-import { defineProps } from 'vue'
+<script setup lang="ts">
+/**
+ * MapEmbed Component
+ *
+ * Responsive Google Maps embed with lazy loading and accessibility features.
+ * Uses 16:9 aspect ratio and Bootstrap styling.
+ */
 
-const props = defineProps({
-  url: {
-    type: String,
-    required: true,
-    default: null
-  },
-  title: {
-    type: String,
-    required: true,
-    default: 'Location map'
-  },
-  heading: {
-    type: String,
-    required: false,
-    default: null
-  }
+interface Props {
+  url: string
+  title: string
+  heading?: string | null
+}
+
+withDefaults(defineProps<Props>(), {
+  title: 'Location map',
+  heading: null
 })
 </script>
 

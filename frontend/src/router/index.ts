@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw, type NavigationGuardNext, type RouteLocationNormalized } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import analytics from '../services/analytics'
 
@@ -12,7 +12,7 @@ import AdminCompanies from '../views/admin/AdminCompanies.vue'
 import AdminEducation from '../views/admin/AdminEducation.vue'
 import AdminProjects from '../views/admin/AdminProjects.vue'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
@@ -67,7 +67,11 @@ const router = createRouter({
 })
 
 // Navigation guards
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (
+  to: RouteLocationNormalized,
+  _from: RouteLocationNormalized,
+  next: NavigationGuardNext
+) => {
   const authStore = useAuthStore()
 
   // Check if route requires authentication
@@ -91,9 +95,9 @@ router.beforeEach(async (to, from, next) => {
 })
 
 // Track page views after navigation
-router.afterEach((to, from) => {
+router.afterEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) => {
   // Track the page view
-  analytics.trackPageView(to.path, to.name)
+  analytics.trackPageView(to.path, to.name as string | undefined)
 })
 
 export default router
