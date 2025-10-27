@@ -9,6 +9,7 @@ export type {
   Education,
   Project,
   Skill,
+  Document,
   LoginRequest,
   LoginResponse,
   HealthResponse,

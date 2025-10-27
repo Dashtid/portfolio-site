@@ -5,7 +5,7 @@
 /**
  * Generate optimized image URLs for different sizes
  */
-export function generateImageSrcSet(baseUrl, sizes = [400, 800, 1200, 1600]) {
+export function generateImageSrcSet(baseUrl: string, sizes: number[] = [400, 800, 1200, 1600]): string {
   if (!baseUrl) return ''
 
   // If it's already a data URL or external URL, return as-is
@@ -22,7 +22,7 @@ export function generateImageSrcSet(baseUrl, sizes = [400, 800, 1200, 1600]) {
 /**
  * Get optimal image format based on browser support
  */
-export function getOptimalImageFormat() {
+export function getOptimalImageFormat(): 'avif' | 'webp' | 'jpg' {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 1
 
@@ -40,7 +40,7 @@ export function getOptimalImageFormat() {
 /**
  * Preload critical images
  */
-export function preloadImage(src, priority = 'auto') {
+export function preloadImage(src: string, priority: 'auto' | 'high' = 'auto'): void {
   if (!src) return
 
   const link = document.createElement('link')
@@ -58,9 +58,11 @@ export function preloadImage(src, priority = 'auto') {
 /**
  * Create a blurred placeholder from an image
  */
-export function createPlaceholder(width = 40, height = 30) {
+export function createPlaceholder(width: number = 40, height: number = 30): string {
   const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
+
+
 
   canvas.width = width
   canvas.height = height
@@ -77,10 +79,19 @@ export function createPlaceholder(width = 40, height = 30) {
   return canvas.toDataURL('image/jpeg', 0.1)
 }
 
+interface Dimensions {
+  width: number
+  height: number
+}
+
 /**
  * Calculate optimal image dimensions based on container
  */
-export function calculateOptimalDimensions(containerWidth, containerHeight, aspectRatio = 16/9) {
+export function calculateOptimalDimensions(
+  containerWidth: number,
+  containerHeight?: number,
+  aspectRatio: number = 16/9
+): Dimensions {
   let width = containerWidth
   let height = containerHeight
 
@@ -97,10 +108,26 @@ export function calculateOptimalDimensions(containerWidth, containerHeight, aspe
   return { width, height }
 }
 
+interface OptimizeImageOptions {
+  maxWidth?: number
+  maxHeight?: number
+  quality?: number
+  format?: 'webp' | 'jpeg' | 'png'
+}
+
+interface OptimizedImage {
+  blob: Blob
+  dataUrl: string
+  width: number
+  height: number
+  size: number
+  format: string
+}
+
 /**
  * Convert image to optimized format
  */
-export async function optimizeImage(file, options = {}) {
+export async function optimizeImage(file: File, options: OptimizeImageOptions = {}): Promise<OptimizedImage> {
   const {
     maxWidth = 1920,
     maxHeight = 1080,
@@ -108,7 +135,7 @@ export async function optimizeImage(file, options = {}) {
     format = 'webp'
   } = options
 
-  return new Promise((resolve, reject) => {
+  return new Promise<OptimizedImage>((resolve, reject) => {
     const reader = new FileReader()
 
     reader.onload = (e) => {
@@ -116,7 +143,9 @@ export async function optimizeImage(file, options = {}) {
 
       img.onload = () => {
         const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext('2d')!
+
+
 
         // Calculate new dimensions
         let { width, height } = img
@@ -157,7 +186,7 @@ export async function optimizeImage(file, options = {}) {
         reject(new Error('Failed to load image'))
       }
 
-      img.src = e.target.result
+      img.src = e.target!.result as string
     }
 
     reader.onerror = () => {
@@ -168,13 +197,22 @@ export async function optimizeImage(file, options = {}) {
   })
 }
 
+interface LazyLoaderOptions {
+  root?: Element | null
+  rootMargin?: string
+  threshold?: number
+}
+
 /**
  * Lazy load images using Intersection Observer
  */
 export class ImageLazyLoader {
-  constructor(options = {}) {
+  private options: Required<LazyLoaderOptions>
+  private observer: IntersectionObserver | null
+
+  constructor(options: LazyLoaderOptions = {}) {
     this.options = {
-      root: options.root || null,
+      root: options.root ?? null,
       rootMargin: options.rootMargin || '50px',
       threshold: options.threshold || 0.01
     }
@@ -183,7 +221,7 @@ export class ImageLazyLoader {
     this.init()
   }
 
-  init() {
+  private init(): void {
     if ('IntersectionObserver' in window) {
       this.observer = new IntersectionObserver(
         this.handleIntersection.bind(this),
@@ -192,10 +230,10 @@ export class ImageLazyLoader {
     }
   }
 
-  handleIntersection(entries) {
+  private handleIntersection(entries: IntersectionObserverEntry[]): void {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const img = entry.target
+        const img = entry.target as HTMLImageElement
         const src = img.dataset.src
         const srcset = img.dataset.srcset
 
@@ -210,18 +248,18 @@ export class ImageLazyLoader {
         }
 
         img.classList.add('lazy-loaded')
-        this.observer.unobserve(img)
+        this.observer!.unobserve(img)
       }
     })
   }
 
-  observe(element) {
+  observe(element: Element): void {
     if (this.observer && element) {
       this.observer.observe(element)
     }
   }
 
-  disconnect() {
+  disconnect(): void {
     if (this.observer) {
       this.observer.disconnect()
     }

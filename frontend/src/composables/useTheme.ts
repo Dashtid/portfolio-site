@@ -4,9 +4,18 @@
  * and system preference detection
  */
 import { useDark, useToggle } from '@vueuse/core'
-import { watch } from 'vue'
+import { watch, type Ref } from 'vue'
 
-export function useTheme() {
+type ThemeMode = 'dark' | 'light' | 'system'
+
+interface UseThemeReturn {
+  isDark: Ref<boolean>
+  toggleTheme: (value?: boolean) => boolean
+  currentTheme: () => 'dark' | 'light'
+  setTheme: (theme: ThemeMode) => void
+}
+
+export function useTheme(): UseThemeReturn {
   // useDark automatically:
   // - Detects system preference (prefers-color-scheme)
   // - Persists to localStorage
@@ -22,7 +31,7 @@ export function useTheme() {
   const toggleTheme = useToggle(isDark)
 
   // Watch for theme changes to update icon variants
-  watch(isDark, (dark) => {
+  watch(isDark, (dark: boolean) => {
     console.log('[Theme] Theme changed to:', dark ? 'dark' : 'light')
 
     // Dispatch custom event for components that need to react to theme changes
@@ -32,10 +41,10 @@ export function useTheme() {
   })
 
   // Get current theme as string
-  const currentTheme = () => isDark.value ? 'dark' : 'light'
+  const currentTheme = (): 'dark' | 'light' => isDark.value ? 'dark' : 'light'
 
   // Set specific theme
-  const setTheme = (theme) => {
+  const setTheme = (theme: ThemeMode): void => {
     if (theme === 'dark') {
       isDark.value = true
     } else if (theme === 'light') {

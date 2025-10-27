@@ -5,7 +5,39 @@
  * Uses web-vitals library for accurate measurement
  */
 
+interface PerformanceMetrics {
+  [key: string]: number
+}
+
+interface MetricEntry {
+  renderTime?: number
+  loadTime?: number
+  processingStart?: number
+  startTime?: number
+  value?: number
+  responseStart?: number
+  requestStart?: number
+}
+
+interface ResourceData {
+  name: string
+  duration: number
+  size: number
+  type: string
+}
+
+interface ResourceStats {
+  images: ResourceData[]
+  scripts: ResourceData[]
+  stylesheets: ResourceData[]
+  other: ResourceData[]
+}
+
 class PerformanceMonitor {
+  private enabled: boolean
+  private apiEndpoint: string
+  private metrics: PerformanceMetrics
+
   constructor() {
     this.enabled = import.meta.env.VITE_METRICS_ENABLED === 'true'
     this.apiEndpoint = import.meta.env.VITE_API_URL + '/api/v1/performance' || '/api/v1/performance'
@@ -15,7 +47,7 @@ class PerformanceMonitor {
   /**
    * Initialize performance monitoring
    */
-  async init() {
+  async init(): Promise<void> {
     if (!this.enabled) {
       console.log('[Performance] Monitoring disabled')
       return
@@ -36,36 +68,40 @@ class PerformanceMonitor {
   /**
    * Track Core Web Vitals using Performance Observer API
    */
-  trackCoreWebVitals() {
+  private trackCoreWebVitals(): void {
     // Largest Contentful Paint (LCP)
     this.observeMetric('largest-contentful-paint', (entry) => {
-      this.recordMetric('LCP', entry.renderTime || entry.loadTime)
+      const metricEntry = entry as MetricEntry
+      this.recordMetric('LCP', metricEntry.renderTime || metricEntry.loadTime || 0)
     })
 
     // First Input Delay (FID) - only available with user interaction
     this.observeMetric('first-input', (entry) => {
-      this.recordMetric('FID', entry.processingStart - entry.startTime)
+      const metricEntry = entry as MetricEntry
+      this.recordMetric('FID', (metricEntry.processingStart || 0) - (metricEntry.startTime || 0))
     })
 
     // Cumulative Layout Shift (CLS)
     let clsValue = 0
     this.observeMetric('layout-shift', (entry) => {
-      if (!entry.hadRecentInput) {
-        clsValue += entry.value
+      const layoutShiftEntry = entry as LayoutShift
+      if (!layoutShiftEntry.hadRecentInput) {
+        clsValue += layoutShiftEntry.value
         this.recordMetric('CLS', clsValue)
       }
     })
 
     // Time to First Byte (TTFB)
     this.observeMetric('navigation', (entry) => {
-      this.recordMetric('TTFB', entry.responseStart - entry.requestStart)
+      const navEntry = entry as PerformanceNavigationTiming
+      this.recordMetric('TTFB', navEntry.responseStart - navEntry.requestStart)
     })
   }
 
   /**
    * Observe performance metrics using PerformanceObserver
    */
-  observeMetric(type, callback) {
+  private observeMetric(type: string, callback: (entry: PerformanceEntry) => void): void {
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
@@ -85,9 +121,9 @@ class PerformanceMonitor {
   /**
    * Track Navigation Timing API metrics
    */
-  trackNavigationTiming() {
+  private trackNavigationTiming(): void {
     window.addEventListener('load', () => {
-      const navigation = performance.getEntriesByType('navigation')[0]
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
 
       if (navigation) {
         this.recordMetric('DNS', navigation.domainLookupEnd - navigation.domainLookupStart)
@@ -107,11 +143,11 @@ class PerformanceMonitor {
   /**
    * Track Resource Timing (images, scripts, styles)
    */
-  trackResourceTiming() {
+  private trackResourceTiming(): void {
     window.addEventListener('load', () => {
-      const resources = performance.getEntriesByType('resource')
+      const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
 
-      const resourceStats = {
+      const resourceStats: ResourceStats = {
         images: [],
         scripts: [],
         stylesheets: [],
@@ -120,7 +156,7 @@ class PerformanceMonitor {
 
       resources.forEach((resource) => {
         const duration = resource.responseEnd - resource.startTime
-        const data = {
+        const data: ResourceData = {
           name: resource.name,
           duration: Math.round(duration),
           size: resource.transferSize,
@@ -148,7 +184,7 @@ class PerformanceMonitor {
   /**
    * Calculate average duration from resource array
    */
-  calculateAverage(resources) {
+  private calculateAverage(resources: ResourceData[]): number {
     if (resources.length === 0) return 0
     const sum = resources.reduce((acc, r) => acc + r.duration, 0)
     return Math.round(sum / resources.length)
@@ -157,7 +193,7 @@ class PerformanceMonitor {
   /**
    * Record a performance metric
    */
-  recordMetric(name, value) {
+  private recordMetric(name: string, value: number): void {
     const roundedValue = Math.round(value)
     this.metrics[name] = roundedValue
 
@@ -169,7 +205,7 @@ class PerformanceMonitor {
   /**
    * Send metrics to backend
    */
-  async sendMetrics() {
+  private async sendMetrics(): Promise<void> {
     if (!this.enabled) return
 
     try {
@@ -195,17 +231,17 @@ class PerformanceMonitor {
   /**
    * Get current metrics
    */
-  getMetrics() {
+  getMetrics(): PerformanceMetrics {
     return { ...this.metrics }
   }
 
   /**
    * Manually measure a custom timing
    */
-  measure(name, startMark, endMark) {
+  measure(name: string, startMark?: string, endMark?: string): void {
     try {
       performance.measure(name, startMark, endMark)
-      const measure = performance.getEntriesByName(name)[0]
+      const measure = performance.getEntriesByName(name)[0] as PerformanceMeasure
       this.recordMetric(name, measure.duration)
     } catch (err) {
       console.warn(`[Performance] Failed to measure ${name}:`, err)
@@ -215,7 +251,7 @@ class PerformanceMonitor {
   /**
    * Mark a performance timestamp
    */
-  mark(name) {
+  mark(name: string): void {
     try {
       performance.mark(name)
     } catch (err) {

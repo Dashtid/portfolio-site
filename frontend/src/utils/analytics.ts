@@ -5,10 +5,30 @@
  * Both are GDPR-compliant, cookie-less, and privacy-friendly
  */
 
+interface TrackingProps {
+  [key: string]: string | number | boolean | undefined
+}
+
+type AnalyticsProvider = 'plausible' | 'umami'
+
+declare global {
+  interface Window {
+    plausible?: (eventName: string, options?: { props?: TrackingProps; u?: string }) => void
+    umami?: {
+      track: (eventName: string | ((props: Record<string, unknown>) => Record<string, unknown>), props?: TrackingProps) => void
+    }
+  }
+}
+
 class Analytics {
+  private enabled: boolean
+  private provider: AnalyticsProvider
+  private siteId: string | undefined
+  private scriptUrl: string | undefined
+
   constructor() {
     this.enabled = import.meta.env.VITE_ANALYTICS_ENABLED === 'true'
-    this.provider = import.meta.env.VITE_ANALYTICS_PROVIDER || 'plausible' // 'plausible' or 'umami'
+    this.provider = (import.meta.env.VITE_ANALYTICS_PROVIDER || 'plausible') as AnalyticsProvider
     this.siteId = import.meta.env.VITE_ANALYTICS_SITE_ID
     this.scriptUrl = import.meta.env.VITE_ANALYTICS_URL
   }
@@ -17,7 +37,7 @@ class Analytics {
    * Initialize analytics
    * Loads the analytics script if enabled
    */
-  init() {
+  init(): void {
     if (!this.enabled || !this.siteId) {
       console.log('[Analytics] Disabled or not configured')
       return
@@ -33,10 +53,10 @@ class Analytics {
   /**
    * Initialize Plausible Analytics
    */
-  initPlausible() {
+  private initPlausible(): void {
     const script = document.createElement('script')
     script.defer = true
-    script.setAttribute('data-domain', this.siteId)
+    script.setAttribute('data-domain', this.siteId!)
     script.src = this.scriptUrl || 'https://plausible.io/js/script.js'
 
     // Optional: track outbound links
@@ -50,10 +70,10 @@ class Analytics {
   /**
    * Initialize Umami Analytics
    */
-  initUmami() {
+  private initUmami(): void {
     const script = document.createElement('script')
     script.defer = true
-    script.setAttribute('data-website-id', this.siteId)
+    script.setAttribute('data-website-id', this.siteId!)
     script.src = this.scriptUrl || 'https://analytics.umami.is/script.js'
 
     document.head.appendChild(script)
@@ -64,10 +84,10 @@ class Analytics {
   /**
    * Track a custom event
    *
-   * @param {string} eventName - Name of the event
-   * @param {object} props - Optional event properties
+   * @param eventName - Name of the event
+   * @param props - Optional event properties
    */
-  trackEvent(eventName, props = {}) {
+  trackEvent(eventName: string, props: TrackingProps = {}): void {
     if (!this.enabled) return
 
     try {
@@ -84,9 +104,9 @@ class Analytics {
   /**
    * Track page view (automatic with Plausible/Umami in SPA mode)
    *
-   * @param {string} path - Page path
+   * @param path - Page path
    */
-  trackPageView(path) {
+  trackPageView(path: string): void {
     if (!this.enabled) return
 
     try {
@@ -103,28 +123,28 @@ class Analytics {
   /**
    * Track outbound link click
    *
-   * @param {string} url - Destination URL
+   * @param url - Destination URL
    */
-  trackOutboundLink(url) {
+  trackOutboundLink(url: string): void {
     this.trackEvent('Outbound Link Click', { url })
   }
 
   /**
    * Track file download
    *
-   * @param {string} filename - Downloaded file name
+   * @param filename - Downloaded file name
    */
-  trackDownload(filename) {
+  trackDownload(filename: string): void {
     this.trackEvent('File Download', { filename })
   }
 
   /**
    * Track error (for monitoring purposes)
    *
-   * @param {string} errorMessage - Error message
-   * @param {string} errorType - Type of error
+   * @param errorMessage - Error message
+   * @param errorType - Type of error
    */
-  trackError(errorMessage, errorType = 'Unknown') {
+  trackError(errorMessage: string, errorType: string = 'Unknown'): void {
     this.trackEvent('Error', {
       message: errorMessage,
       type: errorType
@@ -136,9 +156,9 @@ class Analytics {
 export const analytics = new Analytics()
 
 // Convenience exports
-export const trackEvent = (name, props) => analytics.trackEvent(name, props)
-export const trackPageView = (path) => analytics.trackPageView(path)
-export const trackOutboundLink = (url) => analytics.trackOutboundLink(url)
-export const trackDownload = (filename) => analytics.trackDownload(filename)
+export const trackEvent = (name: string, props?: TrackingProps): void => analytics.trackEvent(name, props)
+export const trackPageView = (path: string): void => analytics.trackPageView(path)
+export const trackOutboundLink = (url: string): void => analytics.trackOutboundLink(url)
+export const trackDownload = (filename: string): void => analytics.trackDownload(filename)
 
 export default analytics

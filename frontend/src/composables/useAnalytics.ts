@@ -3,39 +3,43 @@
  */
 import { analytics, trackEvent, trackPageView, trackOutboundLink } from '@/utils/analytics'
 
+interface TrackingProps {
+  [key: string]: string | number | boolean | undefined
+}
+
 export function useAnalytics() {
   /**
    * Track a custom event
    */
-  const track = (eventName, props = {}) => {
+  const track = (eventName: string, props: TrackingProps = {}): void => {
     trackEvent(eventName, props)
   }
 
   /**
    * Track navigation events
    */
-  const trackNavigation = (section) => {
+  const trackNavigation = (section: string): void => {
     track('Navigation Click', { section })
   }
 
   /**
    * Track theme toggle
    */
-  const trackThemeToggle = (theme) => {
+  const trackThemeToggle = (theme: string): void => {
     track('Theme Toggle', { theme })
   }
 
   /**
    * Track button clicks
    */
-  const trackButtonClick = (buttonName, location = '') => {
+  const trackButtonClick = (buttonName: string, location: string = ''): void => {
     track('Button Click', { button: buttonName, location })
   }
 
   /**
    * Track external link clicks
    */
-  const trackExternalLink = (url, label = '') => {
+  const trackExternalLink = (url: string, label: string = ''): void => {
     trackOutboundLink(url)
     if (label) {
       track('External Link', { url, label })
@@ -45,35 +49,35 @@ export function useAnalytics() {
   /**
    * Track contact interactions
    */
-  const trackContact = (method) => {
+  const trackContact = (method: string): void => {
     track('Contact', { method })
   }
 
   /**
    * Track project interactions
    */
-  const trackProject = (action, projectName) => {
+  const trackProject = (action: string, projectName: string): void => {
     track('Project Interaction', { action, project: projectName })
   }
 
   /**
    * Track scroll interactions
    */
-  const trackScroll = (section) => {
+  const trackScroll = (section: string): void => {
     track('Scroll To', { section })
   }
 
   /**
    * Track GitHub stats view
    */
-  const trackGitHubStats = (username) => {
+  const trackGitHubStats = (username: string): void => {
     track('GitHub Stats Viewed', { username })
   }
 
   /**
    * Track back to top button
    */
-  const trackBackToTop = () => {
+  const trackBackToTop = (): void => {
     track('Back To Top')
   }
 

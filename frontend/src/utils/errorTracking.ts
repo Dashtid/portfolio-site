@@ -5,7 +5,27 @@
  * and Vue component errors
  */
 
+interface ErrorData {
+  type: string
+  message: string
+  filename?: string
+  lineno?: number
+  colno?: number
+  stack?: string
+  componentName?: string
+  errorInfo?: string
+  timestamp: string
+  url: string
+  userAgent: string
+  context?: Record<string, unknown>
+}
+
 class ErrorTracker {
+  private enabled: boolean
+  private apiEndpoint: string
+  private errorQueue: ErrorData[]
+  private maxQueueSize: number
+
   constructor() {
     this.enabled = import.meta.env.VITE_ERROR_TRACKING_ENABLED === 'true'
     this.apiEndpoint = import.meta.env.VITE_API_URL + '/api/v1/errors' || '/api/v1/errors'
@@ -16,7 +36,7 @@ class ErrorTracker {
   /**
    * Initialize error tracking
    */
-  init() {
+  init(): void {
     if (!this.enabled) {
       console.log('[Error Tracking] Disabled')
       return
@@ -34,8 +54,8 @@ class ErrorTracker {
   /**
    * Handle global errors
    */
-  handleError(event) {
-    const errorData = {
+  private handleError(event: ErrorEvent): void {
+    const errorData: ErrorData = {
       type: 'error',
       message: event.message,
       filename: event.filename,
@@ -53,8 +73,8 @@ class ErrorTracker {
   /**
    * Handle unhandled promise rejections
    */
-  handleRejection(event) {
-    const errorData = {
+  private handleRejection(event: PromiseRejectionEvent): void {
+    const errorData: ErrorData = {
       type: 'unhandledRejection',
       message: event.reason?.message || String(event.reason),
       stack: event.reason?.stack,
@@ -69,12 +89,13 @@ class ErrorTracker {
   /**
    * Capture Vue component errors
    */
-  handleVueError(err, instance, info) {
-    const errorData = {
+  handleVueError(err: Error, instance: unknown, info: string): void {
+    const componentName = (instance as { $options?: { name?: string } })?.$options?.name || 'Unknown'
+    const errorData: ErrorData = {
       type: 'vueError',
       message: err.message,
       stack: err.stack,
-      componentName: instance?.$options?.name || 'Unknown',
+      componentName,
       errorInfo: info,
       timestamp: new Date().toISOString(),
       url: window.location.href,
@@ -87,7 +108,7 @@ class ErrorTracker {
   /**
    * Manually capture an error
    */
-  captureError(errorData) {
+  private captureError(errorData: ErrorData): void {
     if (!this.enabled) return
 
     // Add to queue
@@ -110,7 +131,7 @@ class ErrorTracker {
   /**
    * Send error to backend
    */
-  async sendError(errorData) {
+  private async sendError(errorData: ErrorData): Promise<void> {
     try {
       await fetch(this.apiEndpoint, {
         method: 'POST',
@@ -130,11 +151,12 @@ class ErrorTracker {
   /**
    * Manually track an error with context
    */
-  trackError(error, context = {}) {
-    const errorData = {
+  trackError(error: Error | string, context: Record<string, unknown> = {}): void {
+    const errorObj = typeof error === 'string' ? new Error(error) : error
+    const errorData: ErrorData = {
       type: 'manual',
-      message: error.message || String(error),
-      stack: error.stack,
+      message: errorObj.message || String(error),
+      stack: errorObj.stack,
       context,
       timestamp: new Date().toISOString(),
       url: window.location.href,
@@ -147,14 +169,14 @@ class ErrorTracker {
   /**
    * Get error queue (for debugging)
    */
-  getErrors() {
+  getErrors(): ErrorData[] {
     return this.errorQueue
   }
 
   /**
    * Clear error queue
    */
-  clearErrors() {
+  clearErrors(): void {
     this.errorQueue = []
   }
 }
@@ -163,6 +185,7 @@ class ErrorTracker {
 export const errorTracker = new ErrorTracker()
 
 // Convenience export
-export const trackError = (error, context) => errorTracker.trackError(error, context)
+export const trackError = (error: Error | string, context?: Record<string, unknown>): void =>
+  errorTracker.trackError(error, context)
 
 export default errorTracker

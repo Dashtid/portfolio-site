@@ -1,11 +1,44 @@
 /**
  * Analytics service for tracking page views and user interactions
  */
-import axios from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 
 const API_URL = 'http://localhost:8001/api/v1/analytics'
 
+interface PageViewData {
+  page_path: string
+  page_title: string
+  referrer: string | null
+}
+
+interface EventData {
+  category: string
+  action: string
+  label: string | null
+  value: number | null
+  session_id: string
+}
+
+interface TimingData {
+  category: string
+  variable: string
+  time: number
+  label: string | null
+  timestamp: string
+}
+
+interface AnalyticsSummary {
+  [key: string]: unknown
+}
+
+interface VisitorStats {
+  [key: string]: unknown
+}
+
 class AnalyticsService {
+  private sessionId: string
+  private isEnabled: boolean
+
   constructor() {
     this.sessionId = this.getOrCreateSessionId()
     this.isEnabled = true // Can be controlled by user preference
@@ -14,7 +47,7 @@ class AnalyticsService {
   /**
    * Get or create a session ID for the current visitor
    */
-  getOrCreateSessionId() {
+  private getOrCreateSessionId(): string {
     let sessionId = sessionStorage.getItem('analytics_session_id')
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -26,11 +59,11 @@ class AnalyticsService {
   /**
    * Track a page view
    */
-  async trackPageView(pagePath, pageTitle) {
+  async trackPageView(pagePath?: string, pageTitle?: string): Promise<void> {
     if (!this.isEnabled) return
 
     try {
-      const data = {
+      const data: PageViewData = {
         page_path: pagePath || window.location.pathname,
         page_title: pageTitle || document.title,
         referrer: document.referrer || null
@@ -49,11 +82,16 @@ class AnalyticsService {
   /**
    * Track custom events (e.g., button clicks, form submissions)
    */
-  async trackEvent(category, action, label = null, value = null) {
+  async trackEvent(
+    category: string,
+    action: string,
+    label: string | null = null,
+    value: number | null = null
+  ): Promise<void> {
     if (!this.isEnabled) return
 
     try {
-      const data = {
+      const data: EventData = {
         category,
         action,
         label,
@@ -74,11 +112,11 @@ class AnalyticsService {
   /**
    * Track timing (e.g., page load time)
    */
-  trackTiming(category, variable, time, label = null) {
+  trackTiming(category: string, variable: string, time: number, label: string | null = null): void {
     if (!this.isEnabled) return
 
     // Store timing data for potential batch sending
-    const timingData = {
+    const timingData: TimingData = {
       category,
       variable,
       time,
@@ -93,7 +131,7 @@ class AnalyticsService {
   /**
    * Enable or disable analytics tracking
    */
-  setEnabled(enabled) {
+  setEnabled(enabled: boolean): void {
     this.isEnabled = enabled
     localStorage.setItem('analytics_enabled', enabled ? 'true' : 'false')
   }
@@ -101,7 +139,7 @@ class AnalyticsService {
   /**
    * Check if analytics is enabled
    */
-  isAnalyticsEnabled() {
+  isAnalyticsEnabled(): boolean {
     const stored = localStorage.getItem('analytics_enabled')
     return stored !== 'false' // Default to true if not set
   }
@@ -109,9 +147,9 @@ class AnalyticsService {
   /**
    * Get analytics summary (admin only)
    */
-  async getAnalyticsSummary(days = 30) {
+  async getAnalyticsSummary(days: number = 30): Promise<AnalyticsSummary | null> {
     try {
-      const response = await axios.get(`${API_URL}/stats/summary`, {
+      const response: AxiosResponse<AnalyticsSummary> = await axios.get(`${API_URL}/stats/summary`, {
         params: { days }
       })
       return response.data
@@ -124,9 +162,9 @@ class AnalyticsService {
   /**
    * Get visitor statistics (admin only)
    */
-  async getVisitorStats(days = 7) {
+  async getVisitorStats(days: number = 7): Promise<VisitorStats | null> {
     try {
-      const response = await axios.get(`${API_URL}/stats/visitors`, {
+      const response: AxiosResponse<VisitorStats> = await axios.get(`${API_URL}/stats/visitors`, {
         params: { days }
       })
       return response.data

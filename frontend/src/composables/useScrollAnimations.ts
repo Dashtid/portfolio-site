@@ -4,13 +4,25 @@
  * Supports fade-in, slide-up, slide-in-left, slide-in-right effects
  */
 import { useIntersectionObserver } from '@vueuse/core'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, type Ref } from 'vue'
+
+interface AnimationStyles {
+  opacity: string
+  transform: string
+}
+
+interface AnimationConfig {
+  initial: AnimationStyles
+  animate: AnimationStyles
+}
+
+type AnimationType = 'fadeIn' | 'slideUp' | 'slideInLeft' | 'slideInRight' | 'scaleIn'
 
 /**
  * Animation configurations
  * Each animation has a CSS class that will be applied when element is visible
  */
-const ANIMATIONS = {
+const ANIMATIONS: Record<AnimationType, AnimationConfig> = {
   fadeIn: {
     initial: {
       opacity: '0',
@@ -63,18 +75,29 @@ const ANIMATIONS = {
   }
 }
 
+interface ScrollAnimationOptions {
+  animation?: AnimationType
+  duration?: number
+  delay?: number
+  easing?: string
+  threshold?: number
+  once?: boolean
+}
+
+interface ScrollAnimationReturn {
+  isVisible: Ref<boolean>
+  hasAnimated: Ref<boolean>
+}
+
 /**
  * Apply scroll animation to an element
- * @param {Ref<HTMLElement>} target - Element ref to observe
- * @param {Object} options - Animation options
- * @param {string} options.animation - Animation type (fadeIn, slideUp, etc.)
- * @param {number} options.duration - Animation duration in ms (default: 600)
- * @param {number} options.delay - Animation delay in ms (default: 0)
- * @param {string} options.easing - CSS easing function (default: 'ease-out')
- * @param {number} options.threshold - Intersection threshold (default: 0.1)
- * @param {boolean} options.once - Trigger animation only once (default: true)
+ * @param target - Element ref to observe
+ * @param options - Animation options
  */
-export function useScrollAnimation(target, options = {}) {
+export function useScrollAnimation(
+  target: Ref<HTMLElement | null>,
+  options: ScrollAnimationOptions = {}
+): ScrollAnimationReturn {
   const {
     animation = 'fadeIn',
     duration = 600,
@@ -91,7 +114,7 @@ export function useScrollAnimation(target, options = {}) {
   const animationConfig = ANIMATIONS[animation] || ANIMATIONS.fadeIn
 
   // Apply initial styles
-  const applyInitialStyles = () => {
+  const applyInitialStyles = (): void => {
     if (!target.value) return
 
     Object.assign(target.value.style, {
@@ -101,7 +124,7 @@ export function useScrollAnimation(target, options = {}) {
   }
 
   // Apply animation styles
-  const applyAnimationStyles = () => {
+  const applyAnimationStyles = (): void => {
     if (!target.value) return
 
     Object.assign(target.value.style, animationConfig.animate)
@@ -140,15 +163,21 @@ export function useScrollAnimation(target, options = {}) {
   }
 }
 
+interface StaggeredAnimationOptions extends ScrollAnimationOptions {
+  stagger?: number
+}
+
 /**
  * Apply animations to multiple elements with stagger effect
- * @param {Array<Ref<HTMLElement>>} targets - Array of element refs
- * @param {Object} options - Animation options (same as useScrollAnimation)
- * @param {number} options.stagger - Delay between each element animation in ms (default: 100)
+ * @param targets - Array of element refs
+ * @param options - Animation options (same as useScrollAnimation)
  */
-export function useStaggeredAnimation(targets, options = {}) {
+export function useStaggeredAnimation(
+  targets: Ref<HTMLElement | null>[],
+  options: StaggeredAnimationOptions = {}
+): ScrollAnimationReturn[] {
   const { stagger = 100, ...animationOptions } = options
-  const animations = []
+  const animations: ScrollAnimationReturn[] = []
 
   targets.forEach((target, index) => {
     const animation = useScrollAnimation(target, {
@@ -161,21 +190,29 @@ export function useStaggeredAnimation(targets, options = {}) {
   return animations
 }
 
+interface BatchAnimationReturn {
+  elements: Ref<Element[]>
+  animations: Ref<ScrollAnimationReturn[]>
+}
+
 /**
  * Batch animate elements with a selector
  * Useful for animating multiple cards, list items, etc.
- * @param {string} selector - CSS selector for elements to animate
- * @param {Object} options - Animation options
+ * @param selector - CSS selector for elements to animate
+ * @param options - Animation options
  */
-export function useBatchAnimation(selector, options = {}) {
-  const elements = ref([])
-  const animations = ref([])
+export function useBatchAnimation(
+  selector: string,
+  options: StaggeredAnimationOptions = {}
+): BatchAnimationReturn {
+  const elements = ref<Element[]>([])
+  const animations = ref<ScrollAnimationReturn[]>([])
 
   onMounted(() => {
     elements.value = Array.from(document.querySelectorAll(selector))
 
     elements.value.forEach((element, index) => {
-      const elementRef = ref(element)
+      const elementRef = ref(element as HTMLElement)
       const animation = useScrollAnimation(elementRef, {
         ...options,
         delay: (options.delay || 0) + (index * (options.stagger || 100))
@@ -190,17 +227,23 @@ export function useBatchAnimation(selector, options = {}) {
   }
 }
 
+interface ParallaxOptions {
+  speed?: number
+}
+
 /**
  * Parallax scroll effect
- * @param {Ref<HTMLElement>} target - Element ref to apply parallax
- * @param {Object} options - Parallax options
- * @param {number} options.speed - Parallax speed multiplier (default: 0.5)
+ * @param target - Element ref to apply parallax
+ * @param options - Parallax options
  */
-export function useParallax(target, options = {}) {
+export function useParallax(
+  target: Ref<HTMLElement | null>,
+  options: ParallaxOptions = {}
+): void {
   const { speed = 0.5 } = options
 
   onMounted(() => {
-    const handleScroll = () => {
+    const handleScroll = (): void => {
       if (!target.value) return
 
       const rect = target.value.getBoundingClientRect()
@@ -212,7 +255,7 @@ export function useParallax(target, options = {}) {
 
     // Throttle scroll events for performance
     let ticking = false
-    const scrollListener = () => {
+    const scrollListener = (): void => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           handleScroll()
