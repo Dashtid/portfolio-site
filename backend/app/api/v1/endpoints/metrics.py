@@ -1,15 +1,16 @@
 """
 Metrics endpoint for performance monitoring and observability
 """
-from fastapi import APIRouter, Depends
-from app.middleware.performance import get_metrics, reset_metrics
+
+from fastapi import APIRouter
+
 from app.config import settings
-from typing import Dict
+from app.middleware.performance import get_metrics, reset_metrics
 
 router = APIRouter()
 
 
-@router.get("/", response_model=Dict)
+@router.get("/", response_model=dict)
 async def get_performance_metrics():
     """
     Get current performance metrics

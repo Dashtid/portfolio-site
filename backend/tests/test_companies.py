@@ -1,9 +1,8 @@
 """
 Tests for companies API endpoints
 """
-import pytest
+
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def test_get_companies_unauthenticated(client: TestClient):
@@ -21,7 +20,7 @@ def test_create_company_requires_auth(client: TestClient):
         "duration": "2020-2023",
         "description": "Test description",
         "order": 1,
-        "current": False
+        "current": False,
     }
     response = client.post("/api/v1/companies/", json=company_data)
     assert response.status_code == 401
@@ -35,7 +34,7 @@ def test_create_company_with_auth(client: TestClient, admin_headers: dict):
         "duration": "2020-2023",
         "description": "Test description",
         "order": 1,
-        "current": False
+        "current": False,
     }
     response = client.post("/api/v1/companies/", json=company_data, headers=admin_headers)
     assert response.status_code == 200
@@ -54,7 +53,7 @@ def test_update_company(client: TestClient, admin_headers: dict):
         "duration": "2020-2021",
         "description": "Original description",
         "order": 1,
-        "current": False
+        "current": False,
     }
     create_response = client.post("/api/v1/companies/", json=company_data, headers=admin_headers)
     company_id = create_response.json()["id"]
@@ -66,9 +65,11 @@ def test_update_company(client: TestClient, admin_headers: dict):
         "duration": "2020-2023",
         "description": "Updated description",
         "order": 1,
-        "current": True
+        "current": True,
     }
-    response = client.put(f"/api/v1/companies/{company_id}", json=update_data, headers=admin_headers)
+    response = client.put(
+        f"/api/v1/companies/{company_id}", json=update_data, headers=admin_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == update_data["name"]
@@ -85,7 +86,7 @@ def test_delete_company(client: TestClient, admin_headers: dict):
         "duration": "2023",
         "description": "Will be deleted",
         "order": 1,
-        "current": False
+        "current": False,
     }
     create_response = client.post("/api/v1/companies/", json=company_data, headers=admin_headers)
     company_id = create_response.json()["id"]
@@ -110,7 +111,7 @@ def test_company_ordering(client: TestClient, admin_headers: dict):
             "duration": "2023",
             "description": "Description 3",
             "order": 3,
-            "current": False
+            "current": False,
         },
         {
             "name": "First Company",
@@ -118,7 +119,7 @@ def test_company_ordering(client: TestClient, admin_headers: dict):
             "duration": "2021",
             "description": "Description 1",
             "order": 1,
-            "current": False
+            "current": False,
         },
         {
             "name": "Second Company",
@@ -126,8 +127,8 @@ def test_company_ordering(client: TestClient, admin_headers: dict):
             "duration": "2022",
             "description": "Description 2",
             "order": 2,
-            "current": True
-        }
+            "current": True,
+        },
     ]
 
     for company in companies:
@@ -139,7 +140,10 @@ def test_company_ordering(client: TestClient, admin_headers: dict):
 
     # Verify they're ordered correctly
     assert len(data) >= 3
-    ordered_companies = sorted([c for c in data if c["name"] in ["First Company", "Second Company", "Third Company"]], key=lambda x: x["order"])
+    ordered_companies = sorted(
+        [c for c in data if c["name"] in ["First Company", "Second Company", "Third Company"]],
+        key=lambda x: x["order"],
+    )
     assert ordered_companies[0]["name"] == "First Company"
     assert ordered_companies[1]["name"] == "Second Company"
     assert ordered_companies[2]["name"] == "Third Company"

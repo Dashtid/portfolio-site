@@ -1,8 +1,11 @@
 """
 Skill/Technology model
 """
-from sqlalchemy import Column, String, Integer, Float, DateTime, func
+
 import uuid
+
+from sqlalchemy import Column, DateTime, Float, Integer, String, func
+
 from app.database import Base
 
 
@@ -27,5 +30,5 @@ class Skill(Base):
             "category": self.category,
             "proficiency": self.proficiency,
             "years_experience": self.years_experience,
-            "order_index": self.order_index
+            "order_index": self.order_index,
         }

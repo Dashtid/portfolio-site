@@ -30,7 +30,7 @@ DOCUMENTS = [
         "file_path": "static/documents/bachelor-thesis.pdf",
         "file_size": bachelor_size,
         "file_url": "http://localhost:8001/static/documents/bachelor-thesis.pdf",
-        "published_date": "2015-06-15"
+        "published_date": "2015-06-15",
     },
     {
         "id": str(uuid.uuid4()),
@@ -40,8 +40,8 @@ DOCUMENTS = [
         "file_path": "static/documents/master-thesis.pdf",
         "file_size": master_size,
         "file_url": "http://localhost:8001/static/documents/master-thesis.pdf",
-        "published_date": "2017-05-20"
-    }
+        "published_date": "2017-05-20",
+    },
 ]
 
 
@@ -76,21 +76,24 @@ def main():
 
     # Insert new documents
     for doc in DOCUMENTS:
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO documents (
                 id, title, description, document_type, file_path,
                 file_size, file_url, published_date
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            doc["id"],
-            doc["title"],
-            doc["description"],
-            doc["document_type"],
-            doc["file_path"],
-            doc["file_size"],
-            doc["file_url"],
-            doc["published_date"]
-        ))
+        """,
+            (
+                doc["id"],
+                doc["title"],
+                doc["description"],
+                doc["document_type"],
+                doc["file_path"],
+                doc["file_size"],
+                doc["file_url"],
+                doc["published_date"],
+            ),
+        )
         print(f"[+] Added: {doc['title']} ({doc['file_size'] / 1024 / 1024:.1f} MB)")
 
     conn.commit()

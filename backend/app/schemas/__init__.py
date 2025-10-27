@@ -1,12 +1,22 @@
 """
 Pydantic schemas for request/response validation
 """
-from app.schemas.company import CompanyBase, CompanyCreate, CompanyUpdate, CompanyResponse
-from app.schemas.project import ProjectBase, ProjectCreate, ProjectUpdate, ProjectResponse
-from app.schemas.skill import SkillBase, SkillCreate, SkillUpdate, SkillResponse
+
+from app.schemas.company import CompanyBase, CompanyCreate, CompanyResponse, CompanyUpdate
+from app.schemas.project import ProjectBase, ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.skill import SkillBase, SkillCreate, SkillResponse, SkillUpdate
 
 __all__ = [
-    "CompanyBase", "CompanyCreate", "CompanyUpdate", "CompanyResponse",
-    "ProjectBase", "ProjectCreate", "ProjectUpdate", "ProjectResponse",
-    "SkillBase", "SkillCreate", "SkillUpdate", "SkillResponse",
+    "CompanyBase",
+    "CompanyCreate",
+    "CompanyUpdate",
+    "CompanyResponse",
+    "ProjectBase",
+    "ProjectCreate",
+    "ProjectUpdate",
+    "ProjectResponse",
+    "SkillBase",
+    "SkillCreate",
+    "SkillUpdate",
+    "SkillResponse",
 ]

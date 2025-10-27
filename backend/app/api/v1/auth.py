@@ -1,19 +1,21 @@
 """
 Authentication API endpoints with GitHub OAuth
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-from fastapi.responses import RedirectResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import Optional
-import httpx
+
 import secrets
-from app.database import get_db
-from app.models.user import User
-from app.schemas.auth import Token, UserResponse, GitHubUser
-from app.core.security import create_access_token, create_refresh_token, decode_token
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi.responses import RedirectResponse
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import settings
 from app.core.deps import get_current_user
+from app.core.security import create_access_token, create_refresh_token, decode_token
+from app.database import get_db
+from app.models.user import User
+from app.schemas.auth import Token, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -26,8 +28,7 @@ async def github_login():
     """Initiate GitHub OAuth flow"""
     if not settings.GITHUB_CLIENT_ID:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="GitHub OAuth not configured"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="GitHub OAuth not configured"
         )
 
     # Generate state for CSRF protection
@@ -47,17 +48,12 @@ async def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(
-    code: str,
-    state: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def github_callback(code: str, state: str, db: AsyncSession = Depends(get_db)):
     """Handle GitHub OAuth callback"""
     # Verify state
     if state not in oauth_states:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid state parameter"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state parameter"
         )
 
     # Clean up state
@@ -72,15 +68,15 @@ async def github_callback(
                 "client_id": settings.GITHUB_CLIENT_ID,
                 "client_secret": settings.GITHUB_CLIENT_SECRET,
                 "code": code,
-                "redirect_uri": settings.GITHUB_REDIRECT_URI
+                "redirect_uri": settings.GITHUB_REDIRECT_URI,
             },
-            headers={"Accept": "application/json"}
+            headers={"Accept": "application/json"},
         )
 
         if token_response.status_code != 200:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get access token from GitHub"
+                detail="Failed to get access token from GitHub",
             )
 
         token_data = token_response.json()
@@ -88,7 +84,7 @@ async def github_callback(
         if "error" in token_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=token_data.get("error_description", "OAuth error")
+                detail=token_data.get("error_description", "OAuth error"),
             )
 
         github_access_token = token_data.get("access_token")
@@ -98,14 +94,14 @@ async def github_callback(
             "https://api.github.com/user",
             headers={
                 "Authorization": f"Bearer {github_access_token}",
-                "Accept": "application/json"
-            }
+                "Accept": "application/json",
+            },
         )
 
         if user_response.status_code != 200:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get user info from GitHub"
+                detail="Failed to get user info from GitHub",
             )
 
         github_user = user_response.json()
@@ -115,14 +111,11 @@ async def github_callback(
 
         if settings.ADMIN_GITHUB_ID and github_id != settings.ADMIN_GITHUB_ID:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the admin can log in"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Only the admin can log in"
             )
 
         # Check if user exists in database
-        result = await db.execute(
-            select(User).where(User.github_id == github_id)
-        )
+        result = await db.execute(select(User).where(User.github_id == github_id))
         user = result.scalar_one_or_none()
 
         # Create or update user
@@ -133,7 +126,7 @@ async def github_callback(
                 email=github_user.get("email"),
                 name=github_user.get("name"),
                 avatar_url=github_user.get("avatar_url"),
-                is_admin=True  # Since we only allow admin login
+                is_admin=True,  # Since we only allow admin login
             )
             db.add(user)
         else:
@@ -156,18 +149,14 @@ async def github_callback(
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(
-    refresh_token: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
     """Refresh access token using refresh token"""
     # Decode refresh token
     payload = decode_token(refresh_token)
 
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
     user_id = payload.get("sub")
@@ -177,10 +166,7 @@ async def refresh_token(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Create new access token
     access_token = create_access_token(subject=user.id)
@@ -188,14 +174,12 @@ async def refresh_token(
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "refresh_token": refresh_token  # Return same refresh token
+        "refresh_token": refresh_token,  # Return same refresh token
     }
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(
-    current_user: User = Depends(get_current_user)
-):
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 

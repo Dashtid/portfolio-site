@@ -5,9 +5,8 @@ Endpoints for managing academic documents, theses, and papers.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.document import Document
@@ -18,10 +17,8 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=List[DocumentResponse])
-async def get_documents(
-    db: AsyncSession = Depends(get_db)
-):
+@router.get("/", response_model=list[DocumentResponse])
+async def get_documents(db: AsyncSession = Depends(get_db)):
     """
     Get all documents.
 
@@ -39,10 +36,7 @@ async def get_documents(
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
-async def get_document(
-    document_id: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):
     """
     Get a specific document by ID.
 

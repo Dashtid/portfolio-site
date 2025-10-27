@@ -1,14 +1,17 @@
 """
 Error tracking middleware for exception handling and monitoring
 """
-import traceback
+
 import sys
-from typing import Callable
+import traceback
+from collections.abc import Callable
+
 from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.exceptions import HTTPException
-from app.utils.logger import get_logger
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.config import settings
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -23,7 +26,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
         except HTTPException as exc:
             # Log HTTP exceptions (4xx, 5xx)
-            request_id = getattr(request.state, 'request_id', 'unknown')
+            request_id = getattr(request.state, "request_id", "unknown")
 
             if exc.status_code >= 500:
                 # Server errors - log as ERROR
@@ -36,7 +39,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
                         "status_code": exc.status_code,
                         "error_detail": exc.detail,
                         "error_type": "HTTPException",
-                    }
+                    },
                 )
             elif exc.status_code >= 400:
                 # Client errors - log as WARNING
@@ -48,7 +51,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
                         "path": request.url.path,
                         "status_code": exc.status_code,
                         "error_detail": exc.detail,
-                    }
+                    },
                 )
 
             # Re-raise to let FastAPI handle the response
@@ -56,11 +59,11 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
         except Exception as exc:
             # Unexpected exceptions - log as CRITICAL
-            request_id = getattr(request.state, 'request_id', 'unknown')
+            request_id = getattr(request.state, "request_id", "unknown")
 
             # Get stack trace
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            stack_trace = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
 
             # Log the error with full context
             logger.critical(
@@ -74,7 +77,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
                     "stack_trace": stack_trace,
                     "client_ip": request.client.host if request.client else None,
                     "user_agent": request.headers.get("user-agent"),
-                }
+                },
             )
 
             # Re-raise to let FastAPI handle the response
@@ -93,7 +96,7 @@ def track_error(error: Exception, context: dict = None):
         return
 
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    stack_trace = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
 
     log_context = {
         "error_type": type(error).__name__,
@@ -104,7 +107,4 @@ def track_error(error: Exception, context: dict = None):
     if context:
         log_context.update(context)
 
-    logger.error(
-        f"Tracked error: {type(error).__name__}: {str(error)}",
-        extra=log_context
-    )
+    logger.error(f"Tracked error: {type(error).__name__}: {str(error)}", extra=log_context)

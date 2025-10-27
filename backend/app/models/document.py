@@ -4,8 +4,9 @@ Document Model
 Represents academic papers, theses, and other downloadable documents.
 """
 
-from sqlalchemy import Column, String, Integer, DateTime, Text
+from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.sql import func
+
 from app.database import Base
 
 
@@ -24,6 +25,7 @@ class Document(Base):
         published_date: Date document was published/completed
         created_at: Timestamp when record was created
     """
+
     __tablename__ = "documents"
 
     id = Column(String, primary_key=True, index=True)

@@ -1,28 +1,29 @@
 """
 Company Pydantic schemas
 """
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, List
+
 from datetime import date, datetime
+
+from pydantic import BaseModel
 
 
 class CompanyBase(BaseModel):
     name: str
-    title: Optional[str] = None
-    description: Optional[str] = None
-    detailed_description: Optional[str] = None
-    location: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    logo_url: Optional[str] = None
-    website: Optional[str] = None
-    order_index: Optional[int] = 0
-    video_url: Optional[str] = None
-    video_title: Optional[str] = None
-    map_url: Optional[str] = None
-    map_title: Optional[str] = None
-    responsibilities: Optional[List[str]] = None
-    technologies: Optional[List[str]] = None
+    title: str | None = None
+    description: str | None = None
+    detailed_description: str | None = None
+    location: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    logo_url: str | None = None
+    website: str | None = None
+    order_index: int | None = 0
+    video_url: str | None = None
+    video_title: str | None = None
+    map_url: str | None = None
+    map_title: str | None = None
+    responsibilities: list[str] | None = None
+    technologies: list[str] | None = None
 
 
 class CompanyCreate(CompanyBase):
@@ -30,28 +31,28 @@ class CompanyCreate(CompanyBase):
 
 
 class CompanyUpdate(BaseModel):
-    name: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    detailed_description: Optional[str] = None
-    location: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    logo_url: Optional[str] = None
-    website: Optional[str] = None
-    order_index: Optional[int] = None
-    video_url: Optional[str] = None
-    video_title: Optional[str] = None
-    map_url: Optional[str] = None
-    map_title: Optional[str] = None
-    responsibilities: Optional[List[str]] = None
-    technologies: Optional[List[str]] = None
+    name: str | None = None
+    title: str | None = None
+    description: str | None = None
+    detailed_description: str | None = None
+    location: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    logo_url: str | None = None
+    website: str | None = None
+    order_index: int | None = None
+    video_url: str | None = None
+    video_title: str | None = None
+    map_url: str | None = None
+    map_title: str | None = None
+    responsibilities: list[str] | None = None
+    technologies: list[str] | None = None
 
 
 class CompanyResponse(CompanyBase):
     id: str
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     class Config:
         from_attributes = True

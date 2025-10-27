@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+.output
+.nuxt
+.vite
+
+# Coverage
+coverage
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.*
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

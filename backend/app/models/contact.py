@@ -1,8 +1,11 @@
 """
 Contact form submission model
 """
-from sqlalchemy import Column, String, Text, DateTime, func
+
 import uuid
+
+from sqlalchemy import Column, DateTime, String, Text, func
+
 from app.database import Base
 
 
@@ -30,5 +33,5 @@ class Contact(Base):
             "subject": self.subject,
             "message": self.message,
             "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

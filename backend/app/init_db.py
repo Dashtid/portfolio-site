@@ -1,11 +1,12 @@
 """
 Initialize database and create tables
 """
+
 import asyncio
 from datetime import date
-from app.database import engine, Base, AsyncSessionLocal
-from app.models import Company, Project, Skill, Contact, PageView
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import AsyncSessionLocal, Base, engine
+from app.models import Company, Project, Skill
 
 
 async def init_db():
@@ -33,7 +34,7 @@ async def seed_data():
                     end_date=None,  # Current job
                     logo_url="/images/hermes-logo.png",
                     website="https://www.hermesmedical.com",
-                    order_index=1
+                    order_index=1,
                 ),
                 Company(
                     name="Scania",
@@ -44,7 +45,7 @@ async def seed_data():
                     end_date=date(2022, 12, 31),
                     logo_url="/images/scania-logo.png",
                     website="https://www.scania.com",
-                    order_index=2
+                    order_index=2,
                 ),
                 Company(
                     name="Philips",
@@ -55,8 +56,8 @@ async def seed_data():
                     end_date=date(2021, 5, 31),
                     logo_url="/images/philips-logo.png",
                     website="https://www.philips.com",
-                    order_index=3
-                )
+                    order_index=3,
+                ),
             ]
 
             for company in companies:
@@ -65,28 +66,117 @@ async def seed_data():
             # Add skills
             skills = [
                 # Languages
-                Skill(name="Python", category="language", proficiency=5, years_experience=5.0, order_index=1),
-                Skill(name="JavaScript", category="language", proficiency=4, years_experience=4.0, order_index=2),
-                Skill(name="TypeScript", category="language", proficiency=4, years_experience=2.0, order_index=3),
-                Skill(name="PowerShell", category="language", proficiency=5, years_experience=6.0, order_index=4),
-                Skill(name="Bash", category="language", proficiency=4, years_experience=4.0, order_index=5),
-
+                Skill(
+                    name="Python",
+                    category="language",
+                    proficiency=5,
+                    years_experience=5.0,
+                    order_index=1,
+                ),
+                Skill(
+                    name="JavaScript",
+                    category="language",
+                    proficiency=4,
+                    years_experience=4.0,
+                    order_index=2,
+                ),
+                Skill(
+                    name="TypeScript",
+                    category="language",
+                    proficiency=4,
+                    years_experience=2.0,
+                    order_index=3,
+                ),
+                Skill(
+                    name="PowerShell",
+                    category="language",
+                    proficiency=5,
+                    years_experience=6.0,
+                    order_index=4,
+                ),
+                Skill(
+                    name="Bash",
+                    category="language",
+                    proficiency=4,
+                    years_experience=4.0,
+                    order_index=5,
+                ),
                 # Frameworks
-                Skill(name="FastAPI", category="framework", proficiency=4, years_experience=1.0, order_index=6),
-                Skill(name="Vue.js", category="framework", proficiency=3, years_experience=1.0, order_index=7),
-                Skill(name="React", category="framework", proficiency=3, years_experience=2.0, order_index=8),
-
+                Skill(
+                    name="FastAPI",
+                    category="framework",
+                    proficiency=4,
+                    years_experience=1.0,
+                    order_index=6,
+                ),
+                Skill(
+                    name="Vue.js",
+                    category="framework",
+                    proficiency=3,
+                    years_experience=1.0,
+                    order_index=7,
+                ),
+                Skill(
+                    name="React",
+                    category="framework",
+                    proficiency=3,
+                    years_experience=2.0,
+                    order_index=8,
+                ),
                 # Tools
-                Skill(name="Docker", category="tool", proficiency=5, years_experience=4.0, order_index=9),
-                Skill(name="Kubernetes", category="tool", proficiency=4, years_experience=3.0, order_index=10),
-                Skill(name="Git", category="tool", proficiency=5, years_experience=6.0, order_index=11),
-                Skill(name="Azure DevOps", category="tool", proficiency=5, years_experience=4.0, order_index=12),
-                Skill(name="Terraform", category="tool", proficiency=3, years_experience=2.0, order_index=13),
-
+                Skill(
+                    name="Docker",
+                    category="tool",
+                    proficiency=5,
+                    years_experience=4.0,
+                    order_index=9,
+                ),
+                Skill(
+                    name="Kubernetes",
+                    category="tool",
+                    proficiency=4,
+                    years_experience=3.0,
+                    order_index=10,
+                ),
+                Skill(
+                    name="Git", category="tool", proficiency=5, years_experience=6.0, order_index=11
+                ),
+                Skill(
+                    name="Azure DevOps",
+                    category="tool",
+                    proficiency=5,
+                    years_experience=4.0,
+                    order_index=12,
+                ),
+                Skill(
+                    name="Terraform",
+                    category="tool",
+                    proficiency=3,
+                    years_experience=2.0,
+                    order_index=13,
+                ),
                 # Databases
-                Skill(name="PostgreSQL", category="database", proficiency=4, years_experience=3.0, order_index=14),
-                Skill(name="MongoDB", category="database", proficiency=3, years_experience=2.0, order_index=15),
-                Skill(name="Redis", category="database", proficiency=3, years_experience=2.0, order_index=16),
+                Skill(
+                    name="PostgreSQL",
+                    category="database",
+                    proficiency=4,
+                    years_experience=3.0,
+                    order_index=14,
+                ),
+                Skill(
+                    name="MongoDB",
+                    category="database",
+                    proficiency=3,
+                    years_experience=2.0,
+                    order_index=15,
+                ),
+                Skill(
+                    name="Redis",
+                    category="database",
+                    proficiency=3,
+                    years_experience=2.0,
+                    order_index=16,
+                ),
             ]
 
             for skill in skills:
@@ -105,7 +195,7 @@ async def seed_data():
                     github_url="https://github.com/yourusername/infra-automation",
                     company_id=hermes.id,
                     featured=True,
-                    order_index=1
+                    order_index=1,
                 ),
                 Project(
                     name="CI/CD Pipeline Framework",
@@ -113,7 +203,7 @@ async def seed_data():
                     technologies=["Azure DevOps", "Docker", "PowerShell", "YAML"],
                     company_id=hermes.id,
                     featured=True,
-                    order_index=2
+                    order_index=2,
                 ),
                 Project(
                     name="Portfolio Website",
@@ -122,8 +212,8 @@ async def seed_data():
                     github_url="https://github.com/yourusername/portfolio",
                     live_url="https://dashti.se",
                     featured=True,
-                    order_index=3
-                )
+                    order_index=3,
+                ),
             ]
 
             for project in projects:

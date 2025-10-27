@@ -1,20 +1,21 @@
 """
 Skill API endpoints
 """
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import List
+
+from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.models.skill import Skill
 from app.models.user import User
-from app.schemas.skill import SkillCreate, SkillUpdate, SkillResponse
-from app.core.deps import get_current_admin_user
+from app.schemas.skill import SkillCreate, SkillResponse, SkillUpdate
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
 
-@router.get("/", response_model=List[SkillResponse])
+@router.get("/", response_model=list[SkillResponse])
 async def get_skills(db: AsyncSession = Depends(get_db)):
     """Get all skills"""
     result = await db.execute(select(Skill).order_by(Skill.order_index))
@@ -30,8 +31,7 @@ async def get_skill(skill_id: str, db: AsyncSession = Depends(get_db)):
 
     if not skill:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Skill with ID {skill_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill with ID {skill_id} not found"
         )
 
     return skill
@@ -41,7 +41,7 @@ async def get_skill(skill_id: str, db: AsyncSession = Depends(get_db)):
 async def create_skill(
     skill: SkillCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Create a new skill (requires admin authentication)"""
     db_skill = Skill(**skill.dict())
@@ -56,7 +56,7 @@ async def update_skill(
     skill_id: str,
     skill_update: SkillUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Update a skill (requires admin authentication)"""
     result = await db.execute(select(Skill).where(Skill.id == skill_id))
@@ -64,8 +64,7 @@ async def update_skill(
 
     if not skill:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Skill with ID {skill_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill with ID {skill_id} not found"
         )
 
     # Update only provided fields
@@ -81,7 +80,7 @@ async def update_skill(
 async def delete_skill(
     skill_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Delete a skill (requires admin authentication)"""
     result = await db.execute(select(Skill).where(Skill.id == skill_id))
@@ -89,10 +88,8 @@ async def delete_skill(
 
     if not skill:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Skill with ID {skill_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill with ID {skill_id} not found"
         )
 
     await db.delete(skill)
     await db.commit()
-    return None

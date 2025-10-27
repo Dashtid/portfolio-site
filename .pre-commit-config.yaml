@@ -1,0 +1,70 @@
+# Pre-commit hooks for portfolio migration project
+# See https://pre-commit.com for more information
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^frontend/.*\.snap$
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^frontend/.*\.snap$
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Frontend: Prettier formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        files: ^frontend/.*\.(js|ts|vue|json|css|scss|md)$
+        additional_dependencies:
+          - prettier@3.6.2
+
+  # Frontend: ESLint
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.38.0
+    hooks:
+      - id: eslint
+        files: ^frontend/.*\.(js|ts|vue)$
+        args: ['--fix']
+        additional_dependencies:
+          - eslint@9.38.0
+          - '@eslint/js@9.38.0'
+          - '@typescript-eslint/eslint-plugin@8.19.0'
+          - '@typescript-eslint/parser@8.19.0'
+          - eslint-plugin-vue@9.32.0
+          - eslint-plugin-prettier@5.2.2
+          - eslint-config-prettier@10.0.1
+          - vue-eslint-parser@9.4.3
+          - typescript@5.9.3
+
+  # Backend: Ruff (linting and formatting)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.2
+    hooks:
+      # Ruff linter
+      - id: ruff
+        files: ^backend/.*\.py$
+        args: ['--fix']
+      # Ruff formatter (replaces Black)
+      - id: ruff-format
+        files: ^backend/.*\.py$
+
+  # Backend: mypy type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        files: ^backend/.*\.py$
+        additional_dependencies:
+          - types-passlib
+          - types-python-jose
+          - pydantic
+          - fastapi

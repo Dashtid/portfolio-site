@@ -1,20 +1,21 @@
 """
 Company API endpoints
 """
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import List
+
+from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.models.company import Company
 from app.models.user import User
-from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyResponse
-from app.core.deps import get_current_admin_user
+from app.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
 
-@router.get("/", response_model=List[CompanyResponse])
+@router.get("/", response_model=list[CompanyResponse])
 async def get_companies(db: AsyncSession = Depends(get_db)):
     """Get all companies"""
     result = await db.execute(select(Company).order_by(Company.order_index))
@@ -30,8 +31,7 @@ async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):
 
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Company with ID {company_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with ID {company_id} not found"
         )
 
     return company
@@ -41,7 +41,7 @@ async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):
 async def create_company(
     company: CompanyCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Create a new company (requires admin authentication)"""
     db_company = Company(**company.dict())
@@ -56,7 +56,7 @@ async def update_company(
     company_id: str,
     company_update: CompanyUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Update a company (requires admin authentication)"""
     result = await db.execute(select(Company).where(Company.id == company_id))
@@ -64,8 +64,7 @@ async def update_company(
 
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Company with ID {company_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with ID {company_id} not found"
         )
 
     # Update only provided fields
@@ -81,7 +80,7 @@ async def update_company(
 async def delete_company(
     company_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Delete a company (requires admin authentication)"""
     result = await db.execute(select(Company).where(Company.id == company_id))
@@ -89,10 +88,8 @@ async def delete_company(
 
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Company with ID {company_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with ID {company_id} not found"
         )
 
     await db.delete(company)
     await db.commit()
-    return None

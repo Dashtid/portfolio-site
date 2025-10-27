@@ -15,13 +15,13 @@ UPDATES = [
     {
         "file_path": "static/documents/bachelor-thesis.pdf",
         "title": "Bachelor's Thesis: Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers",
-        "description": "Bachelor's Thesis in Biomedical Engineering focusing on ergonomics data processing and inclinometer measurements for improved workplace safety analysis."
+        "description": "Bachelor's Thesis in Biomedical Engineering focusing on ergonomics data processing and inclinometer measurements for improved workplace safety analysis.",
     },
     {
         "file_path": "static/documents/master-thesis.pdf",
         "title": "Master's Thesis: Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis",
-        "description": "Master's Thesis in Biomedical Engineering - Computer Science. Conducted at SoftPro Medical Solutions, integrating Medusa inventory management with radiology workflows and optimizing quality assurance processes for medical equipment."
-    }
+        "description": "Master's Thesis in Biomedical Engineering - Computer Science. Conducted at SoftPro Medical Solutions, integrating Medusa inventory management with radiology workflows and optimizing quality assurance processes for medical equipment.",
+    },
 ]
 
 
@@ -35,11 +35,14 @@ def main():
     cursor = conn.cursor()
 
     for update in UPDATES:
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE documents
             SET title = ?, description = ?
             WHERE file_path = ?
-        """, (update["title"], update["description"], update["file_path"]))
+        """,
+            (update["title"], update["description"], update["file_path"]),
+        )
 
         print(f"[+] Updated: {update['file_path']}")
         print(f"    Title: {update['title'][:60]}...")

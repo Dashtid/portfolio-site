@@ -113,13 +113,13 @@ export default defineConfig({
       output: {
         // Manual chunks for better caching
         manualChunks: {
-          'vendor': ['vue', 'vue-router', 'pinia'],
-          'ui': ['@headlessui/vue'],
-          'utils': ['axios']
+          vendor: ['vue', 'vue-router', 'pinia'],
+          ui: ['@headlessui/vue'],
+          utils: ['axios']
         },
 
         // Asset file naming
-        assetFileNames: (assetInfo) => {
+        assetFileNames: assetInfo => {
           const extType = assetInfo.name.split('.').pop()
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
             return `assets/images/[name]-[hash][extname]`

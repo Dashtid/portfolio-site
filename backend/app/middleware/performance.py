@@ -1,11 +1,14 @@
 """
 Performance monitoring middleware for tracking response times and metrics
 """
+
 import time
-from typing import Callable, Dict
 from collections import defaultdict
+from collections.abc import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,7 +34,7 @@ class PerformanceMetrics:
         if status_code >= 400:
             self.errors[endpoint] += 1
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """Get aggregated statistics"""
         stats = {
             "total_requests": sum(self.request_count.values()),
@@ -86,7 +89,7 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
                 method=request.method,
                 path=request.url.path,
                 duration_ms=duration_ms,
-                status_code=response.status_code
+                status_code=response.status_code,
             )
 
             # Add performance headers
@@ -94,7 +97,7 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
 
             # Log slow requests (> 1 second)
             if duration_ms > 1000:
-                request_id = getattr(request.state, 'request_id', 'unknown')
+                request_id = getattr(request.state, "request_id", "unknown")
                 logger.warning(
                     f"Slow request detected: {duration_ms}ms",
                     extra={
@@ -103,12 +106,12 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
                         "path": request.url.path,
                         "duration_ms": round(duration_ms, 2),
                         "status_code": response.status_code,
-                    }
+                    },
                 )
 
             return response
 
-        except Exception as exc:
+        except Exception:
             # Calculate duration even on error
             duration_ms = (time.time() - start_time) * 1000
 
@@ -117,14 +120,14 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
                 method=request.method,
                 path=request.url.path,
                 duration_ms=duration_ms,
-                status_code=500
+                status_code=500,
             )
 
             # Re-raise exception
             raise
 
 
-def get_metrics() -> Dict:
+def get_metrics() -> dict:
     """Get current performance metrics"""
     return metrics.get_stats()
 

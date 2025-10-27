@@ -1,16 +1,18 @@
 """
 Analytics API endpoints for tracking visitor statistics
 """
-from fastapi import APIRouter, Request, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
-from datetime import datetime, timedelta
-from typing import Optional, Dict
-from app.database import get_db
-from app.models.analytics import PageView
-from app.schemas.analytics import PageViewCreate, AnalyticsStats
+
 import hashlib
 import logging
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.models.analytics import PageView
+from app.schemas.analytics import AnalyticsStats, PageViewCreate
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -27,9 +29,7 @@ def get_visitor_id(request: Request) -> str:
 
 @router.post("/track/pageview")
 async def track_pageview(
-    pageview: PageViewCreate,
-    request: Request,
-    db: AsyncSession = Depends(get_db)
+    pageview: PageViewCreate, request: Request, db: AsyncSession = Depends(get_db)
 ):
     """Track a page view."""
     try:
@@ -49,7 +49,7 @@ async def track_pageview(
                 last_visit=datetime.utcnow(),
                 page_views=0,
                 user_agent=request.headers.get("user-agent", "")[:500],
-                ip_address=request.client.host
+                ip_address=request.client.host,
             )
             db.add(visitor_session)
 
@@ -65,7 +65,7 @@ async def track_pageview(
             referrer=pageview.referrer,
             timestamp=datetime.utcnow(),
             user_agent=request.headers.get("user-agent", "")[:500],
-            ip_address=request.client.host
+            ip_address=request.client.host,
         )
         db.add(page_view)
 
@@ -79,10 +79,7 @@ async def track_pageview(
 
 
 @router.get("/stats/summary", response_model=AnalyticsStats)
-async def get_analytics_summary(
-    days: int = 30,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_analytics_summary(days: int = 30, db: AsyncSession = Depends(get_db)):
     """Get analytics summary for the specified period."""
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=days)
@@ -103,42 +100,27 @@ async def get_analytics_summary(
 
         # Top pages
         top_pages_result = await db.execute(
-            select(
-                PageView.page_path,
-                PageView.page_title,
-                func.count(PageView.id).label("views")
-            )
+            select(PageView.page_path, PageView.page_title, func.count(PageView.id).label("views"))
             .where(PageView.timestamp >= cutoff_date)
             .group_by(PageView.page_path, PageView.page_title)
             .order_by(desc("views"))
             .limit(10)
         )
         top_pages = [
-            {
-                "path": row.page_path,
-                "title": row.page_title,
-                "views": row.views
-            }
+            {"path": row.page_path, "title": row.page_title, "views": row.views}
             for row in top_pages_result
         ]
 
         # Views by day
         daily_views_result = await db.execute(
             select(
-                func.date(PageView.timestamp).label("date"),
-                func.count(PageView.id).label("views")
+                func.date(PageView.timestamp).label("date"), func.count(PageView.id).label("views")
             )
             .where(PageView.timestamp >= cutoff_date)
             .group_by("date")
             .order_by("date")
         )
-        daily_views = [
-            {
-                "date": str(row.date),
-                "views": row.views
-            }
-            for row in daily_views_result
-        ]
+        daily_views = [{"date": str(row.date), "views": row.views} for row in daily_views_result]
 
         # Average session duration (simplified)
         avg_session_duration = 180  # Default 3 minutes
@@ -149,7 +131,7 @@ async def get_analytics_summary(
             avg_session_duration=avg_session_duration,
             top_pages=top_pages,
             daily_views=daily_views,
-            period_days=days
+            period_days=days,
         )
 
     except Exception as e:
@@ -158,10 +140,7 @@ async def get_analytics_summary(
 
 
 @router.get("/stats/visitors")
-async def get_visitor_stats(
-    days: int = 7,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_visitor_stats(days: int = 7, db: AsyncSession = Depends(get_db)):
     """Get detailed visitor statistics."""
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=days)
@@ -178,7 +157,7 @@ async def get_visitor_stats(
                 "visitor_id": v.visitor_id,
                 "first_visit": v.first_visit.isoformat(),
                 "last_visit": v.last_visit.isoformat(),
-                "page_views": v.page_views
+                "page_views": v.page_views,
             }
             for v in recent_visitors_result.scalars()
         ]
@@ -194,7 +173,7 @@ async def get_visitor_stats(
         return {
             "recent_visitors": recent_visitors,
             "returning_visitors": returning_visitors,
-            "period_days": days
+            "period_days": days,
         }
 
     except Exception as e:
@@ -203,18 +182,13 @@ async def get_visitor_stats(
 
 
 @router.delete("/stats/clear")
-async def clear_analytics(
-    older_than_days: int = 90,
-    db: AsyncSession = Depends(get_db)
-):
+async def clear_analytics(older_than_days: int = 90, db: AsyncSession = Depends(get_db)):
     """Clear old analytics data."""
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
 
         # Delete old page views
-        await db.execute(
-            select(PageView).where(PageView.timestamp < cutoff_date).delete()
-        )
+        await db.execute(select(PageView).where(PageView.timestamp < cutoff_date).delete())
 
         # Delete old sessions
         await db.execute(

@@ -1,17 +1,18 @@
 """
 Skill Pydantic schemas
 """
-from pydantic import BaseModel, Field
-from typing import Optional
+
 from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class SkillBase(BaseModel):
     name: str
-    category: Optional[str] = None  # 'language', 'framework', 'tool', 'database'
-    proficiency: Optional[int] = Field(None, ge=1, le=5)  # 1-5 scale
-    years_experience: Optional[float] = Field(None, ge=0)
-    order_index: Optional[int] = 0
+    category: str | None = None  # 'language', 'framework', 'tool', 'database'
+    proficiency: int | None = Field(None, ge=1, le=5)  # 1-5 scale
+    years_experience: float | None = Field(None, ge=0)
+    order_index: int | None = 0
 
 
 class SkillCreate(SkillBase):
@@ -19,11 +20,11 @@ class SkillCreate(SkillBase):
 
 
 class SkillUpdate(BaseModel):
-    name: Optional[str] = None
-    category: Optional[str] = None
-    proficiency: Optional[int] = Field(None, ge=1, le=5)
-    years_experience: Optional[float] = Field(None, ge=0)
-    order_index: Optional[int] = None
+    name: str | None = None
+    category: str | None = None
+    proficiency: int | None = Field(None, ge=1, le=5)
+    years_experience: float | None = Field(None, ge=0)
+    order_index: int | None = None
 
 
 class SkillResponse(SkillBase):

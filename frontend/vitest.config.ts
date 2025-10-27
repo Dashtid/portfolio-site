@@ -11,13 +11,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
-      exclude: [
-        'node_modules/',
-        'tests/',
-        '*.config.js',
-        'dist/',
-        '.eslintrc.cjs'
-      ],
+      exclude: ['node_modules/', 'tests/', '*.config.js', '*.config.ts', 'dist/', '.eslintrc.cjs'],
       thresholds: {
         lines: 80,
         functions: 80,

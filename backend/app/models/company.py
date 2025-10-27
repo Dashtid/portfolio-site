@@ -1,10 +1,12 @@
 """
 Company/Experience model
 """
-from sqlalchemy import Column, String, Text, Date, Integer, DateTime, JSON, func
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+
 import uuid
+
+from sqlalchemy import JSON, Column, Date, DateTime, Integer, String, Text, func
+from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
@@ -59,5 +61,5 @@ class Company(Base):
             "map_url": self.map_url,
             "map_title": self.map_title,
             "responsibilities": self.responsibilities,
-            "technologies": self.technologies
+            "technologies": self.technologies,
         }

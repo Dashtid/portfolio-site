@@ -1,9 +1,10 @@
 """
 Application configuration using Pydantic Settings
 """
-from pydantic_settings import BaseSettings
-from typing import Optional
+
 import secrets
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # Database
-    DATABASE_URL: Optional[str] = "sqlite+aiosqlite:///./portfolio.db"
+    DATABASE_URL: str | None = "sqlite+aiosqlite:///./portfolio.db"
     # For PostgreSQL (when ready):
     # DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost/portfolio_db"
 
@@ -31,24 +32,24 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 1 week
 
     # GitHub OAuth (will be configured later)
-    GITHUB_CLIENT_ID: Optional[str] = None
-    GITHUB_CLIENT_SECRET: Optional[str] = None
+    GITHUB_CLIENT_ID: str | None = None
+    GITHUB_CLIENT_SECRET: str | None = None
     GITHUB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/github/callback"
 
     # Admin
-    ADMIN_GITHUB_ID: Optional[str] = None  # Your GitHub user ID
+    ADMIN_GITHUB_ID: str | None = None  # Your GitHub user ID
 
     # Logging
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
     # Analytics (Privacy-compliant)
     ANALYTICS_ENABLED: bool = True
-    ANALYTICS_SITE_ID: Optional[str] = None  # Plausible/Umami site ID
-    ANALYTICS_URL: Optional[str] = None  # Analytics server URL
+    ANALYTICS_SITE_ID: str | None = None  # Plausible/Umami site ID
+    ANALYTICS_URL: str | None = None  # Analytics server URL
 
     # Error Tracking
     ERROR_TRACKING_ENABLED: bool = True
-    ERROR_TRACKING_DSN: Optional[str] = None  # Sentry DSN (optional)
+    ERROR_TRACKING_DSN: str | None = None  # Sentry DSN (optional)
 
     # Performance Monitoring
     METRICS_ENABLED: bool = True

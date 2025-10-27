@@ -1,15 +1,18 @@
 """
 Health check endpoints for monitoring and load balancing
 """
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from datetime import datetime
+
 import sys
+from datetime import datetime
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 
 router = APIRouter()
+
 
 @router.get("/health")
 async def health_check():
@@ -20,8 +23,9 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "service": "portfolio-api"
+        "service": "portfolio-api",
     }
+
 
 @router.get("/health/ready")
 async def readiness_check(db: Session = Depends(get_db)):
@@ -36,18 +40,15 @@ async def readiness_check(db: Session = Depends(get_db)):
         return {
             "status": "ready",
             "timestamp": datetime.utcnow().isoformat(),
-            "checks": {
-                "database": "connected"
-            }
+            "checks": {"database": "connected"},
         }
     except Exception as e:
         return {
             "status": "not_ready",
             "timestamp": datetime.utcnow().isoformat(),
-            "checks": {
-                "database": f"error: {str(e)}"
-            }
+            "checks": {"database": f"error: {str(e)}"},
         }
+
 
 @router.get("/health/live")
 async def liveness_check():
@@ -58,5 +59,5 @@ async def liveness_check():
     return {
         "status": "alive",
         "timestamp": datetime.utcnow().isoformat(),
-        "python_version": sys.version
+        "python_version": sys.version,
     }

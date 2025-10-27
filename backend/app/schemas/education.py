@@ -1,35 +1,39 @@
-from pydantic import BaseModel
 from datetime import date
-from typing import Optional
+
+from pydantic import BaseModel
+
 
 class EducationBase(BaseModel):
     institution: str
     degree: str
-    field_of_study: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    location: Optional[str] = None
-    description: Optional[str] = None
-    logo_url: Optional[str] = None
+    field_of_study: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    location: str | None = None
+    description: str | None = None
+    logo_url: str | None = None
     is_certification: bool = False
-    certificate_number: Optional[str] = None
+    certificate_number: str | None = None
     order: int = 0
+
 
 class EducationCreate(EducationBase):
     pass
 
+
 class EducationUpdate(BaseModel):
-    institution: Optional[str] = None
-    degree: Optional[str] = None
-    field_of_study: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    location: Optional[str] = None
-    description: Optional[str] = None
-    logo_url: Optional[str] = None
-    is_certification: Optional[bool] = None
-    certificate_number: Optional[str] = None
-    order: Optional[int] = None
+    institution: str | None = None
+    degree: str | None = None
+    field_of_study: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    location: str | None = None
+    description: str | None = None
+    logo_url: str | None = None
+    is_certification: bool | None = None
+    certificate_number: str | None = None
+    order: int | None = None
+
 
 class Education(EducationBase):
     id: int

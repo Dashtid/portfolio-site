@@ -1,19 +1,18 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+
+from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.models.education import Education
 from app.models.user import User
-from app.schemas.education import Education as EducationSchema, EducationCreate, EducationUpdate
-from app.core.deps import get_current_admin_user
+from app.schemas.education import Education as EducationSchema
+from app.schemas.education import EducationCreate, EducationUpdate
 
-router = APIRouter(
-    prefix="/education",
-    tags=["education"]
-)
+router = APIRouter(prefix="/education", tags=["education"])
 
-@router.get("/", response_model=List[EducationSchema])
+
+@router.get("/", response_model=list[EducationSchema])
 async def get_all_education(db: AsyncSession = Depends(get_db)):
     """Get all education records"""
     result = await db.execute(
@@ -22,7 +21,8 @@ async def get_all_education(db: AsyncSession = Depends(get_db)):
     education = result.scalars().all()
     return education
 
-@router.get("/degrees/", response_model=List[EducationSchema])
+
+@router.get("/degrees/", response_model=list[EducationSchema])
 async def get_degrees(db: AsyncSession = Depends(get_db)):
     """Get only degree education records (not certifications)"""
     result = await db.execute(
@@ -33,7 +33,8 @@ async def get_degrees(db: AsyncSession = Depends(get_db)):
     degrees = result.scalars().all()
     return degrees
 
-@router.get("/certifications/", response_model=List[EducationSchema])
+
+@router.get("/certifications/", response_model=list[EducationSchema])
 async def get_certifications(db: AsyncSession = Depends(get_db)):
     """Get only certification records"""
     result = await db.execute(
@@ -44,6 +45,7 @@ async def get_certifications(db: AsyncSession = Depends(get_db)):
     certifications = result.scalars().all()
     return certifications
 
+
 @router.get("/{education_id}/", response_model=EducationSchema)
 async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single education record by ID"""
@@ -53,11 +55,12 @@ async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Education record not found")
     return education
 
+
 @router.post("/", response_model=EducationSchema)
 async def create_education(
     education: EducationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Create a new education record (requires admin authentication)"""
     db_education = Education(**education.dict())
@@ -66,12 +69,13 @@ async def create_education(
     await db.refresh(db_education)
     return db_education
 
+
 @router.put("/{education_id}/", response_model=EducationSchema)
 async def update_education(
     education_id: int,
     education_update: EducationUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Update an education record (requires admin authentication)"""
     # Check if education exists
@@ -89,11 +93,12 @@ async def update_education(
     await db.refresh(db_education)
     return db_education
 
+
 @router.delete("/{education_id}/")
 async def delete_education(
     education_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Delete an education record (requires admin authentication)"""
     result = await db.execute(select(Education).where(Education.id == education_id))

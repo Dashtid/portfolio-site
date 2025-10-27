@@ -21,14 +21,22 @@ errorTracker.init()
 performanceMonitor.init()
 
 // Global error handler for Vue
-app.config.errorHandler = (err: unknown, instance: ComponentPublicInstance | null, info: string) => {
+app.config.errorHandler = (
+  err: unknown,
+  instance: ComponentPublicInstance | null,
+  info: string
+) => {
   console.error('Vue Error:', err)
   errorTracker.handleVueError(err, instance, info)
 }
 
 // Global warning handler for Vue (development)
 if (import.meta.env.DEV) {
-  app.config.warnHandler = (msg: string, _instance: ComponentPublicInstance | null, trace: string) => {
+  app.config.warnHandler = (
+    msg: string,
+    _instance: ComponentPublicInstance | null,
+    trace: string
+  ) => {
     console.warn('Vue Warning:', msg, trace)
   }
 }

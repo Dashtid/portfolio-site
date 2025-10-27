@@ -1,15 +1,18 @@
 """
 Seed data script to populate database with initial portfolio content
 """
+
 import asyncio
 from datetime import datetime
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import engine, Base
+
+from app.database import Base, engine
 from app.models.company import Company
+from app.models.education import Education
 from app.models.project import Project
 from app.models.skill import Skill
-from app.models.education import Education
-from sqlalchemy import select
 
 
 async def clear_existing_data(session: AsyncSession):
@@ -34,7 +37,7 @@ async def seed_companies(session: AsyncSession):
             "start_date": datetime(2022, 9, 1),
             "end_date": None,
             "website": "https://hermesmedical.com",
-            "order_index": 1
+            "order_index": 1,
         },
         {
             "name": "KTH Royal Institute of Technology",
@@ -44,7 +47,7 @@ async def seed_companies(session: AsyncSession):
             "start_date": datetime(2021, 1, 1),
             "end_date": datetime(2022, 6, 30),
             "website": "https://www.kth.se",
-            "order_index": 2
+            "order_index": 2,
         },
         {
             "name": "Stockholm Innovation Hub",
@@ -54,8 +57,8 @@ async def seed_companies(session: AsyncSession):
             "start_date": datetime(2020, 6, 1),
             "end_date": datetime(2020, 12, 31),
             "website": None,
-            "order_index": 3
-        }
+            "order_index": 3,
+        },
     ]
 
     for company_data in companies:
@@ -76,7 +79,7 @@ async def seed_projects(session: AsyncSession):
             "github_url": "https://github.com/Dashtid/portfolio-migration",
             "live_url": None,
             "featured": True,
-            "order_index": 1
+            "order_index": 1,
         },
         {
             "name": "Medical Device Security Framework",
@@ -85,7 +88,7 @@ async def seed_projects(session: AsyncSession):
             "github_url": None,
             "live_url": None,
             "featured": True,
-            "order_index": 2
+            "order_index": 2,
         },
         {
             "name": "Vulnerability Scanner Dashboard",
@@ -94,7 +97,7 @@ async def seed_projects(session: AsyncSession):
             "github_url": None,
             "live_url": None,
             "featured": True,
-            "order_index": 3
+            "order_index": 3,
         },
         {
             "name": "DICOM Processing Pipeline",
@@ -103,7 +106,7 @@ async def seed_projects(session: AsyncSession):
             "github_url": None,
             "live_url": None,
             "featured": False,
-            "order_index": 4
+            "order_index": 4,
         },
         {
             "name": "Compliance Automation Tool",
@@ -112,8 +115,8 @@ async def seed_projects(session: AsyncSession):
             "github_url": None,
             "live_url": None,
             "featured": False,
-            "order_index": 5
-        }
+            "order_index": 5,
+        },
     ]
 
     for project_data in projects:
@@ -128,33 +131,143 @@ async def seed_skills(session: AsyncSession):
     """Seed skills data"""
     skills = [
         # Programming Languages
-        {"name": "Python", "category": "Programming", "proficiency": 95, "years_experience": 6, "order_index": 1},
-        {"name": "JavaScript/TypeScript", "category": "Programming", "proficiency": 85, "years_experience": 4, "order_index": 2},
-        {"name": "SQL", "category": "Programming", "proficiency": 80, "years_experience": 5, "order_index": 3},
-        {"name": "Bash/PowerShell", "category": "Programming", "proficiency": 75, "years_experience": 4, "order_index": 4},
-
+        {
+            "name": "Python",
+            "category": "Programming",
+            "proficiency": 95,
+            "years_experience": 6,
+            "order_index": 1,
+        },
+        {
+            "name": "JavaScript/TypeScript",
+            "category": "Programming",
+            "proficiency": 85,
+            "years_experience": 4,
+            "order_index": 2,
+        },
+        {
+            "name": "SQL",
+            "category": "Programming",
+            "proficiency": 80,
+            "years_experience": 5,
+            "order_index": 3,
+        },
+        {
+            "name": "Bash/PowerShell",
+            "category": "Programming",
+            "proficiency": 75,
+            "years_experience": 4,
+            "order_index": 4,
+        },
         # Frameworks
-        {"name": "FastAPI", "category": "Frameworks", "proficiency": 90, "years_experience": 3, "order_index": 5},
-        {"name": "Vue.js", "category": "Frameworks", "proficiency": 80, "years_experience": 2, "order_index": 6},
-        {"name": "Django", "category": "Frameworks", "proficiency": 85, "years_experience": 3, "order_index": 7},
-        {"name": "React", "category": "Frameworks", "proficiency": 75, "years_experience": 2, "order_index": 8},
-
+        {
+            "name": "FastAPI",
+            "category": "Frameworks",
+            "proficiency": 90,
+            "years_experience": 3,
+            "order_index": 5,
+        },
+        {
+            "name": "Vue.js",
+            "category": "Frameworks",
+            "proficiency": 80,
+            "years_experience": 2,
+            "order_index": 6,
+        },
+        {
+            "name": "Django",
+            "category": "Frameworks",
+            "proficiency": 85,
+            "years_experience": 3,
+            "order_index": 7,
+        },
+        {
+            "name": "React",
+            "category": "Frameworks",
+            "proficiency": 75,
+            "years_experience": 2,
+            "order_index": 8,
+        },
         # DevOps & Cloud
-        {"name": "Docker", "category": "DevOps", "proficiency": 90, "years_experience": 4, "order_index": 9},
-        {"name": "Kubernetes", "category": "DevOps", "proficiency": 80, "years_experience": 3, "order_index": 10},
-        {"name": "Azure", "category": "Cloud", "proficiency": 85, "years_experience": 3, "order_index": 11},
-        {"name": "GitHub Actions", "category": "DevOps", "proficiency": 85, "years_experience": 3, "order_index": 12},
-
+        {
+            "name": "Docker",
+            "category": "DevOps",
+            "proficiency": 90,
+            "years_experience": 4,
+            "order_index": 9,
+        },
+        {
+            "name": "Kubernetes",
+            "category": "DevOps",
+            "proficiency": 80,
+            "years_experience": 3,
+            "order_index": 10,
+        },
+        {
+            "name": "Azure",
+            "category": "Cloud",
+            "proficiency": 85,
+            "years_experience": 3,
+            "order_index": 11,
+        },
+        {
+            "name": "GitHub Actions",
+            "category": "DevOps",
+            "proficiency": 85,
+            "years_experience": 3,
+            "order_index": 12,
+        },
         # Security
-        {"name": "Security Auditing", "category": "Security", "proficiency": 95, "years_experience": 4, "order_index": 13},
-        {"name": "Vulnerability Assessment", "category": "Security", "proficiency": 90, "years_experience": 4, "order_index": 14},
-        {"name": "ISO 27001", "category": "Security", "proficiency": 85, "years_experience": 3, "order_index": 15},
-        {"name": "OWASP", "category": "Security", "proficiency": 85, "years_experience": 3, "order_index": 16},
-
+        {
+            "name": "Security Auditing",
+            "category": "Security",
+            "proficiency": 95,
+            "years_experience": 4,
+            "order_index": 13,
+        },
+        {
+            "name": "Vulnerability Assessment",
+            "category": "Security",
+            "proficiency": 90,
+            "years_experience": 4,
+            "order_index": 14,
+        },
+        {
+            "name": "ISO 27001",
+            "category": "Security",
+            "proficiency": 85,
+            "years_experience": 3,
+            "order_index": 15,
+        },
+        {
+            "name": "OWASP",
+            "category": "Security",
+            "proficiency": 85,
+            "years_experience": 3,
+            "order_index": 16,
+        },
         # Medical/Healthcare
-        {"name": "IEC 62304", "category": "Medical", "proficiency": 80, "years_experience": 2, "order_index": 17},
-        {"name": "DICOM", "category": "Medical", "proficiency": 75, "years_experience": 2, "order_index": 18},
-        {"name": "HL7/FHIR", "category": "Medical", "proficiency": 70, "years_experience": 2, "order_index": 19},
+        {
+            "name": "IEC 62304",
+            "category": "Medical",
+            "proficiency": 80,
+            "years_experience": 2,
+            "order_index": 17,
+        },
+        {
+            "name": "DICOM",
+            "category": "Medical",
+            "proficiency": 75,
+            "years_experience": 2,
+            "order_index": 18,
+        },
+        {
+            "name": "HL7/FHIR",
+            "category": "Medical",
+            "proficiency": 70,
+            "years_experience": 2,
+            "order_index": 19,
+        },
     ]
 
     for skill_data in skills:
@@ -178,7 +291,7 @@ async def seed_education(session: AsyncSession):
             "description": "Specialized in medical imaging, signal processing, and healthcare informatics. Thesis on AI-driven diagnostic systems.",
             "gpa": 4.5,
             "is_certification": False,
-            "order_index": 1
+            "order_index": 1,
         },
         {
             "institution": "Lund University (LTH)",
@@ -190,7 +303,7 @@ async def seed_education(session: AsyncSession):
             "description": "Exchange program focusing on medical device development and regulatory affairs.",
             "gpa": None,
             "is_certification": False,
-            "order_index": 2
+            "order_index": 2,
         },
         {
             "institution": "Företagsuniversitetet",
@@ -201,7 +314,7 @@ async def seed_education(session: AsyncSession):
             "location": "Stockholm, Sweden",
             "description": "Intensive certification program for implementing and managing ISO 27001 ISMS.",
             "is_certification": True,
-            "order_index": 3
+            "order_index": 3,
         },
         {
             "institution": "Microsoft",
@@ -212,7 +325,7 @@ async def seed_education(session: AsyncSession):
             "location": "Online",
             "description": "Azure security services, identity management, and compliance features.",
             "is_certification": True,
-            "order_index": 4
+            "order_index": 4,
         },
         {
             "institution": "EC-Council",
@@ -223,8 +336,8 @@ async def seed_education(session: AsyncSession):
             "location": "Online",
             "description": "Ethical hacking methodologies, penetration testing, and vulnerability assessment.",
             "is_certification": True,
-            "order_index": 5
-        }
+            "order_index": 5,
+        },
     ]
 
     for edu_data in education_items:

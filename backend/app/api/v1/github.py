@@ -1,10 +1,12 @@
 """
 GitHub API endpoints for fetching live statistics
 """
-from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
-from app.services.github_service import github_service
+
 import logging
+
+from fastapi import APIRouter, HTTPException, Query
+
+from app.services.github_service import github_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -43,7 +45,7 @@ async def get_project_stats(owner: str, repo: str):
 @router.get("/repos/{username}")
 async def get_user_repos(
     username: str,
-    limit: Optional[int] = Query(10, le=50, description="Maximum number of repos to return")
+    limit: int | None = Query(10, le=50, description="Maximum number of repos to return"),
 ):
     """
     Get list of repositories for a user.
@@ -75,14 +77,14 @@ async def get_repo_languages(owner: str, repo: str):
             {
                 "name": lang,
                 "bytes": bytes_count,
-                "percentage": round(bytes_count / total_bytes * 100, 2) if total_bytes > 0 else 0
+                "percentage": round(bytes_count / total_bytes * 100, 2) if total_bytes > 0 else 0,
             }
             for lang, bytes_count in languages.items()
         ]
 
         return {
             "total_bytes": total_bytes,
-            "languages": sorted(language_stats, key=lambda x: x["bytes"], reverse=True)
+            "languages": sorted(language_stats, key=lambda x: x["bytes"], reverse=True),
         }
     except Exception as e:
         logger.error(f"Error fetching languages for {owner}/{repo}: {e}")

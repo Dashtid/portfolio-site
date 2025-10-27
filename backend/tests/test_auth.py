@@ -1,10 +1,12 @@
 """
 Tests for authentication endpoints
 """
-import pytest
+
+from unittest.mock import MagicMock, patch
+
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-from app.core.security import create_access_token, verify_token
+
+from app.core.security import create_access_token
 
 
 def test_github_login_redirect(client: TestClient):
@@ -28,7 +30,7 @@ async def test_github_callback_success(mock_client, client: TestClient):
         "login": "testuser",
         "email": "test@example.com",
         "name": "Test User",
-        "avatar_url": "https://github.com/avatar.png"
+        "avatar_url": "https://github.com/avatar.png",
     }
 
     mock_client_instance = MagicMock()
@@ -45,13 +47,10 @@ def test_token_refresh(client: TestClient):
     # Create a valid refresh token
     refresh_token = create_access_token(
         data={"sub": "test_user", "email": "test@example.com"},
-        expires_delta=None  # This would be configured for refresh tokens
+        expires_delta=None,  # This would be configured for refresh tokens
     )
 
-    response = client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": refresh_token}
-    )
+    response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
     # Basic structure test - full implementation would verify new tokens
 
 
@@ -88,10 +87,11 @@ def test_invalid_token(client: TestClient):
 def test_expired_token(client: TestClient):
     """Test with expired token."""
     # Create an expired token
-    from datetime import datetime, timedelta
+    from datetime import timedelta
+
     expired_token = create_access_token(
         data={"sub": "test_user"},
-        expires_delta=timedelta(seconds=-1)  # Already expired
+        expires_delta=timedelta(seconds=-1),  # Already expired
     )
     headers = {"Authorization": f"Bearer {expired_token}"}
     response = client.get("/api/v1/auth/me", headers=headers)

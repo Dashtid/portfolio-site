@@ -2,6 +2,7 @@
 Migrate real content from original portfolio-site to database
 This script populates the database with actual portfolio data
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -9,10 +10,11 @@ from pathlib import Path
 # Add app to path
 sys.path.append(str(Path(__file__).parent))
 
+from sqlalchemy import delete
+
 from app.database import AsyncSessionLocal
 from app.models.company import Company
 from app.models.education import Education
-from sqlalchemy import select, delete
 
 
 async def clear_existing_data():
@@ -46,7 +48,7 @@ async def populate_companies():
                     "end_date": None,
                     "logo_url": "/images/hermes.jpg",
                     "website": "https://hermesmedical.com",
-                    "order_index": 1
+                    "order_index": 1,
                 },
                 {
                     "name": "Scania Engines",
@@ -57,7 +59,7 @@ async def populate_companies():
                     "end_date": date(2021, 12, 31),
                     "logo_url": "/images/scania.svg",
                     "website": "https://www.scania.com",
-                    "order_index": 2
+                    "order_index": 2,
                 },
                 {
                     "name": "Finnish Defence Forces",
@@ -68,7 +70,7 @@ async def populate_companies():
                     "end_date": date(2019, 6, 1),
                     "logo_url": "/images/FDF.png",
                     "website": None,
-                    "order_index": 3
+                    "order_index": 3,
                 },
                 {
                     "name": "Södersjukhuset - SÖS",
@@ -79,7 +81,7 @@ async def populate_companies():
                     "end_date": date(2020, 6, 1),
                     "logo_url": "/images/sös.png",
                     "website": None,
-                    "order_index": 4
+                    "order_index": 4,
                 },
                 {
                     "name": "SoftPro Medical Solutions",
@@ -90,7 +92,7 @@ async def populate_companies():
                     "end_date": date(2020, 6, 1),
                     "logo_url": "/images/softpro.jpg",
                     "website": None,
-                    "order_index": 5
+                    "order_index": 5,
                 },
                 {
                     "name": "Karolinska University Hospital",
@@ -101,7 +103,7 @@ async def populate_companies():
                     "end_date": date(2018, 12, 31),
                     "logo_url": "/images/karolinska.jpg",
                     "website": None,
-                    "order_index": 6
+                    "order_index": 6,
                 },
                 {
                     "name": "Philips Healthcare",
@@ -112,8 +114,8 @@ async def populate_companies():
                     "end_date": date(2017, 5, 31),
                     "logo_url": "/images/philips.jpeg",
                     "website": "https://www.philips.com",
-                    "order_index": 7
-                }
+                    "order_index": 7,
+                },
             ]
 
             for company_data in companies:
@@ -142,7 +144,7 @@ async def populate_education():
                     "logo_url": "/images/LTH.png",
                     "start_date": date(2011, 9, 1),
                     "end_date": date(2014, 6, 1),
-                    "order": 1
+                    "order": 1,
                 },
                 {
                     "institution": "KTH Royal Institute of Technology",
@@ -152,7 +154,7 @@ async def populate_education():
                     "logo_url": "/images/KTH.png",
                     "start_date": date(2014, 9, 1),
                     "end_date": date(2016, 6, 1),
-                    "order": 2
+                    "order": 2,
                 },
                 {
                     "institution": "Företagsuniversitet",
@@ -162,7 +164,7 @@ async def populate_education():
                     "logo_url": "/images/foretagsuniversitet.png",
                     "start_date": date(2023, 1, 1),
                     "end_date": date(2023, 3, 1),
-                    "order": 3
+                    "order": 3,
                 },
                 {
                     "institution": "CompTIA",
@@ -172,8 +174,8 @@ async def populate_education():
                     "logo_url": "/images/CompTIA.png",
                     "start_date": date(2024, 1, 1),
                     "end_date": None,
-                    "order": 4
-                }
+                    "order": 4,
+                },
             ]
 
             for edu_data in education_entries:

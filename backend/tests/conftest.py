@@ -1,18 +1,19 @@
 """
 Test configuration and fixtures for pytest
 """
+
 import asyncio
+from collections.abc import AsyncGenerator, Generator
+
 import pytest
-from typing import AsyncGenerator, Generator
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from app.main import app
-from app.database import Base, get_db
-from app.config import settings
 from app.core.security import create_access_token
+from app.database import Base, get_db
+from app.main import app
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -72,9 +73,7 @@ def client(db_session: AsyncSession) -> TestClient:
 @pytest.fixture
 def test_user_token() -> str:
     """Create a test user access token."""
-    return create_access_token(
-        data={"sub": "test_user", "email": "test@example.com"}
-    )
+    return create_access_token(data={"sub": "test_user", "email": "test@example.com"})
 
 
 @pytest.fixture

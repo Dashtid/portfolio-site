@@ -1,11 +1,14 @@
 """
 Logging middleware for request/response tracking
 """
-import uuid
+
 import time
-from typing import Callable
+import uuid
+from collections.abc import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -32,7 +35,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 "query_params": dict(request.query_params),
                 "client_ip": request.client.host if request.client else None,
                 "user_agent": request.headers.get("user-agent"),
-            }
+            },
         )
 
         # Process request
@@ -51,7 +54,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "path": request.url.path,
                     "status_code": response.status_code,
                     "duration_ms": duration_ms,
-                }
+                },
             )
 
             # Add request ID to response headers
@@ -74,7 +77,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "error": str(exc),
                     "error_type": type(exc).__name__,
                 },
-                exc_info=True
+                exc_info=True,
             )
 
             # Re-raise exception

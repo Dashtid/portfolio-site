@@ -1,27 +1,30 @@
 """
 FastAPI main application
 """
+
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
-from contextlib import asynccontextmanager
-from app.config import settings
-from app.database import engine, Base
-from app.api.v1 import companies, projects, auth, github  # , analytics
-from app.api.v1.endpoints import health, metrics, documents
+
 from app.api import education
-# Import models to ensure they're registered with Base
-from app.models import company, project, user, contact, education as education_model, document
-from app.models import analytics as analytics_model
+from app.api.v1 import auth, companies, github, projects  # , analytics
+from app.api.v1.endpoints import documents, health, metrics
+from app.config import settings
+from app.database import Base, engine
+
 # Import new middleware
 from app.middleware import (
-    LoggingMiddleware,
-    ErrorTrackingMiddleware,
-    PerformanceMiddleware,
+    CacheControlMiddleware,
     CompressionMiddleware,
-    CacheControlMiddleware
+    ErrorTrackingMiddleware,
+    LoggingMiddleware,
+    PerformanceMiddleware,
 )
+
+# Import models to ensure they're registered with Base
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -42,6 +45,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,6 +60,7 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
     logger.info("Database connection closed")
 
+
 # Create FastAPI instance
 app = FastAPI(
     title=settings.APP_NAME,
@@ -63,7 +68,7 @@ app = FastAPI(
     description="Portfolio API with Vue.js frontend",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add middleware (order matters: first added = outermost layer)
@@ -109,24 +114,21 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
 # app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 
+
 # Root endpoint
 @app.get("/")
 async def root():
     return {
         "message": "Portfolio API is running!",
         "version": settings.APP_VERSION,
-        "docs": "/api/docs"
+        "docs": "/api/docs",
     }
 
 
 # Health check endpoint
 @app.get("/api/health")
 async def health_check():
-    return {
-        "status": "healthy",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION
-    }
+    return {"status": "healthy", "service": settings.APP_NAME, "version": settings.APP_VERSION}
 
 
 # Test endpoint for frontend connection
@@ -138,16 +140,12 @@ async def test_endpoint():
         "data": {
             "framework": "FastAPI",
             "version": settings.APP_VERSION,
-            "description": "Your portfolio backend is ready!"
-        }
+            "description": "Your portfolio backend is ready!",
+        },
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "app.main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG
-    )
+
+    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)

@@ -1,42 +1,48 @@
 """
 Authentication schemas
 """
-from pydantic import BaseModel
-from typing import Optional
+
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class Token(BaseModel):
     """Token response schema"""
+
     access_token: str
     token_type: str = "bearer"
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
 
 
 class TokenData(BaseModel):
     """Token data schema"""
-    user_id: Optional[str] = None
+
+    user_id: str | None = None
 
 
 class GitHubUser(BaseModel):
     """GitHub user data schema"""
+
     id: int
     login: str
-    email: Optional[str] = None
-    name: Optional[str] = None
-    avatar_url: Optional[str] = None
+    email: str | None = None
+    name: str | None = None
+    avatar_url: str | None = None
 
 
 class UserBase(BaseModel):
     """Base user schema"""
+
     username: str
-    email: Optional[str] = None
-    name: Optional[str] = None
-    avatar_url: Optional[str] = None
+    email: str | None = None
+    name: str | None = None
+    avatar_url: str | None = None
 
 
 class UserResponse(UserBase):
     """User response schema"""
+
     id: str
     github_id: str
     is_admin: bool

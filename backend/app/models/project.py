@@ -1,9 +1,12 @@
 """
 Project model
 """
-from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, JSON, func
+
 import uuid
+
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
@@ -49,5 +52,5 @@ class Project(Base):
             "company_id": self.company_id,
             "company": self.company.name if self.company else None,
             "featured": self.featured,
-            "order_index": self.order_index
+            "order_index": self.order_index,
         }

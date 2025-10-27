@@ -1,6 +1,7 @@
 """
 Compression middleware for Gzip/Brotli response compression
 """
+
 from starlette.middleware.gzip import GZipMiddleware as StarletteGZipMiddleware
 
 

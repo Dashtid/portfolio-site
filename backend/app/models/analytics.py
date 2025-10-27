@@ -1,8 +1,11 @@
 """
 Analytics model for tracking page views
 """
-from sqlalchemy import Column, String, Text, DateTime, func
+
 import uuid
+
+from sqlalchemy import Column, DateTime, String, Text, func
+
 from app.database import Base
 
 
@@ -29,5 +32,5 @@ class PageView(Base):
             "referrer": self.referrer,
             "country": self.country,
             "city": self.city,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

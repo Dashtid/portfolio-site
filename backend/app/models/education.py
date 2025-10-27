@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, Date, Text, Boolean
+from sqlalchemy import Boolean, Column, Date, Integer, String, Text
+
 from app.database import Base
+
 
 class Education(Base):
     __tablename__ = "education"

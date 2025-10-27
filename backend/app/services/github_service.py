@@ -1,12 +1,13 @@
 """
 GitHub API service for fetching live project statistics
 """
-import httpx
-import asyncio
-from typing import List, Dict, Optional
-from datetime import datetime, timedelta
-from app.config import settings
+
 import logging
+from datetime import datetime, timedelta
+
+import httpx
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +21,15 @@ class GitHubService:
             "Accept": "application/vnd.github.v3+json",
         }
         # Add token if available
-        if hasattr(settings, 'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+        if hasattr(settings, "GITHUB_TOKEN") and settings.GITHUB_TOKEN:
             self.headers["Authorization"] = f"token {settings.GITHUB_TOKEN}"
 
-    async def get_user_info(self, username: str) -> Dict:
+    async def get_user_info(self, username: str) -> dict:
         """Get GitHub user information."""
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/users/{username}",
-                    headers=self.headers
+                    f"{self.base_url}/users/{username}", headers=self.headers
                 )
                 response.raise_for_status()
                 return response.json()
@@ -37,7 +37,7 @@ class GitHubService:
                 logger.error(f"Error fetching user info for {username}: {e}")
                 return {}
 
-    async def get_user_repos(self, username: str, per_page: int = 100) -> List[Dict]:
+    async def get_user_repos(self, username: str, per_page: int = 100) -> list[dict]:
         """Get all public repositories for a user."""
         repos = []
         page = 1
@@ -52,8 +52,8 @@ class GitHubService:
                             "per_page": per_page,
                             "page": page,
                             "sort": "updated",
-                            "direction": "desc"
-                        }
+                            "direction": "desc",
+                        },
                     )
                     response.raise_for_status()
                     data = response.json()
@@ -75,13 +75,12 @@ class GitHubService:
 
         return repos
 
-    async def get_repo_details(self, owner: str, repo: str) -> Dict:
+    async def get_repo_details(self, owner: str, repo: str) -> dict:
         """Get detailed information about a specific repository."""
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/repos/{owner}/{repo}",
-                    headers=self.headers
+                    f"{self.base_url}/repos/{owner}/{repo}", headers=self.headers
                 )
                 response.raise_for_status()
                 return response.json()
@@ -89,13 +88,12 @@ class GitHubService:
                 logger.error(f"Error fetching repo {owner}/{repo}: {e}")
                 return {}
 
-    async def get_repo_languages(self, owner: str, repo: str) -> Dict:
+    async def get_repo_languages(self, owner: str, repo: str) -> dict:
         """Get language statistics for a repository."""
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/repos/{owner}/{repo}/languages",
-                    headers=self.headers
+                    f"{self.base_url}/repos/{owner}/{repo}/languages", headers=self.headers
                 )
                 response.raise_for_status()
                 return response.json()
@@ -103,7 +101,7 @@ class GitHubService:
                 logger.error(f"Error fetching languages for {owner}/{repo}: {e}")
                 return {}
 
-    async def get_repo_commits(self, owner: str, repo: str, since: Optional[datetime] = None) -> int:
+    async def get_repo_commits(self, owner: str, repo: str, since: datetime | None = None) -> int:
         """Get commit count for a repository."""
         if not since:
             since = datetime.now() - timedelta(days=365)  # Default to last year
@@ -113,10 +111,7 @@ class GitHubService:
                 response = await client.get(
                     f"{self.base_url}/repos/{owner}/{repo}/commits",
                     headers=self.headers,
-                    params={
-                        "since": since.isoformat(),
-                        "per_page": 1
-                    }
+                    params={"since": since.isoformat(), "per_page": 1},
                 )
                 response.raise_for_status()
 
@@ -125,6 +120,7 @@ class GitHubService:
                 if link_header:
                     # Parse the last page number from Link header
                     import re
+
                     match = re.search(r'page=(\d+)>; rel="last"', link_header)
                     if match:
                         return int(match.group(1))
@@ -136,7 +132,7 @@ class GitHubService:
                 logger.error(f"Error fetching commits for {owner}/{repo}: {e}")
                 return 0
 
-    async def get_portfolio_stats(self, username: str) -> Dict:
+    async def get_portfolio_stats(self, username: str) -> dict:
         """Get aggregated statistics for portfolio display."""
         user_info = await self.get_user_info(username)
         repos = await self.get_user_repos(username)
@@ -157,11 +153,7 @@ class GitHubService:
                 languages[lang] = languages.get(lang, 0) + bytes_count
 
         # Sort languages by usage
-        top_languages = sorted(
-            languages.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:5]
+        top_languages = sorted(languages.items(), key=lambda x: x[1], reverse=True)[:5]
 
         return {
             "username": username,
@@ -185,13 +177,13 @@ class GitHubService:
                     "forks": r.get("forks_count", 0),
                     "language": r.get("language"),
                     "updated_at": r.get("updated_at"),
-                    "html_url": r.get("html_url")
+                    "html_url": r.get("html_url"),
                 }
                 for r in owned_repos[:6]  # Top 6 recent repos
-            ]
+            ],
         }
 
-    async def get_project_stats(self, owner: str, repo: str) -> Dict:
+    async def get_project_stats(self, owner: str, repo: str) -> dict:
         """Get detailed statistics for a specific project."""
         repo_details = await self.get_repo_details(owner, repo)
         languages = await self.get_repo_languages(owner, repo)
@@ -212,7 +204,7 @@ class GitHubService:
             "languages": languages,
             "topics": repo_details.get("topics", []),
             "homepage": repo_details.get("homepage"),
-            "html_url": repo_details.get("html_url")
+            "html_url": repo_details.get("html_url"),
         }
 
 

@@ -1,16 +1,18 @@
 """
 Database migration script to add missing columns to portfolio.db
 """
-import asyncio
+
 import sqlite3
 from pathlib import Path
 
 DATABASE_PATH = Path(__file__).parent / "portfolio.db"
 
+
 def get_table_columns(cursor, table_name):
     """Get list of column names for a table"""
     cursor.execute(f"PRAGMA table_info({table_name})")
     return [row[1] for row in cursor.fetchall()]
+
 
 def migrate_companies_table(conn):
     """Add missing columns to companies table"""
@@ -28,7 +30,7 @@ def migrate_companies_table(conn):
         "map_url": "VARCHAR(500)",
         "map_title": "VARCHAR(255)",
         "responsibilities": "JSON",
-        "technologies": "JSON"
+        "technologies": "JSON",
     }
 
     # Add missing columns
@@ -49,6 +51,7 @@ def migrate_companies_table(conn):
 
     return added_count
 
+
 def migrate_projects_table(conn):
     """Add missing columns to projects table"""
     cursor = conn.cursor()
@@ -66,7 +69,7 @@ def migrate_projects_table(conn):
         "map_title": "VARCHAR(255)",
         "responsibilities": "JSON",
         "technologies": "JSON",
-        "github_url": "VARCHAR(500)"
+        "github_url": "VARCHAR(500)",
     }
 
     # Add missing columns
@@ -86,6 +89,7 @@ def migrate_projects_table(conn):
         print("[OK] No migration needed for projects table")
 
     return added_count
+
 
 def main():
     """Execute database migrations"""
@@ -112,15 +116,17 @@ def main():
         if total_added > 0:
             print(f"\n[OK] Migration complete! Added {total_added} column(s) total")
         else:
-            print(f"\n[OK] Database schema is up to date")
+            print("\n[OK] Database schema is up to date")
 
         return 0
 
     except Exception as e:
         print(f"[-] ERROR during migration: {type(e).__name__}: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
+
 
 if __name__ == "__main__":
     exit(main())

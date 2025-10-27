@@ -1,7 +1,9 @@
 """
 Caching middleware for GET request responses
 """
-from typing import Callable
+
+from collections.abc import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -48,10 +50,22 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
     @staticmethod
     def _is_static_content(path: str) -> bool:
         """Check if path is static content"""
-        static_extensions = {'.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.woff', '.woff2'}
+        static_extensions = {
+            ".js",
+            ".css",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".svg",
+            ".webp",
+            ".ico",
+            ".woff",
+            ".woff2",
+        }
         return any(path.endswith(ext) for ext in static_extensions)
 
     @staticmethod
     def _is_api_endpoint(path: str) -> bool:
         """Check if path is an API endpoint"""
-        return path.startswith('/api/')
+        return path.startswith("/api/")

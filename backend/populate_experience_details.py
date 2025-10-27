@@ -34,9 +34,8 @@ In my role at Hermes Medical Solutions, I work as a multidisciplinary specialist
 
 **Data Security:** I work with data security, ensuring company and customer data is protected through appropriate controls and policies. This includes assessing security practices, implementing internal best practices, and maintaining data protection standards for our development and testing environments.
 
-**Cross-Functional Collaboration:** Working in a hybrid environment, I collaborate with development teams, clinical specialists, and regulatory experts to align technical excellence with clinical needs and regulatory requirements."""
+**Cross-Functional Collaboration:** Working in a hybrid environment, I collaborate with development teams, clinical specialists, and regulatory experts to align technical excellence with clinical needs and regulatory requirements.""",
     },
-
     "Karolinska University Hospital": {
         "video_url": "https://www.youtube.com/embed/05k9c4zPBWo",
         "video_title": "Karolinska Universitetssjukhuset",
@@ -52,9 +51,8 @@ During my time at Karolinska University Hospital, I operated at the intersection
 
 **Systems Architecture and Integration:** Developed understanding of clinical and technical workflows for RIS/PACS integrations with the regional Hospital Information System (HIS). This work involved learning system architectures that support imaging solutions in clinical environments. Gained experience with healthcare communication protocols including DICOM and HL7, which are essential for medical imaging workflows.
 
-**Infrastructure and Process Management:** Enhanced technical capabilities through hands-on experience with Active Directory management and ITIL framework implementation for technical support processes."""
+**Infrastructure and Process Management:** Enhanced technical capabilities through hands-on experience with Active Directory management and ITIL framework implementation for technical support processes.""",
     },
-
     "Philips Healthcare": {
         "video_url": "https://www.youtube.com/embed/i2wsMvBen1c",
         "video_title": "Enterprise Informatics ESC 2023",
@@ -74,9 +72,8 @@ During my tenure at Philips, I served as a critical link between cutting-edge me
 
 **International Operations and Technical Development:** Gained valuable international experience managing service delivery across diverse healthcare systems and regulatory environments in both Nordic and UK & Ireland regions. Enhanced technical expertise in critical healthcare IT protocols including HL7, broker engines, and enterprise architecture solutions, while developing advanced troubleshooting capabilities and stakeholder management skills essential for supporting complex medical imaging infrastructures.
 
-**Customer-Centric Process Improvement:** Maintained unwavering focus on customer satisfaction throughout all activities, working systematically to improve system deployment processes and service delivery quality, ensuring that Philips' advanced medical imaging solutions consistently met the demanding requirements of modern healthcare environments."""
+**Customer-Centric Process Improvement:** Maintained unwavering focus on customer satisfaction throughout all activities, working systematically to improve system deployment processes and service delivery quality, ensuring that Philips' advanced medical imaging solutions consistently met the demanding requirements of modern healthcare environments.""",
     },
-
     "Scania Engines": {
         "video_url": "https://www.youtube.com/embed/Rm6grXvyX6I",
         "video_title": "Inom Scania produktion: Tillverkningsprocess på Lastbilsfabriken",
@@ -88,9 +85,8 @@ During my time at Scania Södertälje, I progressed from a junior technician rol
 
 **Initial Role (2012):** Started as part of the second-line support team, working alongside experienced engineers and technicians. Acquired fundamental troubleshooting skills and gained a thorough understanding of Scania's organizational structure and production processes.
 
-**Advanced Role (2016):** Returned in a more autonomous capacity that allowed me to further develop my engineering skills. Was a part of the entire troubleshooting process from case intake to resolution and reporting results to superiors. Worked across the production chain, from manufacturing line personnel to construction engineers, while gaining valuable experience in creating documentation and establishing work routines."""
+**Advanced Role (2016):** Returned in a more autonomous capacity that allowed me to further develop my engineering skills. Was a part of the entire troubleshooting process from case intake to resolution and reporting results to superiors. Worked across the production chain, from manufacturing line personnel to construction engineers, while gaining valuable experience in creating documentation and establishing work routines.""",
     },
-
     "Finnish Defence Forces": {
         "video_url": "https://www.youtube.com/embed/AcLYbg2Jk9c?si=LFG4nBnqCZ3WRfSt",
         "video_title": "Finnish Defence Forces",
@@ -106,9 +102,8 @@ During my service with Nylands Brigad, I underwent an intensive transformation f
 
 **Command Responsibilities:** My duties encompassed both garrison and field operations, requiring adaptability between different operational contexts. In day-to-day garrison duties, I was responsible for the command and welfare of 150 soldiers, managing everything from training schedules to personnel development. During field operations, I led a specialized unit of 30 soldiers in tactical scenarios, where coordination and split-second decision-making were essential for mission success and personnel safety.
 
-This experience fundamentally shaped my approach to leadership, teaching me the importance of clear communication, decisive action, and maintaining team cohesion under pressure."""
+This experience fundamentally shaped my approach to leadership, teaching me the importance of clear communication, decisive action, and maintaining team cohesion under pressure.""",
     },
-
     "Södersjukhuset - SÖS": {
         "video_url": None,  # SÖS page only has a map, no video
         "video_title": None,
@@ -122,8 +117,8 @@ At Södersjukhuset's radiology department, I worked with both radiology equipmen
 
 **Cross-Functional Collaboration:** I worked with multidisciplinary teams including clinical staff, IT specialists, and administrative personnel to align technology implementations with operational needs.
 
-**Security and Compliance:** I analyzed IT systems for operational efficiency and security, identifying improvement opportunities while ensuring compliance with healthcare regulations including ISO 13485."""
-    }
+**Security and Compliance:** I analyzed IT systems for operational efficiency and security, identifying improvement opportunities while ensuring compliance with healthcare regulations including ISO 13485.""",
+    },
 }
 
 
@@ -142,7 +137,8 @@ def main():
         print(f"\nUpdating: {company_name}")
 
         # Update company record
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE companies
             SET
                 video_url = ?,
@@ -151,41 +147,46 @@ def main():
                 map_title = ?,
                 detailed_description = ?
             WHERE name = ?
-        """, (
-            details["video_url"],
-            details["video_title"],
-            details["map_url"],
-            details["map_title"],
-            details["detailed_description"],
-            company_name
-        ))
+        """,
+            (
+                details["video_url"],
+                details["video_title"],
+                details["map_url"],
+                details["map_title"],
+                details["detailed_description"],
+                company_name,
+            ),
+        )
 
         if cursor.rowcount > 0:
             updated_count += 1
-            print(f"  [OK] Updated successfully")
+            print("  [OK] Updated successfully")
             print(f"  - Video: {'Yes' if details['video_url'] else 'No'}")
             print(f"  - Map: {'Yes' if details['map_url'] else 'No'}")
             print(f"  - Detailed Description: {len(details['detailed_description'])} characters")
         else:
-            print(f"  [WARN] Company not found in database")
+            print("  [WARN] Company not found in database")
 
     # Commit changes
     conn.commit()
 
     # Verify updates
     print(f"\n{'=' * 60}")
-    print(f"Summary:")
+    print("Summary:")
     print(f"  - Total companies updated: {updated_count}/{len(EXPERIENCE_DETAILS)}")
 
     # Query to check results
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT name,
                CASE WHEN video_url IS NOT NULL THEN 'Yes' ELSE 'No' END as has_video,
                CASE WHEN map_url IS NOT NULL THEN 'Yes' ELSE 'No' END as has_map,
                CASE WHEN detailed_description IS NOT NULL THEN 'Yes' ELSE 'No' END as has_details
         FROM companies
         WHERE name IN (?, ?, ?, ?, ?, ?)
-    """, tuple(EXPERIENCE_DETAILS.keys()))
+    """,
+        tuple(EXPERIENCE_DETAILS.keys()),
+    )
 
     print("\nVerification:")
     for row in cursor.fetchall():
