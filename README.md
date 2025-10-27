@@ -85,14 +85,63 @@ cd frontend && npm install && npm run dev
 
 ## Development
 
+### Code Quality Tools (2025 Best Practices)
+
+**Frontend**:
 ```bash
-# Tests
+npm run lint              # ESLint 9 with flat config
+npm run lint:fix          # Auto-fix linting issues
+npm run format            # Prettier formatting
+npm run format:check      # Check formatting
+npm run type-check        # TypeScript type checking
+```
+
+**Backend**:
+```bash
+ruff check .              # Lint Python code
+ruff check --fix .        # Auto-fix linting issues
+ruff format .             # Format Python code
+mypy .                    # Static type checking
+```
+
+**Pre-commit Hooks**:
+```bash
+pre-commit run --all-files   # Run all quality checks
+```
+
+### Testing
+
+```bash
+# Backend tests
 cd backend && pytest
-cd frontend && npm run test:unit
+cd backend && pytest --cov=app --cov-report=html
+
+# Frontend tests
+cd frontend && npm run test
+cd frontend && npm run coverage
 
 # Build
 cd frontend && npm run build
 ```
+
+### Tooling Stack
+
+**Frontend**:
+- ESLint 9.38.0 (flat config format)
+- Prettier 3.6.2
+- TypeScript 5.9.3
+- Vitest 2.1.9 + v8 coverage
+- Vite 7.1.7
+
+**Backend**:
+- Ruff 0.14.2 (linter + formatter)
+- mypy 1.18.2 (type checker)
+- pytest 8.3.4 + pytest-cov
+- Python 3.11+
+
+**Both**:
+- EditorConfig (consistency)
+- Pre-commit hooks (automated checks)
 
 ## Deployment
 
