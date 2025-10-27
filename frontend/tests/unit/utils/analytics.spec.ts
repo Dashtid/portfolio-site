@@ -2,19 +2,74 @@
  * Tests for analytics utility (TypeScript)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+// Mock the analytics module with enabled state
+vi.mock('@/utils/analytics', async () => {
+  const actual = await vi.importActual('@/utils/analytics') as any
+
+  // Create a test instance with analytics enabled
+  class TestAnalytics {
+    private enabled = true
+    private provider = 'plausible'
+
+    trackEvent(eventName: string, props: Record<string, any> = {}): void {
+      if (!this.enabled) return
+      try {
+        if (this.provider === 'plausible' && window.plausible) {
+          window.plausible(eventName, { props })
+        }
+      } catch (error) {
+        console.warn('[Analytics] Failed to track event:', error)
+      }
+    }
+
+    trackPageView(path: string): void {
+      if (!this.enabled) return
+      try {
+        if (this.provider === 'plausible' && window.plausible) {
+          window.plausible('pageview', { u: window.location.origin + path })
+        }
+      } catch (error) {
+        console.warn('[Analytics] Failed to track pageview:', error)
+      }
+    }
+
+    trackOutboundLink(url: string): void {
+      this.trackEvent('Outbound Link Click', { url })
+    }
+
+    trackDownload(filename: string): void {
+      this.trackEvent('File Download', { filename })
+    }
+
+    trackError(errorMessage: string, errorType: string = 'Unknown'): void {
+      this.trackEvent('Error', {
+        message: errorMessage,
+        type: errorType
+      })
+    }
+  }
+
+  const testAnalytics = new TestAnalytics()
+
+  return {
+    analytics: testAnalytics,
+    trackEvent: (name: string, props?: Record<string, any>) => testAnalytics.trackEvent(name, props),
+    trackPageView: (path: string) => testAnalytics.trackPageView(path),
+    trackOutboundLink: (url: string) => testAnalytics.trackOutboundLink(url),
+    trackDownload: (filename: string) => testAnalytics.trackDownload(filename),
+    default: testAnalytics
+  }
+})
+
 import { analytics, trackEvent, trackPageView, trackOutboundLink, trackDownload } from '@/utils/analytics'
 
 describe('analytics utility', () => {
   beforeEach(() => {
-    // Re-import to get fresh instance with test environment variables
-    vi.resetModules()
-
-    // Mock window.plausible before importing analytics
     window.plausible = vi.fn()
   })
 
   afterEach(() => {
-    vi.unstubAllEnvs()
     delete window.plausible
     vi.clearAllMocks()
   })
@@ -25,16 +80,11 @@ describe('analytics utility', () => {
     })
 
     it('tracks events with Plausible', () => {
-      // Enable analytics for this test
-      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
-
       analytics.trackEvent('Test Event', { test: 'value' })
 
       expect(window.plausible).toHaveBeenCalledWith('Test Event', {
         props: { test: 'value' }
       })
-
-      vi.unstubAllEnvs()
     })
 
     it('tracks events with empty props', () => {

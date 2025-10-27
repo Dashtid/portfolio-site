@@ -110,6 +110,20 @@ describe('imageOptimization utility', () => {
   })
 
   describe('createPlaceholder', () => {
+    beforeEach(() => {
+      // Mock canvas context for placeholder generation
+      const mockContext = {
+        createLinearGradient: vi.fn(() => ({
+          addColorStop: vi.fn()
+        })),
+        fillRect: vi.fn(),
+        fillStyle: ''
+      }
+
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext as any)
+      vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/jpeg;base64,mockdata')
+    })
+
     it('returns data URL', () => {
       const placeholder = createPlaceholder()
 

@@ -144,7 +144,7 @@ describe('useAnalytics', () => {
 
     analytics.trackBackToTop()
 
-    expect(analyticsUtils.trackEvent).toHaveBeenCalledWith('Back To Top')
+    expect(analyticsUtils.trackEvent).toHaveBeenCalledWith('Back To Top', {})
   })
 
   it('exposes analytics instance', () => {

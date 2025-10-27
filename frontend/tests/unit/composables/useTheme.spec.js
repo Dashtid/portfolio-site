@@ -56,35 +56,44 @@ describe('useTheme', () => {
     const { currentTheme, setTheme } = useTheme()
 
     setTheme('dark')
-    expect(currentTheme.value).toBe('dark')
+    expect(currentTheme()).toBe('dark')
 
     setTheme('light')
-    expect(currentTheme.value).toBe('light')
+    expect(currentTheme()).toBe('light')
   })
 
-  it('persists theme to localStorage', () => {
+  it('persists theme to localStorage', async () => {
     const { setTheme } = useTheme()
 
     setTheme('dark')
+
+    // Wait for Vue to update
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     const stored = localStorage.getItem('portfolio-theme')
     expect(stored).toBeTruthy()
   })
 
-  it('applies theme attribute to HTML element', () => {
+  it('applies theme attribute to HTML element', async () => {
     const { setTheme } = useTheme()
 
     setTheme('dark')
+
+    // Wait for Vue to update DOM
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     const htmlTheme = document.documentElement.getAttribute('data-theme')
     expect(htmlTheme).toBe('dark')
   })
 
-  it('dispatches theme-changed event', () => {
+  it('dispatches theme-changed event', async () => {
     const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent')
 
     const { toggleTheme } = useTheme()
     toggleTheme()
+
+    // Wait for watch effect to trigger
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     expect(dispatchEventSpy).toHaveBeenCalled()
 
