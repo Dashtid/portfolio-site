@@ -16,15 +16,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://dashti-portfolio-backend.fly.dev/api/:path*"
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
