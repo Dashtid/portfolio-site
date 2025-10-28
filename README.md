@@ -53,13 +53,16 @@ cd frontend && npm install && npm run dev
 ## Documentation
 
 **Essential**:
-- [NEXT_STEPS_RECOMMENDATIONS.md](NEXT_STEPS_RECOMMENDATIONS.md) - Deployment & enhancements
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Production deployment guide (Vercel + Fly.io)
+- [NEXT_STEPS_RECOMMENDATIONS.md](NEXT_STEPS_RECOMMENDATIONS.md) - Next enhancements
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 
 **Guides** (docs/guides/):
+- DEPLOYMENT.md - Production deployment (Vercel + Fly.io, $0-5/month)
 - MONITORING.md - Logging & error tracking
 - PERFORMANCE.md - Optimization strategies
 - TESTING.md - Test infrastructure
+- TOOLING.md - Development tooling (ESLint 9, Ruff, mypy)
 
 **Migration** (docs/migration/):
 - FEATURE_PARITY_ANALYSIS.md - Complete comparison with original
@@ -145,9 +148,20 @@ cd frontend && npm run build
 
 ## Deployment
 
-See [NEXT_STEPS_RECOMMENDATIONS.md](NEXT_STEPS_RECOMMENDATIONS.md) for detailed guide.
+**Production Configuration**: Vercel (frontend) + Fly.io (backend) = $0-5/month
 
-**Options**: Azure (Container Instances) | AWS (ECS/Fargate) | Vercel/Netlify + Railway
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete deployment guide with step-by-step instructions.
+
+**Quick Deploy**:
+```bash
+# Backend (Fly.io)
+cd backend && fly launch --no-deploy && fly deploy
+
+# Frontend (Vercel)
+cd frontend && vercel --prod
+```
+
+**CI/CD**: Automated deployment via GitHub Actions (`.github/workflows/deploy.yml`)
 
 ## Migration Status
 
