@@ -20,8 +20,25 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str | None = "sqlite+aiosqlite:///./portfolio.db"
-    # For PostgreSQL (when ready):
-    # DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost/portfolio_db"
+
+    @property
+    def async_database_url(self) -> str:
+        """
+        Convert DATABASE_URL to async-compatible format.
+        Fly.io provides postgres:// but SQLAlchemy async needs postgresql+asyncpg://
+        """
+        if self.DATABASE_URL is None:
+            return "sqlite+aiosqlite:///./portfolio.db"
+
+        url = self.DATABASE_URL
+        # Convert postgres:// to postgresql+asyncpg://
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        # Ensure postgresql:// becomes postgresql+asyncpg://
+        elif url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        return url
 
     # CORS
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]
@@ -42,7 +59,7 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-    # Analytics (Privacy-compliant)
+    # Analytics
     ANALYTICS_ENABLED: bool = True
     ANALYTICS_SITE_ID: str | None = None  # Plausible/Umami site ID
     ANALYTICS_URL: str | None = None  # Analytics server URL
