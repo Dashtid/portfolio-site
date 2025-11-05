@@ -100,6 +100,8 @@ async def rebuild_complete_data_temp(
     db: AsyncSession = Depends(get_db),
 ):
     """TEMPORARY: Rebuild database with complete experience data from original site (NO AUTH - REMOVE AFTER USE)"""
+    from datetime import datetime
+
     try:
         # Clear existing companies
         await db.execute(delete(Company))
@@ -368,6 +370,12 @@ async def rebuild_complete_data_temp(
         # Create companies with all details
         count = 0
         for company_dict in companies_data:
+            # Convert date strings to date objects
+            if company_dict.get("start_date"):
+                company_dict["start_date"] = datetime.fromisoformat(company_dict["start_date"]).date()
+            if company_dict.get("end_date"):
+                company_dict["end_date"] = datetime.fromisoformat(company_dict["end_date"]).date()
+
             company = Company(**company_dict)
             db.add(company)
             count += 1
