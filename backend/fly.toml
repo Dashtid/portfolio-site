@@ -37,7 +37,7 @@ primary_region = 'arn'
     timeout = '5s'
     grace_period = '10s'
     method = 'GET'
-    path = '/health'
+    path = '/api/v1/health'
 
 [[vm]]
   memory = '1gb'

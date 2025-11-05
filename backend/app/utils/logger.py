@@ -111,8 +111,7 @@ def setup_logger(name: str = None, level: str = "INFO") -> logging.Logger:
 
     # Create JSON formatter
     formatter = CustomJsonFormatter(
-        "%(timestamp)s %(level)s %(logger)s %(message)s",
-        rename_fields={"levelname": "level", "name": "logger", "asctime": "timestamp"},
+        "%(timestamp)s %(level)s %(logger)s %(message)s"
     )
 
     handler.setFormatter(formatter)

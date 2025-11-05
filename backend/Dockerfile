@@ -36,13 +36,9 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:8000/api/v1/health')" || exit 1
 
-# Run with gunicorn + uvicorn workers for production
-CMD ["gunicorn", "app.main:app", \
-     "-k", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "2", \
-     "--timeout", "120", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-"]
+# Run with uvicorn directly (simpler for debugging)
+CMD ["python", "-m", "uvicorn", "app.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000"]

@@ -289,9 +289,8 @@ async def seed_education(session: AsyncSession):
             "end_date": datetime(2022, 6, 15),
             "location": "Stockholm, Sweden",
             "description": "Specialized in medical imaging, signal processing, and healthcare informatics. Thesis on AI-driven diagnostic systems.",
-            "gpa": 4.5,
             "is_certification": False,
-            "order_index": 1,
+            "order": 1,
         },
         {
             "institution": "Lund University (LTH)",
@@ -301,9 +300,8 @@ async def seed_education(session: AsyncSession):
             "end_date": datetime(2021, 6, 1),
             "location": "Lund, Sweden",
             "description": "Exchange program focusing on medical device development and regulatory affairs.",
-            "gpa": None,
             "is_certification": False,
-            "order_index": 2,
+            "order": 2,
         },
         {
             "institution": "Företagsuniversitetet",
@@ -314,7 +312,7 @@ async def seed_education(session: AsyncSession):
             "location": "Stockholm, Sweden",
             "description": "Intensive certification program for implementing and managing ISO 27001 ISMS.",
             "is_certification": True,
-            "order_index": 3,
+            "order": 3,
         },
         {
             "institution": "Microsoft",
@@ -325,7 +323,7 @@ async def seed_education(session: AsyncSession):
             "location": "Online",
             "description": "Azure security services, identity management, and compliance features.",
             "is_certification": True,
-            "order_index": 4,
+            "order": 4,
         },
         {
             "institution": "EC-Council",
@@ -336,7 +334,7 @@ async def seed_education(session: AsyncSession):
             "location": "Online",
             "description": "Ethical hacking methodologies, penetration testing, and vulnerability assessment.",
             "is_certification": True,
-            "order_index": 5,
+            "order": 5,
         },
     ]
 

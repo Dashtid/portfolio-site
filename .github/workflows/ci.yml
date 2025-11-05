@@ -1,0 +1,119 @@
+name: CI - Test All Components
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run Python linter (Ruff)
+        run: |
+          cd backend
+          pip install ruff
+          ruff check .
+
+      - name: Run type checker (mypy)
+        run: |
+          cd backend
+          pip install mypy
+          mypy .
+        continue-on-error: true
+
+      - name: Run tests
+        run: |
+          cd backend
+          pytest --cov=app --cov-report=xml --cov-report=term-missing
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          SECRET_KEY: test-secret-key-for-ci
+          ENVIRONMENT: testing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+        continue-on-error: true
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run linter (ESLint)
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run formatter check (Prettier)
+        run: |
+          cd frontend
+          npm run format:check
+
+      - name: Run type check (TypeScript)
+        run: |
+          cd frontend
+          npm run type-check
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm run coverage
+
+      - name: Build
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./frontend/coverage
+          flags: frontend
+          name: frontend-coverage
+        continue-on-error: true
