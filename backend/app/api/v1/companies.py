@@ -3,7 +3,7 @@ Company API endpoints
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_admin_user
@@ -102,7 +102,7 @@ async def rebuild_complete_data_temp(
     """TEMPORARY: Rebuild database with complete experience data from original site (NO AUTH - REMOVE AFTER USE)"""
     try:
         # Clear existing companies
-        await db.execute(select(Company).delete())
+        await db.execute(delete(Company))
         await db.commit()
 
         companies_data = [
