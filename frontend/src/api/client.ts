@@ -9,9 +9,13 @@ import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosR
  * - Automatic logout on refresh failure
  */
 
+// Get API URL from environment variables
+// Vite exposes env vars as import.meta.env
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 // Create axios instance with default configuration
 const apiClient: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8001',  // Backend running on port 8001
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -44,7 +48,7 @@ apiClient.interceptors.response.use(
       if (refreshToken) {
         try {
           const response = await axios.post<{ access_token: string; refresh_token: string }>(
-            'http://localhost:8001/api/v1/auth/refresh',
+            `${API_URL}/api/v1/auth/refresh`,
             { refresh_token: refreshToken }
           )
 

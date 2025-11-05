@@ -110,6 +110,9 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
+// Get API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const props = defineProps({
   username: {
     type: String,
@@ -126,7 +129,7 @@ const fetchGitHubStats = async () => {
     loading.value = true
     error.value = false
 
-    const response = await axios.get(`http://localhost:8001/api/v1/github/stats/${props.username}`)
+    const response = await axios.get(`${API_URL}/api/v1/github/stats/${props.username}`)
     stats.value = response.data
   } catch (err) {
     console.error('Error fetching GitHub stats:', err)

@@ -143,6 +143,9 @@ import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
 
+// Get API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -193,7 +196,7 @@ const fetchCompanyDetails = async (companyId) => {
     error.value = null
 
     // Fetch all companies first (for navigation)
-    const companiesResponse = await axios.get('http://localhost:8001/api/v1/companies/')
+    const companiesResponse = await axios.get(`${API_URL}/api/v1/companies/`)
     allCompanies.value = companiesResponse.data.sort((a, b) => {
       return new Date(b.start_date) - new Date(a.start_date)
     })

@@ -3,7 +3,9 @@
  */
 import axios, { type AxiosResponse } from 'axios'
 
-const API_URL = 'http://localhost:8001/api/v1/analytics'
+// Get API URL from environment variables
+const BASE_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = `${BASE_API_URL}/api/v1/analytics`
 
 interface PageViewData {
   page_path: string

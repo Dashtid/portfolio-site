@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import apiClient from '../api/client'
 import type { LoginResponse } from '@/types'
 
+// Get API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 interface User {
   id: string
   username: string
@@ -100,7 +103,7 @@ export const useAuthStore = defineStore('auth', {
 
     // Login with GitHub
     loginWithGitHub(): void {
-      window.location.href = 'http://localhost:8001/api/v1/auth/github'
+      window.location.href = `${API_URL}/api/v1/auth/github`
     },
 
     // Logout
