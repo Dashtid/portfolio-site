@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Hotfix] - 2025-11-05 - Production Media Content & Frontend Deployment Fix
+
+### Fixed
+**Frontend Deployment:**
+- Fixed blank page issue on Vercel production deployment
+- Replaced all hardcoded localhost API URLs with environment variable (VITE_API_URL)
+- Updated files: src/api/client.ts, src/stores/auth.ts, src/services/analytics.ts, src/views/CompanyDetailView.vue, src/components/GitHubStats.vue
+- Frontend now correctly connects to production backend (https://dashti-portfolio-backend.fly.dev)
+
+**Backend Data:**
+- Added complete media content (YouTube videos and Google Maps) for all experience entries
+- Added missing 7th company: SoftPro Medical Solutions (Master Thesis Student, 2020)
+- Created update_complete_with_media.py script with all media URLs extracted from original site
+- Successfully updated production database with all 7 companies including:
+  - Scania: YouTube video + Google Maps
+  - Finnish Defence Forces: YouTube video + Google Maps
+  - Hermes Medical Solutions: YouTube video + Google Maps
+  - Södersjukhuset: Google Maps only
+  - SoftPro Medical Solutions: No media (thesis entry)
+  - Karolinska University Hospital: YouTube video + Google Maps
+  - Philips AB: YouTube video + Google Maps
+
+### Root Cause
+- Frontend was attempting to connect to localhost:8001 in production instead of using .env.production configuration
+- This caused the Vue app to fail loading data, resulting in a blank page
+- Missing media URLs meant experience sections were incomplete even when accessible
+
 ## [Phase 6] - 2025-10-22 - Monitoring & Performance Optimization
 
 ### Added
