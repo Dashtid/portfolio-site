@@ -85,11 +85,11 @@ psql postgres://postgres@top2.nearest.of.dashti-portfolio-db.internal:5432 -c "\
 
 ## Current Status
 
-- [X] DATABASE_URL secret exists
-- [X] `portfolio_app` user exists in PostgreSQL
-- [X] Backend deployment successful
-- [ ] **BLOCKED**: Password authentication fails (wrong password in DATABASE_URL)
-- [ ] PostgreSQL connection not working
+- DATABASE_URL secret exists
+- `portfolio_app` user exists in PostgreSQL
+- Backend deployment successful
+- BLOCKED: Password authentication fails (wrong password in DATABASE_URL)
+- PostgreSQL connection not working
 
 ## Next Steps
 

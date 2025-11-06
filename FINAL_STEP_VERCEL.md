@@ -2,13 +2,13 @@
 
 ## Current Status
 
-✅ **COMPLETED:**
+**COMPLETED:**
 - Backend deployed and running on Fly.io
 - PostgreSQL database connected successfully
 - Database populated with 7 companies and 4 education entries
 - API verified working: https://dashti-portfolio-backend.fly.dev/api/v1/companies/
 
-❌ **REMAINING:**
+**REMAINING:**
 - Frontend showing wrong site (Next.js template instead of Vue 3 portfolio)
 - Vercel needs Root Directory configured to `frontend/`
 
@@ -67,10 +67,10 @@ curl -s https://portfolio-site-psi-three.vercel.app/ | grep -i "David Dashti"
 https://portfolio-site-psi-three.vercel.app/
 
 **You should see:**
-- ✓ Your Vue 3 portfolio homepage
-- ✓ Navigation (Home, Experience, Projects, Publications)
-- ✓ Experience timeline with your companies
-- ✓ No console errors
+- Your Vue 3 portfolio homepage
+- Navigation (Home, Experience, Projects, Publications)
+- Experience timeline with your companies
+- No console errors
 
 ---
 
@@ -149,16 +149,16 @@ Once Vercel is fixed, you'll have:
 - App: dashti-portfolio-backend
 - Database: PostgreSQL (dashti-portfolio-db)
 - API: https://dashti-portfolio-backend.fly.dev/api/v1/
-- Status: ✓ Running, ✓ Connected, ✓ Populated
+- Status: Running, Connected, Populated
 
 **Frontend (Vercel):**
 - App: portfolio-site-psi-three
 - URL: https://portfolio-site-psi-three.vercel.app/
-- Status: ⏳ Needs Root Directory fix
+- Status: Needs Root Directory fix
 
 **Database Content:**
-- 7 Companies ✓
-- 4 Education Entries ✓
+- 7 Companies (populated)
+- 4 Education Entries (populated)
 - 0 Projects (can be added later)
 - 0 Documents (can be added later)
 

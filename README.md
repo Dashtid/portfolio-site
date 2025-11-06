@@ -2,16 +2,16 @@
 
 Modern, production-ready portfolio website with dynamic content management, authentication, and comprehensive testing.
 
-**Status**: 🚧 Backend Deployed (Fly.io) | Frontend Deployed (Vercel) - Layout needs fixing | **Coverage**: 80%
+**Status**: Backend Deployed (Fly.io) | Frontend Deployed (Vercel) - Layout needs fixing | **Coverage**: 80%
 
 ## Production Deployment
 
 **Backend:** https://dashti-portfolio-backend.fly.dev/api/v1/
-- Status: ✅ Running on Fly.io with PostgreSQL
+- Status: Running on Fly.io with PostgreSQL
 - Database: 7 companies, 4 education entries
 
 **Frontend:** https://portfolio-site-jade-five.vercel.app/
-- Status: ⚠️ Deployed but layout broken (needs investigation)
+- Status: Deployed but layout broken (needs investigation)
 
 **See:** [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for current deployment status and next steps
 
@@ -176,7 +176,7 @@ cd frontend && vercel --prod
 
 ## Migration Status
 
-**✅ 100% Complete**:
+**100% Complete**:
 - 7 companies, 4 education entries, 8 projects
 - 2 thesis PDFs (actual 1.3 MB + 4.0 MB files)
 - 48 logo images

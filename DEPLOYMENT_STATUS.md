@@ -2,7 +2,7 @@
 
 ## Current State
 
-### ✅ Backend (Fly.io) - FULLY WORKING
+### Backend (Fly.io) - Fully Operational
 
 **Application:** dashti-portfolio-backend
 - URL: https://dashti-portfolio-backend.fly.dev/
@@ -21,7 +21,7 @@
 - Companies: https://dashti-portfolio-backend.fly.dev/api/v1/companies/
 - Education: https://dashti-portfolio-backend.fly.dev/api/v1/education/
 
-### ⚠️ Frontend (Vercel) - DEPLOYED BUT LAYOUT BROKEN
+### Frontend (Vercel) - Deployed, Layout Issue
 
 **Application:** portfolio-site
 - URL: https://portfolio-site-jade-five.vercel.app/
