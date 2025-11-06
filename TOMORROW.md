@@ -26,16 +26,16 @@
 - Backend API: Correctly configured
 - Build: Completes successfully
 
-## Investigation Steps for Tomorrow
+## Investigation Steps
 
 ### 1. Compare Current vs Expected
 
-**Check dashti.se:**
+Check dashti.se:
 - Note the layout structure
 - Identify missing components (cards, etc.)
 - Screenshot the expected design
 
-**Check deployed site:**
+Check deployed site:
 - What's rendering vs what's missing
 - Check browser DevTools Console for errors
 - Verify API calls are working
@@ -58,7 +58,7 @@ Check if frontend needs environment variables:
 - Any feature flags
 - Build-time variables
 
-**Vercel Dashboard:**
+Vercel Dashboard:
 - Settings → Environment Variables
 - Check if any are missing
 
@@ -86,12 +86,12 @@ fetch('https://dashti-portfolio-backend.fly.dev/api/v1/companies/')
 
 ### 7. Compare Local vs Production
 
-**If local works but production doesn't:**
+If local works but production doesn't:
 - Build configuration issue
 - Environment-specific code
 - Path resolution differences
 
-**If both broken:**
+If both broken:
 - Recent code changes broke layout
 - Git revert to last working commit
 - Incremental fixes
@@ -119,8 +119,9 @@ curl -s https://portfolio-site-jade-five.vercel.app/ | grep -i "error\|404\|500"
 
 ## Vercel Projects Cleanup
 
-**Keep:** portfolio-site (main)
-**Delete:**
+Keep: portfolio-site (main)
+
+Delete:
 - portfolio-site-ekpmll
 - portfolio-site-ekpm
 - dashti-portfolio
@@ -143,16 +144,18 @@ Frontend layout matches dashti.se:
 - No console errors
 - API data loading correctly
 
----
+## Estimated Time
 
-**Estimated Time:** 1-2 hours depending on issue complexity
+1-2 hours depending on issue complexity
 
-**Most Likely Issues:**
+## Most Likely Issues
+
 1. Frontend environment variable missing (API URL)
 2. CSS/asset path issues in production build
 3. Component not rendering due to data loading issue
 
-**Start Here Tomorrow:**
+## Start Here
+
 1. Open browser DevTools on deployed site
 2. Check Console tab for errors
 3. Check Network tab for failed requests
