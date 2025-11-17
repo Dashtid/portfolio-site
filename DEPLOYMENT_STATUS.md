@@ -1,4 +1,4 @@
-# Deployment Status - 2025-11-06
+# Deployment Status - 2025-11-17
 
 ## Current State
 
@@ -21,18 +21,19 @@
 - Companies: https://dashti-portfolio-backend.fly.dev/api/v1/companies/
 - Education: https://dashti-portfolio-backend.fly.dev/api/v1/education/
 
-### Frontend (Vercel) - Deployed, Layout Issue
+### Frontend (Vercel) - ISSUE IDENTIFIED
 
 **Application:** portfolio-site
 - URL: https://portfolio-site-jade-five.vercel.app/
-- Status: Deployed, but UI/layout not matching expected design
+- Status: Deployed but broken - no data loading
 - Root Directory: `frontend` (correctly configured)
-- Backend Connection: Configured correctly
+- Backend Connection: INCORRECT
 
-**Issue:**
-- Site is deploying but doesn't match the expected design from dashti.se
-- Cards/layout on main page not displaying as expected
-- Needs UI/layout investigation
+**ROOT CAUSE IDENTIFIED:**
+- Frontend is trying to connect to `https://api.dashti.se` (does not exist)
+- Actual backend is at `https://dashti-portfolio-backend.fly.dev`
+- The `VITE_API_URL` environment variable in Vercel is not set correctly
+- Without backend data, the site shows empty/broken layout
 
 **Duplicate Projects to Delete:**
 - portfolio-site-ekpmll
@@ -53,13 +54,35 @@ TypeError: connect() got an unexpected keyword argument 'sslmode'
 2. Set DATABASE_URL without sslmode: `postgres://portfolio_app:PASSWORD@dashti-portfolio-db.internal:5432/dashti_portfolio_backend`
 3. Backend successfully connected to PostgreSQL
 
-## Next Steps (Tomorrow)
+## FIX REQUIRED: Set Vercel Environment Variable
 
-1. **Frontend Layout Investigation**
-   - Compare deployed site with dashti.se
-   - Check Vue component rendering
-   - Verify frontend build configuration
-   - Investigate missing cards/layout elements
+**CRITICAL:** You need to set the `VITE_API_URL` environment variable in Vercel.
+
+### Quick Fix (Web UI - Recommended):
+
+1. Go to: https://vercel.com/dashboard
+2. Select your `portfolio-site` project
+3. Go to **Settings** > **Environment Variables**
+4. Add new variable:
+   - Name: `VITE_API_URL`
+   - Value: `https://dashti-portfolio-backend.fly.dev`
+   - Environments: Check all (Production, Preview, Development)
+5. Click **Save**
+6. Go to **Deployments** tab
+7. Click the three dots on the latest deployment
+8. Click **Redeploy**
+
+### Alternative Fix (CLI):
+
+See [VERCEL_ENV_FIX.md](VERCEL_ENV_FIX.md) for detailed CLI instructions.
+
+## Next Steps (After Fixing Environment Variable)
+
+1. **Verify Fix**
+   - Open deployed site: https://portfolio-site-jade-five.vercel.app/
+   - Open browser DevTools (F12) > Network tab
+   - Verify API calls go to `dashti-portfolio-backend.fly.dev`
+   - Confirm experience cards load with company data
 
 2. **Delete Duplicate Vercel Projects**
    - Keep only: portfolio-site
@@ -70,12 +93,17 @@ TypeError: connect() got an unexpected keyword argument 'sslmode'
    - Configure custom domain (dashti.se)
    - Performance optimization
 
-## Files Modified Today
+## Files Modified
 
+**2025-11-17:**
+- `frontend/.env.production` - Updated VITE_API_URL to correct backend URL (local only, not committed)
+- `VERCEL_ENV_FIX.md` - Comprehensive fix documentation and instructions
+- `DEPLOYMENT_STATUS.md` - Updated with root cause and fix instructions
+
+**2025-11-06:**
 - `backend/.dockerignore` - Added .env exclusions
 - `POSTGRES_CONNECTION_FIX.md` - Technical PostgreSQL fix documentation
 - `FINAL_STEP_VERCEL.md` - Vercel configuration guide
-- `DEPLOYMENT_STATUS.md` - This file
 
 ## Important Credentials
 
