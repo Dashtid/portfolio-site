@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
-import type { Company, Skill, Project } from '@/types'
+import type { Company, Skill, Project, Education } from '@/types'
 
 interface PortfolioState {
   companies: Company[]
   skills: Skill[]
   projects: Project[]
+  education: Education[]
   loading: boolean
   error: string | null
 }
@@ -19,6 +20,7 @@ export const usePortfolioStore = defineStore('portfolio', {
     companies: [],
     skills: [],
     projects: [],
+    education: [],
     loading: false,
     error: null
   }),
@@ -87,11 +89,21 @@ export const usePortfolioStore = defineStore('portfolio', {
       }
     },
 
+    async fetchEducation(): Promise<void> {
+      try {
+        const response = await apiClient.get<Education[]>('/api/v1/education')
+        this.education = response.data
+      } catch (error) {
+        console.error('Error fetching education:', error)
+      }
+    },
+
     async fetchAllData(): Promise<void> {
       await Promise.all([
         this.fetchCompanies(),
         this.fetchSkills(),
-        this.fetchProjects()
+        this.fetchProjects(),
+        this.fetchEducation()
       ])
     }
   }
