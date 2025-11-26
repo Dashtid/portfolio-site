@@ -1,4 +1,4 @@
-# Deployment Status - 2025-11-17
+# Deployment Status - 2025-11-26
 
 ## Current State
 
@@ -13,33 +13,27 @@
 **Database Content:**
 - 7 Companies populated
 - 4 Education entries populated
-- 0 Projects (not populated yet)
-- 0 Documents (not populated yet)
+- 6 Projects populated (4 featured)
+- 2 Documents populated (Bachelor + Master thesis PDFs)
 
 **API Endpoints Working:**
 - Health: https://dashti-portfolio-backend.fly.dev/api/v1/health
 - Companies: https://dashti-portfolio-backend.fly.dev/api/v1/companies/
 - Education: https://dashti-portfolio-backend.fly.dev/api/v1/education/
+- Projects: https://dashti-portfolio-backend.fly.dev/api/v1/projects/
+- Documents: https://dashti-portfolio-backend.fly.dev/api/v1/documents/
 
-### Frontend (Vercel) - ISSUE IDENTIFIED
+**Static Files:**
+- Bachelor Thesis PDF: https://dashti-portfolio-backend.fly.dev/static/documents/bachelor-thesis.pdf (1.23 MB)
+- Master Thesis PDF: https://dashti-portfolio-backend.fly.dev/static/documents/master-thesis.pdf (3.90 MB)
+
+### Frontend (Vercel) - Operational
 
 **Application:** portfolio-site
 - URL: https://portfolio-site-jade-five.vercel.app/
-- Status: Deployed but broken - no data loading
+- Status: Deployed and working
 - Root Directory: `frontend` (correctly configured)
-- Backend Connection: INCORRECT
-
-**ROOT CAUSE IDENTIFIED:**
-- Frontend is trying to connect to `https://api.dashti.se` (does not exist)
-- Actual backend is at `https://dashti-portfolio-backend.fly.dev`
-- The `VITE_API_URL` environment variable in Vercel is not set correctly
-- Without backend data, the site shows empty/broken layout
-
-**Duplicate Projects to Delete:**
-- portfolio-site-ekpmll
-- portfolio-site-ekpm
-- dashti-portfolio
-- frontend (standalone)
+- Backend Connection: Configured correctly (VITE_API_URL set in Vercel)
 
 ## PostgreSQL Connection Issue - RESOLVED
 
