@@ -4,107 +4,94 @@
 
 ### Backend (Fly.io) - Fully Operational
 
-**Application:** dashti-portfolio-backend
+Application: dashti-portfolio-backend
 - URL: https://dashti-portfolio-backend.fly.dev/
 - Status: Running and healthy
 - Database: PostgreSQL (dashti-portfolio-db)
 - Connection: `postgresql+asyncpg://portfolio_app@dashti-portfolio-db.internal:5432/dashti_portfolio_backend`
 
-**Database Content:**
+Database Content:
 - 7 Companies populated
 - 4 Education entries populated
 - 6 Projects populated (4 featured)
 - 2 Documents populated (Bachelor + Master thesis PDFs)
 
-**API Endpoints Working:**
+API Endpoints Working:
 - Health: https://dashti-portfolio-backend.fly.dev/api/v1/health
 - Companies: https://dashti-portfolio-backend.fly.dev/api/v1/companies/
 - Education: https://dashti-portfolio-backend.fly.dev/api/v1/education/
 - Projects: https://dashti-portfolio-backend.fly.dev/api/v1/projects/
 - Documents: https://dashti-portfolio-backend.fly.dev/api/v1/documents/
 
-**Static Files:**
+Static Files:
 - Bachelor Thesis PDF: https://dashti-portfolio-backend.fly.dev/static/documents/bachelor-thesis.pdf (1.23 MB)
 - Master Thesis PDF: https://dashti-portfolio-backend.fly.dev/static/documents/master-thesis.pdf (3.90 MB)
 
-### Frontend (Vercel) - Operational
+### Frontend (Vercel) - Fully Operational
 
-**Application:** portfolio-site
+Application: portfolio-site
 - URL: https://portfolio-site-jade-five.vercel.app/
 - Status: Deployed and working
 - Root Directory: `frontend` (correctly configured)
 - Backend Connection: Configured correctly (VITE_API_URL set in Vercel)
 
-## PostgreSQL Connection Issue - RESOLVED
+## Resolved Issues
 
-### Problem
-The `flyctl postgres attach` command set DATABASE_URL with `?sslmode=disable` which is incompatible with `asyncpg`:
-```
-TypeError: connect() got an unexpected keyword argument 'sslmode'
-```
+### PostgreSQL Connection Issue - RESOLVED
 
-### Solution
-1. Manually created `portfolio_app` user with password: `009cdc73b9988e90bd524747c54b0920c490f0f216a94b6ca878375d68bccac0`
-2. Set DATABASE_URL without sslmode: `postgres://portfolio_app:PASSWORD@dashti-portfolio-db.internal:5432/dashti_portfolio_backend`
+Problem:
+The `flyctl postgres attach` command set DATABASE_URL with `?sslmode=disable` which is incompatible with `asyncpg`.
+
+Solution:
+
+1. Manually created `portfolio_app` user
+2. Set DATABASE_URL without sslmode
 3. Backend successfully connected to PostgreSQL
 
-## FIX REQUIRED: Set Vercel Environment Variable
+### Vercel Environment Variable - RESOLVED
 
-**CRITICAL:** You need to set the `VITE_API_URL` environment variable in Vercel.
+The `VITE_API_URL` environment variable is correctly set to `https://dashti-portfolio-backend.fly.dev` in Vercel.
 
-### Quick Fix (Web UI - Recommended):
+### Frontend Store Missing Education Fetch - RESOLVED (2025-11-26)
 
-1. Go to: https://vercel.com/dashboard
-2. Select your `portfolio-site` project
-3. Go to **Settings** > **Environment Variables**
-4. Add new variable:
-   - Name: `VITE_API_URL`
-   - Value: `https://dashti-portfolio-backend.fly.dev`
-   - Environments: Check all (Production, Preview, Development)
-5. Click **Save**
-6. Go to **Deployments** tab
-7. Click the three dots on the latest deployment
-8. Click **Redeploy**
+Problem:
+The portfolio store was not fetching education data, causing the Education section to be empty.
 
-### Alternative Fix (CLI):
+Solution:
+Added `education` state and `fetchEducation()` action to the portfolio store, included in `fetchAllData()`.
 
-See [VERCEL_ENV_FIX.md](VERCEL_ENV_FIX.md) for detailed CLI instructions.
+### Projects Technologies Double-Encoding - RESOLVED (2025-11-26)
 
-## Next Steps (After Fixing Environment Variable)
+Problem:
+The projects populate script used `json.dumps()` on the technologies array, causing double JSON encoding when SQLAlchemy stored it in the JSON column.
 
-1. **Verify Fix**
-   - Open deployed site: https://portfolio-site-jade-five.vercel.app/
-   - Open browser DevTools (F12) > Network tab
-   - Verify API calls go to `dashti-portfolio-backend.fly.dev`
-   - Confirm experience cards load with company data
-
-2. **Delete Duplicate Vercel Projects**
-   - Keep only: portfolio-site
-   - Remove: portfolio-site-ekpmll, portfolio-site-ekpm, dashti-portfolio, frontend
-
-3. **Optional Enhancements**
-   - Add remaining content (Projects, Documents)
-   - Configure custom domain (dashti.se)
-   - Performance optimization
+Solution:
+Fixed populate script to pass plain Python lists instead of JSON strings. SQLAlchemy JSON column handles serialization automatically.
 
 ## Files Modified
 
-**2025-11-17:**
+2025-11-26:
+
+- `frontend/src/stores/portfolio.ts` - Added education state and fetchEducation action
+- `backend/populate_projects_postgres.py` - Fixed technologies to use plain lists instead of json.dumps
+
+2025-11-17:
+
 - `frontend/.env.production` - Updated VITE_API_URL to correct backend URL (local only, not committed)
 - `VERCEL_ENV_FIX.md` - Comprehensive fix documentation and instructions
-- `DEPLOYMENT_STATUS.md` - Updated with root cause and fix instructions
 
-**2025-11-06:**
+2025-11-06:
+
 - `backend/.dockerignore` - Added .env exclusions
 - `POSTGRES_CONNECTION_FIX.md` - Technical PostgreSQL fix documentation
 - `FINAL_STEP_VERCEL.md` - Vercel configuration guide
 
 ## Important Credentials
 
-**PostgreSQL User:** portfolio_app
-**Password:** 009cdc73b9988e90bd524747c54b0920c490f0f216a94b6ca878375d68bccac0
-**Database:** dashti_portfolio_backend
-**Connection:** Already configured in Fly.io secrets
+PostgreSQL User: portfolio_app
+Password: 009cdc73b9988e90bd524747c54b0920c490f0f216a94b6ca878375d68bccac0
+Database: dashti_portfolio_backend
+Connection: Already configured in Fly.io secrets
 
 ## Backend Verification Commands
 
@@ -125,6 +112,12 @@ SELECT COUNT(*) FROM companies;
 EOF
 ```
 
+## Next Steps
+
+1. Configure custom domain (dashti.se)
+2. Delete duplicate Vercel projects (portfolio-site-ekpmll, portfolio-site-ekpm, dashti-portfolio, frontend)
+3. Performance optimization
+
 ## Summary
 
-Backend is fully operational with PostgreSQL. Frontend is deployed but needs layout/UI investigation.
+Both backend and frontend are fully operational. All data is populated and displaying correctly.
