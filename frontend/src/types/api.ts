@@ -48,13 +48,21 @@ export interface Project {
   id: string
   name: string
   description: string
+  detailed_description?: string | null
   technologies: string[]
-  start_date: string
-  end_date?: string | null
-  project_url?: string | null
   github_url?: string | null
+  live_url?: string | null
   image_url?: string | null
+  company_id?: string | null
   featured: boolean
+  order_index?: number
+  video_url?: string | null
+  video_title?: string | null
+  map_url?: string | null
+  map_title?: string | null
+  responsibilities?: string | null
+  created_at?: string
+  updated_at?: string | null
 }
 
 /**

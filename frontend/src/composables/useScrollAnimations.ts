@@ -192,7 +192,7 @@ export function useStaggeredAnimation(
 
 interface BatchAnimationReturn {
   elements: Ref<Element[]>
-  animations: Ref<ScrollAnimationReturn[]>
+  animations: ScrollAnimationReturn[]
 }
 
 /**
@@ -206,7 +206,7 @@ export function useBatchAnimation(
   options: StaggeredAnimationOptions = {}
 ): BatchAnimationReturn {
   const elements = ref<Element[]>([])
-  const animations = ref<ScrollAnimationReturn[]>([])
+  const animations: ScrollAnimationReturn[] = []
 
   onMounted(() => {
     elements.value = Array.from(document.querySelectorAll(selector))
@@ -217,7 +217,7 @@ export function useBatchAnimation(
         ...options,
         delay: (options.delay || 0) + (index * (options.stagger || 100))
       })
-      animations.value.push(animation)
+      animations.push(animation)
     })
   })
 

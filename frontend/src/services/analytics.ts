@@ -93,13 +93,15 @@ class AnalyticsService {
     if (!this.isEnabled) return
 
     try {
-      const data: EventData = {
+      // EventData prepared for future use with dedicated event endpoint
+      const _eventData: EventData = {
         category,
         action,
         label,
         value,
         session_id: this.sessionId
       }
+      void _eventData // Suppress unused variable warning
 
       // For now, we can track this as a special page view
       await this.trackPageView(

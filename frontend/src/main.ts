@@ -27,7 +27,8 @@ app.config.errorHandler = (
   info: string
 ) => {
   console.error('Vue Error:', err)
-  errorTracker.handleVueError(err, instance, info)
+  const error = err instanceof Error ? err : new Error(String(err))
+  errorTracker.handleVueError(error, instance, info)
 }
 
 // Global warning handler for Vue (development)

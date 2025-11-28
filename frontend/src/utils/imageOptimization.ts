@@ -93,12 +93,15 @@ export function calculateOptimalDimensions(
   aspectRatio: number = 16/9
 ): Dimensions {
   let width = containerWidth
-  let height = containerHeight
+  let height: number
 
   if (!containerHeight) {
     height = Math.round(containerWidth / aspectRatio)
   } else if (!containerWidth) {
+    height = containerHeight
     width = Math.round(containerHeight * aspectRatio)
+  } else {
+    height = containerHeight
   }
 
   // Ensure dimensions are reasonable

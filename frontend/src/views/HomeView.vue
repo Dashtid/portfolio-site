@@ -244,11 +244,13 @@ const documentsError = ref<string | null>(null)
 // Static projects data as fallback
 const staticProjects = [
   {
-    id: 1,
+    id: 'static-1',
     name: "Portfolio Website",
     description: "Personal portfolio showcasing professional experience and projects",
-    technologies: '["Vue.js", "Python", "FastAPI"]',
-    github_url: "https://github.com/Dashtid"
+    technologies: ["Vue.js", "Python", "FastAPI"],
+    github_url: "https://github.com/Dashtid",
+    live_url: null,
+    featured: true
   }
 ]
 
@@ -259,7 +261,7 @@ const companiesByDate = computed(() => {
   return [...companies.value].sort((a, b) => {
     if (!a.start_date) return 1
     if (!b.start_date) return -1
-    return new Date(b.start_date) - new Date(a.start_date)
+    return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
   })
 })
 
@@ -268,7 +270,7 @@ const displayProjects = computed(() => {
 })
 
 // Methods
-const formatDate = (dateString) => {
+const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
@@ -277,10 +279,14 @@ const formatDate = (dateString) => {
   })
 }
 
-const parseTechnologies = (technologies) => {
+const parseTechnologies = (technologies: string | string[] | null | undefined): string[] => {
   if (!technologies) return []
+  // If already an array, return as-is
+  if (Array.isArray(technologies)) return technologies
+  // If string, try to parse as JSON
   try {
-    return JSON.parse(technologies)
+    const parsed = JSON.parse(technologies)
+    return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
   }

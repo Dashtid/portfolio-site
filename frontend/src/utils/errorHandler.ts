@@ -132,7 +132,7 @@ function classifyError(error: ErrorWithResponse): Partial<ErrorInfo> {
   }
 
   // Server errors
-  if (error.response?.status >= 500) {
+  if (error.response?.status !== undefined && error.response.status >= 500) {
     return {
       type: ErrorTypes.SERVER,
       severity: ErrorSeverity.HIGH,
@@ -141,7 +141,7 @@ function classifyError(error: ErrorWithResponse): Partial<ErrorInfo> {
   }
 
   // Client errors
-  if (error.response?.status >= 400) {
+  if (error.response?.status !== undefined && error.response.status >= 400) {
     return {
       type: ErrorTypes.CLIENT,
       severity: ErrorSeverity.MEDIUM,

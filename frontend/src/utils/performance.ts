@@ -33,6 +33,11 @@ interface ResourceStats {
   other: ResourceData[]
 }
 
+interface LayoutShift extends PerformanceEntry {
+  hadRecentInput: boolean
+  value: number
+}
+
 class PerformanceMonitor {
   private enabled: boolean
   private apiEndpoint: string
@@ -113,7 +118,8 @@ class PerformanceMonitor {
     } catch (err) {
       // PerformanceObserver not supported or metric type not available
       if (import.meta.env.DEV) {
-        console.warn(`[Performance] Cannot observe ${type}:`, err.message)
+        const message = err instanceof Error ? err.message : String(err)
+        console.warn(`[Performance] Cannot observe ${type}:`, message)
       }
     }
   }
