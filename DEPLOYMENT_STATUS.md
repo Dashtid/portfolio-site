@@ -1,16 +1,18 @@
-# Deployment Status - 2025-11-26
+# Deployment Status - 2025-11-28
 
 ## Current State
 
 ### Backend (Fly.io) - Fully Operational
 
 Application: dashti-portfolio-backend
+
 - URL: https://dashti-portfolio-backend.fly.dev/
 - Status: Running and healthy
 - Database: PostgreSQL (dashti-portfolio-db)
 - Connection: `postgresql+asyncpg://portfolio_app@dashti-portfolio-db.internal:5432/dashti_portfolio_backend`
 
 Database Content:
+
 - 7 Companies populated
 - 4 Education entries populated
 - 6 Projects populated (4 featured)
