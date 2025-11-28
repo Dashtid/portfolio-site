@@ -60,7 +60,7 @@ export const usePortfolioStore = defineStore('portfolio', {
       this.loading = true
       this.error = null
       try {
-        const response = await apiClient.get<Company[]>('/api/v1/companies')
+        const response = await apiClient.get<Company[]>('/api/v1/companies/')
         this.companies = response.data
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -73,7 +73,7 @@ export const usePortfolioStore = defineStore('portfolio', {
 
     async fetchSkills(): Promise<void> {
       try {
-        const response = await apiClient.get<Skill[]>('/api/v1/skills')
+        const response = await apiClient.get<Skill[]>('/api/v1/skills/')
         this.skills = response.data
       } catch (error) {
         console.error('Error fetching skills:', error)
@@ -82,7 +82,7 @@ export const usePortfolioStore = defineStore('portfolio', {
 
     async fetchProjects(): Promise<void> {
       try {
-        const response = await apiClient.get<Project[]>('/api/v1/projects')
+        const response = await apiClient.get<Project[]>('/api/v1/projects/')
         this.projects = response.data
       } catch (error) {
         console.error('Error fetching projects:', error)
@@ -91,7 +91,7 @@ export const usePortfolioStore = defineStore('portfolio', {
 
     async fetchEducation(): Promise<void> {
       try {
-        const response = await apiClient.get<Education[]>('/api/v1/education')
+        const response = await apiClient.get<Education[]>('/api/v1/education/')
         this.education = response.data
       } catch (error) {
         console.error('Error fetching education:', error)
