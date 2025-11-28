@@ -180,6 +180,51 @@ section {
   background-color: var(--bg-tertiary) !important;
 }
 
+/* Dark Background Section - Publications */
+.bg-dark {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: #f8fafc !important;
+}
+
+.bg-dark .section-title {
+  color: #f8fafc !important;
+}
+
+.bg-dark .section-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* Portfolio Section Base Styling */
+.portfolio-section {
+  padding: 5rem 0;
+}
+
+.portfolio-section .section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.portfolio-section .section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+  border-radius: 2px;
+}
+
+.bg-dark .section-title::after {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
 /* Experience Cards - Bootstrap Grid Layout */
 .experience-list {
   display: grid;

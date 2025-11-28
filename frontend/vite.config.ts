@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import os from 'os'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Use temp directory to avoid OneDrive path issues with spaces
+  cacheDir: path.join(os.tmpdir(), 'vite-cache-portfolio'),
   plugins: [
     vue(),
     // Bundle analyzer (optional, only in analysis mode)

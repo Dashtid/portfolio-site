@@ -83,19 +83,22 @@ const formattedDate = computed(() => {
 }
 
 .card-glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.75rem;
   transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-glass:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .card-header {
@@ -112,64 +115,75 @@ const formattedDate = computed(() => {
 .document-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-heading);
-  margin: 0 0 0.5rem 0;
+  color: #f8fafc;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
 }
 
 .document-type {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: rgba(var(--color-accent-rgb), 0.1);
-  color: var(--color-accent);
-  border-radius: 12px;
-  font-size: 0.875rem;
+  padding: 0.375rem 0.875rem;
+  background: rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+  border-radius: 20px;
+  font-size: 0.8125rem;
   font-weight: 500;
+  letter-spacing: 0.025em;
 }
 
 .document-description {
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  color: #cbd5e1;
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+  flex: 1;
 }
 
 .card-meta {
   display: flex;
   gap: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-text-secondary);
+  color: #94a3b8;
   font-size: 0.875rem;
 }
 
 .icon {
   stroke-width: 2;
-  opacity: 0.7;
+  opacity: 0.8;
+  color: #94a3b8;
 }
 
 .card-actions {
   display: flex;
   gap: 1rem;
-  padding-top: 1rem;
+  padding-top: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
 }
 
 .document-link {
-  color: var(--color-accent);
+  color: #60a5fa;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
+  font-weight: 600;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(96, 165, 250, 0.1);
 }
 
 .document-link:hover {
-  color: var(--color-accent-light);
+  color: #93c5fd;
+  background: rgba(96, 165, 250, 0.2);
+  transform: translateX(4px);
 }
 
 .download-link {
