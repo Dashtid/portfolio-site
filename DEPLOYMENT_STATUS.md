@@ -70,6 +70,17 @@ Fixed populate script to pass plain Python lists instead of JSON strings. SQLAlc
 
 ## Files Modified
 
+2025-11-28:
+
+- `frontend/src/views/HomeView.vue` - Fixed parseTechnologies to handle arrays, formatDate types, companiesByDate sorting, staticProjects fallback
+- `frontend/src/types/api.ts` - Updated Project interface to match API (live_url instead of project_url)
+- `frontend/src/composables/useScrollAnimations.ts` - Fixed BatchAnimationReturn type
+- `frontend/src/main.ts` - Fixed error handler type conversion
+- `frontend/src/services/analytics.ts` - Fixed unused variable warning
+- `frontend/src/utils/errorHandler.ts` - Fixed status comparison with undefined
+- `frontend/src/utils/imageOptimization.ts` - Fixed dimension calculation for undefined height
+- `frontend/src/utils/performance.ts` - Added LayoutShift interface, fixed error message type
+
 2025-11-26:
 
 - `frontend/src/stores/portfolio.ts` - Added education state and fetchEducation action
