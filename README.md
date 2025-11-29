@@ -2,18 +2,19 @@
 
 Modern, production-ready portfolio website with dynamic content management, authentication, and comprehensive testing.
 
-**Status**: Backend Deployed (Fly.io) | Frontend Deployed (Vercel) - Layout needs fixing | **Coverage**: 80%
+**Status**: Fully Operational | **Coverage**: 80%
 
-## Production Deployment
+## Production URLs
 
-**Backend:** https://dashti-portfolio-backend.fly.dev/api/v1/
-- Status: Running on Fly.io with PostgreSQL
-- Database: 7 companies, 4 education entries
+| Service | URL | Status |
+|---------|-----|--------|
+| Frontend | <https://portfolio-site-jade-five.vercel.app/> | Running |
+| Backend API | <https://dashti-portfolio-backend.fly.dev/api/v1/> | Running |
+| Health Check | <https://dashti-portfolio-backend.fly.dev/api/v1/health> | Healthy |
 
-**Frontend:** https://portfolio-site-jade-five.vercel.app/
-- Status: Deployed but layout broken (needs investigation)
+**Database**: PostgreSQL on Fly.io (7 companies, 4 education, 6 projects, 2 documents)
 
-**See:** [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for current deployment status and next steps
+**See**: [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment information
 
 ## Quick Start
 
@@ -63,22 +64,26 @@ cd frontend && npm install && npm run dev
 
 ## Documentation
 
-**Essential**:
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Production deployment guide (Vercel + Fly.io)
-- [NEXT_STEPS_RECOMMENDATIONS.md](NEXT_STEPS_RECOMMENDATIONS.md) - Next enhancements
+**Root Level**:
+
+- [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) - Current deployment status
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 
-**Guides** (docs/guides/):
-- DEPLOYMENT.md - Production deployment (Vercel + Fly.io, $0-5/month)
-- MONITORING.md - Logging & error tracking
+**Guides** ([docs/guides/](docs/guides/)):
+
+- MONITORING.md - Logging and error tracking
 - PERFORMANCE.md - Optimization strategies
 - TESTING.md - Test infrastructure
 - TOOLING.md - Development tooling (ESLint 9, Ruff, mypy)
 
-**Migration** (docs/migration/):
-- FEATURE_PARITY_ANALYSIS.md - Complete comparison with original
-- PHASE9A_COMPLETION.md - Downloadable documents feature
-- THESIS_PDF_MIGRATION.md - PDF migration details
+**Deployment** ([docs/](docs/)):
+
+- DEPLOYMENT.md - Production deployment (Vercel + Fly.io, $0-5/month)
+- DATABASE_SETUP.md - PostgreSQL configuration
+
+**Archive** ([docs/archive/](docs/archive/)):
+
+- Historical migration notes and fix documentation
 
 ## API Endpoints
 

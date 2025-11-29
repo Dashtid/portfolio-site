@@ -99,12 +99,19 @@ Fixed populate script to pass plain Python lists instead of JSON strings. SQLAlc
 - `POSTGRES_CONNECTION_FIX.md` - Technical PostgreSQL fix documentation
 - `FINAL_STEP_VERCEL.md` - Vercel configuration guide
 
-## Important Credentials
+## Credentials
 
-PostgreSQL User: portfolio_app
-Password: 009cdc73b9988e90bd524747c54b0920c490f0f216a94b6ca878375d68bccac0
-Database: dashti_portfolio_backend
-Connection: Already configured in Fly.io secrets
+All credentials are stored securely in Fly.io secrets. Never commit credentials to documentation or source control.
+
+- PostgreSQL credentials: Managed via `flyctl secrets`
+- Database connection: Configured in Fly.io app secrets as `DATABASE_URL`
+
+To view or update secrets:
+
+```bash
+flyctl secrets list -a dashti-portfolio-backend
+flyctl secrets set DATABASE_URL="..." -a dashti-portfolio-backend
+```
 
 ## Backend Verification Commands
 
