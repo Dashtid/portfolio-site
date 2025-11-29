@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
 import type { Company, Skill, Project, Education } from '@/types'
+import { apiLogger } from '../utils/logger'
 
 interface PortfolioState {
   companies: Company[]
@@ -65,7 +66,7 @@ export const usePortfolioStore = defineStore('portfolio', {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         this.error = errorMessage
-        console.error('Error fetching companies:', error)
+        apiLogger.error('Error fetching companies:', error)
       } finally {
         this.loading = false
       }
@@ -76,7 +77,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Skill[]>('/api/v1/skills/')
         this.skills = response.data
       } catch (error) {
-        console.error('Error fetching skills:', error)
+        apiLogger.error('Error fetching skills:', error)
       }
     },
 
@@ -85,7 +86,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Project[]>('/api/v1/projects/')
         this.projects = response.data
       } catch (error) {
-        console.error('Error fetching projects:', error)
+        apiLogger.error('Error fetching projects:', error)
       }
     },
 
@@ -94,7 +95,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Education[]>('/api/v1/education/')
         this.education = response.data
       } catch (error) {
-        console.error('Error fetching education:', error)
+        apiLogger.error('Error fetching education:', error)
       }
     },
 

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { mount, VueWrapper } from '@vue/test-utils'
 import NavBar from '../NavBar.vue'
 
 describe('NavBar', () => {
-  let wrapper
+  let wrapper: VueWrapper
 
   beforeEach(() => {
     wrapper = mount(NavBar)
@@ -32,7 +32,7 @@ describe('NavBar', () => {
 
   it('applies sticky class on scroll', async () => {
     // Simulate scroll event
-    window.pageYOffset = 100
+    Object.defineProperty(window, 'pageYOffset', { value: 100, writable: true })
     window.dispatchEvent(new Event('scroll'))
 
     await wrapper.vm.$nextTick()
@@ -47,9 +47,9 @@ describe('NavBar', () => {
 
     // Mock scrollIntoView
     const mockScrollIntoView = vi.fn()
-    document.getElementById = vi.fn(() => ({
+    vi.spyOn(document, 'getElementById').mockReturnValue({
       scrollIntoView: mockScrollIntoView
-    }))
+    } as unknown as HTMLElement)
 
     await link.trigger('click')
 

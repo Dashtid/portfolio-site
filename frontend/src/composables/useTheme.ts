@@ -5,6 +5,7 @@
  */
 import { useDark, useToggle } from '@vueuse/core'
 import { watch, type Ref } from 'vue'
+import { themeLogger } from '../utils/logger'
 
 type ThemeMode = 'dark' | 'light' | 'system'
 
@@ -32,7 +33,7 @@ export function useTheme(): UseThemeReturn {
 
   // Watch for theme changes to update icon variants
   watch(isDark, (dark: boolean) => {
-    console.log('[Theme] Theme changed to:', dark ? 'dark' : 'light')
+    themeLogger.log('Theme changed to:', dark ? 'dark' : 'light')
 
     // Dispatch custom event for components that need to react to theme changes
     window.dispatchEvent(new CustomEvent('theme-changed', {

@@ -5,6 +5,8 @@
  * Both are GDPR-compliant, cookie-less, and privacy-friendly
  */
 
+import { analyticsLogger } from './logger'
+
 interface TrackingProps {
   [key: string]: string | number | boolean | undefined
 }
@@ -39,7 +41,7 @@ class Analytics {
    */
   init(): void {
     if (!this.enabled || !this.siteId) {
-      console.log('[Analytics] Disabled or not configured')
+      analyticsLogger.log('Disabled or not configured')
       return
     }
 
@@ -64,7 +66,7 @@ class Analytics {
 
     document.head.appendChild(script)
 
-    console.log('[Analytics] Plausible initialized for', this.siteId)
+    analyticsLogger.log('Plausible initialized for', this.siteId)
   }
 
   /**
@@ -78,7 +80,7 @@ class Analytics {
 
     document.head.appendChild(script)
 
-    console.log('[Analytics] Umami initialized for', this.siteId)
+    analyticsLogger.log('Umami initialized for', this.siteId)
   }
 
   /**
@@ -97,7 +99,7 @@ class Analytics {
         window.umami.track(eventName, props)
       }
     } catch (error) {
-      console.warn('[Analytics] Failed to track event:', error)
+      analyticsLogger.warn('Failed to track event:', error)
     }
   }
 
@@ -116,7 +118,7 @@ class Analytics {
         window.umami.track(props => ({ ...props, url: path }))
       }
     } catch (error) {
-      console.warn('[Analytics] Failed to track pageview:', error)
+      analyticsLogger.warn('Failed to track pageview:', error)
     }
   }
 
