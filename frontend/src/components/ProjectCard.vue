@@ -77,118 +77,128 @@ const techStack = computed(() => {
 
 <style scoped>
 .project-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-6);
-  transition: all var(--transition-base) ease;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .project-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-primary);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-400, #60a5fa);
 }
 
 .project-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-4);
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .project-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--slate-800, #1e293b);
   margin: 0;
   flex: 1;
+  line-height: 1.3;
 }
 
 .featured-badge {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-teal));
+  background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
   color: white;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  padding: var(--spacing-1) var(--spacing-2);
-  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .project-description {
-  color: var(--color-gray-600);
-  line-height: var(--line-height-relaxed);
-  margin-bottom: var(--spacing-4);
+  color: var(--slate-600, #475569);
+  line-height: 1.6;
+  margin-bottom: 1rem;
   flex: 1;
+  font-size: 0.95rem;
 }
 
 .project-tech {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-2);
-  margin-bottom: var(--spacing-4);
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .tech-tag {
-  background: var(--color-gray-100);
-  color: var(--color-gray-700);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  padding: var(--spacing-1) var(--spacing-3);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-gray-200);
-  transition: all var(--transition-base) ease;
+  background: var(--slate-100, #f1f5f9);
+  color: var(--slate-700, #334155);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  transition: all 0.2s ease;
 }
 
 .tech-tag:hover {
-  background: var(--color-primary);
+  background: var(--primary-600, #2563eb);
   color: white;
-  border-color: var(--color-primary);
-  transform: scale(1.05);
+  border-color: var(--primary-600, #2563eb);
+  transform: translateY(-1px);
 }
 
 .project-links {
   display: flex;
-  gap: var(--spacing-3);
+  gap: 0.75rem;
   margin-top: auto;
 }
 
 .project-link {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-2);
-  color: var(--color-gray-600);
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--slate-600, #475569);
   text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--radius-base);
-  border: 1px solid var(--color-gray-300);
-  transition: all var(--transition-base) ease;
-  background: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  border: none;
+  transition: all 0.2s ease;
+  flex: 1;
 }
 
-.project-link:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+.github-link {
+  background: var(--slate-800, #1e293b);
+  color: white;
 }
 
 .github-link:hover {
-  border-color: var(--color-gray-800);
-  color: var(--color-gray-900);
-  background: var(--color-gray-50);
+  background: var(--slate-900, #0f172a);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+}
+
+.live-link {
+  background: linear-gradient(135deg, #0891b2 0%, #0d9488 100%);
+  color: white;
 }
 
 .live-link:hover {
-  border-color: var(--color-teal);
-  color: var(--color-teal);
-  background: rgba(var(--color-teal-rgb), 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.4);
 }
 
 .link-icon {
@@ -198,42 +208,54 @@ const techStack = computed(() => {
 }
 
 /* Dark mode adjustments */
+[data-theme="dark"] .project-card {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .project-card:hover {
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
 [data-theme="dark"] .project-title {
-  color: var(--color-gray-100);
+  color: #f1f5f9;
 }
 
 [data-theme="dark"] .project-description {
-  color: var(--color-gray-400);
+  color: #94a3b8;
 }
 
 [data-theme="dark"] .tech-tag {
-  background: var(--color-gray-800);
-  color: var(--color-gray-300);
-  border-color: var(--color-gray-700);
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .tech-tag:hover {
-  background: var(--color-primary);
+  background: #3b82f6;
   color: white;
-  border-color: var(--color-primary);
+  border-color: #3b82f6;
 }
 
-[data-theme="dark"] .project-link {
-  background: var(--color-gray-800);
-  color: var(--color-gray-300);
-  border-color: var(--color-gray-700);
+[data-theme="dark"] .github-link {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
 }
 
 [data-theme="dark"] .github-link:hover {
-  background: var(--color-gray-900);
-  border-color: var(--color-gray-600);
-  color: var(--color-gray-100);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   .project-card {
-    padding: var(--spacing-4);
+    padding: 1.25rem;
+  }
+
+  .project-header {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .project-links {
@@ -242,7 +264,6 @@ const techStack = computed(() => {
 
   .project-link {
     width: 100%;
-    justify-content: center;
   }
 }
 </style>

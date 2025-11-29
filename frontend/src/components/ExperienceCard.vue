@@ -82,7 +82,7 @@ const formatDuration = computed(() => {
 
 <style scoped>
 .experience-card {
-  margin-bottom: var(--spacing-6);
+  margin-bottom: 1.5rem;
   animation: slideIn 0.5s ease-out;
 }
 
@@ -98,114 +98,219 @@ const formatDuration = computed(() => {
 }
 
 .card-glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-6);
-  box-shadow: var(--shadow-lg);
-  transition: all var(--transition-base) ease;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-500, #3b82f6), var(--primary-600, #2563eb));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.experience-card:hover .card-glass::before {
+  transform: scaleX(1);
 }
 
 .experience-card:hover .card-glass {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--color-primary);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  border-color: var(--primary-300, #93c5fd);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-4);
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .company-name {
-  color: var(--color-gray-900);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  margin: 0 0 var(--spacing-1) 0;
+  color: var(--slate-800, #1e293b);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
 }
 
 .company-title {
-  color: var(--color-primary);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
+  color: var(--primary-600, #2563eb);
+  font-size: 1rem;
+  font-weight: 600;
   margin: 0;
 }
 
 .current-badge {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-teal));
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  padding: var(--spacing-1) var(--spacing-3);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .company-description {
-  color: var(--color-gray-600);
-  line-height: var(--line-height-relaxed);
-  margin: 0 0 var(--spacing-4) 0;
+  color: var(--slate-600, #475569);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
 }
 
 .card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-4);
-  padding-top: var(--spacing-4);
-  border-top: 1px solid var(--glass-border);
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--slate-200, #e2e8f0);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
-  color: var(--color-gray-500);
-  font-size: var(--font-size-sm);
+  gap: 0.5rem;
+  color: var(--slate-500, #64748b);
+  font-size: 0.875rem;
 }
 
 .icon {
   stroke-width: 2;
+  color: var(--slate-400, #94a3b8);
 }
 
 .card-actions {
   display: flex;
-  gap: var(--spacing-4);
-  padding-top: var(--spacing-4);
+  gap: 1rem;
+  padding-top: 1rem;
   flex-wrap: wrap;
 }
 
 .company-link {
   display: inline-flex;
   align-items: center;
-  color: var(--color-primary);
-  font-weight: var(--font-weight-medium);
+  gap: 0.25rem;
+  color: var(--primary-600, #2563eb);
+  font-weight: 600;
+  font-size: 0.9rem;
   text-decoration: none;
-  transition: color var(--transition-fast);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.08);
+  transition: all 0.2s ease;
 }
 
 .company-link:hover {
-  color: var(--color-primary-dark);
+  background: var(--primary-600, #2563eb);
+  color: white;
+  transform: translateX(4px);
 }
 
 .detail-link {
-  font-weight: var(--font-weight-semibold);
+  background: var(--primary-600, #2563eb);
+  color: white;
+}
+
+.detail-link:hover {
+  background: var(--primary-700, #1d4ed8);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* Dark mode adjustments */
+[data-theme="dark"] .card-glass {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .card-glass::before {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+[data-theme="dark"] .experience-card:hover .card-glass {
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
 [data-theme="dark"] .company-name {
-  color: var(--color-gray-100);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .company-title {
+  color: #60a5fa;
 }
 
 [data-theme="dark"] .company-description {
-  color: var(--color-gray-400);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .card-meta {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .meta-item {
-  color: var(--color-gray-500);
+  color: #64748b;
+}
+
+[data-theme="dark"] .icon {
+  color: #64748b;
+}
+
+[data-theme="dark"] .company-link {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .company-link:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+[data-theme="dark"] .detail-link {
+  background: #3b82f6;
+  color: white;
+}
+
+[data-theme="dark"] .detail-link:hover {
+  background: #60a5fa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-glass {
+    padding: 1.25rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .company-link {
+    justify-content: center;
+    width: 100%;
+  }
 }
 </style>
