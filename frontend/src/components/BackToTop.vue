@@ -24,19 +24,19 @@
   </transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const isVisible = ref(false)
-const scrollThreshold = 300 // Show button after scrolling 300px
+const isVisible = ref<boolean>(false)
+const scrollThreshold: number = 300 // Show button after scrolling 300px
 
 // Handle scroll events to show/hide button
-const handleScroll = () => {
+const handleScroll = (): void => {
   isVisible.value = window.scrollY > scrollThreshold
 }
 
 // Scroll to top with smooth animation
-const scrollToTop = () => {
+const scrollToTop = (): void => {
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -45,7 +45,7 @@ const scrollToTop = () => {
 
 // Throttle scroll events for performance
 let ticking = false
-const throttledScroll = () => {
+const throttledScroll = (): void => {
   if (!ticking) {
     window.requestAnimationFrame(() => {
       handleScroll()

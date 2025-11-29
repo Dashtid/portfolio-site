@@ -10,26 +10,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  message: {
-    type: String,
-    default: ''
-  },
-  size: {
-    type: String,
-    default: 'medium',
-    validator: (value) => ['small', 'medium', 'large'].includes(value)
-  },
-  fullScreen: {
-    type: Boolean,
-    default: false
-  }
+type SpinnerSize = 'small' | 'medium' | 'large'
+
+interface Props {
+  message?: string
+  size?: SpinnerSize
+  fullScreen?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  message: '',
+  size: 'medium',
+  fullScreen: false
 })
 
-const sizeClass = computed(() => `spinner-${props.size}`)
+const sizeClass = computed<string>(() => `spinner-${props.size}`)
 </script>
 
 <style scoped>

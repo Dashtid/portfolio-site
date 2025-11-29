@@ -178,56 +178,57 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
+import { useRoute } from 'vue-router'
+import axios, { type AxiosError } from 'axios'
+import type { Company } from '../../types/api'
 
 const route = useRoute()
-const router = useRouter()
 
-const company = ref(null)
-const allCompanies = ref([])
-const loading = ref(true)
-const error = ref(null)
+const company = ref<Company | null>(null)
+const allCompanies = ref<Company[]>([])
+const loading = ref<boolean>(true)
+const error = ref<string | null>(null)
 
-const companyId = computed(() => route.params.id)
+const companyId = computed<string>(() => route.params.id as string)
 
 // Format date helper
-const formatDate = (dateString) => {
+const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
 // Format description with HTML (sanitized from backend)
-const formatDescription = (desc) => {
+const formatDescription = (desc: string | null | undefined): string => {
   if (!desc) return ''
   // Replace newlines with paragraph breaks
   return desc.split('\n\n').map(p => `<p>${p}</p>`).join('')
 }
 
 // Fetch all companies for navigation
-const fetchAllCompanies = async () => {
+const fetchAllCompanies = async (): Promise<void> => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/`)
-    allCompanies.value = response.data.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+    const response = await axios.get<Company[]>(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/`)
+    allCompanies.value = response.data.sort((a, b) => ((a as Company & { order_index?: number }).order_index || 0) - ((b as Company & { order_index?: number }).order_index || 0))
   } catch (err) {
     console.error('Error fetching companies:', err)
   }
 }
 
 // Fetch company details
-const fetchCompany = async (id) => {
+const fetchCompany = async (id: string): Promise<void> => {
   loading.value = true
   error.value = null
 
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/${id}`)
+    const response = await axios.get<Company>(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/${id}`)
     company.value = response.data
   } catch (err) {
     console.error('Error fetching company:', err)
-    if (err.response?.status === 404) {
+    const axiosError = err as AxiosError
+    if (axiosError.response?.status === 404) {
       error.value = 'Company not found. It may have been removed or the link is incorrect.'
     } else {
       error.value = 'Failed to load company details. Please try again later.'
@@ -240,12 +241,12 @@ const fetchCompany = async (id) => {
 // Watch for route changes
 watch(() => route.params.id, (newId) => {
   if (newId) {
-    fetchCompany(newId)
+    fetchCompany(newId as string)
   }
 })
 
 // Initial load
-onMounted(() => {
+onMounted((): void => {
   fetchAllCompanies()
   if (companyId.value) {
     fetchCompany(companyId.value)

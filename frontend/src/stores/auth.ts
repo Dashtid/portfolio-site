@@ -8,7 +8,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 interface User {
   id: string
   username: string
+  name?: string
   email?: string
+  avatar_url?: string
 }
 
 interface AuthState {

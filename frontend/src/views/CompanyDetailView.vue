@@ -136,36 +136,37 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
+import type { Company } from '../types/api'
 
 // Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const route = useRoute()
 const router = useRouter()
 
-const company = ref(null)
-const allCompanies = ref([])
-const loading = ref(true)
-const error = ref(null)
+const company = ref<Company | null>(null)
+const allCompanies = ref<Company[]>([])
+const loading = ref<boolean>(true)
+const error = ref<string | null>(null)
 
 // Format date helper
-const formatDate = (dateString) => {
+const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return 'Present'
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
 }
 
 // Format detailed description with markdown-like formatting
-const formattedDescription = computed(() => {
+const formattedDescription = computed<string>(() => {
   if (!company.value?.detailed_description) return ''
 
-  let html = company.value.detailed_description
+  let html: string = company.value.detailed_description
 
   // Convert **bold** to <strong>
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -177,32 +178,32 @@ const formattedDescription = computed(() => {
 })
 
 // Get previous and next companies for navigation
-const previousCompany = computed(() => {
+const previousCompany = computed<Company | null>(() => {
   if (!allCompanies.value.length || !company.value) return null
-  const currentIndex = allCompanies.value.findIndex(c => c.id === company.value.id)
+  const currentIndex = allCompanies.value.findIndex(c => c.id === company.value!.id)
   return currentIndex > 0 ? allCompanies.value[currentIndex - 1] : null
 })
 
-const nextCompany = computed(() => {
+const nextCompany = computed<Company | null>(() => {
   if (!allCompanies.value.length || !company.value) return null
-  const currentIndex = allCompanies.value.findIndex(c => c.id === company.value.id)
+  const currentIndex = allCompanies.value.findIndex(c => c.id === company.value!.id)
   return currentIndex < allCompanies.value.length - 1 ? allCompanies.value[currentIndex + 1] : null
 })
 
 // Fetch company details
-const fetchCompanyDetails = async (companyId) => {
+const fetchCompanyDetails = async (companyId: string): Promise<void> => {
   try {
     loading.value = true
     error.value = null
 
     // Fetch all companies first (for navigation)
-    const companiesResponse = await axios.get(`${API_URL}/api/v1/companies/`)
+    const companiesResponse = await axios.get<Company[]>(`${API_URL}/api/v1/companies/`)
     allCompanies.value = companiesResponse.data.sort((a, b) => {
-      return new Date(b.start_date) - new Date(a.start_date)
+      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
     })
 
     // Find the specific company
-    company.value = allCompanies.value.find(c => c.id === companyId)
+    company.value = allCompanies.value.find(c => c.id === companyId) || null
 
     if (!company.value) {
       error.value = 'Company not found'
@@ -216,19 +217,19 @@ const fetchCompanyDetails = async (companyId) => {
 }
 
 // Navigate to another company
-const navigateToCompany = (companyId) => {
+const navigateToCompany = (companyId: string): void => {
   router.push({ name: 'company-detail', params: { id: companyId } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Scroll to section on home page
-const scrollToSection = (sectionId) => {
+const scrollToSection = (sectionId: string): void => {
   router.push({ path: '/', hash: `#${sectionId}` })
 }
 
 // Load company on mount
-onMounted(() => {
-  fetchCompanyDetails(route.params.id)
+onMounted((): void => {
+  fetchCompanyDetails(route.params.id as string)
 })
 </script>
 

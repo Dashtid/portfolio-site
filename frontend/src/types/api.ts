@@ -18,6 +18,7 @@ export interface Company {
   start_date: string
   end_date?: string | null
   location?: string | null
+  website?: string | null
   video_url?: string | null
   video_title?: string | null
   map_url?: string | null

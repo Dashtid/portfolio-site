@@ -47,25 +47,33 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  project: {
-    type: Object,
-    required: true
-  }
-})
+interface ProjectData {
+  title: string
+  description: string
+  featured?: boolean
+  github_url?: string | null
+  live_url?: string | null
+  tech_stack?: string | string[] | null
+}
+
+interface Props {
+  project: ProjectData
+}
+
+const props = defineProps<Props>()
 
 // Parse tech stack from JSON or string
-const techStack = computed(() => {
+const techStack = computed<string[]>(() => {
   if (!props.project.tech_stack) return []
 
   if (typeof props.project.tech_stack === 'string') {
     try {
-      return JSON.parse(props.project.tech_stack)
+      return JSON.parse(props.project.tech_stack) as string[]
     } catch {
-      return props.project.tech_stack.split(',').map(t => t.trim())
+      return props.project.tech_stack.split(',').map((t: string) => t.trim())
     }
   }
 

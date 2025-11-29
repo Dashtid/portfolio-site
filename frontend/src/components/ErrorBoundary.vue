@@ -26,34 +26,38 @@
   <slot v-else />
 </template>
 
-<script setup>
-import { ref, onErrorCaptured } from 'vue'
+<script setup lang="ts">
+import { ref, onErrorCaptured, type ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
 
-const props = defineProps({
-  title: {
-    type: String,
-    default: 'Oops! Something went wrong'
-  },
-  message: {
-    type: String,
-    default: 'We encountered an unexpected error. Please try again.'
-  },
-  showDetails: {
-    type: Boolean,
-    default: false
-  },
-  onRetry: {
-    type: Function,
-    default: null
-  }
+interface Props {
+  title?: string
+  message?: string
+  showDetails?: boolean
+  onRetry?: (() => void) | null
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  title: 'Oops! Something went wrong',
+  message: 'We encountered an unexpected error. Please try again.',
+  showDetails: false,
+  onRetry: null
 })
 
-const router = useRouter()
-const hasError = ref(false)
-const errorDetails = ref(null)
+// Extend Window interface for analytics
+declare global {
+  interface Window {
+    analytics?: {
+      trackEvent: (category: string, action: string, label: string) => void
+    }
+  }
+}
 
-const handleRetry = () => {
+const router = useRouter()
+const hasError = ref<boolean>(false)
+const errorDetails = ref<string | null>(null)
+
+const handleRetry = (): void => {
   if (props.onRetry) {
     props.onRetry()
   } else {
@@ -64,13 +68,13 @@ const handleRetry = () => {
   errorDetails.value = null
 }
 
-const handleGoHome = () => {
+const handleGoHome = (): void => {
   hasError.value = false
   errorDetails.value = null
   router.push('/')
 }
 
-onErrorCaptured((err, instance, info) => {
+onErrorCaptured((err: Error, _instance: ComponentPublicInstance | null, info: string) => {
   console.error('Error caught in boundary:', err)
   hasError.value = true
   errorDetails.value = import.meta.env.DEV ? `${err.message}\n\nComponent: ${info}` : null
@@ -85,7 +89,7 @@ onErrorCaptured((err, instance, info) => {
 })
 
 // Expose method to manually trigger error state
-const showError = (error) => {
+const showError = (error?: Error | null): void => {
   hasError.value = true
   errorDetails.value = error?.message || 'Unknown error'
 }

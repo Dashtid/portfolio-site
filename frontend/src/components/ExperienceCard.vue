@@ -51,21 +51,21 @@
   </article>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
+import type { Company } from '@/types'
 
-const props = defineProps({
-  company: {
-    type: Object,
-    required: true
-  }
-})
+interface Props {
+  company: Company
+}
 
-const isCurrent = computed(() => {
+const props = defineProps<Props>()
+
+const isCurrent = computed<boolean>(() => {
   return props.company.end_date === null || props.company.end_date === undefined
 })
 
-const formatDuration = computed(() => {
+const formatDuration = computed<string>(() => {
   const start = props.company.start_date ? new Date(props.company.start_date) : null
   const end = props.company.end_date ? new Date(props.company.end_date) : new Date()
 

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 
@@ -6,7 +6,7 @@ import { useAuthStore } from './stores/auth'
 const authStore = useAuthStore()
 
 // Check auth on mount
-onMounted(() => {
+onMounted((): void => {
   authStore.checkAuth()
   authStore.initializeFromCallback()
 })

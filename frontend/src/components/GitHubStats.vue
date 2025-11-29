@@ -106,30 +106,54 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+
+interface Language {
+  name: string
+  percentage: number
+}
+
+interface Repository {
+  name: string
+  description: string | null
+  html_url: string
+  language: string | null
+  stars: number
+  forks: number
+}
+
+interface GitHubStatsData {
+  public_repos: number
+  total_stars: number
+  followers: number
+  total_forks: number
+  top_languages?: Language[]
+  recent_repos?: Repository[]
+}
+
+interface Props {
+  username?: string
+}
 
 // Get API URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-const props = defineProps({
-  username: {
-    type: String,
-    default: 'Dashtid'
-  }
+const props = withDefaults(defineProps<Props>(), {
+  username: 'Dashtid'
 })
 
-const stats = ref(null)
-const loading = ref(true)
-const error = ref(false)
+const stats = ref<GitHubStatsData | null>(null)
+const loading = ref<boolean>(true)
+const error = ref<boolean>(false)
 
-const fetchGitHubStats = async () => {
+const fetchGitHubStats = async (): Promise<void> => {
   try {
     loading.value = true
     error.value = false
 
-    const response = await axios.get(`${API_URL}/api/v1/github/stats/${props.username}`)
+    const response = await axios.get<GitHubStatsData>(`${API_URL}/api/v1/github/stats/${props.username}`)
     stats.value = response.data
   } catch (err) {
     console.error('Error fetching GitHub stats:', err)

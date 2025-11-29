@@ -22,12 +22,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()
 
-const loginWithGitHub = () => {
+const loginWithGitHub = (): void => {
   authStore.loginWithGitHub()
 }
 </script>

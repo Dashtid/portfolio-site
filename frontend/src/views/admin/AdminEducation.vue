@@ -147,20 +147,35 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import api from '../../api/client'
 
+// Education form interface
+interface EducationFormData {
+  id?: string
+  institution: string
+  degree: string
+  field_of_study: string
+  start_date: string
+  end_date: string
+  location: string
+  description: string
+  is_certification: boolean
+  certificate_number: string
+  order: number
+}
+
 const authStore = useAuthStore()
 const router = useRouter()
 
-const showForm = ref(false)
-const editingEducation = ref(null)
-const educationList = ref([])
+const showForm = ref<boolean>(false)
+const editingEducation = ref<EducationFormData | null>(null)
+const educationList = ref<EducationFormData[]>([])
 
-const formData = ref({
+const formData = ref<EducationFormData>({
   institution: '',
   degree: '',
   field_of_study: '',
@@ -174,20 +189,20 @@ const formData = ref({
 })
 
 // Computed properties
-const degrees = computed(() => educationList.value.filter(e => !e.is_certification))
-const certifications = computed(() => educationList.value.filter(e => e.is_certification))
+const degrees = computed<EducationFormData[]>(() => educationList.value.filter(e => !e.is_certification))
+const certifications = computed<EducationFormData[]>(() => educationList.value.filter(e => e.is_certification))
 
 // Methods
-const fetchEducation = async () => {
+const fetchEducation = async (): Promise<void> => {
   try {
-    const response = await api.get('/education/')
+    const response = await api.get<EducationFormData[]>('/education/')
     educationList.value = response.data
   } catch (error) {
     console.error('Error fetching education:', error)
   }
 }
 
-const saveEducation = async () => {
+const saveEducation = async (): Promise<void> => {
   try {
     if (editingEducation.value) {
       await api.put(`/education/${editingEducation.value.id}/`, formData.value)
@@ -202,13 +217,14 @@ const saveEducation = async () => {
   }
 }
 
-const editEducation = (edu) => {
+const editEducation = (edu: EducationFormData): void => {
   editingEducation.value = edu
   formData.value = { ...edu }
   showForm.value = true
 }
 
-const deleteEducation = async (id) => {
+const deleteEducation = async (id: string | undefined): Promise<void> => {
+  if (!id) return
   if (!confirm('Are you sure you want to delete this education record?')) return
 
   try {
@@ -220,7 +236,7 @@ const deleteEducation = async (id) => {
   }
 }
 
-const closeForm = () => {
+const closeForm = (): void => {
   showForm.value = false
   editingEducation.value = null
   formData.value = {
@@ -237,7 +253,7 @@ const closeForm = () => {
   }
 }
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string | null | undefined): string => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -246,7 +262,7 @@ const formatDate = (dateStr) => {
 }
 
 // Check authentication on mount
-onMounted(async () => {
+onMounted(async (): Promise<void> => {
   if (!authStore.isAuthenticated) {
     router.push('/admin/login')
     return

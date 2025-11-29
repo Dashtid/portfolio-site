@@ -14,48 +14,33 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps({
-  src: {
-    type: String,
-    required: true
-  },
-  placeholder: {
-    type: String,
-    default: null
-  },
-  alt: {
-    type: String,
-    default: ''
-  },
-  imageClass: {
-    type: String,
-    default: ''
-  },
-  threshold: {
-    type: Number,
-    default: 0.1
-  }
+interface Props {
+  src: string
+  placeholder?: string | null
+  alt?: string
+  imageClass?: string
+  threshold?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placeholder: null,
+  alt: '',
+  imageClass: '',
+  threshold: 0.1
 })
 
-const imageContainer = ref(null)
-const loaded = ref(false)
-const error = ref(false)
-const isIntersecting = ref(false)
-const currentSrc = ref('')
+const imageContainer = ref<HTMLDivElement | null>(null)
+const loaded = ref<boolean>(false)
+const error = ref<boolean>(false)
+const isIntersecting = ref<boolean>(false)
+const currentSrc = ref<string>('')
 
-let observer = null
+let observer: IntersectionObserver | null = null
 
-// Create a low-quality placeholder
-const placeholderSrc = computed(() => {
-  if (props.placeholder) return props.placeholder
-  // Could generate a data URL placeholder or use a default image
-  return 'data:image/svg+xml,%3Csvg width="400" height="300" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="100%25" height="100%25" fill="%23f0f0f0"/%3E%3C/svg%3E'
-})
-
-const loadImage = () => {
+const loadImage = (): void => {
   if (!isIntersecting.value) return
 
   // Start with placeholder if available
@@ -79,24 +64,24 @@ const loadImage = () => {
   }
 }
 
-const onImageLoad = () => {
+const onImageLoad = (): void => {
   loaded.value = true
   error.value = false
 }
 
-const onImageError = () => {
+const onImageError = (): void => {
   error.value = true
   loaded.value = false
 }
 
-const setupIntersectionObserver = () => {
-  const options = {
+const setupIntersectionObserver = (): void => {
+  const options: IntersectionObserverInit = {
     root: null,
     rootMargin: '50px',
     threshold: props.threshold
   }
 
-  observer = new IntersectionObserver((entries) => {
+  observer = new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && !isIntersecting.value) {
         isIntersecting.value = true

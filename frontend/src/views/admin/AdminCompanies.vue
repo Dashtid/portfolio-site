@@ -163,18 +163,31 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, computed, type WritableComputedRef } from 'vue'
 import apiClient from '../../api/client'
+import type { Company } from '../../types/api'
+
+// Form data interface (extends Company with order_index)
+interface CompanyFormData {
+  name: string
+  title: string
+  start_date: string
+  end_date: string
+  location: string
+  description: string
+  technologies: string[]
+  order_index: number
+}
 
 // Data
-const companies = ref([])
-const loading = ref(false)
-const showAddForm = ref(false)
-const editingCompany = ref(null)
+const companies = ref<Company[]>([])
+const loading = ref<boolean>(false)
+const showAddForm = ref<boolean>(false)
+const editingCompany = ref<Company | null>(null)
 
 // Form data
-const form = ref({
+const form = ref<CompanyFormData>({
   name: '',
   title: '',
   start_date: '',
@@ -186,13 +199,13 @@ const form = ref({
 })
 
 // Computed
-const technologiesInput = computed({
-  get() {
+const technologiesInput: WritableComputedRef<string> = computed({
+  get(): string {
     return Array.isArray(form.value.technologies)
       ? form.value.technologies.join(', ')
       : ''
   },
-  set(value) {
+  set(value: string): void {
     form.value.technologies = value
       .split(',')
       .map(t => t.trim())
@@ -201,10 +214,10 @@ const technologiesInput = computed({
 })
 
 // Methods
-const fetchCompanies = async () => {
+const fetchCompanies = async (): Promise<void> => {
   loading.value = true
   try {
-    const response = await apiClient.get('/api/v1/companies')
+    const response = await apiClient.get<Company[]>('/api/v1/companies')
     companies.value = response.data
   } catch (error) {
     console.error('Error fetching companies:', error)
@@ -214,17 +227,23 @@ const fetchCompanies = async () => {
   }
 }
 
-const editCompany = (company) => {
+const editCompany = (company: Company): void => {
   editingCompany.value = company
   form.value = {
-    ...company,
+    name: company.name,
+    title: company.title,
+    start_date: company.start_date,
+    end_date: company.end_date || '',
+    location: company.location || '',
+    description: company.description,
     technologies: Array.isArray(company.technologies)
       ? company.technologies
-      : JSON.parse(company.technologies || '[]')
+      : JSON.parse((company.technologies as unknown as string) || '[]'),
+    order_index: (company as Company & { order_index?: number }).order_index || 0
   }
 }
 
-const saveCompany = async () => {
+const saveCompany = async (): Promise<void> => {
   try {
     const data = {
       ...form.value,
@@ -249,7 +268,7 @@ const saveCompany = async () => {
   }
 }
 
-const deleteCompany = async (id) => {
+const deleteCompany = async (id: string): Promise<void> => {
   if (!confirm('Are you sure you want to delete this company?')) {
     return
   }
@@ -264,7 +283,7 @@ const deleteCompany = async (id) => {
   }
 }
 
-const closeForm = () => {
+const closeForm = (): void => {
   showAddForm.value = false
   editingCompany.value = null
   form.value = {
@@ -279,7 +298,7 @@ const closeForm = () => {
   }
 }
 
-const formatDate = (dateString) => {
+const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
@@ -289,7 +308,7 @@ const formatDate = (dateString) => {
 }
 
 // Lifecycle
-onMounted(() => {
+onMounted((): void => {
   fetchCompanies()
 })
 </script>

@@ -117,7 +117,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
@@ -128,18 +128,18 @@ const authStore = useAuthStore()
 const portfolioStore = usePortfolioStore()
 
 // Computed
-const featuredProjects = computed(() => {
+const featuredProjects = computed<number>(() => {
   return portfolioStore.projects.filter(p => p.featured).length
 })
 
 // Methods
-const logout = async () => {
+const logout = async (): Promise<void> => {
   await authStore.logout()
   router.push('/admin/login')
 }
 
 // Load data on mount
-onMounted(() => {
+onMounted((): void => {
   portfolioStore.fetchAllData()
 })
 </script>

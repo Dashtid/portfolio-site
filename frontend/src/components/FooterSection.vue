@@ -42,20 +42,20 @@
   </footer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-const showScrollTop = ref(false)
-const currentYear = computed(() => new Date().getFullYear())
+const showScrollTop = ref<boolean>(false)
+const currentYear = computed<number>(() => new Date().getFullYear())
 
-const scrollToTop = () => {
+const scrollToTop = (): void => {
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   })
 }
 
-const handleScroll = () => {
+const handleScroll = (): void => {
   showScrollTop.value = window.scrollY > 300
 }
 

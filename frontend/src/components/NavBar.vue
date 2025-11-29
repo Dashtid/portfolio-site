@@ -29,14 +29,19 @@
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import ThemeToggle from './ThemeToggle.vue'
 
-const scrolled = ref(false)
-const activeSection = ref('hero')
+interface NavItem {
+  name: string
+  href: string
+}
 
-const navItems = [
+const scrolled = ref<boolean>(false)
+const activeSection = ref<string>('hero')
+
+const navItems: NavItem[] = [
   { name: 'Home', href: 'hero' },
   { name: 'Experience', href: 'experience' },
   { name: 'Education', href: 'education' },
@@ -46,7 +51,7 @@ const navItems = [
 ]
 
 // Smooth scroll to section
-const scrollToSection = (sectionId) => {
+const scrollToSection = (sectionId: string): void => {
   const element = document.getElementById(sectionId)
   if (element) {
     const navHeight = 70 // Account for fixed navbar
@@ -70,12 +75,12 @@ const scrollToSection = (sectionId) => {
 }
 
 // Handle scroll events
-const handleScroll = () => {
+const handleScroll = (): void => {
   // Update navbar background on scroll
   scrolled.value = window.scrollY > 50
 
   // Update active section based on scroll position
-  const sections = ['hero', 'experience', 'education', 'projects', 'about', 'contact']
+  const sections: string[] = ['hero', 'experience', 'education', 'projects', 'about', 'contact']
   const scrollPosition = window.scrollY + 100
 
   for (const sectionId of sections) {

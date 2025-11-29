@@ -48,10 +48,17 @@
   </button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useTheme } from '../composables/useTheme'
 
-const { isDark, toggleTheme } = useTheme()
+const { isDark, toggleTheme: toggle } = useTheme()
+
+const handleClick = (): void => {
+  toggle()
+}
+
+// Alias for template usage
+const toggleTheme = handleClick
 </script>
 
 <style scoped>
