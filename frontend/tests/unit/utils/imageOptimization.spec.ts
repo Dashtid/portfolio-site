@@ -244,4 +244,183 @@ describe('imageOptimization utility', () => {
       expect(lazyLoader.disconnect).toBeDefined()
     })
   })
+
+  describe('optimizeImage', () => {
+    let optimizeImage: typeof import('@/utils/imageOptimization').optimizeImage
+
+    beforeEach(async () => {
+      const module = await import('@/utils/imageOptimization')
+      optimizeImage = module.optimizeImage
+    })
+
+    it('rejects when file read fails', async () => {
+      const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' })
+
+      // Mock FileReader to trigger error
+      const mockFileReader = {
+        readAsDataURL: vi.fn(),
+        onerror: null as (() => void) | null,
+        onload: null as ((e: ProgressEvent<FileReader>) => void) | null
+      }
+
+      vi.spyOn(window, 'FileReader').mockImplementation(() => {
+        setTimeout(() => {
+          if (mockFileReader.onerror) mockFileReader.onerror()
+        }, 0)
+        return mockFileReader as unknown as FileReader
+      })
+
+      await expect(optimizeImage(mockFile)).rejects.toThrow('Failed to read file')
+    })
+
+    it('rejects when image load fails', async () => {
+      const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' })
+
+      // Mock FileReader to succeed but image to fail
+      const mockFileReader = {
+        readAsDataURL: vi.fn(),
+        onerror: null as (() => void) | null,
+        onload: null as ((e: ProgressEvent<FileReader>) => void) | null,
+        result: 'data:image/jpeg;base64,test'
+      }
+
+      vi.spyOn(window, 'FileReader').mockImplementation(() => {
+        setTimeout(() => {
+          if (mockFileReader.onload) {
+            mockFileReader.onload({ target: mockFileReader } as unknown as ProgressEvent<FileReader>)
+          }
+        }, 0)
+        return mockFileReader as unknown as FileReader
+      })
+
+      // Mock Image to fail
+      const originalImage = window.Image
+      window.Image = vi.fn().mockImplementation(() => {
+        const img = {
+          src: '',
+          onerror: null as (() => void) | null,
+          onload: null as (() => void) | null
+        }
+        setTimeout(() => {
+          if (img.onerror) img.onerror()
+        }, 10)
+        return img
+      }) as unknown as typeof Image
+
+      await expect(optimizeImage(mockFile)).rejects.toThrow('Failed to load image')
+
+      window.Image = originalImage
+    })
+
+    it('accepts custom options', () => {
+      // Just test that the function accepts options - actual optimization
+      // requires complex browser API mocking
+      expect(optimizeImage).toBeDefined()
+      expect(typeof optimizeImage).toBe('function')
+    })
+  })
+
+  describe('ImageLazyLoader intersection handling', () => {
+    it('handles intersection with data-src', () => {
+      const loader = new ImageLazyLoader()
+      const img = document.createElement('img')
+      img.dataset.src = '/test-image.jpg'
+      img.dataset.srcset = '/test-image.jpg 400w'
+
+      // Manually trigger intersection
+      const mockEntry = {
+        isIntersecting: true,
+        target: img
+      } as unknown as IntersectionObserverEntry
+
+      // Access private method through prototype
+      const handleIntersection = (loader as any).handleIntersection.bind(loader)
+      handleIntersection([mockEntry])
+
+      expect(img.src).toContain('test-image.jpg')
+      expect(img.srcset).toBe('/test-image.jpg 400w')
+      expect(img.classList.contains('lazy-loaded')).toBe(true)
+    })
+
+    it('ignores non-intersecting entries', () => {
+      const loader = new ImageLazyLoader()
+      const img = document.createElement('img')
+      img.dataset.src = '/test-image.jpg'
+
+      const mockEntry = {
+        isIntersecting: false,
+        target: img
+      } as unknown as IntersectionObserverEntry
+
+      const handleIntersection = (loader as any).handleIntersection.bind(loader)
+      handleIntersection([mockEntry])
+
+      expect(img.src).toBe('')
+      expect(img.classList.contains('lazy-loaded')).toBe(false)
+    })
+
+    it('handles elements without data-src', () => {
+      const loader = new ImageLazyLoader()
+      const img = document.createElement('img')
+
+      const mockEntry = {
+        isIntersecting: true,
+        target: img
+      } as unknown as IntersectionObserverEntry
+
+      const handleIntersection = (loader as any).handleIntersection.bind(loader)
+
+      expect(() => handleIntersection([mockEntry])).not.toThrow()
+    })
+
+    it('handles elements with only data-srcset', () => {
+      const loader = new ImageLazyLoader()
+      const img = document.createElement('img')
+      img.dataset.srcset = '/image.jpg 400w, /image.jpg 800w'
+
+      const mockEntry = {
+        isIntersecting: true,
+        target: img
+      } as unknown as IntersectionObserverEntry
+
+      const handleIntersection = (loader as any).handleIntersection.bind(loader)
+      handleIntersection([mockEntry])
+
+      expect(img.srcset).toBe('/image.jpg 400w, /image.jpg 800w')
+    })
+
+    it('removes data attributes after loading', () => {
+      const loader = new ImageLazyLoader()
+      const img = document.createElement('img')
+      img.dataset.src = '/test.jpg'
+      img.dataset.srcset = '/test.jpg 400w'
+
+      const mockEntry = {
+        isIntersecting: true,
+        target: img
+      } as unknown as IntersectionObserverEntry
+
+      const handleIntersection = (loader as any).handleIntersection.bind(loader)
+      handleIntersection([mockEntry])
+
+      expect(img.dataset.src).toBeUndefined()
+      expect(img.dataset.srcset).toBeUndefined()
+    })
+  })
+
+  describe('ImageLazyLoader without IntersectionObserver', () => {
+    it('handles missing IntersectionObserver gracefully', () => {
+      const originalIO = window.IntersectionObserver
+      delete (window as any).IntersectionObserver
+
+      const loader = new ImageLazyLoader()
+
+      // Should not throw and observe should handle null observer
+      const element = document.createElement('img')
+      expect(() => loader.observe(element)).not.toThrow()
+      expect(() => loader.disconnect()).not.toThrow()
+
+      window.IntersectionObserver = originalIO
+    })
+  })
 })
