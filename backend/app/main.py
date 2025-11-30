@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import education
-from app.api.v1 import auth, companies, github, projects  # , analytics
+from app.api.v1 import auth, companies, github, projects, skills  # , analytics
 from app.api.v1.endpoints import documents, health, metrics
 from app.config import settings
 from app.database import Base, engine
@@ -107,6 +107,7 @@ app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
+app.include_router(skills.router, prefix="/api/v1")
 app.include_router(education.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
 # Mount static files for document downloads
