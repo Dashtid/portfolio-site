@@ -6,8 +6,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://dashti-portfolio-backend.fly.dev/api/:path*"
+      "source": "/api/:path(.*)",
+      "destination": "https://dashti-portfolio-backend.fly.dev/api/:path"
     },
     {
       "source": "/(.*)",
