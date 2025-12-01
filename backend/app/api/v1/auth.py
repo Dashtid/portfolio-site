@@ -5,7 +5,7 @@ Authentication API endpoints with GitHub OAuth
 import secrets
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from app.config import settings
 from app.core.deps import get_current_user
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.database import get_db
+from app.middleware import limiter
 from app.models.user import User
 from app.schemas.auth import Token, UserResponse
 
@@ -24,7 +25,8 @@ oauth_states = {}
 
 
 @router.get("/github")
-async def github_login():
+@limiter.limit(settings.RATE_LIMIT_AUTH)
+async def github_login(request: Request):
     """Initiate GitHub OAuth flow"""
     if not settings.GITHUB_CLIENT_ID:
         raise HTTPException(
@@ -48,7 +50,8 @@ async def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(code: str, state: str, db: AsyncSession = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_AUTH)
+async def github_callback(request: Request, code: str, state: str, db: AsyncSession = Depends(get_db)):
     """Handle GitHub OAuth callback"""
     # Verify state
     if state not in oauth_states:
@@ -149,7 +152,8 @@ async def github_callback(code: str, state: str, db: AsyncSession = Depends(get_
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_AUTH)
+async def refresh_token(request: Request, refresh_token: str, db: AsyncSession = Depends(get_db)):
     """Refresh access token using refresh token"""
     # Decode refresh token
     payload = decode_token(refresh_token)
@@ -179,13 +183,15 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
+@limiter.limit(settings.RATE_LIMIT_API)
+async def get_current_user_info(request: Request, current_user: User = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 
 
 @router.post("/logout")
-async def logout(response: Response):
+@limiter.limit(settings.RATE_LIMIT_API)
+async def logout(request: Request):
     """Logout user (client-side token removal)"""
     # In a production app, you might want to blacklist the token
     # For now, we just return a success message

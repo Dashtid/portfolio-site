@@ -71,6 +71,15 @@ class Settings(BaseSettings):
     # Performance Monitoring
     METRICS_ENABLED: bool = True
 
+    # Rate Limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_DEFAULT: str = "100/minute"  # Default rate limit for all endpoints
+    RATE_LIMIT_AUTH: str = "5/minute"  # Auth endpoints (login, token refresh)
+    RATE_LIMIT_API: str = "60/minute"  # General API endpoints
+    RATE_LIMIT_STRICT: str = "10/minute"  # Sensitive endpoints (password reset, etc.)
+    RATE_LIMIT_PUBLIC: str = "120/minute"  # Public read-only endpoints
+    RATE_LIMIT_STORAGE_URI: str | None = None  # Redis URI for distributed rate limiting
+
     class Config:
         env_file = ".env"
         case_sensitive = True
