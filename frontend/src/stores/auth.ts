@@ -6,6 +6,16 @@ import { storage, STORAGE_KEYS } from '@/utils/storage'
 // Get API URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+// JWT format validation regex (header.payload.signature)
+const JWT_REGEX = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
+
+/**
+ * Validate JWT format to prevent XSS via URL parameters
+ */
+function isValidJWT(token: string): boolean {
+  return JWT_REGEX.test(token)
+}
+
 interface User {
   id: string
   username: string
@@ -43,11 +53,18 @@ export const useAuthStore = defineStore('auth', {
       const token = params.get('token')
       const refresh = params.get('refresh')
 
-      if (token && refresh) {
+      // Validate JWT format to prevent XSS attacks
+      if (token && refresh && isValidJWT(token) && isValidJWT(refresh)) {
         this.setTokens(token, refresh)
         // Clean URL
         window.history.replaceState({}, '', window.location.pathname)
         return true
+      }
+
+      // Clean URL even if tokens are invalid
+      if (token || refresh) {
+        console.error('Invalid token format received from OAuth callback')
+        window.history.replaceState({}, '', window.location.pathname)
       }
       return false
     },

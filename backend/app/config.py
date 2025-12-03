@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]
 
+    # Frontend URL (for OAuth redirect)
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # Security
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ALGORITHM: str = "HS256"

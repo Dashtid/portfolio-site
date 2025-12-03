@@ -104,9 +104,11 @@ async def delete_company(
 
 @router.post("/rebuild-complete-data-temp", status_code=status.HTTP_200_OK)
 async def rebuild_complete_data_temp(
-    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: AdminUser,
+    db: DbSession,
 ):
-    """TEMPORARY: Rebuild database with complete experience data (NO AUTH - REMOVE AFTER USE)"""
+    """Rebuild database with complete experience data (requires admin authentication)"""
+    _ = current_user  # Used for authentication
     from datetime import datetime  # noqa: PLC0415
 
     try:

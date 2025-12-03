@@ -152,8 +152,8 @@ async def github_callback(request: Request, code: str, state: str, db: DbSession
         refresh_token = create_refresh_token(subject=user.id)
 
         # Redirect to frontend with tokens
-        frontend_url = f"http://localhost:3000/admin?token={access_token}&refresh={refresh_token}"
-        return RedirectResponse(url=frontend_url)
+        redirect_url = f"{settings.FRONTEND_URL}/admin?token={access_token}&refresh={refresh_token}"
+        return RedirectResponse(url=redirect_url)
 
 
 @router.post("/refresh", response_model=Token)
