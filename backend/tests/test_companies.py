@@ -39,8 +39,8 @@ def test_create_company_requires_auth(client: TestClient):
         "order_index": 1,
     }
     response = client.post("/api/v1/companies/", json=company_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_create_company_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
@@ -138,9 +138,7 @@ def test_delete_company_with_db_auth(client: TestClient, admin_user_in_db: dict[
     company_id = create_response.json()["id"]
 
     # Delete the company
-    response = client.delete(
-        f"/api/v1/companies/{company_id}", headers=admin_user_in_db["headers"]
-    )
+    response = client.delete(f"/api/v1/companies/{company_id}", headers=admin_user_in_db["headers"])
     assert response.status_code == 204
 
     # Verify it's deleted
@@ -179,15 +177,15 @@ def test_update_company_requires_auth(client: TestClient):
         "order_index": 1,
     }
     response = client.put("/api/v1/companies/some-id", json=update_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_delete_company_requires_auth(client: TestClient):
     """Test that deleting a company requires authentication."""
     response = client.delete("/api/v1/companies/some-id")
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_company_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
@@ -245,8 +243,8 @@ def test_company_ordering(client: TestClient, admin_user_in_db: dict[str, Any]):
 def test_rebuild_complete_data_temp_requires_auth(client: TestClient):
     """Test rebuild-complete-data-temp endpoint requires authentication."""
     response = client.post("/api/v1/companies/rebuild-complete-data-temp")
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_rebuild_complete_data_temp(client: TestClient, admin_user_in_db: dict[str, Any]):
@@ -263,7 +261,9 @@ def test_rebuild_complete_data_temp(client: TestClient, admin_user_in_db: dict[s
     assert data["count"] == 7  # Expected number of companies
 
 
-def test_rebuild_complete_data_creates_companies(client: TestClient, admin_user_in_db: dict[str, Any]):
+def test_rebuild_complete_data_creates_companies(
+    client: TestClient, admin_user_in_db: dict[str, Any]
+):
     """Test that rebuild creates expected companies."""
     # First rebuild the data (with auth)
     response = client.post(
@@ -323,3 +323,165 @@ def test_company_response_schema(client: TestClient, admin_user_in_db: dict[str,
         assert "title" in company
         assert "description" in company
         assert "order_index" in company
+
+
+class TestCompanyEdgeCases:
+    """Edge case tests for companies API."""
+
+    def test_update_partial_fields(self, client: TestClient, admin_user_in_db: dict[str, Any]):
+        """Test updating only some fields preserves others."""
+        company_data = {
+            "name": "Partial Update Company",
+            "title": "Original Title",
+            "description": "Original description",
+            "location": "Original Location",
+            "order_index": 10,
+        }
+        create_response = client.post(
+            "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+        )
+        assert create_response.status_code == 201
+        company_id = create_response.json()["id"]
+
+        # Update only title
+        update_response = client.put(
+            f"/api/v1/companies/{company_id}",
+            json={"title": "Updated Title Only"},
+            headers=admin_user_in_db["headers"],
+        )
+        assert update_response.status_code == 200
+        data = update_response.json()
+        assert data["title"] == "Updated Title Only"
+        assert data["name"] == "Partial Update Company"
+        assert data["description"] == "Original description"
+        assert data["location"] == "Original Location"
+
+    def test_create_company_with_all_fields(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating company with all optional fields."""
+        company_data = {
+            "name": "Full Company",
+            "title": "Full Title",
+            "description": "Short description",
+            "detailed_description": "Very detailed description here",
+            "location": "Stockholm, Sweden",
+            "start_date": "2020-01-15",
+            "end_date": "2023-12-31",
+            "website": "https://example.com",
+            "order_index": 5,
+            "responsibilities": ["Task 1", "Task 2"],
+            "technologies": ["Python", "FastAPI"],
+        }
+        response = client.post(
+            "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Full Company"
+        assert data["detailed_description"] == "Very detailed description here"
+        assert data["website"] == "https://example.com"
+        assert "responsibilities" in data
+        assert "technologies" in data
+
+    def test_create_company_minimal_fields(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating company with only required fields."""
+        company_data = {
+            "name": "Minimal Company",
+            "title": "Minimal Title",
+        }
+        response = client.post(
+            "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Minimal Company"
+        assert data["title"] == "Minimal Title"
+
+    def test_create_company_missing_name(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating company without name fails validation."""
+        company_data = {
+            "title": "Has Title",
+            "description": "Has description",
+        }
+        response = client.post(
+            "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 422
+
+    def test_create_company_without_title(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating company without title succeeds (title is optional)."""
+        company_data = {
+            "name": "Company Without Title",
+            "description": "Has description",
+        }
+        response = client.post(
+            "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Company Without Title"
+        assert data["title"] is None
+
+    def test_rebuild_clears_existing_data(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test that rebuild clears existing companies first."""
+        # Create a custom company
+        custom_company = {
+            "name": "Custom Company",
+            "title": "Custom Title",
+            "description": "Should be removed after rebuild",
+            "order_index": 100,
+        }
+        create_response = client.post(
+            "/api/v1/companies/", json=custom_company, headers=admin_user_in_db["headers"]
+        )
+        assert create_response.status_code == 201
+
+        # Rebuild the data
+        rebuild_response = client.post(
+            "/api/v1/companies/rebuild-complete-data-temp",
+            headers=admin_user_in_db["headers"],
+        )
+        assert rebuild_response.status_code == 200
+
+        # Get all companies
+        response = client.get("/api/v1/companies/")
+        data = response.json()
+        company_names = [c["name"] for c in data]
+
+        # Custom company should be gone, only rebuilt data remains
+        assert "Custom Company" not in company_names
+        assert len(data) == 7  # Only the rebuilt companies
+
+    def test_get_company_by_invalid_uuid_format(self, client: TestClient):
+        """Test getting company with invalid ID format."""
+        # Valid UUID format but non-existent
+        response = client.get("/api/v1/companies/00000000-0000-0000-0000-000000000000")
+        assert response.status_code == 404
+
+    def test_company_with_current_position(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating a company with no end date (current position)."""
+        company_data = {
+            "name": "Current Employer",
+            "title": "Current Role",
+            "description": "Still working here",
+            "start_date": "2023-01-01",
+            "end_date": None,
+            "order_index": 1,
+        }
+        response = client.post(
+            "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["end_date"] is None

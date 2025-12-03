@@ -25,8 +25,8 @@ def test_create_project_requires_auth(client: TestClient):
         "order_index": 1,
     }
     response = client.post("/api/v1/projects/", json=project_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_create_project_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
@@ -127,9 +127,7 @@ def test_delete_project_with_db_auth(client: TestClient, admin_user_in_db: dict[
     project_id = create_response.json()["id"]
 
     # Delete the project
-    response = client.delete(
-        f"/api/v1/projects/{project_id}", headers=admin_user_in_db["headers"]
-    )
+    response = client.delete(f"/api/v1/projects/{project_id}", headers=admin_user_in_db["headers"])
     assert response.status_code == 204
 
     # Verify it's deleted
@@ -169,9 +167,7 @@ def test_update_project_not_found(client: TestClient, admin_user_in_db: dict[str
 
 def test_delete_project_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test deleting a non-existent project."""
-    response = client.delete(
-        "/api/v1/projects/nonexistent-id", headers=admin_user_in_db["headers"]
-    )
+    response = client.delete("/api/v1/projects/nonexistent-id", headers=admin_user_in_db["headers"])
     assert response.status_code == 404
 
 
@@ -183,15 +179,15 @@ def test_update_project_requires_auth(client: TestClient):
         "order_index": 1,
     }
     response = client.put("/api/v1/projects/some-id", json=update_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_delete_project_requires_auth(client: TestClient):
     """Test that deleting project requires authentication."""
     response = client.delete("/api/v1/projects/some-id")
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_get_projects_empty_list(client: TestClient):

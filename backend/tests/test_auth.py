@@ -2,8 +2,9 @@
 Tests for authentication endpoints
 """
 
+import urllib.parse  # noqa: PLC0415
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -137,14 +138,15 @@ def test_token_refresh(client: TestClient):
     refresh_token = create_refresh_token(subject="test_user")
 
     response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
-    # Basic structure test - endpoint should exist and accept refresh tokens
+    # Endpoint should exist and return either success or an error response
+    assert response.status_code in [200, 401, 422]
 
 
 def test_protected_endpoint_without_auth(client: TestClient):
     """Test accessing protected endpoint without authentication."""
     response = client.get("/api/v1/auth/me")
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_protected_endpoint_with_auth(client: TestClient, auth_headers: dict):
@@ -257,9 +259,7 @@ class TestAuthIntegration:
         assert data["username"] == "adminuser"
         assert data["is_admin"] is True
 
-    def test_refresh_token_with_valid_user_in_db(
-        self, client: TestClient, test_user_in_db: dict
-    ):
+    def test_refresh_token_with_valid_user_in_db(self, client: TestClient, test_user_in_db: dict):
         """Test token refresh with valid user in database."""
         response = client.post(
             f"/api/v1/auth/refresh?refresh_token={test_user_in_db['refresh_token']}"
@@ -272,9 +272,7 @@ class TestAuthIntegration:
         assert data["token_type"] == "bearer"
         assert "refresh_token" in data
 
-    def test_refreshed_token_works_for_me_endpoint(
-        self, client: TestClient, test_user_in_db: dict
-    ):
+    def test_refreshed_token_works_for_me_endpoint(self, client: TestClient, test_user_in_db: dict):
         """Test that refreshed access token works for protected endpoints."""
         # First refresh the token
         refresh_response = client.post(
@@ -317,7 +315,7 @@ class TestTokenExpiration:
 
     def test_access_token_structure(self, client: TestClient, test_user_in_db: dict):
         """Test access token has correct structure."""
-        from app.core.security import ALGORITHM, decode_token
+        from app.core.security import decode_token  # noqa: PLC0415
 
         token = test_user_in_db["access_token"]
         payload = decode_token(token)
@@ -330,7 +328,7 @@ class TestTokenExpiration:
 
     def test_refresh_token_structure(self, client: TestClient, test_user_in_db: dict):
         """Test refresh token has correct structure."""
-        from app.core.security import decode_token
+        from app.core.security import decode_token  # noqa: PLC0415
 
         token = test_user_in_db["refresh_token"]
         payload = decode_token(token)
@@ -341,9 +339,7 @@ class TestTokenExpiration:
         assert "type" in payload
         assert payload["type"] == "refresh"
 
-    def test_cannot_use_refresh_token_for_access(
-        self, client: TestClient, test_user_in_db: dict
-    ):
+    def test_cannot_use_refresh_token_for_access(self, client: TestClient, test_user_in_db: dict):
         """Test that refresh token cannot be used as access token."""
         # Try to use refresh token as bearer token
         refresh_as_access = {"Authorization": f"Bearer {test_user_in_db['refresh_token']}"}
@@ -361,28 +357,28 @@ class TestAuthorizationEdgeCases:
         """Test handling of malformed Bearer token."""
         headers = {"Authorization": "Bearer "}
         response = client.get("/api/v1/auth/me", headers=headers)
-        # HTTPBearer returns 403 for malformed Bearer header
-        assert response.status_code == 403
+        # HTTPBearer returns 401 for malformed Bearer header
+        assert response.status_code == 401
 
     def test_wrong_auth_scheme(self, client: TestClient):
         """Test handling of wrong authentication scheme."""
         headers = {"Authorization": "Basic dXNlcjpwYXNz"}
         response = client.get("/api/v1/auth/me", headers=headers)
-        # HTTPBearer returns 403 for wrong auth scheme
-        assert response.status_code == 403
+        # HTTPBearer returns 401 for wrong auth scheme
+        assert response.status_code == 401
 
     def test_no_authorization_header(self, client: TestClient):
         """Test handling of missing Authorization header."""
         response = client.get("/api/v1/auth/me")
-        # HTTPBearer returns 403 when no Authorization header is present
-        assert response.status_code == 403
+        # HTTPBearer returns 401 when no Authorization header is present
+        assert response.status_code == 401
 
     def test_bearer_without_token(self, client: TestClient):
         """Test handling of Bearer without token."""
         headers = {"Authorization": "Bearer"}
         response = client.get("/api/v1/auth/me", headers=headers)
-        # HTTPBearer returns 403 for malformed Bearer header
-        assert response.status_code == 403
+        # HTTPBearer returns 401 for malformed Bearer header
+        assert response.status_code == 401
 
     def test_tampered_token(self, client: TestClient, test_user_in_db: dict):
         """Test handling of tampered token."""
@@ -406,9 +402,7 @@ class TestRefreshTokenEdgeCases:
         response = client.post("/api/v1/auth/refresh?refresh_token=   ")
         assert response.status_code == 401
 
-    def test_refresh_preserves_same_refresh_token(
-        self, client: TestClient, test_user_in_db: dict
-    ):
+    def test_refresh_preserves_same_refresh_token(self, client: TestClient, test_user_in_db: dict):
         """Test that refresh returns the same refresh token."""
         response = client.post(
             f"/api/v1/auth/refresh?refresh_token={test_user_in_db['refresh_token']}"
@@ -434,7 +428,7 @@ class TestGitHubCallbackMocked:
 
             # Extract state from redirect URL
             location = login_response.headers.get("location", "")
-            import urllib.parse
+            import urllib.parse  # noqa: PLC0415
 
             parsed = urllib.parse.urlparse(location)
             params = urllib.parse.parse_qs(parsed.query)
@@ -455,8 +449,6 @@ class TestGitHubCallbackMocked:
             login_response = client.get("/api/v1/auth/github", follow_redirects=False)
 
             # Extract state
-            import urllib.parse
-
             location = login_response.headers.get("location", "")
             parsed = urllib.parse.urlparse(location)
             params = urllib.parse.parse_qs(parsed.query)
@@ -477,3 +469,257 @@ class TestGitHubCallbackMocked:
                 )
                 # Should fail with 400 due to GitHub error
                 assert callback_response.status_code == 400
+
+
+class TestGitHubCallbackFullFlow:
+    """Full OAuth callback flow tests with comprehensive mocking."""
+
+    def _get_valid_state(self, client: TestClient) -> str:
+        """Helper to get a valid OAuth state."""
+        with patch("app.api.v1.auth.settings") as mock_settings:
+            mock_settings.GITHUB_CLIENT_ID = "test_client_id"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            login_response = client.get("/api/v1/auth/github", follow_redirects=False)
+            location = login_response.headers.get("location", "")
+            parsed = urllib.parse.urlparse(location)
+            params = urllib.parse.parse_qs(parsed.query)
+            return params.get("state", [""])[0]
+
+    def test_callback_token_exchange_failure(self, client: TestClient):
+        """Test callback when GitHub token exchange fails."""
+        state = self._get_valid_state(client)
+
+        with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+            # Mock token exchange to fail
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 500
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
+            assert response.status_code == 400
+            assert "Failed to get access token" in response.json()["detail"]
+
+    def test_callback_oauth_error_in_response(self, client: TestClient):
+        """Test callback when GitHub returns OAuth error."""
+        state = self._get_valid_state(client)
+
+        with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+            # Mock token exchange to return error
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 200
+            mock_token_response.json.return_value = {
+                "error": "bad_verification_code",
+                "error_description": "The code passed is incorrect or expired.",
+            }
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(f"/api/v1/auth/github/callback?code=bad&state={state}")
+            assert response.status_code == 400
+            assert "incorrect or expired" in response.json()["detail"]
+
+    def test_callback_user_info_failure(self, client: TestClient):
+        """Test callback when GitHub user info request fails."""
+        state = self._get_valid_state(client)
+
+        with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+            # Mock token exchange success
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 200
+            mock_token_response.json.return_value = {"access_token": "gh_token_123"}
+
+            # Mock user info failure
+            mock_user_response = MagicMock()
+            mock_user_response.status_code = 401
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_async_client.get.return_value = mock_user_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
+            assert response.status_code == 400
+            assert "Failed to get user info" in response.json()["detail"]
+
+    def test_callback_non_admin_rejected(self, client: TestClient):
+        """Test callback rejects non-admin users."""
+        state = self._get_valid_state(client)
+
+        with (
+            patch("app.api.v1.auth.httpx.AsyncClient") as mock_client,
+            patch("app.api.v1.auth.settings") as mock_settings,
+        ):
+            mock_settings.GITHUB_CLIENT_ID = "test_id"
+            mock_settings.GITHUB_CLIENT_SECRET = "test_secret"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.ADMIN_GITHUB_ID = "12345"  # Expected admin ID
+            mock_settings.FRONTEND_URL = "http://localhost:3000"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            # Mock token exchange success
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 200
+            mock_token_response.json.return_value = {"access_token": "gh_token_123"}
+
+            # Mock user info with different ID
+            mock_user_response = MagicMock()
+            mock_user_response.status_code = 200
+            mock_user_response.json.return_value = {
+                "id": 99999,  # Not the admin
+                "login": "notadmin",
+                "email": "notadmin@example.com",
+                "name": "Not Admin",
+                "avatar_url": "https://example.com/avatar.png",
+            }
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_async_client.get.return_value = mock_user_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
+            assert response.status_code == 403
+            assert "Only the admin can log in" in response.json()["detail"]
+
+    def test_callback_success_new_user(self, client: TestClient):
+        """Test successful callback creates new user and redirects."""
+        state = self._get_valid_state(client)
+
+        with (
+            patch("app.api.v1.auth.httpx.AsyncClient") as mock_client,
+            patch("app.api.v1.auth.settings") as mock_settings,
+        ):
+            mock_settings.GITHUB_CLIENT_ID = "test_id"
+            mock_settings.GITHUB_CLIENT_SECRET = "test_secret"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.ADMIN_GITHUB_ID = "12345"
+            mock_settings.FRONTEND_URL = "http://localhost:3000"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            # Mock token exchange success
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 200
+            mock_token_response.json.return_value = {"access_token": "gh_token_123"}
+
+            # Mock user info with admin ID
+            mock_user_response = MagicMock()
+            mock_user_response.status_code = 200
+            mock_user_response.json.return_value = {
+                "id": 12345,  # Admin ID
+                "login": "adminuser",
+                "email": "admin@example.com",
+                "name": "Admin User",
+                "avatar_url": "https://example.com/admin.png",
+            }
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_async_client.get.return_value = mock_user_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(
+                f"/api/v1/auth/github/callback?code=valid_code&state={state}",
+                follow_redirects=False,
+            )
+
+            # Should redirect to frontend with tokens
+            assert response.status_code == 307
+            location = response.headers.get("location", "")
+            assert "localhost:3000/admin" in location
+            assert "token=" in location
+            assert "refresh=" in location
+
+    def test_callback_success_existing_user_updated(self, client: TestClient):
+        """Test successful callback updates existing user info."""
+        state = self._get_valid_state(client)
+
+        with (
+            patch("app.api.v1.auth.httpx.AsyncClient") as mock_client,
+            patch("app.api.v1.auth.settings") as mock_settings,
+        ):
+            mock_settings.GITHUB_CLIENT_ID = "test_id"
+            mock_settings.GITHUB_CLIENT_SECRET = "test_secret"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.ADMIN_GITHUB_ID = "67890"  # Match existing user
+            mock_settings.FRONTEND_URL = "http://localhost:3000"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            # Mock token exchange success
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 200
+            mock_token_response.json.return_value = {"access_token": "gh_token_456"}
+
+            # Mock user info matching existing admin_user_in_db github_id
+            mock_user_response = MagicMock()
+            mock_user_response.status_code = 200
+            mock_user_response.json.return_value = {
+                "id": 67890,
+                "login": "updated_username",
+                "email": "updated@example.com",
+                "name": "Updated Name",
+                "avatar_url": "https://example.com/new_avatar.png",
+            }
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_async_client.get.return_value = mock_user_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(
+                f"/api/v1/auth/github/callback?code=valid&state={state}",
+                follow_redirects=False,
+            )
+
+            # Should succeed with redirect
+            assert response.status_code == 307
+
+    def test_callback_no_admin_restriction(self, client: TestClient):
+        """Test callback when ADMIN_GITHUB_ID is not set (any user allowed)."""
+        state = self._get_valid_state(client)
+
+        with (
+            patch("app.api.v1.auth.httpx.AsyncClient") as mock_client,
+            patch("app.api.v1.auth.settings") as mock_settings,
+        ):
+            mock_settings.GITHUB_CLIENT_ID = "test_id"
+            mock_settings.GITHUB_CLIENT_SECRET = "test_secret"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.ADMIN_GITHUB_ID = None  # No admin restriction
+            mock_settings.FRONTEND_URL = "http://localhost:3000"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            # Mock token exchange success
+            mock_token_response = MagicMock()
+            mock_token_response.status_code = 200
+            mock_token_response.json.return_value = {"access_token": "gh_token_789"}
+
+            # Mock any user
+            mock_user_response = MagicMock()
+            mock_user_response.status_code = 200
+            mock_user_response.json.return_value = {
+                "id": 11111,
+                "login": "anyuser",
+                "email": "any@example.com",
+                "name": "Any User",
+                "avatar_url": "https://example.com/any.png",
+            }
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post.return_value = mock_token_response
+            mock_async_client.get.return_value = mock_user_response
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            response = client.get(
+                f"/api/v1/auth/github/callback?code=valid&state={state}",
+                follow_redirects=False,
+            )
+
+            # Should succeed when no admin restriction
+            assert response.status_code == 307

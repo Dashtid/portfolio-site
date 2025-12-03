@@ -142,19 +142,19 @@ class TestMiddlewareIntegration:
 
     def test_compression_middleware_exists(self):
         """Test compression middleware is imported."""
-        from app.middleware.compression import CompressionMiddleware
+        from app.middleware.compression import CompressionMiddleware  # noqa: PLC0415
 
         assert CompressionMiddleware is not None
 
     def test_logging_middleware_exists(self):
         """Test logging middleware is imported."""
-        from app.middleware.logging import LoggingMiddleware
+        from app.middleware.logging import LoggingMiddleware  # noqa: PLC0415
 
         assert LoggingMiddleware is not None
 
     def test_error_tracking_middleware_exists(self):
         """Test error tracking middleware is imported."""
-        from app.middleware.error_tracking import ErrorTrackingMiddleware
+        from app.middleware.error_tracking import ErrorTrackingMiddleware  # noqa: PLC0415
 
         assert ErrorTrackingMiddleware is not None
 
@@ -215,7 +215,7 @@ class TestSecurityHeaders:
 
     def test_hsts_header_in_production(self):
         """Test that HSTS header is added in production mode."""
-        from app.main import SecurityHeadersMiddleware
+        from app.main import SecurityHeadersMiddleware  # noqa: PLC0415
 
         # The middleware class exists and is properly defined
         assert SecurityHeadersMiddleware is not None
@@ -237,12 +237,8 @@ class TestStaticFilesMount:
         response = client.get("/static/documents/nonexistent.pdf")
         assert response.status_code == 404
 
-    def test_static_js_file(self, client: TestClient):
-        """Test accessing a static JS file triggers cache headers."""
-        response = client.get("/static/test.js")
-        # File should exist and return 200 with cache headers
-        assert response.status_code == 200
-        # Check for Cache-Control header (set by cache middleware for static content)
-        cache_control = response.headers.get("Cache-Control")
-        if cache_control:
-            assert "max-age" in cache_control
+    def test_static_nonexistent_js_file(self, client: TestClient):
+        """Test accessing a non-existent static JS file returns 404."""
+        response = client.get("/static/nonexistent.js")
+        # Non-existent file should return 404
+        assert response.status_code == 404

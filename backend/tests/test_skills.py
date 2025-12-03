@@ -23,8 +23,8 @@ def test_create_skill_requires_auth(client: TestClient):
         "order_index": 1,
     }
     response = client.post("/api/v1/skills/", json=skill_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_create_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
@@ -35,9 +35,7 @@ def test_create_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
         "proficiency": 90,
         "order_index": 1,
     }
-    response = client.post(
-        "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
-    )
+    response = client.post("/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"])
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Python"
@@ -116,9 +114,7 @@ def test_delete_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     skill_id = create_response.json()["id"]
 
     # Delete the skill
-    response = client.delete(
-        f"/api/v1/skills/{skill_id}", headers=admin_user_in_db["headers"]
-    )
+    response = client.delete(f"/api/v1/skills/{skill_id}", headers=admin_user_in_db["headers"])
     assert response.status_code == 204
 
     # Verify it's deleted
@@ -136,15 +132,15 @@ def test_update_skill_requires_auth(client: TestClient):
     """Test that updating skill requires authentication."""
     update_data = {"name": "Updated Skill"}
     response = client.put("/api/v1/skills/some-id", json=update_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_delete_skill_requires_auth(client: TestClient):
     """Test that deleting skill requires authentication."""
     response = client.delete("/api/v1/skills/some-id")
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+    # HTTPBearer returns 401 when no Authorization header is present
+    assert response.status_code == 401
 
 
 def test_skill_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
@@ -188,9 +184,7 @@ def test_update_skill_not_found(client: TestClient, admin_user_in_db: dict[str, 
 
 def test_delete_skill_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test deleting a non-existent skill."""
-    response = client.delete(
-        "/api/v1/skills/nonexistent-id", headers=admin_user_in_db["headers"]
-    )
+    response = client.delete("/api/v1/skills/nonexistent-id", headers=admin_user_in_db["headers"])
     assert response.status_code == 404
 
 
