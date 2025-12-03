@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
 import type { LoginResponse } from '@/types'
+import { storage, STORAGE_KEYS } from '@/utils/storage'
 
 // Get API URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -24,15 +25,15 @@ interface AuthState {
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
-    accessToken: localStorage.getItem('accessToken') || null,
-    refreshToken: localStorage.getItem('refreshToken') || null,
+    accessToken: storage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
+    refreshToken: storage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
     isLoading: false,
-    error: null
+    error: null,
   }),
 
   getters: {
     isAuthenticated: (state): boolean => !!state.accessToken,
-    currentUser: (state): User | null => state.user
+    currentUser: (state): User | null => state.user,
   },
 
   actions: {
@@ -56,9 +57,9 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = accessToken
       this.refreshToken = refreshToken
 
-      // Save to localStorage
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
+      // Save to localStorage using storage utility
+      storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
+      storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
 
       // Configure axios default header
       if (apiClient.defaults.headers.common) {
@@ -76,9 +77,14 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await apiClient.get<User>('/api/v1/auth/me')
         this.user = response.data
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to fetch user:', error)
-        if (error.response?.status === 401) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          (error as { response?: { status?: number } }).response?.status === 401
+        ) {
           await this.refreshAccessToken()
         }
       }
@@ -93,10 +99,10 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const response = await apiClient.post<LoginResponse>('/api/v1/auth/refresh', {
-          refresh_token: this.refreshToken
+          refresh_token: this.refreshToken,
         })
 
-        this.setTokens(response.data.access_token, response.data.access_token)
+        this.setTokens(response.data.access_token, response.data.refresh_token)
       } catch (error) {
         console.error('Failed to refresh token:', error)
         this.logout()
@@ -120,9 +126,8 @@ export const useAuthStore = defineStore('auth', {
         this.accessToken = null
         this.refreshToken = null
 
-        // Clear localStorage
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
+        // Clear localStorage using storage utility
+        storage.removeMultiple([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN])
 
         // Clear axios header
         if (apiClient.defaults.headers.common) {
@@ -142,6 +147,6 @@ export const useAuthStore = defineStore('auth', {
         // Fetch user info
         await this.fetchUser()
       }
-    }
-  }
+    },
+  },
 })
