@@ -3,17 +3,44 @@ GitHub API endpoints for fetching live statistics
 """
 
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Path, Query
 
 from app.services.github_service import github_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# GitHub username/repo validation patterns
+# GitHub usernames: 1-39 chars, alphanumeric and hyphens, cannot start/end with hyphen
+GITHUB_USERNAME_PATTERN = r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$"
+# GitHub repo names: 1-100 chars, alphanumeric, hyphens, underscores, dots
+GITHUB_REPO_PATTERN = r"^[a-zA-Z0-9._-]{1,100}$"
+
+# Type aliases for validated path parameters
+GitHubUsername = Annotated[
+    str,
+    Path(
+        min_length=1,
+        max_length=39,
+        pattern=GITHUB_USERNAME_PATTERN,
+        description="GitHub username (1-39 chars, alphanumeric and hyphens)",
+    ),
+]
+GitHubRepoName = Annotated[
+    str,
+    Path(
+        min_length=1,
+        max_length=100,
+        pattern=GITHUB_REPO_PATTERN,
+        description="GitHub repository name (1-100 chars, alphanumeric, hyphens, underscores, dots)",
+    ),
+]
+
 
 @router.get("/stats/{username}")
-async def get_github_stats(username: str):
+async def get_github_stats(username: GitHubUsername):
     """
     Get GitHub statistics for a user.
 
@@ -29,7 +56,7 @@ async def get_github_stats(username: str):
 
 
 @router.get("/project/{owner}/{repo}")
-async def get_project_stats(owner: str, repo: str):
+async def get_project_stats(owner: GitHubUsername, repo: GitHubRepoName):
     """
     Get detailed statistics for a specific GitHub project.
 
@@ -46,7 +73,7 @@ async def get_project_stats(owner: str, repo: str):
 
 @router.get("/repos/{username}")
 async def get_user_repos(
-    username: str,
+    username: GitHubUsername,
     limit: int | None = Query(10, le=50, description="Maximum number of repos to return"),
 ):
     """
@@ -66,7 +93,7 @@ async def get_user_repos(
 
 
 @router.get("/languages/{owner}/{repo}")
-async def get_repo_languages(owner: str, repo: str):
+async def get_repo_languages(owner: GitHubUsername, repo: GitHubRepoName):
     """
     Get language statistics for a specific repository.
 

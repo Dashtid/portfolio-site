@@ -23,7 +23,7 @@ class Company(Base):
     end_date = Column(Date, nullable=True)  # Null means current job
     logo_url = Column(String(500))
     website = Column(String(500))
-    order_index = Column(Integer, default=0)
+    order_index = Column(Integer, default=0, index=True)
 
     # Detail page media
     video_url = Column(String(500), nullable=True)  # YouTube embed URL

@@ -23,7 +23,7 @@ class Project(Base):
     image_url = Column(String(500))
     company_id = Column(String, ForeignKey("companies.id", ondelete="CASCADE"))
     featured = Column(Boolean, default=False)
-    order_index = Column(Integer, default=0)
+    order_index = Column(Integer, default=0, index=True)
 
     # Additional media fields
     video_url = Column(String(500), nullable=True)

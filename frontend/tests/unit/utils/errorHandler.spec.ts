@@ -152,10 +152,7 @@ describe('errorHandler utility', () => {
       const error = {
         response: {
           data: {
-            detail: [
-              { msg: 'Field 1 error' },
-              { msg: 'Field 2 error' }
-            ]
+            detail: [{ msg: 'Field 1 error' }, { msg: 'Field 2 error' }]
           }
         }
       } as any
@@ -228,7 +225,8 @@ describe('errorHandler utility', () => {
     })
 
     it('retries on failure and succeeds', async () => {
-      const operation = vi.fn()
+      const operation = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockResolvedValue('success')
@@ -258,9 +256,7 @@ describe('errorHandler utility', () => {
     it('retries on server errors', async () => {
       const serverError = new Error('Server error') as any
       serverError.response = { status: 500 }
-      const operation = vi.fn()
-        .mockRejectedValueOnce(serverError)
-        .mockResolvedValue('success')
+      const operation = vi.fn().mockRejectedValueOnce(serverError).mockResolvedValue('success')
 
       const result = await retryOperation(operation, 2, 10)
 
@@ -269,16 +265,25 @@ describe('errorHandler utility', () => {
     })
 
     it('uses exponential backoff', async () => {
-      const operation = vi.fn()
+      vi.useFakeTimers()
+
+      const operation = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail'))
         .mockResolvedValue('success')
 
-      const startTime = Date.now()
-      await retryOperation(operation, 3, 100)
-      const duration = Date.now() - startTime
+      // Start the retry operation
+      const retryPromise = retryOperation(operation, 3, 100)
 
-      // Should have waited at least 100ms (first retry delay)
-      expect(duration).toBeGreaterThanOrEqual(100)
+      // Fast-forward through the delay (100ms for first retry)
+      await vi.advanceTimersByTimeAsync(100)
+
+      const result = await retryPromise
+
+      expect(result).toBe('success')
+      expect(operation).toHaveBeenCalledTimes(2)
+
+      vi.useRealTimers()
     })
   })
 

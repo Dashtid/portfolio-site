@@ -17,7 +17,7 @@ class Skill(Base):
     category = Column(String(50))  # 'language', 'framework', 'tool', 'database', etc.
     proficiency = Column(Integer)  # 1-5 scale
     years_experience = Column(Float)
-    order_index = Column(Integer, default=0)
+    order_index = Column(Integer, default=0, index=True)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
