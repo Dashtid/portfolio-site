@@ -4,6 +4,8 @@ Document API Endpoints
 Endpoints for managing academic documents, theses, and papers.
 """
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,9 +18,12 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 router = APIRouter()
 
+# Type alias for dependency injection (FastAPI 2025 best practice)
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+
 
 @router.get("/", response_model=list[DocumentResponse])
-async def get_documents(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_documents(db: DbSession):
     """
     Get all documents.
 
@@ -29,14 +34,15 @@ async def get_documents(db: AsyncSession = Depends(get_db)):  # noqa: B008
         result = await db.execute(select(Document).order_by(Document.published_date.desc()))
         documents = result.scalars().all()
         logger.info(f"Retrieved {len(documents)} documents")
-        return documents
     except Exception as e:
-        logger.error(f"Error fetching documents: {str(e)}")
+        logger.exception(f"Error fetching documents: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch documents") from e
+    else:
+        return documents
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
-async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_document(document_id: str, db: DbSession):
     """
     Get a specific document by ID.
 
@@ -57,9 +63,10 @@ async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):  #
             raise HTTPException(status_code=404, detail="Document not found")
 
         logger.info(f"Retrieved document: {document.title}")
-        return document
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching document {document_id}: {str(e)}")
+        logger.exception(f"Error fetching document {document_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch document") from e
+    else:
+        return document

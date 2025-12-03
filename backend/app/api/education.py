@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,9 +13,13 @@ from app.schemas.education import EducationCreate, EducationUpdate
 
 router = APIRouter(prefix="/education", tags=["education"])
 
+# Type aliases for dependency injection (FastAPI 2025 best practice)
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+AdminUser = Annotated[User, Depends(get_current_admin_user)]
+
 
 @router.get("/", response_model=list[EducationSchema])
-async def get_all_education(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_all_education(db: DbSession):
     """Get all education records"""
     result = await db.execute(
         select(Education).order_by(Education.order, Education.start_date.desc())
@@ -22,7 +28,7 @@ async def get_all_education(db: AsyncSession = Depends(get_db)):  # noqa: B008
 
 
 @router.get("/degrees/", response_model=list[EducationSchema])
-async def get_degrees(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_degrees(db: DbSession):
     """Get only degree education records (not certifications)"""
     result = await db.execute(
         select(Education)
@@ -33,7 +39,7 @@ async def get_degrees(db: AsyncSession = Depends(get_db)):  # noqa: B008
 
 
 @router.get("/certifications/", response_model=list[EducationSchema])
-async def get_certifications(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_certifications(db: DbSession):
     """Get only certification records"""
     result = await db.execute(
         select(Education)
@@ -44,7 +50,7 @@ async def get_certifications(db: AsyncSession = Depends(get_db)):  # noqa: B008
 
 
 @router.get("/{education_id}/", response_model=EducationSchema)
-async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_education(education_id: int, db: DbSession):
     """Get a single education record by ID"""
     result = await db.execute(select(Education).where(Education.id == education_id))
     education = result.scalar_one_or_none()
@@ -56,12 +62,12 @@ async def get_education(education_id: int, db: AsyncSession = Depends(get_db)): 
 @router.post("/", response_model=EducationSchema)
 async def create_education(
     education: EducationCreate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Create a new education record (requires admin authentication)"""
     _ = current_user  # Used for authentication
-    db_education = Education(**education.dict())
+    db_education = Education(**education.model_dump())
     db.add(db_education)
     await db.commit()
     await db.refresh(db_education)
@@ -72,8 +78,8 @@ async def create_education(
 async def update_education(
     education_id: int,
     education_update: EducationUpdate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Update an education record (requires admin authentication)"""
     _ = current_user  # Used for authentication
@@ -82,7 +88,7 @@ async def update_education(
     if not db_education:
         raise HTTPException(status_code=404, detail="Education record not found")
 
-    update_data = education_update.dict(exclude_unset=True)
+    update_data = education_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_education, field, value)
 
@@ -94,8 +100,8 @@ async def update_education(
 @router.delete("/{education_id}/")
 async def delete_education(
     education_id: int,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Delete an education record (requires admin authentication)"""
     _ = current_user  # Used for authentication

@@ -2,6 +2,8 @@
 Skill API endpoints
 """
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,16 +16,20 @@ from app.schemas.skill import SkillCreate, SkillResponse, SkillUpdate
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
+# Type aliases for dependency injection (FastAPI 2025 best practice)
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+AdminUser = Annotated[User, Depends(get_current_admin_user)]
+
 
 @router.get("/", response_model=list[SkillResponse])
-async def get_skills(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_skills(db: DbSession):
     """Get all skills"""
     result = await db.execute(select(Skill).order_by(Skill.order_index))
     return result.scalars().all()
 
 
 @router.get("/{skill_id}", response_model=SkillResponse)
-async def get_skill(skill_id: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_skill(skill_id: str, db: DbSession):
     """Get a specific skill by ID"""
     result = await db.execute(select(Skill).where(Skill.id == skill_id))
     skill = result.scalar_one_or_none()
@@ -39,12 +45,12 @@ async def get_skill(skill_id: str, db: AsyncSession = Depends(get_db)):  # noqa:
 @router.post("/", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
 async def create_skill(
     skill: SkillCreate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Create a new skill (requires admin authentication)"""
     _ = current_user  # Used for authentication
-    db_skill = Skill(**skill.dict())
+    db_skill = Skill(**skill.model_dump())
     db.add(db_skill)
     await db.commit()
     await db.refresh(db_skill)
@@ -55,8 +61,8 @@ async def create_skill(
 async def update_skill(
     skill_id: str,
     skill_update: SkillUpdate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Update a skill (requires admin authentication)"""
     _ = current_user  # Used for authentication
@@ -68,7 +74,7 @@ async def update_skill(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill with ID {skill_id} not found"
         )
 
-    for field, value in skill_update.dict(exclude_unset=True).items():
+    for field, value in skill_update.model_dump(exclude_unset=True).items():
         setattr(skill, field, value)
 
     await db.commit()
@@ -79,8 +85,8 @@ async def update_skill(
 @router.delete("/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_skill(
     skill_id: str,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Delete a skill (requires admin authentication)"""
     _ = current_user  # Used for authentication

@@ -2,6 +2,8 @@
 Tests for skills API endpoints
 """
 
+from typing import Any
+
 from fastapi.testclient import TestClient
 
 
@@ -25,17 +27,103 @@ def test_create_skill_requires_auth(client: TestClient):
     assert response.status_code == 403
 
 
-def test_create_skill_with_auth(client: TestClient, admin_headers: dict):
-    """Test creating skill with authentication."""
+def test_create_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test creating skill with database-backed authentication."""
     skill_data = {
         "name": "Python",
         "category": "Programming Languages",
         "proficiency": 90,
         "order_index": 1,
     }
-    response = client.post("/api/v1/skills/", json=skill_data, headers=admin_headers)
-    # Note: With in-memory DB and no user, this may fail with 404
-    assert response.status_code in [200, 201, 404]
+    response = client.post(
+        "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Python"
+    assert data["category"] == "Programming Languages"
+    assert data["proficiency"] == 90
+    assert "id" in data
+
+
+def test_get_skill_by_id(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test getting a specific skill by ID."""
+    # First create a skill
+    skill_data = {
+        "name": "JavaScript",
+        "category": "Programming Languages",
+        "proficiency": 85,
+        "order_index": 2,
+    }
+    create_response = client.post(
+        "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+    )
+    assert create_response.status_code == 201
+    skill_id = create_response.json()["id"]
+
+    # Get the skill
+    response = client.get(f"/api/v1/skills/{skill_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == skill_id
+    assert data["name"] == "JavaScript"
+
+
+def test_update_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test updating a skill with database-backed authentication."""
+    # Create a skill first
+    skill_data = {
+        "name": "TypeScript",
+        "category": "Programming Languages",
+        "proficiency": 75,
+        "order_index": 3,
+    }
+    create_response = client.post(
+        "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+    )
+    assert create_response.status_code == 201
+    skill_id = create_response.json()["id"]
+
+    # Update the skill
+    update_data = {
+        "name": "TypeScript",
+        "category": "Programming Languages",
+        "proficiency": 95,
+        "order_index": 1,
+    }
+    response = client.put(
+        f"/api/v1/skills/{skill_id}", json=update_data, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["proficiency"] == 95
+    assert data["order_index"] == 1
+
+
+def test_delete_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test deleting a skill with database-backed authentication."""
+    # Create a skill first
+    skill_data = {
+        "name": "Skill to Delete",
+        "category": "Test",
+        "proficiency": 50,
+        "order_index": 99,
+    }
+    create_response = client.post(
+        "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+    )
+    assert create_response.status_code == 201
+    skill_id = create_response.json()["id"]
+
+    # Delete the skill
+    response = client.delete(
+        f"/api/v1/skills/{skill_id}", headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 204
+
+    # Verify it's deleted
+    get_response = client.get(f"/api/v1/skills/{skill_id}")
+    assert get_response.status_code == 404
 
 
 def test_get_skill_not_found(client: TestClient):
@@ -59,16 +147,17 @@ def test_delete_skill_requires_auth(client: TestClient):
     assert response.status_code == 403
 
 
-def test_skill_validation(client: TestClient, admin_headers: dict):
+def test_skill_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test skill field validation."""
     # Missing required fields (name is required)
     invalid_skill = {"category": "Test"}
-    response = client.post("/api/v1/skills/", json=invalid_skill, headers=admin_headers)
-    # Either 422 for validation error or 404 for user not found
-    assert response.status_code in [404, 422]
+    response = client.post(
+        "/api/v1/skills/", json=invalid_skill, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 422
 
 
-def test_skill_proficiency_validation(client: TestClient, admin_headers: dict):
+def test_skill_proficiency_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test skill proficiency range validation."""
     # Proficiency out of range (should be 0-100)
     invalid_skill = {
@@ -77,12 +166,13 @@ def test_skill_proficiency_validation(client: TestClient, admin_headers: dict):
         "proficiency": 150,  # Invalid - over 100
         "order_index": 1,
     }
-    response = client.post("/api/v1/skills/", json=invalid_skill, headers=admin_headers)
-    # Should be 422 for validation error or 404 for user not found
-    assert response.status_code in [404, 422]
+    response = client.post(
+        "/api/v1/skills/", json=invalid_skill, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 422
 
 
-def test_update_skill_not_found(client: TestClient, admin_headers: dict):
+def test_update_skill_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test updating a non-existent skill."""
     update_data = {
         "name": "Updated Skill",
@@ -90,13 +180,17 @@ def test_update_skill_not_found(client: TestClient, admin_headers: dict):
         "proficiency": 85,
         "order_index": 1,
     }
-    response = client.put("/api/v1/skills/nonexistent-id", json=update_data, headers=admin_headers)
+    response = client.put(
+        "/api/v1/skills/nonexistent-id", json=update_data, headers=admin_user_in_db["headers"]
+    )
     assert response.status_code == 404
 
 
-def test_delete_skill_not_found(client: TestClient, admin_headers: dict):
+def test_delete_skill_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test deleting a non-existent skill."""
-    response = client.delete("/api/v1/skills/nonexistent-id", headers=admin_headers)
+    response = client.delete(
+        "/api/v1/skills/nonexistent-id", headers=admin_user_in_db["headers"]
+    )
     assert response.status_code == 404
 
 
@@ -109,7 +203,7 @@ def test_get_skills_empty_list(client: TestClient):
     assert len(data) == 0
 
 
-def test_skill_proficiency_negative(client: TestClient, admin_headers: dict):
+def test_skill_proficiency_negative(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test skill with negative proficiency."""
     invalid_skill = {
         "name": "Test Skill",
@@ -117,5 +211,34 @@ def test_skill_proficiency_negative(client: TestClient, admin_headers: dict):
         "proficiency": -10,  # Invalid - negative
         "order_index": 1,
     }
-    response = client.post("/api/v1/skills/", json=invalid_skill, headers=admin_headers)
-    assert response.status_code in [404, 422]
+    response = client.post(
+        "/api/v1/skills/", json=invalid_skill, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 422
+
+
+def test_skill_ordering(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test that skills are returned ordered by order_index."""
+    # Create skills with different order_index values
+    skills = [
+        {"name": "Skill C", "category": "Test", "proficiency": 80, "order_index": 3},
+        {"name": "Skill A", "category": "Test", "proficiency": 90, "order_index": 1},
+        {"name": "Skill B", "category": "Test", "proficiency": 85, "order_index": 2},
+    ]
+
+    for skill_data in skills:
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+
+    # Get all skills
+    response = client.get("/api/v1/skills/")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 3
+
+    # Verify ordering
+    assert data[0]["name"] == "Skill A"
+    assert data[1]["name"] == "Skill B"
+    assert data[2]["name"] == "Skill C"

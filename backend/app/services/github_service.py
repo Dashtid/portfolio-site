@@ -35,14 +35,15 @@ class GitHubService:
                 )
                 response.raise_for_status()
                 result: dict[str, Any] = response.json()
-                return result
             except httpx.HTTPError as e:
-                logger.error(f"Error fetching user info for {username}: {e}")
+                logger.exception(f"Error fetching user info for {username}: {e}")
                 return {}
+            else:
+                return result
 
     async def get_user_repos(self, username: str, per_page: int = 100) -> list[dict]:
         """Get all public repositories for a user."""
-        repos = []
+        repos: list[dict] = []
         page = 1
 
         async with httpx.AsyncClient() as client:
@@ -73,7 +74,7 @@ class GitHubService:
                     page += 1
 
                 except httpx.HTTPError as e:
-                    logger.error(f"Error fetching repos for {username}: {e}")
+                    logger.exception(f"Error fetching repos for {username}: {e}")
                     break
 
         return repos
@@ -87,10 +88,11 @@ class GitHubService:
                 )
                 response.raise_for_status()
                 result: dict[str, Any] = response.json()
-                return result
             except httpx.HTTPError as e:
-                logger.error(f"Error fetching repo {owner}/{repo}: {e}")
+                logger.exception(f"Error fetching repo {owner}/{repo}: {e}")
                 return {}
+            else:
+                return result
 
     async def get_repo_languages(self, owner: str, repo: str) -> dict[str, int]:
         """Get language statistics for a repository."""
@@ -101,10 +103,11 @@ class GitHubService:
                 )
                 response.raise_for_status()
                 result: dict[str, int] = response.json()
-                return result
             except httpx.HTTPError as e:
-                logger.error(f"Error fetching languages for {owner}/{repo}: {e}")
+                logger.exception(f"Error fetching languages for {owner}/{repo}: {e}")
                 return {}
+            else:
+                return result
 
     async def get_repo_commits(self, owner: str, repo: str, since: datetime | None = None) -> int:
         """Get commit count for a repository."""
@@ -132,7 +135,7 @@ class GitHubService:
                 return len(response.json())
 
             except httpx.HTTPError as e:
-                logger.error(f"Error fetching commits for {owner}/{repo}: {e}")
+                logger.exception(f"Error fetching commits for {owner}/{repo}: {e}")
                 return 0
 
     async def get_portfolio_stats(self, username: str) -> dict[str, Any]:

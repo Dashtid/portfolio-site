@@ -2,6 +2,8 @@
 Tests for companies API endpoints
 """
 
+from typing import Any
+
 from fastapi.testclient import TestClient
 
 
@@ -28,7 +30,125 @@ def test_get_company_not_found(client: TestClient):
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_update_company_not_found(client: TestClient, admin_headers: dict):
+def test_create_company_requires_auth(client: TestClient):
+    """Test creating company without authentication should fail."""
+    company_data = {
+        "name": "Test Company",
+        "title": "Software Engineer",
+        "description": "Test description",
+        "order_index": 1,
+    }
+    response = client.post("/api/v1/companies/", json=company_data)
+    # HTTPBearer returns 403 when no Authorization header is present
+    assert response.status_code == 403
+
+
+def test_create_company_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test creating company with database-backed admin authentication."""
+    company_data = {
+        "name": "Test Company",
+        "title": "Software Engineer",
+        "description": "Test description",
+        "location": "Stockholm, Sweden",
+        "start_date": "2023-01-01",
+        "order_index": 1,
+    }
+    response = client.post(
+        "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Company"
+    assert data["title"] == "Software Engineer"
+    assert data["description"] == "Test description"
+    assert data["location"] == "Stockholm, Sweden"
+    assert "id" in data
+
+
+def test_get_company_by_id(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test getting a specific company by ID."""
+    # First create a company
+    company_data = {
+        "name": "Company to Get",
+        "title": "Developer",
+        "description": "A company to retrieve",
+        "order_index": 1,
+    }
+    create_response = client.post(
+        "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+    )
+    assert create_response.status_code == 201
+    company_id = create_response.json()["id"]
+
+    # Get the company
+    response = client.get(f"/api/v1/companies/{company_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == company_id
+    assert data["name"] == "Company to Get"
+
+
+def test_update_company_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test updating a company with database-backed authentication."""
+    # Create a company first
+    company_data = {
+        "name": "Original Company",
+        "title": "Junior Developer",
+        "description": "Original description",
+        "order_index": 1,
+    }
+    create_response = client.post(
+        "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+    )
+    assert create_response.status_code == 201
+    company_id = create_response.json()["id"]
+
+    # Update the company
+    update_data = {
+        "name": "Updated Company",
+        "title": "Senior Developer",
+        "description": "Updated description with more details",
+        "location": "Gothenburg, Sweden",
+        "order_index": 2,
+    }
+    response = client.put(
+        f"/api/v1/companies/{company_id}", json=update_data, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "Updated Company"
+    assert data["title"] == "Senior Developer"
+    assert data["location"] == "Gothenburg, Sweden"
+    assert data["order_index"] == 2
+
+
+def test_delete_company_with_db_auth(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test deleting a company with database-backed authentication."""
+    # Create a company first
+    company_data = {
+        "name": "Company to Delete",
+        "title": "Test Role",
+        "description": "Will be deleted",
+        "order_index": 99,
+    }
+    create_response = client.post(
+        "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
+    )
+    assert create_response.status_code == 201
+    company_id = create_response.json()["id"]
+
+    # Delete the company
+    response = client.delete(
+        f"/api/v1/companies/{company_id}", headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 204
+
+    # Verify it's deleted
+    get_response = client.get(f"/api/v1/companies/{company_id}")
+    assert get_response.status_code == 404
+
+
+def test_update_company_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test updating a non-existent company returns 404."""
     update_data = {
         "name": "Updated Company",
@@ -36,15 +156,17 @@ def test_update_company_not_found(client: TestClient, admin_headers: dict):
         "description": "Updated description",
         "order_index": 1,
     }
-    response = client.put("/api/v1/companies/nonexistent-id", json=update_data, headers=admin_headers)
-    # Should return 404 since company doesn't exist
+    response = client.put(
+        "/api/v1/companies/nonexistent-id", json=update_data, headers=admin_user_in_db["headers"]
+    )
     assert response.status_code == 404
 
 
-def test_delete_company_not_found(client: TestClient, admin_headers: dict):
+def test_delete_company_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test deleting a non-existent company returns 404."""
-    response = client.delete("/api/v1/companies/nonexistent-id", headers=admin_headers)
-    # Should return 404 since company doesn't exist
+    response = client.delete(
+        "/api/v1/companies/nonexistent-id", headers=admin_user_in_db["headers"]
+    )
     assert response.status_code == 404
 
 
@@ -68,83 +190,17 @@ def test_delete_company_requires_auth(client: TestClient):
     assert response.status_code == 403
 
 
-def test_create_company_requires_auth(client: TestClient):
-    """Test creating company without authentication should fail."""
-    company_data = {
-        "name": "Test Company",
-        "title": "Software Engineer",
-        "description": "Test description",
-        "order_index": 1,
-    }
-    response = client.post("/api/v1/companies/", json=company_data)
-    # HTTPBearer returns 403 when no Authorization header is present
-    assert response.status_code == 403
+def test_company_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test company field validation."""
+    # Missing required fields (name and title are required)
+    invalid_company = {"description": "Missing name and title"}
+    response = client.post(
+        "/api/v1/companies/", json=invalid_company, headers=admin_user_in_db["headers"]
+    )
+    assert response.status_code == 422
 
 
-def test_create_company_with_auth(client: TestClient, admin_headers: dict):
-    """Test creating company with admin authentication."""
-    company_data = {
-        "name": "Test Company",
-        "title": "Software Engineer",
-        "description": "Test description",
-        "location": "Stockholm, Sweden",
-        "order_index": 1,
-    }
-    response = client.post("/api/v1/companies/", json=company_data, headers=admin_headers)
-    # Note: With in-memory DB and no user, this may fail with 404
-    # The test documents expected behavior when authentication works
-    assert response.status_code in [200, 201, 404]
-
-
-def test_update_company(client: TestClient, admin_headers: dict):
-    """Test updating a company."""
-    # Create a company first
-    company_data = {
-        "name": "Original Company",
-        "title": "Junior Developer",
-        "description": "Original description",
-        "order_index": 1,
-    }
-    create_response = client.post("/api/v1/companies/", json=company_data, headers=admin_headers)
-
-    # Note: With in-memory DB and no user, creation may fail
-    if create_response.status_code in [200, 201]:
-        company_id = create_response.json()["id"]
-
-        # Update the company
-        update_data = {
-            "name": "Updated Company",
-            "title": "Senior Developer",
-            "description": "Updated description",
-            "order_index": 1,
-        }
-        response = client.put(
-            f"/api/v1/companies/{company_id}", json=update_data, headers=admin_headers
-        )
-        assert response.status_code in [200, 404]
-
-
-def test_delete_company(client: TestClient, admin_headers: dict):
-    """Test deleting a company."""
-    # Create a company first
-    company_data = {
-        "name": "Company to Delete",
-        "title": "Test Role",
-        "description": "Will be deleted",
-        "order_index": 1,
-    }
-    create_response = client.post("/api/v1/companies/", json=company_data, headers=admin_headers)
-
-    # Note: With in-memory DB and no user, creation may fail
-    if create_response.status_code in [200, 201]:
-        company_id = create_response.json()["id"]
-
-        # Delete the company
-        response = client.delete(f"/api/v1/companies/{company_id}", headers=admin_headers)
-        assert response.status_code in [200, 204, 404]
-
-
-def test_company_ordering(client: TestClient, admin_headers: dict):
+def test_company_ordering(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test that companies are returned in correct order."""
     # Create multiple companies with different orders
     companies = [
@@ -168,26 +224,22 @@ def test_company_ordering(client: TestClient, admin_headers: dict):
         },
     ]
 
-    created_count = 0
     for company in companies:
-        response = client.post("/api/v1/companies/", json=company, headers=admin_headers)
-        if response.status_code in [200, 201]:
-            created_count += 1
+        response = client.post(
+            "/api/v1/companies/", json=company, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
 
     # Get all companies
     response = client.get("/api/v1/companies/")
-    data = response.json()
     assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 3
 
-    # If companies were created, verify ordering
-    if created_count >= 3:
-        ordered_companies = sorted(
-            [c for c in data if c["name"] in ["First Company", "Second Company", "Third Company"]],
-            key=lambda x: x["order_index"],
-        )
-        assert ordered_companies[0]["name"] == "First Company"
-        assert ordered_companies[1]["name"] == "Second Company"
-        assert ordered_companies[2]["name"] == "Third Company"
+    # Verify ordering
+    assert data[0]["name"] == "First Company"
+    assert data[1]["name"] == "Second Company"
+    assert data[2]["name"] == "Third Company"
 
 
 def test_rebuild_complete_data_temp(client: TestClient):

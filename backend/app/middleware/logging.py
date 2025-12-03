@@ -59,9 +59,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             # Add request ID to response headers
             response.headers["X-Request-ID"] = request_id
-
-            return response
-
         except Exception as exc:
             # Calculate duration
             duration_ms = round((time.time() - start_time) * 1000, 2)
@@ -82,3 +79,5 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             # Re-raise exception
             raise
+        else:
+            return response

@@ -4,6 +4,7 @@ Health check endpoints for monitoring and load balancing
 
 import sys
 from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
@@ -12,6 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 
 router = APIRouter()
+
+# Type alias for dependency injection (FastAPI 2025 best practice)
+DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 
 @router.get("/health")
@@ -28,7 +32,7 @@ async def health_check():
 
 
 @router.get("/health/ready")
-async def readiness_check(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def readiness_check(db: DbSession):
     """
     Readiness check - verifies database connectivity
     Used by load balancers to determine if instance can receive traffic

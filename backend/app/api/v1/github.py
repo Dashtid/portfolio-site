@@ -20,10 +20,12 @@ async def get_github_stats(username: str):
     Returns aggregated stats including repos, stars, languages, etc.
     """
     try:
-        return await github_service.get_portfolio_stats(username)
+        stats = await github_service.get_portfolio_stats(username)
     except Exception as e:
-        logger.error(f"Error fetching GitHub stats for {username}: {e}")
+        logger.exception(f"Error fetching GitHub stats for {username}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+    else:
+        return stats
 
 
 @router.get("/project/{owner}/{repo}")
@@ -34,10 +36,12 @@ async def get_project_stats(owner: str, repo: str):
     Returns project details including stars, forks, languages, commit count, etc.
     """
     try:
-        return await github_service.get_project_stats(owner, repo)
+        stats = await github_service.get_project_stats(owner, repo)
     except Exception as e:
-        logger.error(f"Error fetching project stats for {owner}/{repo}: {e}")
+        logger.exception(f"Error fetching project stats for {owner}/{repo}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+    else:
+        return stats
 
 
 @router.get("/repos/{username}")
@@ -53,10 +57,12 @@ async def get_user_repos(
     try:
         repos = await github_service.get_user_repos(username)
         # Return only requested number of repos
-        return repos[:limit]
+        result = repos[:limit]
     except Exception as e:
-        logger.error(f"Error fetching repos for {username}: {e}")
+        logger.exception(f"Error fetching repos for {username}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+    else:
+        return result
 
 
 @router.get("/languages/{owner}/{repo}")
@@ -80,10 +86,12 @@ async def get_repo_languages(owner: str, repo: str):
             for lang, bytes_count in languages.items()
         ]
 
-        return {
+        result = {
             "total_bytes": total_bytes,
             "languages": sorted(language_stats, key=lambda x: x["bytes"], reverse=True),
         }
     except Exception as e:
-        logger.error(f"Error fetching languages for {owner}/{repo}: {e}")
+        logger.exception(f"Error fetching languages for {owner}/{repo}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+    else:
+        return result

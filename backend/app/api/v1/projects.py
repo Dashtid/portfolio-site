@@ -2,6 +2,8 @@
 Project API endpoints
 """
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,16 +16,20 @@ from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
+# Type aliases for dependency injection (FastAPI 2025 best practice)
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+AdminUser = Annotated[User, Depends(get_current_admin_user)]
+
 
 @router.get("/", response_model=list[ProjectResponse])
-async def get_projects(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_projects(db: DbSession):
     """Get all projects"""
     result = await db.execute(select(Project).order_by(Project.order_index))
     return result.scalars().all()
 
 
 @router.get("/{project_id}", response_model=ProjectResponse)
-async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_project(project_id: str, db: DbSession):
     """Get a specific project by ID"""
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
@@ -39,12 +45,12 @@ async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):  # n
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     project: ProjectCreate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Create a new project (requires admin authentication)"""
     _ = current_user  # Used for authentication
-    db_project = Project(**project.dict())
+    db_project = Project(**project.model_dump())
     db.add(db_project)
     await db.commit()
     await db.refresh(db_project)
@@ -55,8 +61,8 @@ async def create_project(
 async def update_project(
     project_id: str,
     project_update: ProjectUpdate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Update a project (requires admin authentication)"""
     _ = current_user  # Used for authentication
@@ -68,7 +74,7 @@ async def update_project(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Project with ID {project_id} not found"
         )
 
-    for field, value in project_update.dict(exclude_unset=True).items():
+    for field, value in project_update.model_dump(exclude_unset=True).items():
         setattr(project, field, value)
 
     await db.commit()
@@ -79,8 +85,8 @@ async def update_project(
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(
     project_id: str,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Delete a project (requires admin authentication)"""
     _ = current_user  # Used for authentication

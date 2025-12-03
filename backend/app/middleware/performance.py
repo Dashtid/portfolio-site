@@ -109,9 +109,6 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
                         "status_code": response.status_code,
                     },
                 )
-
-            return response
-
         except Exception:
             # Calculate duration even on error
             duration_ms = (time.time() - start_time) * 1000
@@ -126,6 +123,8 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
 
             # Re-raise exception
             raise
+        else:
+            return response
 
 
 def get_metrics() -> dict:

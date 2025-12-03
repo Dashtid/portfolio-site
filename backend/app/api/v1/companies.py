@@ -2,7 +2,7 @@
 Company API endpoints
 """
 
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
@@ -16,16 +16,20 @@ from app.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
+# Type aliases for dependency injection (FastAPI 2025 best practice)
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+AdminUser = Annotated[User, Depends(get_current_admin_user)]
+
 
 @router.get("/", response_model=list[CompanyResponse])
-async def get_companies(db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_companies(db: DbSession):
     """Get all companies"""
     result = await db.execute(select(Company).order_by(Company.order_index))
     return result.scalars().all()
 
 
 @router.get("/{company_id}", response_model=CompanyResponse)
-async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
+async def get_company(company_id: str, db: DbSession):
     """Get a specific company by ID"""
     result = await db.execute(select(Company).where(Company.id == company_id))
     company = result.scalar_one_or_none()
@@ -41,12 +45,12 @@ async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):  # n
 @router.post("/", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED)
 async def create_company(
     company: CompanyCreate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Create a new company (requires admin authentication)"""
     _ = current_user  # Used for authentication
-    db_company = Company(**company.dict())
+    db_company = Company(**company.model_dump())
     db.add(db_company)
     await db.commit()
     await db.refresh(db_company)
@@ -57,8 +61,8 @@ async def create_company(
 async def update_company(
     company_id: str,
     company_update: CompanyUpdate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Update a company (requires admin authentication)"""
     _ = current_user  # Used for authentication
@@ -70,7 +74,7 @@ async def update_company(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with ID {company_id} not found"
         )
 
-    for field, value in company_update.dict(exclude_unset=True).items():
+    for field, value in company_update.model_dump(exclude_unset=True).items():
         setattr(company, field, value)
 
     await db.commit()
@@ -81,8 +85,8 @@ async def update_company(
 @router.delete("/{company_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_company(
     company_id: str,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-    current_user: User = Depends(get_current_admin_user),  # noqa: B008
+    db: DbSession,
+    current_user: AdminUser,
 ):
     """Delete a company (requires admin authentication)"""
     _ = current_user  # Used for authentication
@@ -384,7 +388,7 @@ async def rebuild_complete_data_temp(
             count += 1
 
         await db.commit()
-        return {"status": "success", "message": f"Successfully rebuilt database with {count} complete companies", "count": count}
+        result = {"status": "success", "message": f"Successfully rebuilt database with {count} complete companies", "count": count}
 
     except Exception as e:
         await db.rollback()
@@ -392,3 +396,5 @@ async def rebuild_complete_data_temp(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error rebuilding database: {str(e)}"
         ) from e
+    else:
+        return result

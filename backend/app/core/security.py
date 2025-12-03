@@ -58,6 +58,7 @@ def decode_token(token: str) -> dict[str, Any] | None:
     """Decode and verify a JWT token"""
     try:
         payload: dict[str, Any] = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
     except PyJWTError:
         return None
+    else:
+        return payload

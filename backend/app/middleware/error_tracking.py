@@ -22,15 +22,13 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         try:
             response: Response = await call_next(request)
-            return response
-
         except HTTPException as exc:
             # Log HTTP exceptions (4xx, 5xx)
             request_id = getattr(request.state, "request_id", "unknown")
 
             if exc.status_code >= 500:
-                # Server errors - log as ERROR
-                logger.error(
+                # Server errors - log as ERROR with traceback
+                logger.exception(
                     f"HTTP {exc.status_code}: {exc.detail}",
                     extra={
                         "request_id": request_id,
@@ -56,7 +54,6 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
             # Re-raise to let FastAPI handle the response
             raise
-
         except Exception as exc:
             # Unexpected exceptions - log as CRITICAL
             request_id = getattr(request.state, "request_id", "unknown")
@@ -82,6 +79,8 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
             # Re-raise to let FastAPI handle the response
             raise
+        else:
+            return response
 
 
 def track_error(error: Exception, context: dict | None = None):
