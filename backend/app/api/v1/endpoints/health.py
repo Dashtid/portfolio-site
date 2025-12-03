@@ -3,11 +3,11 @@ Health check endpoints for monitoring and load balancing
 """
 
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 
@@ -22,30 +22,30 @@ async def health_check():
     """
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "service": "portfolio-api",
     }
 
 
 @router.get("/health/ready")
-async def readiness_check(db: Session = Depends(get_db)):
+async def readiness_check(db: AsyncSession = Depends(get_db)):
     """
     Readiness check - verifies database connectivity
     Used by load balancers to determine if instance can receive traffic
     """
     try:
         # Test database connection
-        db.execute(text("SELECT 1"))
+        await db.execute(text("SELECT 1"))
 
         return {
             "status": "ready",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "checks": {"database": "connected"},
         }
     except Exception as e:
         return {
             "status": "not_ready",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "checks": {"database": f"error: {str(e)}"},
         }
 
@@ -58,6 +58,6 @@ async def liveness_check():
     """
     return {
         "status": "alive",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "python_version": sys.version,
     }

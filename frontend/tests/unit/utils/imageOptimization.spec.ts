@@ -257,58 +257,74 @@ describe('imageOptimization utility', () => {
       const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' })
 
       // Mock FileReader to trigger error
-      const mockFileReader = {
-        readAsDataURL: vi.fn(),
-        onerror: null as (() => void) | null,
-        onload: null as ((e: ProgressEvent<FileReader>) => void) | null
+      const originalFileReader = window.FileReader
+
+      class MockFileReader {
+        onload: ((e: ProgressEvent<FileReader>) => void) | null = null
+        onerror: (() => void) | null = null
+        result: string | ArrayBuffer | null = null
+
+        readAsDataURL() {
+          // Use queueMicrotask to ensure onerror is called after it's assigned
+          queueMicrotask(() => {
+            if (this.onerror) this.onerror()
+          })
+        }
       }
 
-      vi.spyOn(window, 'FileReader').mockImplementation(() => {
-        setTimeout(() => {
-          if (mockFileReader.onerror) mockFileReader.onerror()
-        }, 0)
-        return mockFileReader as unknown as FileReader
-      })
+      window.FileReader = MockFileReader as unknown as typeof FileReader
 
       await expect(optimizeImage(mockFile)).rejects.toThrow('Failed to read file')
+
+      window.FileReader = originalFileReader
     })
 
     it('rejects when image load fails', async () => {
       const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' })
 
       // Mock FileReader to succeed but image to fail
-      const mockFileReader = {
-        readAsDataURL: vi.fn(),
-        onerror: null as (() => void) | null,
-        onload: null as ((e: ProgressEvent<FileReader>) => void) | null,
-        result: 'data:image/jpeg;base64,test'
+      const originalFileReader = window.FileReader
+      const originalImage = window.Image
+
+      class MockFileReader {
+        onload: ((e: ProgressEvent<FileReader>) => void) | null = null
+        onerror: (() => void) | null = null
+        result: string | ArrayBuffer | null = 'data:image/jpeg;base64,test'
+
+        readAsDataURL() {
+          // Use queueMicrotask to ensure onload is called after it's assigned
+          queueMicrotask(() => {
+            if (this.onload) {
+              this.onload({ target: this } as unknown as ProgressEvent<FileReader>)
+            }
+          })
+        }
       }
 
-      vi.spyOn(window, 'FileReader').mockImplementation(() => {
-        setTimeout(() => {
-          if (mockFileReader.onload) {
-            mockFileReader.onload({ target: mockFileReader } as unknown as ProgressEvent<FileReader>)
-          }
-        }, 0)
-        return mockFileReader as unknown as FileReader
-      })
+      class MockImage {
+        private _src = ''
+        onerror: (() => void) | null = null
+        onload: (() => void) | null = null
 
-      // Mock Image to fail
-      const originalImage = window.Image
-      window.Image = vi.fn().mockImplementation(() => {
-        const img = {
-          src: '',
-          onerror: null as (() => void) | null,
-          onload: null as (() => void) | null
+        get src() {
+          return this._src
         }
-        setTimeout(() => {
-          if (img.onerror) img.onerror()
-        }, 10)
-        return img
-      }) as unknown as typeof Image
+
+        set src(value: string) {
+          this._src = value
+          // Use queueMicrotask to ensure onerror is triggered after assignment
+          queueMicrotask(() => {
+            if (this.onerror) this.onerror()
+          })
+        }
+      }
+
+      window.FileReader = MockFileReader as unknown as typeof FileReader
+      window.Image = MockImage as unknown as typeof Image
 
       await expect(optimizeImage(mockFile)).rejects.toThrow('Failed to load image')
 
+      window.FileReader = originalFileReader
       window.Image = originalImage
     })
 

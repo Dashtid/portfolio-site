@@ -29,11 +29,17 @@ describe('performance utility', () => {
     vi.spyOn(performance, 'getEntriesByName').mockImplementation(mockGetEntriesByName)
     vi.spyOn(performance, 'getEntriesByType').mockImplementation(mockGetEntriesByType)
 
-    // Mock PerformanceObserver
-    global.PerformanceObserver = vi.fn().mockImplementation(() => ({
-      observe: vi.fn(),
-      disconnect: vi.fn()
-    })) as any
+    // Mock PerformanceObserver - must use class syntax for vitest 4
+    class MockPerformanceObserver {
+      callback: PerformanceObserverCallback
+      constructor(callback: PerformanceObserverCallback) {
+        this.callback = callback
+      }
+      observe = vi.fn()
+      disconnect = vi.fn()
+      takeRecords = vi.fn(() => [])
+    }
+    global.PerformanceObserver = MockPerformanceObserver as unknown as typeof PerformanceObserver
   })
 
   afterEach(() => {
@@ -52,10 +58,24 @@ describe('performance utility', () => {
     })
 
     it('sets up PerformanceObserver for Core Web Vitals', async () => {
+      // Track how many times MockPerformanceObserver is instantiated
+      let observerCount = 0
+      class TrackingMockPerformanceObserver {
+        callback: PerformanceObserverCallback
+        constructor(callback: PerformanceObserverCallback) {
+          this.callback = callback
+          observerCount++
+        }
+        observe = vi.fn()
+        disconnect = vi.fn()
+        takeRecords = vi.fn(() => [])
+      }
+      global.PerformanceObserver = TrackingMockPerformanceObserver as unknown as typeof PerformanceObserver
+
       await performanceMonitor.init()
 
-      // Should create multiple PerformanceObserver instances
-      expect(PerformanceObserver).toHaveBeenCalled()
+      // Should create PerformanceObserver instances for Core Web Vitals
+      expect(observerCount).toBeGreaterThan(0)
     })
   })
 
@@ -117,9 +137,16 @@ describe('performance utility', () => {
 
   describe('Core Web Vitals', () => {
     it('handles PerformanceObserver not supported', async () => {
-      global.PerformanceObserver = vi.fn().mockImplementation(() => {
-        throw new Error('Not supported')
-      }) as any
+      // Use class that throws on construction
+      class FailingPerformanceObserver {
+        constructor() {
+          throw new Error('Not supported')
+        }
+        observe = vi.fn()
+        disconnect = vi.fn()
+        takeRecords = vi.fn(() => [])
+      }
+      global.PerformanceObserver = FailingPerformanceObserver as unknown as typeof PerformanceObserver
 
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
