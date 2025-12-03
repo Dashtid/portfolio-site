@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=list[DocumentResponse])
-async def get_documents(db: AsyncSession = Depends(get_db)):
+async def get_documents(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """
     Get all documents.
 
@@ -32,11 +32,11 @@ async def get_documents(db: AsyncSession = Depends(get_db)):
         return documents
     except Exception as e:
         logger.error(f"Error fetching documents: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch documents")
+        raise HTTPException(status_code=500, detail="Failed to fetch documents") from e
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
-async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):
+async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
     """
     Get a specific document by ID.
 
@@ -62,4 +62,4 @@ async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):
         raise
     except Exception as e:
         logger.error(f"Error fetching document {document_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch document")
+        raise HTTPException(status_code=500, detail="Failed to fetch document") from e

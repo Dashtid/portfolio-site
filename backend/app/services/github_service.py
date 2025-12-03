@@ -3,6 +3,7 @@ GitHub API service for fetching live project statistics
 """
 
 import logging
+import re
 from datetime import datetime, timedelta
 
 import httpx
@@ -119,8 +120,6 @@ class GitHubService:
                 link_header = response.headers.get("Link", "")
                 if link_header:
                     # Parse the last page number from Link header
-                    import re
-
                     match = re.search(r'page=(\d+)>; rel="last"', link_header)
                     if match:
                         return int(match.group(1))

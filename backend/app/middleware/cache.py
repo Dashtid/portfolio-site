@@ -29,21 +29,19 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
 
-        # Only cache GET requests
-        if request.method == "GET":
-            # Check if response is successful
-            if 200 <= response.status_code < 300:
-                # Add cache headers based on path
-                if self._is_static_content(request.url.path):
-                    # Static content - cache for longer (1 year)
-                    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-                elif self._is_api_endpoint(request.url.path):
-                    # API endpoints - cache for configured duration
-                    response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
-                    response.headers["Vary"] = "Accept-Encoding"
-                else:
-                    # Default - short cache
-                    response.headers["Cache-Control"] = "public, max-age=300"
+        # Only cache successful GET requests
+        if request.method == "GET" and 200 <= response.status_code < 300:
+            # Add cache headers based on path
+            if self._is_static_content(request.url.path):
+                # Static content - cache for longer (1 year)
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            elif self._is_api_endpoint(request.url.path):
+                # API endpoints - cache for configured duration
+                response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
+                response.headers["Vary"] = "Accept-Encoding"
+            else:
+                # Default - short cache
+                response.headers["Cache-Control"] = "public, max-age=300"
 
         return response
 

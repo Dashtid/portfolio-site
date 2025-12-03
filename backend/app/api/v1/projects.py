@@ -16,15 +16,14 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 
 @router.get("/", response_model=list[ProjectResponse])
-async def get_projects(db: AsyncSession = Depends(get_db)):
+async def get_projects(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Get all projects"""
     result = await db.execute(select(Project).order_by(Project.order_index))
-    projects = result.scalars().all()
-    return projects
+    return result.scalars().all()
 
 
 @router.get("/{project_id}", response_model=ProjectResponse)
-async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):
+async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Get a specific project by ID"""
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
@@ -40,10 +39,11 @@ async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     project: ProjectCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: User = Depends(get_current_admin_user),  # noqa: B008
 ):
     """Create a new project (requires admin authentication)"""
+    _ = current_user  # Used for authentication
     db_project = Project(**project.dict())
     db.add(db_project)
     await db.commit()
@@ -55,10 +55,11 @@ async def create_project(
 async def update_project(
     project_id: str,
     project_update: ProjectUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: User = Depends(get_current_admin_user),  # noqa: B008
 ):
     """Update a project (requires admin authentication)"""
+    _ = current_user  # Used for authentication
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
 
@@ -67,7 +68,6 @@ async def update_project(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Project with ID {project_id} not found"
         )
 
-    # Update only provided fields
     for field, value in project_update.dict(exclude_unset=True).items():
         setattr(project, field, value)
 
@@ -79,10 +79,11 @@ async def update_project(
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(
     project_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: User = Depends(get_current_admin_user),  # noqa: B008
 ):
     """Delete a project (requires admin authentication)"""
+    _ = current_user  # Used for authentication
     result = await db.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
 

@@ -7,28 +7,23 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import education
-from app.api.v1 import auth, companies, github, projects, skills  # , analytics
+from app.api.v1 import auth, companies, github, projects, skills
 from app.api.v1.endpoints import documents, health, metrics
 from app.config import settings
 from app.database import Base, engine
-
-# Import new middleware
 from app.middleware import (
     CacheControlMiddleware,
     CompressionMiddleware,
     ErrorTrackingMiddleware,
-    limiter,
     LoggingMiddleware,
     PerformanceMiddleware,
+    limiter,
     rate_limit_exceeded_handler,
 )
-
-# Import models to ensure they're registered with Base
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -123,7 +118,6 @@ app.include_router(documents.router, prefix="/api/v1/documents", tags=["Document
 # Mount static files for document downloads
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
-# app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 
 
 # Root endpoint

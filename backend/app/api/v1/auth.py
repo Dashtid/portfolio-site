@@ -5,7 +5,7 @@ Authentication API endpoints with GitHub OAuth
 import secrets
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,7 +51,7 @@ async def github_login(request: Request):
 
 @router.get("/github/callback")
 @limiter.limit(settings.RATE_LIMIT_AUTH)
-async def github_callback(request: Request, code: str, state: str, db: AsyncSession = Depends(get_db)):
+async def github_callback(request: Request, code: str, state: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Handle GitHub OAuth callback"""
     # Verify state
     if state not in oauth_states:
@@ -153,7 +153,7 @@ async def github_callback(request: Request, code: str, state: str, db: AsyncSess
 
 @router.post("/refresh", response_model=Token)
 @limiter.limit(settings.RATE_LIMIT_AUTH)
-async def refresh_token(request: Request, refresh_token: str, db: AsyncSession = Depends(get_db)):
+async def refresh_token(request: Request, refresh_token: str, db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Refresh access token using refresh token"""
     # Decode refresh token
     payload = decode_token(refresh_token)
@@ -184,7 +184,7 @@ async def refresh_token(request: Request, refresh_token: str, db: AsyncSession =
 
 @router.get("/me", response_model=UserResponse)
 @limiter.limit(settings.RATE_LIMIT_API)
-async def get_current_user_info(request: Request, current_user: User = Depends(get_current_user)):
+async def get_current_user_info(request: Request, current_user: User = Depends(get_current_user)):  # noqa: B008
     """Get current user information"""
     return current_user
 

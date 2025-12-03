@@ -16,8 +16,8 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> User:
     """Get the current authenticated user from JWT token"""
     token = credentials.credentials
@@ -51,7 +51,7 @@ async def get_current_user(
     return user
 
 
-async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:  # noqa: B008
     """Require the current user to be an admin"""
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")

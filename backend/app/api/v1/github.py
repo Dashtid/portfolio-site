@@ -20,11 +20,10 @@ async def get_github_stats(username: str):
     Returns aggregated stats including repos, stars, languages, etc.
     """
     try:
-        stats = await github_service.get_portfolio_stats(username)
-        return stats
+        return await github_service.get_portfolio_stats(username)
     except Exception as e:
         logger.error(f"Error fetching GitHub stats for {username}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/project/{owner}/{repo}")
@@ -35,11 +34,10 @@ async def get_project_stats(owner: str, repo: str):
     Returns project details including stars, forks, languages, commit count, etc.
     """
     try:
-        stats = await github_service.get_project_stats(owner, repo)
-        return stats
+        return await github_service.get_project_stats(owner, repo)
     except Exception as e:
         logger.error(f"Error fetching project stats for {owner}/{repo}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/repos/{username}")
@@ -58,7 +56,7 @@ async def get_user_repos(
         return repos[:limit]
     except Exception as e:
         logger.error(f"Error fetching repos for {username}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/languages/{owner}/{repo}")
@@ -88,4 +86,4 @@ async def get_repo_languages(owner: str, repo: str):
         }
     except Exception as e:
         logger.error(f"Error fetching languages for {owner}/{repo}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

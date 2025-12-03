@@ -21,8 +21,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         try:
-            response = await call_next(request)
-            return response
+            return await call_next(request)
 
         except HTTPException as exc:
             # Log HTTP exceptions (4xx, 5xx)

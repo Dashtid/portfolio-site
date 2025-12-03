@@ -138,6 +138,6 @@ def get_logger(name: str = None) -> logging.Logger:
     Returns:
         Logger instance
     """
-    from app.config import settings
+    from app.config import settings  # noqa: PLC0415
 
     return setup_logger(name, level=settings.LOG_LEVEL)

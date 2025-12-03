@@ -28,7 +28,7 @@ async def health_check():
 
 
 @router.get("/health/ready")
-async def readiness_check(db: AsyncSession = Depends(get_db)):
+async def readiness_check(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """
     Readiness check - verifies database connectivity
     Used by load balancers to determine if instance can receive traffic

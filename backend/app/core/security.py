@@ -28,8 +28,7 @@ def create_access_token(subject: str | Any, expires_delta: timedelta | None = No
         expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode = {"exp": expire, "sub": str(subject), "type": "access"}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
 def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
@@ -40,8 +39,7 @@ def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = N
         expire = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -57,7 +55,6 @@ def get_password_hash(password: str) -> str:
 def decode_token(token: str) -> dict:
     """Decode and verify a JWT token"""
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
     except PyJWTError:
         return None

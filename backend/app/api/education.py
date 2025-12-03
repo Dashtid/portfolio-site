@@ -13,41 +13,38 @@ router = APIRouter(prefix="/education", tags=["education"])
 
 
 @router.get("/", response_model=list[EducationSchema])
-async def get_all_education(db: AsyncSession = Depends(get_db)):
+async def get_all_education(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Get all education records"""
     result = await db.execute(
         select(Education).order_by(Education.order, Education.start_date.desc())
     )
-    education = result.scalars().all()
-    return education
+    return result.scalars().all()
 
 
 @router.get("/degrees/", response_model=list[EducationSchema])
-async def get_degrees(db: AsyncSession = Depends(get_db)):
+async def get_degrees(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Get only degree education records (not certifications)"""
     result = await db.execute(
         select(Education)
-        .where(Education.is_certification == False)
+        .where(Education.is_certification.is_(False))
         .order_by(Education.order, Education.start_date.desc())
     )
-    degrees = result.scalars().all()
-    return degrees
+    return result.scalars().all()
 
 
 @router.get("/certifications/", response_model=list[EducationSchema])
-async def get_certifications(db: AsyncSession = Depends(get_db)):
+async def get_certifications(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Get only certification records"""
     result = await db.execute(
         select(Education)
-        .where(Education.is_certification == True)
+        .where(Education.is_certification.is_(True))
         .order_by(Education.order, Education.end_date.desc())
     )
-    certifications = result.scalars().all()
-    return certifications
+    return result.scalars().all()
 
 
 @router.get("/{education_id}/", response_model=EducationSchema)
-async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):
+async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):  # noqa: B008
     """Get a single education record by ID"""
     result = await db.execute(select(Education).where(Education.id == education_id))
     education = result.scalar_one_or_none()
@@ -59,10 +56,11 @@ async def get_education(education_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("/", response_model=EducationSchema)
 async def create_education(
     education: EducationCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: User = Depends(get_current_admin_user),  # noqa: B008
 ):
     """Create a new education record (requires admin authentication)"""
+    _ = current_user  # Used for authentication
     db_education = Education(**education.dict())
     db.add(db_education)
     await db.commit()
@@ -74,17 +72,16 @@ async def create_education(
 async def update_education(
     education_id: int,
     education_update: EducationUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: User = Depends(get_current_admin_user),  # noqa: B008
 ):
     """Update an education record (requires admin authentication)"""
-    # Check if education exists
+    _ = current_user  # Used for authentication
     result = await db.execute(select(Education).where(Education.id == education_id))
     db_education = result.scalar_one_or_none()
     if not db_education:
         raise HTTPException(status_code=404, detail="Education record not found")
 
-    # Update fields
     update_data = education_update.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_education, field, value)
@@ -97,10 +94,11 @@ async def update_education(
 @router.delete("/{education_id}/")
 async def delete_education(
     education_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    current_user: User = Depends(get_current_admin_user),  # noqa: B008
 ):
     """Delete an education record (requires admin authentication)"""
+    _ = current_user  # Used for authentication
     result = await db.execute(select(Education).where(Education.id == education_id))
     db_education = result.scalar_one_or_none()
     if not db_education:

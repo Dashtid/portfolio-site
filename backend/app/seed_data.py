@@ -357,9 +357,6 @@ async def main():
     # Create session and seed data
     async with AsyncSession(engine) as session:
         try:
-            # Optional: Clear existing data first
-            # await clear_existing_data(session)
-
             # Seed all data
             await seed_companies(session)
             await seed_projects(session)
