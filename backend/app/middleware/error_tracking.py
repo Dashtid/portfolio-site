@@ -21,7 +21,8 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         try:
-            return await call_next(request)
+            response: Response = await call_next(request)
+            return response
 
         except HTTPException as exc:
             # Log HTTP exceptions (4xx, 5xx)
@@ -83,7 +84,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
             raise
 
 
-def track_error(error: Exception, context: dict = None):
+def track_error(error: Exception, context: dict | None = None):
     """
     Manually track an error with additional context
 

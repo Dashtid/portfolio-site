@@ -2,6 +2,8 @@
 Company API endpoints
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,7 +110,7 @@ async def rebuild_complete_data_temp(
         await db.execute(delete(Company))
         await db.commit()
 
-        companies_data = [
+        companies_data: list[dict[str, Any]] = [
             {
                 "name": "Scania",
                 "title": "Technician, Engine Analysis",

@@ -44,17 +44,20 @@ def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = N
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password"""
-    return pwd_context.verify(plain_password, hashed_password)
+    result: bool = pwd_context.verify(plain_password, hashed_password)
+    return result
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password"""
-    return pwd_context.hash(password)
+    result: str = pwd_context.hash(password)
+    return result
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, Any] | None:
     """Decode and verify a JWT token"""
     try:
-        return jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict[str, Any] = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
     except PyJWTError:
         return None

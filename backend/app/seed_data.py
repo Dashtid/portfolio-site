@@ -5,7 +5,7 @@ Seed data script to populate database with initial portfolio content
 import asyncio
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base, engine
@@ -18,10 +18,10 @@ from app.models.skill import Skill
 async def clear_existing_data(session: AsyncSession):
     """Clear existing data from tables"""
     # Delete in order to respect foreign key constraints
-    await session.execute(select(Project).delete())
-    await session.execute(select(Skill).delete())
-    await session.execute(select(Company).delete())
-    await session.execute(select(Education).delete())
+    await session.execute(delete(Project))
+    await session.execute(delete(Skill))
+    await session.execute(delete(Company))
+    await session.execute(delete(Education))
     await session.commit()
     print("[OK] Cleared existing data")
 

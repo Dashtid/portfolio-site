@@ -63,12 +63,19 @@ limiter = Limiter(
 )
 
 
-async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+async def rate_limit_exceeded_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     Custom handler for rate limit exceeded errors.
 
     Returns a JSON response with retry-after information.
     """
+    # Type narrow to RateLimitExceeded
+    if not isinstance(exc, RateLimitExceeded):
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded"},
+        )
+
     retry_after = exc.detail.split("rate limit exceeded")[-1].strip() if exc.detail else "60"
 
     logger.warning(

@@ -72,7 +72,8 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Skip metrics collection for metrics endpoint itself
         if request.url.path == "/api/v1/metrics":
-            return await call_next(request)
+            response: Response = await call_next(request)
+            return response
 
         # Start timer
         start_time = time.time()

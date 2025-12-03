@@ -40,7 +40,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         # Process request
         try:
-            response = await call_next(request)
+            response: Response = await call_next(request)
 
             # Calculate duration
             duration_ms = round((time.time() - start_time) * 1000, 2)

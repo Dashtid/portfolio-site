@@ -27,7 +27,7 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
         self.max_age = max_age
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        response = await call_next(request)
+        response: Response = await call_next(request)
 
         # Only cache successful GET requests
         if request.method == "GET" and 200 <= response.status_code < 300:

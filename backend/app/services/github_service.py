@@ -5,6 +5,7 @@ GitHub API service for fetching live project statistics
 import logging
 import re
 from datetime import datetime, timedelta
+from typing import Any
 
 import httpx
 
@@ -25,7 +26,7 @@ class GitHubService:
         if hasattr(settings, "GITHUB_TOKEN") and settings.GITHUB_TOKEN:
             self.headers["Authorization"] = f"token {settings.GITHUB_TOKEN}"
 
-    async def get_user_info(self, username: str) -> dict:
+    async def get_user_info(self, username: str) -> dict[str, Any]:
         """Get GitHub user information."""
         async with httpx.AsyncClient() as client:
             try:
@@ -33,7 +34,8 @@ class GitHubService:
                     f"{self.base_url}/users/{username}", headers=self.headers
                 )
                 response.raise_for_status()
-                return response.json()
+                result: dict[str, Any] = response.json()
+                return result
             except httpx.HTTPError as e:
                 logger.error(f"Error fetching user info for {username}: {e}")
                 return {}
@@ -76,7 +78,7 @@ class GitHubService:
 
         return repos
 
-    async def get_repo_details(self, owner: str, repo: str) -> dict:
+    async def get_repo_details(self, owner: str, repo: str) -> dict[str, Any]:
         """Get detailed information about a specific repository."""
         async with httpx.AsyncClient() as client:
             try:
@@ -84,12 +86,13 @@ class GitHubService:
                     f"{self.base_url}/repos/{owner}/{repo}", headers=self.headers
                 )
                 response.raise_for_status()
-                return response.json()
+                result: dict[str, Any] = response.json()
+                return result
             except httpx.HTTPError as e:
                 logger.error(f"Error fetching repo {owner}/{repo}: {e}")
                 return {}
 
-    async def get_repo_languages(self, owner: str, repo: str) -> dict:
+    async def get_repo_languages(self, owner: str, repo: str) -> dict[str, int]:
         """Get language statistics for a repository."""
         async with httpx.AsyncClient() as client:
             try:
@@ -97,7 +100,8 @@ class GitHubService:
                     f"{self.base_url}/repos/{owner}/{repo}/languages", headers=self.headers
                 )
                 response.raise_for_status()
-                return response.json()
+                result: dict[str, int] = response.json()
+                return result
             except httpx.HTTPError as e:
                 logger.error(f"Error fetching languages for {owner}/{repo}: {e}")
                 return {}
@@ -131,7 +135,7 @@ class GitHubService:
                 logger.error(f"Error fetching commits for {owner}/{repo}: {e}")
                 return 0
 
-    async def get_portfolio_stats(self, username: str) -> dict:
+    async def get_portfolio_stats(self, username: str) -> dict[str, Any]:
         """Get aggregated statistics for portfolio display."""
         user_info = await self.get_user_info(username)
         repos = await self.get_user_repos(username)
@@ -145,7 +149,7 @@ class GitHubService:
         total_watchers = sum(r.get("watchers_count", 0) for r in owned_repos)
 
         # Get language statistics
-        languages = {}
+        languages: dict[str, int] = {}
         for repo in owned_repos[:10]:  # Limit to top 10 repos to avoid rate limiting
             repo_langs = await self.get_repo_languages(username, repo["name"])
             for lang, bytes_count in repo_langs.items():
@@ -182,7 +186,7 @@ class GitHubService:
             ],
         }
 
-    async def get_project_stats(self, owner: str, repo: str) -> dict:
+    async def get_project_stats(self, owner: str, repo: str) -> dict[str, Any]:
         """Get detailed statistics for a specific project."""
         repo_details = await self.get_repo_details(owner, repo)
         languages = await self.get_repo_languages(owner, repo)

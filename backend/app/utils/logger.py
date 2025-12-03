@@ -61,12 +61,12 @@ class SensitiveDataFilter(logging.Filter):
 
         return True
 
-    def _mask_sensitive_data(self, data: dict[str, Any]) -> dict[str, Any]:
+    def _mask_sensitive_data(self, data: Any) -> Any:
         """Recursively mask sensitive fields in dictionaries"""
         if not isinstance(data, dict):
             return data
 
-        masked_data = {}
+        masked_data: dict[str, Any] = {}
         for key, value in data.items():
             # Check if key contains sensitive information
             if any(sensitive in key.lower() for sensitive in self.SENSITIVE_KEYS):
@@ -84,7 +84,7 @@ class SensitiveDataFilter(logging.Filter):
         return masked_data
 
 
-def setup_logger(name: str = None, level: str = "INFO") -> logging.Logger:
+def setup_logger(name: str | None = None, level: str = "INFO") -> logging.Logger:
     """
     Setup and configure logger with JSON formatting
 
@@ -128,7 +128,7 @@ def setup_logger(name: str = None, level: str = "INFO") -> logging.Logger:
     return logger
 
 
-def get_logger(name: str = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """
     Get or create a logger instance
 
