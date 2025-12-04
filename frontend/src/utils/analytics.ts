@@ -17,7 +17,10 @@ declare global {
   interface Window {
     plausible?: (eventName: string, options?: { props?: TrackingProps; u?: string }) => void
     umami?: {
-      track: (eventName: string | ((props: Record<string, unknown>) => Record<string, unknown>), props?: TrackingProps) => void
+      track: (
+        eventName: string | ((props: Record<string, unknown>) => Record<string, unknown>),
+        props?: TrackingProps
+      ) => void
     }
   }
 }
@@ -158,7 +161,8 @@ class Analytics {
 export const analytics = new Analytics()
 
 // Convenience exports
-export const trackEvent = (name: string, props?: TrackingProps): void => analytics.trackEvent(name, props)
+export const trackEvent = (name: string, props?: TrackingProps): void =>
+  analytics.trackEvent(name, props)
 export const trackPageView = (path: string): void => analytics.trackPageView(path)
 export const trackOutboundLink = (url: string): void => analytics.trackOutboundLink(url)
 export const trackDownload = (filename: string): void => analytics.trackDownload(filename)

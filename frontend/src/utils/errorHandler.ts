@@ -16,7 +16,7 @@ export const ErrorTypes = {
   UNKNOWN: 'unknown'
 } as const
 
-export type ErrorType = typeof ErrorTypes[keyof typeof ErrorTypes]
+export type ErrorType = (typeof ErrorTypes)[keyof typeof ErrorTypes]
 
 /**
  * Error severity levels
@@ -28,7 +28,7 @@ export const ErrorSeverity = {
   CRITICAL: 'critical'
 } as const
 
-export type ErrorSeverityLevel = typeof ErrorSeverity[keyof typeof ErrorSeverity]
+export type ErrorSeverityLevel = (typeof ErrorSeverity)[keyof typeof ErrorSeverity]
 
 interface ErrorInfo {
   message: string
@@ -68,7 +68,10 @@ declare global {
 /**
  * Handle different types of errors
  */
-export function handleError(error: ErrorWithResponse, context: Record<string, unknown> = {}): ErrorInfo {
+export function handleError(
+  error: ErrorWithResponse,
+  context: Record<string, unknown> = {}
+): ErrorInfo {
   const errorInfo: ErrorInfo = {
     message: error.message || 'An unexpected error occurred',
     type: ErrorTypes.UNKNOWN,
@@ -233,7 +236,11 @@ export async function retryOperation<T>(
       lastError = error as ErrorWithResponse
 
       // Don't retry on client errors
-      if (lastError.response?.status && lastError.response.status >= 400 && lastError.response.status < 500) {
+      if (
+        lastError.response?.status &&
+        lastError.response.status >= 400 &&
+        lastError.response.status < 500
+      ) {
         throw error
       }
 
@@ -261,13 +268,17 @@ export function setupGlobalErrorHandlers(app: App): void {
 
   // Unhandled promise rejection
   window.addEventListener('unhandledrejection', event => {
-    handleError(new Error(event.reason as string) as ErrorWithResponse, { type: 'unhandledRejection' })
+    handleError(new Error(event.reason as string) as ErrorWithResponse, {
+      type: 'unhandledRejection'
+    })
     event.preventDefault()
   })
 
   // Global error
   window.addEventListener('error', event => {
-    handleError((event.error || new Error(event.message)) as ErrorWithResponse, { type: 'globalError' })
+    handleError((event.error || new Error(event.message)) as ErrorWithResponse, {
+      type: 'globalError'
+    })
   })
 }
 
@@ -279,7 +290,10 @@ interface ErrorNotificationOptions {
 /**
  * Create error toast/notification
  */
-export function showErrorNotification(message: string, options: ErrorNotificationOptions = {}): void {
+export function showErrorNotification(
+  message: string,
+  options: ErrorNotificationOptions = {}
+): void {
   // This would integrate with your notification system
   console.error('Error notification:', message, options)
 
