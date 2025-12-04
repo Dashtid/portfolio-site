@@ -34,7 +34,7 @@ jobs:
       - name: Run frontend tests
         run: |
           cd frontend
-          npm run test:unit
+          npm test -- --run
 
       - name: Install backend dependencies
         run: |
