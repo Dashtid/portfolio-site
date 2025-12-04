@@ -2,10 +2,10 @@
   <transition name="slide-fade">
     <button
       v-if="isVisible"
-      @click="scrollToTop"
       class="back-to-top"
       :aria-label="'Scroll back to top'"
       title="Back to top"
+      @click="scrollToTop"
     >
       <svg
         class="arrow-icon"
@@ -110,7 +110,11 @@ onUnmounted(() => {
 
 /* Bounce animation for the arrow */
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
   40% {

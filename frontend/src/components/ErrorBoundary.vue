@@ -2,7 +2,14 @@
   <div v-if="hasError" class="error-boundary">
     <div class="error-container">
       <div class="error-icon">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -14,12 +21,8 @@
         <pre>{{ errorDetails }}</pre>
       </div>
       <div class="error-actions">
-        <button @click="handleRetry" class="btn-retry">
-          Try Again
-        </button>
-        <button @click="handleGoHome" class="btn-home">
-          Go to Homepage
-        </button>
+        <button class="btn-retry" @click="handleRetry">Try Again</button>
+        <button class="btn-home" @click="handleGoHome">Go to Homepage</button>
       </div>
     </div>
   </div>
@@ -118,7 +121,7 @@ defineExpose({
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="dark"] .error-container {
+[data-theme='dark'] .error-container {
   background: #1a1a1a;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
@@ -155,7 +158,7 @@ defineExpose({
   overflow-y: auto;
 }
 
-[data-theme="dark"] .error-details {
+[data-theme='dark'] .error-details {
   background: #0a0a0a;
   border-color: #333;
 }
