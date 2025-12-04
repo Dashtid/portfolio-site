@@ -30,7 +30,7 @@
               :key="comp.id"
               :to="`/experience/${comp.id}`"
               class="nav-link px-2 py-1 border rounded shadow-sm text-center"
-              :class="{ 'active': comp.id === companyId }"
+              :class="{ active: comp.id === companyId }"
             >
               {{ comp.name }}
             </router-link>
@@ -52,7 +52,7 @@
       <div class="alert alert-danger" role="alert">
         <h4 class="alert-heading">Error Loading Experience</h4>
         <p>{{ error }}</p>
-        <hr>
+        <hr />
         <router-link to="/" class="btn btn-primary">Return to Home</router-link>
       </div>
     </div>
@@ -68,7 +68,15 @@
             <iframe
               :src="company.video_url"
               :title="company.video_title || `${company.name} Video`"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="
+                accelerometer;
+                autoplay;
+                clipboard-write;
+                encrypted-media;
+                gyroscope;
+                picture-in-picture;
+                web-share;
+              "
               referrerpolicy="strict-origin-when-cross-origin"
               allowfullscreen
             ></iframe>
@@ -98,7 +106,7 @@
             :src="company.logo_url"
             :alt="`${company.name} logo`"
             class="me-3"
-            style="width: 64px; height: 64px; object-fit: contain;"
+            style="width: 64px; height: 64px; object-fit: contain"
           />
           <div>
             <h1 class="mb-1">{{ company.title }}</h1>
@@ -158,11 +166,7 @@
       <div v-if="company.technologies && company.technologies.length > 0" class="mb-5">
         <h3>Technologies & Tools</h3>
         <div class="d-flex flex-wrap gap-2">
-          <span
-            v-for="(tech, index) in company.technologies"
-            :key="index"
-            class="badge bg-primary"
-          >
+          <span v-for="(tech, index) in company.technologies" :key="index" class="badge bg-primary">
             {{ tech }}
           </span>
         </div>
@@ -204,14 +208,23 @@ const formatDate = (dateString: string | null | undefined): string => {
 const formatDescription = (desc: string | null | undefined): string => {
   if (!desc) return ''
   // Replace newlines with paragraph breaks
-  return desc.split('\n\n').map(p => `<p>${p}</p>`).join('')
+  return desc
+    .split('\n\n')
+    .map(p => `<p>${p}</p>`)
+    .join('')
 }
 
 // Fetch all companies for navigation
 const fetchAllCompanies = async (): Promise<void> => {
   try {
-    const response = await axios.get<Company[]>(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/`)
-    allCompanies.value = response.data.sort((a, b) => ((a as Company & { order_index?: number }).order_index || 0) - ((b as Company & { order_index?: number }).order_index || 0))
+    const response = await axios.get<Company[]>(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/`
+    )
+    allCompanies.value = response.data.sort(
+      (a, b) =>
+        ((a as Company & { order_index?: number }).order_index || 0) -
+        ((b as Company & { order_index?: number }).order_index || 0)
+    )
   } catch (err) {
     console.error('Error fetching companies:', err)
   }
@@ -223,7 +236,9 @@ const fetchCompany = async (id: string): Promise<void> => {
   error.value = null
 
   try {
-    const response = await axios.get<Company>(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/${id}`)
+    const response = await axios.get<Company>(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/${id}`
+    )
     company.value = response.data
   } catch (err) {
     console.error('Error fetching company:', err)
@@ -239,11 +254,14 @@ const fetchCompany = async (id: string): Promise<void> => {
 }
 
 // Watch for route changes
-watch(() => route.params.id, (newId) => {
-  if (newId) {
-    fetchCompany(newId as string)
+watch(
+  () => route.params.id,
+  newId => {
+    if (newId) {
+      fetchCompany(newId as string)
+    }
   }
-})
+)
 
 // Initial load
 onMounted((): void => {
@@ -285,7 +303,9 @@ onMounted((): void => {
   border-radius: 0.5rem;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: #1e293b;
 }
 
