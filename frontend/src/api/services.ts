@@ -70,7 +70,10 @@ export const createEducation = async (education: Omit<Education, 'id'>): Promise
   return response.data
 }
 
-export const updateEducation = async (id: string, education: Partial<Education>): Promise<Education> => {
+export const updateEducation = async (
+  id: string,
+  education: Partial<Education>
+): Promise<Education> => {
   const response = await apiClient.patch<Education>(`/api/v1/education/${id}`, education)
   return response.data
 }

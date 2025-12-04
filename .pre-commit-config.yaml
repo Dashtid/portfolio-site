@@ -33,7 +33,7 @@ repos:
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|ts|vue)$
-        args: ['--fix']
+        args: ['--fix', '--config', 'frontend/eslint.config.js']
         additional_dependencies:
           - eslint@9.38.0
           - '@eslint/js@9.38.0'
