@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, VueWrapper } from '@vue/test-utils'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import type { ComponentPublicInstance } from 'vue'
 
 describe('ThemeToggle', () => {
-  let wrapper
+  let wrapper: VueWrapper<ComponentPublicInstance>
 
   beforeEach(() => {
     // Clear localStorage before each test

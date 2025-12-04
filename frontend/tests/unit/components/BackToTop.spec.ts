@@ -1,14 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, VueWrapper } from '@vue/test-utils'
 import BackToTop from '@/components/BackToTop.vue'
+import type { ComponentPublicInstance } from 'vue'
+
+interface BackToTopInstance extends ComponentPublicInstance {
+  isVisible: boolean
+}
 
 describe('BackToTop', () => {
-  let wrapper
+  let wrapper: VueWrapper<BackToTopInstance>
 
   beforeEach(() => {
     // Mock window.scrollTo
     window.scrollTo = vi.fn()
-    window.scrollY = 0
+    Object.defineProperty(window, 'scrollY', { value: 0, writable: true })
   })
 
   afterEach(() => {
@@ -18,23 +23,23 @@ describe('BackToTop', () => {
   })
 
   it('renders correctly', () => {
-    wrapper = mount(BackToTop)
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
     expect(wrapper.exists()).toBe(true)
   })
 
   it('is hidden when scrollY < 300', () => {
-    window.scrollY = 100
-    wrapper = mount(BackToTop)
+    Object.defineProperty(window, 'scrollY', { value: 100, writable: true })
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
 
     // Button should not be visible (v-if="isVisible" will remove it from DOM)
     expect(wrapper.find('button').exists()).toBe(false)
   })
 
   it('shows when scrollY > 300', async () => {
-    wrapper = mount(BackToTop)
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
 
     // Simulate scroll event
-    window.scrollY = 400
+    Object.defineProperty(window, 'scrollY', { value: 400, writable: true })
     window.dispatchEvent(new Event('scroll'))
 
     // Wait for component to update
@@ -46,8 +51,8 @@ describe('BackToTop', () => {
   })
 
   it('scrolls to top when clicked', async () => {
-    window.scrollY = 500
-    wrapper = mount(BackToTop)
+    Object.defineProperty(window, 'scrollY', { value: 500, writable: true })
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
 
     // Trigger scroll to make button visible
     window.dispatchEvent(new Event('scroll'))
@@ -68,8 +73,8 @@ describe('BackToTop', () => {
   })
 
   it('has proper ARIA label', async () => {
-    window.scrollY = 500
-    wrapper = mount(BackToTop)
+    Object.defineProperty(window, 'scrollY', { value: 500, writable: true })
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
 
     window.dispatchEvent(new Event('scroll'))
     await wrapper.vm.$nextTick()
@@ -83,8 +88,8 @@ describe('BackToTop', () => {
   })
 
   it('has arrow icon', async () => {
-    window.scrollY = 500
-    wrapper = mount(BackToTop)
+    Object.defineProperty(window, 'scrollY', { value: 500, writable: true })
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
 
     window.dispatchEvent(new Event('scroll'))
     await wrapper.vm.$nextTick()
@@ -97,10 +102,9 @@ describe('BackToTop', () => {
   })
 
   it('has transition animation', () => {
-    wrapper = mount(BackToTop)
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
 
     // Check for transition component
-    const transition = wrapper.find('[class*="slide-fade"]')
     // Transition may not be in DOM if button is hidden
     // Just verify wrapper mounted successfully
     expect(wrapper.exists()).toBe(true)
@@ -109,7 +113,7 @@ describe('BackToTop', () => {
   it('cleans up scroll listener on unmount', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
 
-    wrapper = mount(BackToTop)
+    wrapper = mount(BackToTop) as VueWrapper<BackToTopInstance>
     wrapper.unmount()
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function))

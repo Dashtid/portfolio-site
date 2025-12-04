@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { createRouter, createMemoryHistory } from 'vue-router'
+import { mount, VueWrapper } from '@vue/test-utils'
+import { createRouter, createMemoryHistory, Router } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
+import type { ComponentPublicInstance } from 'vue'
+
+interface NavBarInstance extends ComponentPublicInstance {
+  scrolled: boolean
+}
 
 // Mock ThemeToggle component
 vi.mock('@/components/ThemeToggle.vue', () => ({
@@ -12,16 +17,14 @@ vi.mock('@/components/ThemeToggle.vue', () => ({
 }))
 
 describe('NavBar', () => {
-  let wrapper
-  let router
+  let wrapper: VueWrapper<NavBarInstance>
+  let router: Router
 
   beforeEach(async () => {
     // Create a mock router
     router = createRouter({
       history: createMemoryHistory(),
-      routes: [
-        { path: '/', component: { template: '<div>Home</div>' } }
-      ]
+      routes: [{ path: '/', component: { template: '<div>Home</div>' } }]
     })
 
     await router.push('/')
@@ -33,7 +36,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
     expect(wrapper.exists()).toBe(true)
   })
 
@@ -42,7 +45,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     const brand = wrapper.find('.navbar-brand')
     expect(brand.exists()).toBe(true)
@@ -58,7 +61,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     const navItems = wrapper.findAll('.nav-link')
     expect(navItems.length).toBeGreaterThan(0)
@@ -78,7 +81,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     // Check for mocked ThemeToggle component
     expect(wrapper.find('.theme-toggle-mock').exists()).toBe(true)
@@ -89,7 +92,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     const toggler = wrapper.find('.navbar-toggler')
     expect(toggler.exists()).toBe(true)
@@ -101,7 +104,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     const navLinks = wrapper.findAll('.nav-link')
     navLinks.forEach(link => {
@@ -115,13 +118,13 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     // Initially not scrolled
     expect(wrapper.vm.scrolled).toBe(false)
 
     // Simulate scroll
-    window.scrollY = 100
+    Object.defineProperty(window, 'scrollY', { value: 100, writable: true })
     window.dispatchEvent(new Event('scroll'))
 
     await wrapper.vm.$nextTick()
@@ -136,7 +139,7 @@ describe('NavBar', () => {
       global: {
         plugins: [router]
       }
-    })
+    }) as VueWrapper<NavBarInstance>
 
     const nav = wrapper.find('nav')
     expect(nav.attributes('role')).toBe('navigation')

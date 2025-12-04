@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    setupFiles: ['./tests/setup.js'],
+    setupFiles: ['./tests/setup.ts'],
     env: {
       VITE_ERROR_TRACKING_ENABLED: 'true',
       VITE_METRICS_ENABLED: 'true',
