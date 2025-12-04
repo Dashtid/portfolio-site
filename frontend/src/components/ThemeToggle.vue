@@ -1,9 +1,9 @@
 <template>
   <button
-    @click="toggleTheme"
     class="theme-toggle"
     :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
     :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+    @click="toggleTheme"
   >
     <transition name="icon-fade" mode="out-in">
       <svg
