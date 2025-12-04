@@ -75,20 +75,20 @@ class PerformanceMonitor {
    */
   private trackCoreWebVitals(): void {
     // Largest Contentful Paint (LCP)
-    this.observeMetric('largest-contentful-paint', (entry) => {
+    this.observeMetric('largest-contentful-paint', entry => {
       const metricEntry = entry as MetricEntry
       this.recordMetric('LCP', metricEntry.renderTime || metricEntry.loadTime || 0)
     })
 
     // First Input Delay (FID) - only available with user interaction
-    this.observeMetric('first-input', (entry) => {
+    this.observeMetric('first-input', entry => {
       const metricEntry = entry as MetricEntry
       this.recordMetric('FID', (metricEntry.processingStart || 0) - (metricEntry.startTime || 0))
     })
 
     // Cumulative Layout Shift (CLS)
     let clsValue = 0
-    this.observeMetric('layout-shift', (entry) => {
+    this.observeMetric('layout-shift', entry => {
       const layoutShiftEntry = entry as LayoutShift
       if (!layoutShiftEntry.hadRecentInput) {
         clsValue += layoutShiftEntry.value
@@ -97,7 +97,7 @@ class PerformanceMonitor {
     })
 
     // Time to First Byte (TTFB)
-    this.observeMetric('navigation', (entry) => {
+    this.observeMetric('navigation', entry => {
       const navEntry = entry as PerformanceNavigationTiming
       this.recordMetric('TTFB', navEntry.responseStart - navEntry.requestStart)
     })
@@ -108,7 +108,7 @@ class PerformanceMonitor {
    */
   private observeMetric(type: string, callback: (entry: PerformanceEntry) => void): void {
     try {
-      const observer = new PerformanceObserver((list) => {
+      const observer = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
           callback(entry)
         }
@@ -129,7 +129,9 @@ class PerformanceMonitor {
    */
   private trackNavigationTiming(): void {
     window.addEventListener('load', () => {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+      const navigation = performance.getEntriesByType(
+        'navigation'
+      )[0] as PerformanceNavigationTiming
 
       if (navigation) {
         this.recordMetric('DNS', navigation.domainLookupEnd - navigation.domainLookupStart)
@@ -160,7 +162,7 @@ class PerformanceMonitor {
         other: []
       }
 
-      resources.forEach((resource) => {
+      resources.forEach(resource => {
         const duration = resource.responseEnd - resource.startTime
         const data: ResourceData = {
           name: resource.name,
@@ -218,14 +220,14 @@ class PerformanceMonitor {
       await fetch(this.apiEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           metrics: this.metrics,
           url: window.location.href,
           userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString(),
-        }),
+          timestamp: new Date().toISOString()
+        })
       })
     } catch (err) {
       if (import.meta.env.DEV) {
