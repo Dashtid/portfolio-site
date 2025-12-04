@@ -13,23 +13,19 @@
               :src="authStore.currentUser.avatar_url"
               :alt="authStore.currentUser.name"
               class="user-avatar"
-            >
-            <span class="user-name">{{ authStore.currentUser.name || authStore.currentUser.username }}</span>
+            />
+            <span class="user-name">{{
+              authStore.currentUser.name || authStore.currentUser.username
+            }}</span>
           </div>
-          <button @click="logout" class="logout-button">
-            Sign Out
-          </button>
+          <button @click="logout" class="logout-button">Sign Out</button>
         </div>
       </div>
     </header>
 
     <!-- Admin Navigation -->
     <nav class="admin-nav">
-      <router-link
-        to="/admin"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin' }"
-      >
+      <router-link to="/admin" class="nav-link" :class="{ active: $route.path === '/admin' }">
         Dashboard
       </router-link>
       <router-link
@@ -86,27 +82,55 @@
           <h3 class="subsection-title">Quick Actions</h3>
           <div class="action-buttons">
             <router-link to="/admin/companies" class="action-button">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              <svg
+                class="action-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
               </svg>
               <span>Add Experience</span>
             </router-link>
             <router-link to="/admin/projects" class="action-button">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 4v16m8-8H4"/>
+              <svg
+                class="action-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 4v16m8-8H4" />
               </svg>
               <span>New Project</span>
             </router-link>
             <router-link to="/admin/skills" class="action-button">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              <svg
+                class="action-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Update Skills</span>
             </router-link>
             <a href="/" target="_blank" class="action-button">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              <svg
+                class="action-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
               <span>View Site</span>
             </a>

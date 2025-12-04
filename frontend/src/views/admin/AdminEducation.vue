@@ -2,9 +2,7 @@
   <div class="admin-education">
     <div class="admin-header">
       <h2>Manage Education & Certifications</h2>
-      <button class="btn btn-primary" @click="showForm = true">
-        Add New Education
-      </button>
+      <button class="btn btn-primary" @click="showForm = true">Add New Education</button>
     </div>
 
     <!-- Add/Edit Form Modal -->
@@ -14,37 +12,37 @@
         <form @submit.prevent="saveEducation">
           <div class="form-group">
             <label>Institution *</label>
-            <input v-model="formData.institution" type="text" class="form-control" required>
+            <input v-model="formData.institution" type="text" class="form-control" required />
           </div>
 
           <div class="form-group">
             <label>Degree/Certification *</label>
-            <input v-model="formData.degree" type="text" class="form-control" required>
+            <input v-model="formData.degree" type="text" class="form-control" required />
           </div>
 
           <div class="form-group">
             <label>Field of Study</label>
-            <input v-model="formData.field_of_study" type="text" class="form-control">
+            <input v-model="formData.field_of_study" type="text" class="form-control" />
           </div>
 
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label>Start Date</label>
-                <input v-model="formData.start_date" type="date" class="form-control">
+                <input v-model="formData.start_date" type="date" class="form-control" />
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label>End Date</label>
-                <input v-model="formData.end_date" type="date" class="form-control">
+                <input v-model="formData.end_date" type="date" class="form-control" />
               </div>
             </div>
           </div>
 
           <div class="form-group">
             <label>Location</label>
-            <input v-model="formData.location" type="text" class="form-control">
+            <input v-model="formData.location" type="text" class="form-control" />
           </div>
 
           <div class="form-group">
@@ -53,20 +51,23 @@
           </div>
 
           <div class="form-check mb-3">
-            <input v-model="formData.is_certification" type="checkbox" class="form-check-input" id="is_certification">
-            <label class="form-check-label" for="is_certification">
-              This is a certification
-            </label>
+            <input
+              v-model="formData.is_certification"
+              type="checkbox"
+              class="form-check-input"
+              id="is_certification"
+            />
+            <label class="form-check-label" for="is_certification"> This is a certification </label>
           </div>
 
           <div v-if="formData.is_certification" class="form-group">
             <label>Certificate Number</label>
-            <input v-model="formData.certificate_number" type="text" class="form-control">
+            <input v-model="formData.certificate_number" type="text" class="form-control" />
           </div>
 
           <div class="form-group">
             <label>Display Order</label>
-            <input v-model.number="formData.order" type="number" class="form-control" min="0">
+            <input v-model.number="formData.order" type="number" class="form-control" min="0" />
           </div>
 
           <div class="form-actions">
@@ -105,8 +106,12 @@
               </td>
               <td>{{ edu.order }}</td>
               <td>
-                <button class="btn btn-sm btn-warning me-2" @click="editEducation(edu)">Edit</button>
-                <button class="btn btn-sm btn-danger" @click="deleteEducation(edu.id)">Delete</button>
+                <button class="btn btn-sm btn-warning me-2" @click="editEducation(edu)">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-danger" @click="deleteEducation(edu.id)">
+                  Delete
+                </button>
               </td>
             </tr>
           </tbody>
@@ -135,8 +140,12 @@
               <td>{{ cert.end_date ? formatDate(cert.end_date) : '-' }}</td>
               <td>{{ cert.order }}</td>
               <td>
-                <button class="btn btn-sm btn-warning me-2" @click="editEducation(cert)">Edit</button>
-                <button class="btn btn-sm btn-danger" @click="deleteEducation(cert.id)">Delete</button>
+                <button class="btn btn-sm btn-warning me-2" @click="editEducation(cert)">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-danger" @click="deleteEducation(cert.id)">
+                  Delete
+                </button>
               </td>
             </tr>
           </tbody>
@@ -189,8 +198,12 @@ const formData = ref<EducationFormData>({
 })
 
 // Computed properties
-const degrees = computed<EducationFormData[]>(() => educationList.value.filter(e => !e.is_certification))
-const certifications = computed<EducationFormData[]>(() => educationList.value.filter(e => e.is_certification))
+const degrees = computed<EducationFormData[]>(() =>
+  educationList.value.filter(e => !e.is_certification)
+)
+const certifications = computed<EducationFormData[]>(() =>
+  educationList.value.filter(e => e.is_certification)
+)
 
 // Methods
 const fetchEducation = async (): Promise<void> => {

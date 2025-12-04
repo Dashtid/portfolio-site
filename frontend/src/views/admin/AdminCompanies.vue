@@ -4,7 +4,7 @@
       <h2 class="page-title">Manage Experience</h2>
       <button @click="showAddForm = true" class="add-button">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 4v16m8-8H4"/>
+          <path d="M12 4v16m8-8H4" />
         </svg>
         Add Company
       </button>
@@ -12,32 +12,40 @@
 
     <!-- Companies List -->
     <div class="companies-grid">
-      <div v-if="loading" class="loading-state">
-        Loading companies...
-      </div>
+      <div v-if="loading" class="loading-state">Loading companies...</div>
 
       <div v-else-if="companies.length === 0" class="empty-state">
         <p>No companies added yet.</p>
       </div>
 
       <div v-else class="company-cards">
-        <div
-          v-for="company in companies"
-          :key="company.id"
-          class="company-card"
-        >
+        <div v-for="company in companies" :key="company.id" class="company-card">
           <div class="company-header">
             <h3 class="company-name">{{ company.name }}</h3>
             <div class="company-actions">
               <button @click="editCompany(company)" class="action-btn edit-btn">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                <svg
+                  class="icon-sm"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
               <button @click="deleteCompany(company.id)" class="action-btn delete-btn">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                <svg
+                  class="icon-sm"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                  />
                 </svg>
               </button>
             </div>
@@ -64,24 +72,12 @@
         <form @submit.prevent="saveCompany" class="company-form">
           <div class="form-group">
             <label for="name">Company Name *</label>
-            <input
-              id="name"
-              v-model="form.name"
-              type="text"
-              required
-              class="form-input"
-            />
+            <input id="name" v-model="form.name" type="text" required class="form-input" />
           </div>
 
           <div class="form-group">
             <label for="title">Job Title *</label>
-            <input
-              id="title"
-              v-model="form.title"
-              type="text"
-              required
-              class="form-input"
-            />
+            <input id="title" v-model="form.title" type="text" required class="form-input" />
           </div>
 
           <div class="form-row">
@@ -98,23 +94,13 @@
 
             <div class="form-group">
               <label for="end_date">End Date</label>
-              <input
-                id="end_date"
-                v-model="form.end_date"
-                type="date"
-                class="form-input"
-              />
+              <input id="end_date" v-model="form.end_date" type="date" class="form-input" />
             </div>
           </div>
 
           <div class="form-group">
             <label for="location">Location</label>
-            <input
-              id="location"
-              v-model="form.location"
-              type="text"
-              class="form-input"
-            />
+            <input id="location" v-model="form.location" type="text" class="form-input" />
           </div>
 
           <div class="form-group">
@@ -150,9 +136,7 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" @click="closeForm" class="btn-cancel">
-              Cancel
-            </button>
+            <button type="button" @click="closeForm" class="btn-cancel">Cancel</button>
             <button type="submit" class="btn-save">
               {{ editingCompany ? 'Update' : 'Add' }} Company
             </button>
@@ -201,9 +185,7 @@ const form = ref<CompanyFormData>({
 // Computed
 const technologiesInput: WritableComputedRef<string> = computed({
   get(): string {
-    return Array.isArray(form.value.technologies)
-      ? form.value.technologies.join(', ')
-      : ''
+    return Array.isArray(form.value.technologies) ? form.value.technologies.join(', ') : ''
   },
   set(value: string): void {
     form.value.technologies = value
