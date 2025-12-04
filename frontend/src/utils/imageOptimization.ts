@@ -5,7 +5,10 @@
 /**
  * Generate optimized image URLs for different sizes
  */
-export function generateImageSrcSet(baseUrl: string, sizes: number[] = [400, 800, 1200, 1600]): string {
+export function generateImageSrcSet(
+  baseUrl: string,
+  sizes: number[] = [400, 800, 1200, 1600]
+): string {
   if (!baseUrl) return ''
 
   // If it's already a data URL or external URL, return as-is
@@ -14,9 +17,7 @@ export function generateImageSrcSet(baseUrl: string, sizes: number[] = [400, 800
   }
 
   // Generate srcset for local images
-  return sizes
-    .map(size => `${baseUrl}?w=${size} ${size}w`)
-    .join(', ')
+  return sizes.map(size => `${baseUrl}?w=${size} ${size}w`).join(', ')
 }
 
 /**
@@ -62,8 +63,6 @@ export function createPlaceholder(width: number = 40, height: number = 30): stri
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')!
 
-
-
   canvas.width = width
   canvas.height = height
 
@@ -90,7 +89,7 @@ interface Dimensions {
 export function calculateOptimalDimensions(
   containerWidth: number,
   containerHeight?: number,
-  aspectRatio: number = 16/9
+  aspectRatio: number = 16 / 9
 ): Dimensions {
   let width = containerWidth
   let height: number
@@ -105,7 +104,7 @@ export function calculateOptimalDimensions(
   }
 
   // Ensure dimensions are reasonable
-  width = Math.min(width, 2400)  // Max width
+  width = Math.min(width, 2400) // Max width
   height = Math.min(height, 1800) // Max height
 
   return { width, height }
@@ -130,25 +129,21 @@ interface OptimizedImage {
 /**
  * Convert image to optimized format
  */
-export async function optimizeImage(file: File, options: OptimizeImageOptions = {}): Promise<OptimizedImage> {
-  const {
-    maxWidth = 1920,
-    maxHeight = 1080,
-    quality = 0.85,
-    format = 'webp'
-  } = options
+export async function optimizeImage(
+  file: File,
+  options: OptimizeImageOptions = {}
+): Promise<OptimizedImage> {
+  const { maxWidth = 1920, maxHeight = 1080, quality = 0.85, format = 'webp' } = options
 
   return new Promise<OptimizedImage>((resolve, reject) => {
     const reader = new FileReader()
 
-    reader.onload = (e) => {
+    reader.onload = e => {
       const img = new Image()
 
       img.onload = () => {
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')!
-
-
 
         // Calculate new dimensions
         let { width, height } = img
@@ -166,7 +161,7 @@ export async function optimizeImage(file: File, options: OptimizeImageOptions = 
         ctx.drawImage(img, 0, 0, width, height)
 
         canvas.toBlob(
-          (blob) => {
+          blob => {
             if (blob) {
               resolve({
                 blob,
@@ -226,10 +221,7 @@ export class ImageLazyLoader {
 
   private init(): void {
     if ('IntersectionObserver' in window) {
-      this.observer = new IntersectionObserver(
-        this.handleIntersection.bind(this),
-        this.options
-      )
+      this.observer = new IntersectionObserver(this.handleIntersection.bind(this), this.options)
     }
   }
 

@@ -64,7 +64,7 @@ class ErrorTracker {
       stack: event.error?.stack,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent,
+      userAgent: navigator.userAgent
     }
 
     this.captureError(errorData)
@@ -80,7 +80,7 @@ class ErrorTracker {
       stack: event.reason?.stack,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent,
+      userAgent: navigator.userAgent
     }
 
     this.captureError(errorData)
@@ -90,7 +90,8 @@ class ErrorTracker {
    * Capture Vue component errors
    */
   handleVueError(err: Error, instance: unknown, info: string): void {
-    const componentName = (instance as { $options?: { name?: string } })?.$options?.name || 'Unknown'
+    const componentName =
+      (instance as { $options?: { name?: string } })?.$options?.name || 'Unknown'
     const errorData: ErrorData = {
       type: 'vueError',
       message: err.message,
@@ -99,7 +100,7 @@ class ErrorTracker {
       errorInfo: info,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent,
+      userAgent: navigator.userAgent
     }
 
     this.captureError(errorData)
@@ -136,9 +137,9 @@ class ErrorTracker {
       await fetch(this.apiEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(errorData),
+        body: JSON.stringify(errorData)
       })
     } catch (err) {
       // Silently fail - don't want error tracking to cause more errors
@@ -160,7 +161,7 @@ class ErrorTracker {
       context,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent,
+      userAgent: navigator.userAgent
     }
 
     this.captureError(errorData)
