@@ -104,10 +104,7 @@ class AnalyticsService {
       void _eventData // Suppress unused variable warning
 
       // For now, we can track this as a special page view
-      await this.trackPageView(
-        `/event/${category}/${action}`,
-        `Event: ${category} - ${action}`
-      )
+      await this.trackPageView(`/event/${category}/${action}`, `Event: ${category} - ${action}`)
     } catch (error) {
       console.error('Failed to track event:', error)
     }
@@ -153,9 +150,12 @@ class AnalyticsService {
    */
   async getAnalyticsSummary(days: number = 30): Promise<AnalyticsSummary | null> {
     try {
-      const response: AxiosResponse<AnalyticsSummary> = await axios.get(`${API_URL}/stats/summary`, {
-        params: { days }
-      })
+      const response: AxiosResponse<AnalyticsSummary> = await axios.get(
+        `${API_URL}/stats/summary`,
+        {
+          params: { days }
+        }
+      )
       return response.data
     } catch (error) {
       console.error('Failed to get analytics summary:', error)

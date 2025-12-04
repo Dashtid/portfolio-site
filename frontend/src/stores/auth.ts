@@ -38,12 +38,12 @@ export const useAuthStore = defineStore('auth', {
     accessToken: storage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
     refreshToken: storage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
     isLoading: false,
-    error: null,
+    error: null
   }),
 
   getters: {
     isAuthenticated: (state): boolean => !!state.accessToken,
-    currentUser: (state): User | null => state.user,
+    currentUser: (state): User | null => state.user
   },
 
   actions: {
@@ -116,7 +116,7 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const response = await apiClient.post<LoginResponse>('/api/v1/auth/refresh', {
-          refresh_token: this.refreshToken,
+          refresh_token: this.refreshToken
         })
 
         this.setTokens(response.data.access_token, response.data.refresh_token)
@@ -164,6 +164,6 @@ export const useAuthStore = defineStore('auth', {
         // Fetch user info
         await this.fetchUser()
       }
-    },
-  },
+    }
+  }
 })
