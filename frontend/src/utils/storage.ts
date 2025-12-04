@@ -16,7 +16,7 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'accessToken',
   REFRESH_TOKEN: 'refreshToken',
   THEME: 'theme',
-  USER_PREFERENCES: 'userPreferences',
+  USER_PREFERENCES: 'userPreferences'
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]
@@ -161,7 +161,7 @@ export const storage = {
     for (const key of keys) {
       this.removeItem(key)
     }
-  },
+  }
 }
 
 export default storage

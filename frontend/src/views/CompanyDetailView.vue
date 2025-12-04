@@ -80,7 +80,10 @@
       </div>
 
       <!-- Technologies (if available) -->
-      <div v-if="company.technologies && company.technologies.length > 0" class="technologies-section mb-5">
+      <div
+        v-if="company.technologies && company.technologies.length > 0"
+        class="technologies-section mb-5"
+      >
         <h3 class="h5 mb-3">Technologies Used</h3>
         <div class="technologies-list">
           <span
@@ -94,7 +97,10 @@
       </div>
 
       <!-- Responsibilities (if available) -->
-      <div v-if="company.responsibilities && company.responsibilities.length > 0" class="responsibilities-section mb-5">
+      <div
+        v-if="company.responsibilities && company.responsibilities.length > 0"
+        class="responsibilities-section mb-5"
+      >
         <h3 class="h5 mb-3">Key Responsibilities</h3>
         <ul class="responsibilities-list">
           <li v-for="(responsibility, index) in company.responsibilities" :key="index">
@@ -172,7 +178,10 @@ const formattedDescription = computed<string>(() => {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 
   // Convert paragraphs (separated by double newlines)
-  html = html.split('\n\n').map(para => `<p>${para.trim()}</p>`).join('')
+  html = html
+    .split('\n\n')
+    .map(para => `<p>${para.trim()}</p>`)
+    .join('')
 
   return html
 })
