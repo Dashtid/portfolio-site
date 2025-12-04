@@ -35,7 +35,7 @@ export const CompanySchema = z.object({
   map_url: z.string().nullable().optional(),
   map_title: z.string().nullable().optional(),
   technologies: z.array(z.string()).nullable().optional(),
-  responsibilities: z.array(z.string()).nullable().optional(),
+  responsibilities: z.array(z.string()).nullable().optional()
 })
 
 export const CompanyArraySchema = z.array(CompanySchema)
@@ -56,7 +56,7 @@ export const EducationSchema = z.object({
   end_date: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
-  logo_url: z.string().nullable().optional(),
+  logo_url: z.string().nullable().optional()
 })
 
 export const EducationArraySchema = z.array(EducationSchema)
@@ -86,7 +86,7 @@ export const ProjectSchema = z.object({
   map_title: z.string().nullable().optional(),
   responsibilities: z.string().nullable().optional(),
   created_at: z.string().optional(),
-  updated_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional()
 })
 
 export const ProjectArraySchema = z.array(ProjectSchema)
@@ -103,7 +103,7 @@ export const SkillSchema = z.object({
   name: z.string(),
   category: z.string(),
   proficiency_level: z.number().min(0).max(100),
-  years_of_experience: z.number().nullable().optional(),
+  years_of_experience: z.number().nullable().optional()
 })
 
 export const SkillArraySchema = z.array(SkillSchema)
@@ -124,7 +124,7 @@ export const DocumentSchema = z.object({
   file_size: z.number(),
   file_url: z.string(),
   published_date: z.string().nullable().optional(),
-  created_at: z.string(),
+  created_at: z.string()
 })
 
 export const DocumentArraySchema = z.array(DocumentSchema)
@@ -139,20 +139,20 @@ export const UserSchema = z.object({
   name: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
   avatar_url: z.string().nullable().optional(),
-  github_id: z.string().nullable().optional(),
+  github_id: z.string().nullable().optional()
 })
 
 export const LoginResponseSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string().optional(),
   token_type: z.string(),
-  user: UserSchema.optional(),
+  user: UserSchema.optional()
 })
 
 export const TokenRefreshResponseSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string().optional(),
-  token_type: z.string(),
+  token_type: z.string()
 })
 
 // ============================================================================
@@ -162,7 +162,7 @@ export const TokenRefreshResponseSchema = z.object({
 export const HealthResponseSchema = z.object({
   status: z.string(),
   service: z.string(),
-  version: z.string(),
+  version: z.string()
 })
 
 // ============================================================================
@@ -170,11 +170,15 @@ export const HealthResponseSchema = z.object({
 // ============================================================================
 
 export const ErrorResponseSchema = z.object({
-  detail: z.string().or(z.array(z.object({
-    loc: z.array(z.string().or(z.number())),
-    msg: z.string(),
-    type: z.string(),
-  }))),
+  detail: z.string().or(
+    z.array(
+      z.object({
+        loc: z.array(z.string().or(z.number())),
+        msg: z.string(),
+        type: z.string()
+      })
+    )
+  )
 })
 
 // ============================================================================
@@ -211,7 +215,7 @@ export class ApiValidationError extends Error {
 export function validateApiResponse<T extends z.ZodTypeAny>(
   schema: T,
   data: unknown,
-  options: { strict?: boolean } = {},
+  options: { strict?: boolean } = {}
 ): z.infer<T> {
   const { strict = true } = options
 
@@ -221,17 +225,17 @@ export function validateApiResponse<T extends z.ZodTypeAny>(
     if (strict) {
       console.error('[API Validation] Schema validation failed:', {
         errors: result.error.errors,
-        data,
+        data
       })
       throw new ApiValidationError(
         `API response validation failed: ${result.error.message}`,
-        result.error,
+        result.error
       )
     }
 
     // In non-strict mode, log warning and return data as-is
     console.warn('[API Validation] Schema validation failed (non-strict mode):', {
-      errors: result.error.errors,
+      errors: result.error.errors
     })
     return data as z.infer<T>
   }
@@ -258,7 +262,7 @@ export function validateApiResponse<T extends z.ZodTypeAny>(
  */
 export function safeValidateApiResponse<T extends z.ZodTypeAny>(
   schema: T,
-  data: unknown,
+  data: unknown
 ): { success: true; data: z.infer<T> } | { success: false; errors: z.ZodError } {
   const result = schema.safeParse(data)
 

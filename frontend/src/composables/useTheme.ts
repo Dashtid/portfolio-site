@@ -36,13 +36,15 @@ export function useTheme(): UseThemeReturn {
     themeLogger.log('Theme changed to:', dark ? 'dark' : 'light')
 
     // Dispatch custom event for components that need to react to theme changes
-    window.dispatchEvent(new CustomEvent('theme-changed', {
-      detail: { theme: dark ? 'dark' : 'light' }
-    }))
+    window.dispatchEvent(
+      new CustomEvent('theme-changed', {
+        detail: { theme: dark ? 'dark' : 'light' }
+      })
+    )
   })
 
   // Get current theme as string
-  const currentTheme = (): 'dark' | 'light' => isDark.value ? 'dark' : 'light'
+  const currentTheme = (): 'dark' | 'light' => (isDark.value ? 'dark' : 'light')
 
   // Set specific theme
   const setTheme = (theme: ThemeMode): void => {

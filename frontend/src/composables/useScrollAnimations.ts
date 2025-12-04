@@ -182,7 +182,7 @@ export function useStaggeredAnimation(
   targets.forEach((target, index) => {
     const animation = useScrollAnimation(target, {
       ...animationOptions,
-      delay: (animationOptions.delay || 0) + (index * stagger)
+      delay: (animationOptions.delay || 0) + index * stagger
     })
     animations.push(animation)
   })
@@ -215,7 +215,7 @@ export function useBatchAnimation(
       const elementRef = ref(element as HTMLElement)
       const animation = useScrollAnimation(elementRef, {
         ...options,
-        delay: (options.delay || 0) + (index * (options.stagger || 100))
+        delay: (options.delay || 0) + index * (options.stagger || 100)
       })
       animations.push(animation)
     })
@@ -236,10 +236,7 @@ interface ParallaxOptions {
  * @param target - Element ref to apply parallax
  * @param options - Parallax options
  */
-export function useParallax(
-  target: Ref<HTMLElement | null>,
-  options: ParallaxOptions = {}
-): void {
+export function useParallax(target: Ref<HTMLElement | null>, options: ParallaxOptions = {}): void {
   const { speed = 0.5 } = options
 
   onMounted(() => {
