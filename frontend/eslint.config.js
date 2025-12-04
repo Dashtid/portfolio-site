@@ -75,6 +75,10 @@ export default [
         process: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        global: 'readonly',
+        globalThis: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
         // Vitest globals
         describe: 'readonly',
         it: 'readonly',
