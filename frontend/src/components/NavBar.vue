@@ -1,22 +1,48 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom" :class="{ 'navbar-scrolled': scrolled }" role="navigation" aria-label="Main navigation">
+  <nav
+    class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom"
+    :class="{ 'navbar-scrolled': scrolled }"
+    role="navigation"
+    aria-label="Main navigation"
+  >
     <div class="container">
-      <a class="navbar-brand" href="#hero" @click="scrollToSection('hero')" aria-label="David Dashti - Home">
-        <img src="/images/D-dark.svg" alt="David Dashti Logo" height="30" class="d-inline-block align-text-top me-2" loading="lazy">
+      <a
+        class="navbar-brand"
+        href="#hero"
+        @click="scrollToSection('hero')"
+        aria-label="David Dashti - Home"
+      >
+        <img
+          src="/images/D-dark.svg"
+          alt="David Dashti Logo"
+          height="30"
+          class="d-inline-block align-text-top me-2"
+          loading="lazy"
+        />
         David Dashti
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation menu">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation menu"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item" v-for="item in navItems" :key="item.href">
-            <a class="nav-link" :class="{ active: activeSection === item.href }"
-               :href="`#${item.href}`"
-               :aria-label="`Navigate to ${item.name} section`"
-               :aria-current="activeSection === item.href ? 'page' : undefined"
-               @click.prevent="scrollToSection(item.href)">
+            <a
+              class="nav-link"
+              :class="{ active: activeSection === item.href }"
+              :href="`#${item.href}`"
+              :aria-label="`Navigate to ${item.name} section`"
+              :aria-current="activeSection === item.href ? 'page' : undefined"
+              @click.prevent="scrollToSection(item.href)"
+            >
               {{ item.name }}
             </a>
           </li>
@@ -181,47 +207,47 @@ onUnmounted(() => {
 }
 
 /* Dark theme styles */
-[data-theme="dark"] .navbar-custom {
+[data-theme='dark'] .navbar-custom {
   background: rgba(15, 23, 42, 0.9);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .navbar-scrolled {
+[data-theme='dark'] .navbar-scrolled {
   background: rgba(15, 23, 42, 0.98);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .navbar-brand {
+[data-theme='dark'] .navbar-brand {
   color: #f1f5f9;
 }
 
-[data-theme="dark"] .navbar-brand:hover {
+[data-theme='dark'] .navbar-brand:hover {
   color: #60a5fa;
 }
 
-[data-theme="dark"] .nav-link {
+[data-theme='dark'] .nav-link {
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .nav-link:hover {
+[data-theme='dark'] .nav-link:hover {
   color: #60a5fa !important;
   background: rgba(96, 165, 250, 0.1) !important;
 }
 
-[data-theme="dark"] .nav-link.active {
+[data-theme='dark'] .nav-link.active {
   color: #60a5fa !important;
   background: rgba(96, 165, 250, 0.15) !important;
 }
 
-[data-theme="dark"] .nav-link.active::after {
+[data-theme='dark'] .nav-link.active::after {
   background: #60a5fa;
 }
 
-[data-theme="dark"] .navbar-toggler {
+[data-theme='dark'] .navbar-toggler {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] .navbar-toggler-icon {
+[data-theme='dark'] .navbar-toggler-icon {
   filter: invert(1);
 }
 
@@ -237,7 +263,7 @@ onUnmounted(() => {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   }
 
-  [data-theme="dark"] .navbar-collapse {
+  [data-theme='dark'] .navbar-collapse {
     background: rgba(30, 41, 59, 0.98);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   }
@@ -261,7 +287,7 @@ onUnmounted(() => {
     color: white !important;
   }
 
-  [data-theme="dark"] .nav-link.active {
+  [data-theme='dark'] .nav-link.active {
     background: #3b82f6 !important;
     color: white !important;
   }
