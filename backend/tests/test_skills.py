@@ -236,3 +236,142 @@ def test_skill_ordering(client: TestClient, admin_user_in_db: dict[str, Any]):
     assert data[0]["name"] == "Skill A"
     assert data[1]["name"] == "Skill B"
     assert data[2]["name"] == "Skill C"
+
+
+class TestSkillEdgeCases:
+    """Edge case tests for skills API."""
+
+    def test_create_skill_with_all_fields(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating skill with all optional fields."""
+        skill_data = {
+            "name": "Full Skill",
+            "category": "Frameworks",
+            "proficiency": 95,
+            "years_experience": 5.5,
+            "order_index": 1,
+        }
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Full Skill"
+        assert data["category"] == "Frameworks"
+        assert data["proficiency"] == 95
+        assert data["years_experience"] == 5.5
+        assert data["order_index"] == 1
+
+    def test_create_skill_minimal_fields(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test creating skill with only required fields."""
+        skill_data = {"name": "Minimal Skill"}
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Minimal Skill"
+        assert data["category"] is None
+        assert data["proficiency"] is None
+
+    def test_update_partial_fields(self, client: TestClient, admin_user_in_db: dict[str, Any]):
+        """Test updating only some fields preserves others."""
+        # Create skill
+        skill_data = {
+            "name": "Partial Update Skill",
+            "category": "Original Category",
+            "proficiency": 70,
+            "order_index": 5,
+        }
+        create_response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert create_response.status_code == 201
+        skill_id = create_response.json()["id"]
+
+        # Update only proficiency
+        update_response = client.put(
+            f"/api/v1/skills/{skill_id}",
+            json={"proficiency": 90},
+            headers=admin_user_in_db["headers"],
+        )
+        assert update_response.status_code == 200
+        data = update_response.json()
+        assert data["proficiency"] == 90
+        assert data["name"] == "Partial Update Skill"
+        assert data["category"] == "Original Category"
+        assert data["order_index"] == 5
+
+    def test_skill_boundary_proficiency_zero(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test skill with proficiency at boundary (0)."""
+        skill_data = {
+            "name": "Zero Proficiency Skill",
+            "proficiency": 0,
+            "order_index": 1,
+        }
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        assert response.json()["proficiency"] == 0
+
+    def test_skill_boundary_proficiency_hundred(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test skill with proficiency at boundary (100)."""
+        skill_data = {
+            "name": "Max Proficiency Skill",
+            "proficiency": 100,
+            "order_index": 1,
+        }
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        assert response.json()["proficiency"] == 100
+
+    def test_skill_with_years_experience(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Test skill with years of experience."""
+        skill_data = {
+            "name": "Experienced Skill",
+            "years_experience": 3.5,
+            "order_index": 1,
+        }
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        assert response.json()["years_experience"] == 3.5
+
+    def test_get_skill_by_invalid_uuid_format(self, client: TestClient):
+        """Test getting skill with valid UUID format but non-existent."""
+        response = client.get("/api/v1/skills/00000000-0000-0000-0000-000000000000")
+        assert response.status_code == 404
+
+    def test_skill_response_schema(self, client: TestClient, admin_user_in_db: dict[str, Any]):
+        """Test that skill response matches expected schema."""
+        skill_data = {
+            "name": "Schema Test Skill",
+            "category": "Test",
+            "proficiency": 85,
+            "order_index": 1,
+        }
+        response = client.post(
+            "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 201
+        data = response.json()
+        # Check expected fields exist
+        assert "id" in data
+        assert "name" in data
+        assert "category" in data
+        assert "proficiency" in data
+        assert "order_index" in data
+        assert "created_at" in data

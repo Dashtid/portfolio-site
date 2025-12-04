@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
-from slowapi.errors import RateLimitExceeded
 
 from app.middleware.error_tracking import track_error
 
@@ -412,7 +411,9 @@ class TestCacheMiddlewareDispatch:
             "/fonts/roboto.woff2",
         ]
         for path in static_paths:
-            assert CacheControlMiddleware._is_static_content(path) is True, f"{path} should be static"
+            assert CacheControlMiddleware._is_static_content(path) is True, (
+                f"{path} should be static"
+            )
 
     def test_non_static_paths(self):
         """Test non-static paths are not detected as static."""
@@ -425,7 +426,9 @@ class TestCacheMiddlewareDispatch:
             "/healthz",
         ]
         for path in non_static_paths:
-            assert CacheControlMiddleware._is_static_content(path) is False, f"{path} should not be static"
+            assert CacheControlMiddleware._is_static_content(path) is False, (
+                f"{path} should not be static"
+            )
 
     def test_cache_control_header_for_static_content(self):
         """Test cache control header format for static content."""
@@ -680,9 +683,7 @@ class TestRateLimitIntegration:
         exc = MagicMock()
         exc.detail = "rate limit exceeded 5 per 1 minute"
 
-        response = asyncio.run(
-            rate_limit_exceeded_handler(mock_request, exc)
-        )
+        response = asyncio.run(rate_limit_exceeded_handler(mock_request, exc))
 
         assert response.status_code == 429
         body = json.loads(response.body)
@@ -791,9 +792,308 @@ class TestMiddlewareOrder:
 
     def test_middleware_order_in_app(self, client: TestClient):
         """Test that middleware is applied in correct order."""
-        from app.main import app
 
         response = client.get("/api/health")
         assert response.status_code == 200
         # Check that security headers are applied
         assert response.headers.get("X-Content-Type-Options") is not None
+
+
+class TestErrorTrackingMiddlewareDispatch:
+    """Tests for ErrorTrackingMiddleware dispatch method exception handling."""
+
+    def test_middleware_handles_http_exception_4xx(self):
+        """Test that middleware handles 4xx HTTP exceptions correctly."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from starlette.exceptions import HTTPException
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        # Create mock request
+        mock_request = MagicMock()
+        mock_request.state = MagicMock()
+        mock_request.state.request_id = "test-request-123"
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/test"
+
+        # Create mock call_next that raises 404
+        async def raise_404(request):
+            raise HTTPException(status_code=404, detail="Not found")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(HTTPException) as exc_info:
+                asyncio.run(middleware.dispatch(mock_request, raise_404))
+
+            assert exc_info.value.status_code == 404
+            # 4xx errors should trigger warning log
+            mock_logger.warning.assert_called_once()
+
+    def test_middleware_handles_http_exception_5xx(self):
+        """Test that middleware handles 5xx HTTP exceptions correctly."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from starlette.exceptions import HTTPException
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        # Create mock request
+        mock_request = MagicMock()
+        mock_request.state = MagicMock()
+        mock_request.state.request_id = "test-request-456"
+        mock_request.method = "POST"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/projects"
+
+        # Create mock call_next that raises 500
+        async def raise_500(request):
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(HTTPException) as exc_info:
+                asyncio.run(middleware.dispatch(mock_request, raise_500))
+
+            assert exc_info.value.status_code == 500
+            # 5xx errors should trigger exception log
+            mock_logger.exception.assert_called_once()
+
+    def test_middleware_handles_unexpected_exception(self):
+        """Test that middleware handles unexpected exceptions correctly."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        # Create mock request
+        mock_request = MagicMock()
+        mock_request.state = MagicMock()
+        mock_request.state.request_id = "test-request-789"
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/crash"
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
+        mock_request.headers = {"user-agent": "TestClient/1.0"}
+
+        # Create mock call_next that raises unexpected exception
+        async def raise_unexpected(request):
+            raise RuntimeError("Unexpected database error")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(RuntimeError) as exc_info:
+                asyncio.run(middleware.dispatch(mock_request, raise_unexpected))
+
+            assert "Unexpected database error" in str(exc_info.value)
+            # Unexpected exceptions should trigger critical log
+            mock_logger.critical.assert_called_once()
+
+    def test_middleware_success_path(self):
+        """Test that middleware passes through successful requests."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        # Create mock request
+        mock_request = MagicMock()
+
+        # Create mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+
+        # Create mock call_next that returns success
+        async def success_response(request):
+            return mock_response
+
+        result = asyncio.run(middleware.dispatch(mock_request, success_response))
+        assert result == mock_response
+
+    def test_middleware_handles_missing_request_id(self):
+        """Test middleware when request_id is not set on state."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from starlette.exceptions import HTTPException
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        # Create mock request without request_id
+        mock_request = MagicMock()
+        mock_request.state = MagicMock(spec=[])  # Empty spec means no request_id attr
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/test"
+
+        async def raise_400(request):
+            raise HTTPException(status_code=400, detail="Bad request")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(HTTPException):
+                asyncio.run(middleware.dispatch(mock_request, raise_400))
+
+            # Should still log with "unknown" as request_id
+            mock_logger.warning.assert_called_once()
+
+    def test_middleware_handles_missing_client(self):
+        """Test middleware when client is None."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        # Create mock request without client
+        mock_request = MagicMock()
+        mock_request.state = MagicMock()
+        mock_request.state.request_id = "test-123"
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/test"
+        mock_request.client = None
+        mock_request.headers = {}
+
+        async def raise_value_error(request):
+            raise ValueError("Test value error")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(ValueError):
+                asyncio.run(middleware.dispatch(mock_request, raise_value_error))
+
+            # Should still log without client IP
+            mock_logger.critical.assert_called_once()
+
+    def test_middleware_http_exception_boundary_status_codes(self):
+        """Test middleware handles status code boundaries correctly."""
+        import asyncio
+        from unittest.mock import MagicMock
+
+        from starlette.exceptions import HTTPException
+
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        app = MagicMock()
+        middleware = ErrorTrackingMiddleware(app=app)
+
+        mock_request = MagicMock()
+        mock_request.state = MagicMock()
+        mock_request.state.request_id = "test-boundary"
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/test"
+
+        # Test 399 (below 400, no logging expected for HTTP exceptions)
+        async def raise_399(request):
+            raise HTTPException(status_code=399, detail="Custom status")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(HTTPException):
+                asyncio.run(middleware.dispatch(mock_request, raise_399))
+            # 399 < 400, so no warning or exception log
+            mock_logger.warning.assert_not_called()
+            mock_logger.exception.assert_not_called()
+
+        # Test 499 (4xx range, warning)
+        async def raise_499(request):
+            raise HTTPException(status_code=499, detail="Custom 4xx")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(HTTPException):
+                asyncio.run(middleware.dispatch(mock_request, raise_499))
+            mock_logger.warning.assert_called_once()
+
+        # Test exactly 500 (5xx range, exception log)
+        async def raise_exact_500(request):
+            raise HTTPException(status_code=500, detail="Exact 500")
+
+        with patch("app.middleware.error_tracking.logger") as mock_logger:
+            with pytest.raises(HTTPException):
+                asyncio.run(middleware.dispatch(mock_request, raise_exact_500))
+            mock_logger.exception.assert_called_once()
+
+
+class TestTrackErrorFunction:
+    """Additional tests for track_error function."""
+
+    def test_track_error_with_empty_context(self):
+        """Test track_error with empty context dict."""
+        with patch("app.middleware.error_tracking.settings") as mock_settings:
+            mock_settings.ERROR_TRACKING_ENABLED = True
+
+            with patch("app.middleware.error_tracking.logger") as mock_logger:
+                error = ValueError("Test error")
+                context = {}
+
+                try:
+                    raise error
+                except ValueError as e:
+                    track_error(e, context)
+
+                mock_logger.error.assert_called_once()
+
+    def test_track_error_with_complex_context(self):
+        """Test track_error with complex nested context."""
+        with patch("app.middleware.error_tracking.settings") as mock_settings:
+            mock_settings.ERROR_TRACKING_ENABLED = True
+
+            with patch("app.middleware.error_tracking.logger") as mock_logger:
+                error = RuntimeError("Complex error")
+                context = {
+                    "user_id": "user-123",
+                    "request_data": {"method": "POST", "path": "/api/v1/test"},
+                    "nested": {"level1": {"level2": "value"}},
+                }
+
+                try:
+                    raise error
+                except RuntimeError as e:
+                    track_error(e, context)
+
+                mock_logger.error.assert_called_once()
+                call_kwargs = mock_logger.error.call_args[1]
+                extra = call_kwargs.get("extra", {})
+                assert "user_id" in extra
+                assert "request_data" in extra
+
+    def test_track_error_different_exception_types(self):
+        """Test track_error with different exception types."""
+        with patch("app.middleware.error_tracking.settings") as mock_settings:
+            mock_settings.ERROR_TRACKING_ENABLED = True
+
+            exception_types = [
+                ValueError("Value error"),
+                TypeError("Type error"),
+                KeyError("Key error"),
+                RuntimeError("Runtime error"),
+                OSError("IO error"),
+            ]
+
+            for error in exception_types:
+                with patch("app.middleware.error_tracking.logger") as mock_logger:
+                    try:
+                        raise error
+                    except Exception as e:
+                        track_error(e)
+
+                    mock_logger.error.assert_called_once()
+                    call_args = mock_logger.error.call_args[0][0]
+                    assert type(error).__name__ in call_args
