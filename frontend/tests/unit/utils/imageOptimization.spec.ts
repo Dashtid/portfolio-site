@@ -121,7 +121,9 @@ describe('imageOptimization utility', () => {
       }
 
       vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext as any)
-      vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/jpeg;base64,mockdata')
+      vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
+        'data:image/jpeg;base64,mockdata'
+      )
     })
 
     it('returns data URL', () => {

@@ -13,7 +13,7 @@ import {
   validateApiResponse,
   safeValidateApiResponse,
   createValidator,
-  ApiValidationError,
+  ApiValidationError
 } from '@/schemas/api.schemas'
 
 describe('API Schemas', () => {
@@ -23,7 +23,7 @@ describe('API Schemas', () => {
       name: 'Test Company',
       title: 'Software Engineer',
       description: 'Test description',
-      start_date: '2020-01-01',
+      start_date: '2020-01-01'
     }
 
     it('should validate a valid company', () => {
@@ -37,7 +37,7 @@ describe('API Schemas', () => {
         end_date: '2022-12-31',
         location: 'Stockholm, Sweden',
         technologies: ['Python', 'FastAPI'],
-        responsibilities: ['Lead development', 'Code review'],
+        responsibilities: ['Lead development', 'Code review']
       }
 
       const result = CompanySchema.safeParse(companyWithOptionals)
@@ -49,7 +49,7 @@ describe('API Schemas', () => {
         ...validCompany,
         end_date: null,
         location: null,
-        technologies: null,
+        technologies: null
       }
 
       const result = CompanySchema.safeParse(companyWithNulls)
@@ -59,7 +59,7 @@ describe('API Schemas', () => {
     it('should reject invalid company - missing required fields', () => {
       const invalidCompany = {
         id: '1',
-        name: 'Test Company',
+        name: 'Test Company'
         // missing title, description, start_date
       }
 
@@ -70,7 +70,7 @@ describe('API Schemas', () => {
     it('should reject invalid company - wrong types', () => {
       const invalidCompany = {
         ...validCompany,
-        id: 123, // should be string
+        id: 123 // should be string
       }
 
       const result = CompanySchema.safeParse(invalidCompany)
@@ -86,15 +86,15 @@ describe('API Schemas', () => {
           name: 'Company A',
           title: 'Engineer',
           description: 'Desc A',
-          start_date: '2020-01-01',
+          start_date: '2020-01-01'
         },
         {
           id: '2',
           name: 'Company B',
           title: 'Manager',
           description: 'Desc B',
-          start_date: '2021-01-01',
-        },
+          start_date: '2021-01-01'
+        }
       ]
 
       const result = CompanyArraySchema.safeParse(companies)
@@ -113,12 +113,12 @@ describe('API Schemas', () => {
           name: 'Company A',
           title: 'Engineer',
           description: 'Desc A',
-          start_date: '2020-01-01',
+          start_date: '2020-01-01'
         },
         {
           id: 2, // invalid - should be string
-          name: 'Company B',
-        },
+          name: 'Company B'
+        }
       ]
 
       const result = CompanyArraySchema.safeParse(companies)
@@ -132,7 +132,7 @@ describe('API Schemas', () => {
       institution: 'University',
       degree: 'BSc',
       field_of_study: 'Computer Science',
-      start_date: '2015-09-01',
+      start_date: '2015-09-01'
     }
 
     it('should validate valid education', () => {
@@ -145,7 +145,7 @@ describe('API Schemas', () => {
         ...validEducation,
         end_date: '2019-06-15',
         description: 'Graduated with honors',
-        location: 'Stockholm',
+        location: 'Stockholm'
       }
 
       const result = EducationSchema.safeParse(education)
@@ -155,7 +155,7 @@ describe('API Schemas', () => {
     it('should reject missing required fields', () => {
       const invalid = {
         id: '1',
-        institution: 'University',
+        institution: 'University'
         // missing degree, field_of_study, start_date
       }
 
@@ -170,7 +170,7 @@ describe('API Schemas', () => {
       name: 'Test Project',
       description: 'Project description',
       technologies: ['Vue.js', 'TypeScript'],
-      featured: true,
+      featured: true
     }
 
     it('should validate valid project', () => {
@@ -183,7 +183,7 @@ describe('API Schemas', () => {
         ...validProject,
         github_url: 'https://github.com/test/project',
         live_url: 'https://example.com',
-        order_index: 1,
+        order_index: 1
       }
 
       const result = ProjectSchema.safeParse(project)
@@ -193,7 +193,7 @@ describe('API Schemas', () => {
     it('should require technologies array', () => {
       const invalid = {
         ...validProject,
-        technologies: 'not-an-array',
+        technologies: 'not-an-array'
       }
 
       const result = ProjectSchema.safeParse(invalid)
@@ -203,7 +203,7 @@ describe('API Schemas', () => {
     it('should require featured boolean', () => {
       const invalid = {
         ...validProject,
-        featured: 'yes', // should be boolean
+        featured: 'yes' // should be boolean
       }
 
       const result = ProjectSchema.safeParse(invalid)
@@ -216,7 +216,7 @@ describe('API Schemas', () => {
       id: '1',
       name: 'Python',
       category: 'Programming Languages',
-      proficiency_level: 90,
+      proficiency_level: 90
     }
 
     it('should validate valid skill', () => {
@@ -253,7 +253,7 @@ describe('API Schemas', () => {
       file_path: '/documents/resume.pdf',
       file_size: 1024,
       file_url: 'https://example.com/resume.pdf',
-      created_at: '2024-01-15T10:00:00Z',
+      created_at: '2024-01-15T10:00:00Z'
     }
 
     it('should validate valid document', () => {
@@ -271,7 +271,7 @@ describe('API Schemas', () => {
   describe('UserSchema', () => {
     const validUser = {
       id: '1',
-      username: 'testuser',
+      username: 'testuser'
     }
 
     it('should validate minimal user', () => {
@@ -285,7 +285,7 @@ describe('API Schemas', () => {
         name: 'Test User',
         email: 'test@example.com',
         avatar_url: 'https://example.com/avatar.png',
-        github_id: '12345',
+        github_id: '12345'
       }
 
       const result = UserSchema.safeParse(fullUser)
@@ -297,7 +297,7 @@ describe('API Schemas', () => {
     it('should validate valid login response', () => {
       const response = {
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        token_type: 'bearer',
+        token_type: 'bearer'
       }
 
       const result = LoginResponseSchema.safeParse(response)
@@ -308,7 +308,7 @@ describe('API Schemas', () => {
       const response = {
         access_token: 'access',
         refresh_token: 'refresh',
-        token_type: 'bearer',
+        token_type: 'bearer'
       }
 
       const result = LoginResponseSchema.safeParse(response)
@@ -321,7 +321,7 @@ describe('API Schemas', () => {
       const response = {
         status: 'healthy',
         service: 'portfolio-api',
-        version: '1.0.0',
+        version: '1.0.0'
       }
 
       const result = HealthResponseSchema.safeParse(response)
@@ -338,9 +338,7 @@ describe('API Schemas', () => {
 
     it('should validate validation error array', () => {
       const error = {
-        detail: [
-          { loc: ['body', 'name'], msg: 'field required', type: 'value_error.missing' },
-        ],
+        detail: [{ loc: ['body', 'name'], msg: 'field required', type: 'value_error.missing' }]
       }
 
       const result = ErrorResponseSchema.safeParse(error)
@@ -356,7 +354,7 @@ describe('Validation Utilities', () => {
       name: 'Test',
       title: 'Engineer',
       description: 'Desc',
-      start_date: '2020-01-01',
+      start_date: '2020-01-01'
     }
 
     it('should return validated data for valid input', () => {
@@ -387,7 +385,7 @@ describe('Validation Utilities', () => {
       id: '1',
       name: 'Python',
       category: 'Languages',
-      proficiency_level: 90,
+      proficiency_level: 90
     }
 
     it('should return success result for valid data', () => {
@@ -417,7 +415,7 @@ describe('Validation Utilities', () => {
         institution: 'Uni',
         degree: 'BSc',
         field_of_study: 'CS',
-        start_date: '2020-01-01',
+        start_date: '2020-01-01'
       }
 
       const result = validateEducation(validData)

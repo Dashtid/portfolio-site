@@ -93,10 +93,7 @@ describe('useScrollAnimations', () => {
     })
 
     it('applies stagger delay to each element', () => {
-      const elements = [
-        ref<HTMLElement | null>(null),
-        ref<HTMLElement | null>(null)
-      ]
+      const elements = [ref<HTMLElement | null>(null), ref<HTMLElement | null>(null)]
 
       const results = useStaggeredAnimation(elements, { stagger: 100 })
 
@@ -104,10 +101,7 @@ describe('useScrollAnimations', () => {
     })
 
     it('combines stagger with custom delay', () => {
-      const elements = [
-        ref<HTMLElement | null>(null),
-        ref<HTMLElement | null>(null)
-      ]
+      const elements = [ref<HTMLElement | null>(null), ref<HTMLElement | null>(null)]
 
       const results = useStaggeredAnimation(elements, { stagger: 100, delay: 200 })
 
@@ -115,10 +109,7 @@ describe('useScrollAnimations', () => {
     })
 
     it('passes through animation options', () => {
-      const elements = [
-        ref<HTMLElement | null>(null),
-        ref<HTMLElement | null>(null)
-      ]
+      const elements = [ref<HTMLElement | null>(null), ref<HTMLElement | null>(null)]
 
       const results = useStaggeredAnimation(elements, {
         animation: 'slideUp',

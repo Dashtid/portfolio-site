@@ -70,7 +70,8 @@ describe('performance utility', () => {
         disconnect = vi.fn()
         takeRecords = vi.fn(() => [])
       }
-      global.PerformanceObserver = TrackingMockPerformanceObserver as unknown as typeof PerformanceObserver
+      global.PerformanceObserver =
+        TrackingMockPerformanceObserver as unknown as typeof PerformanceObserver
 
       await performanceMonitor.init()
 
@@ -146,7 +147,8 @@ describe('performance utility', () => {
         disconnect = vi.fn()
         takeRecords = vi.fn(() => [])
       }
-      global.PerformanceObserver = FailingPerformanceObserver as unknown as typeof PerformanceObserver
+      global.PerformanceObserver =
+        FailingPerformanceObserver as unknown as typeof PerformanceObserver
 
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
@@ -174,7 +176,7 @@ describe('performance utility', () => {
         fetchStart: 0
       }
 
-      mockGetEntriesByType.mockImplementation((type) => {
+      mockGetEntriesByType.mockImplementation(type => {
         if (type === 'navigation') return [mockNavigation]
         return []
       })
@@ -212,17 +214,44 @@ describe('performance utility', () => {
   describe('resource timing', () => {
     it('categorizes resources by type', async () => {
       const mockNavigation = {
-        domainLookupStart: 0, domainLookupEnd: 0, connectStart: 0, connectEnd: 0,
-        requestStart: 0, responseStart: 0, responseEnd: 0, domInteractive: 0,
-        domComplete: 0, loadEventStart: 0, loadEventEnd: 0, fetchStart: 0
+        domainLookupStart: 0,
+        domainLookupEnd: 0,
+        connectStart: 0,
+        connectEnd: 0,
+        requestStart: 0,
+        responseStart: 0,
+        responseEnd: 0,
+        domInteractive: 0,
+        domComplete: 0,
+        loadEventStart: 0,
+        loadEventEnd: 0,
+        fetchStart: 0
       }
       const mockResources = [
-        { name: 'image.jpg', startTime: 0, responseEnd: 100, transferSize: 1024, initiatorType: 'img' },
-        { name: 'script.js', startTime: 0, responseEnd: 50, transferSize: 2048, initiatorType: 'script' },
-        { name: 'style.css', startTime: 0, responseEnd: 30, transferSize: 512, initiatorType: 'link' }
+        {
+          name: 'image.jpg',
+          startTime: 0,
+          responseEnd: 100,
+          transferSize: 1024,
+          initiatorType: 'img'
+        },
+        {
+          name: 'script.js',
+          startTime: 0,
+          responseEnd: 50,
+          transferSize: 2048,
+          initiatorType: 'script'
+        },
+        {
+          name: 'style.css',
+          startTime: 0,
+          responseEnd: 30,
+          transferSize: 512,
+          initiatorType: 'link'
+        }
       ]
 
-      mockGetEntriesByType.mockImplementation((type) => {
+      mockGetEntriesByType.mockImplementation(type => {
         if (type === 'resource') return mockResources
         if (type === 'navigation') return [mockNavigation]
         return []
@@ -249,12 +278,21 @@ describe('performance utility', () => {
 
     it('handles empty resource arrays', async () => {
       const mockNavigation = {
-        domainLookupStart: 0, domainLookupEnd: 0, connectStart: 0, connectEnd: 0,
-        requestStart: 0, responseStart: 0, responseEnd: 0, domInteractive: 0,
-        domComplete: 0, loadEventStart: 0, loadEventEnd: 0, fetchStart: 0
+        domainLookupStart: 0,
+        domainLookupEnd: 0,
+        connectStart: 0,
+        connectEnd: 0,
+        requestStart: 0,
+        responseStart: 0,
+        responseEnd: 0,
+        domInteractive: 0,
+        domComplete: 0,
+        loadEventStart: 0,
+        loadEventEnd: 0,
+        fetchStart: 0
       }
 
-      mockGetEntriesByType.mockImplementation((type) => {
+      mockGetEntriesByType.mockImplementation(type => {
         if (type === 'navigation') return [mockNavigation]
         return []
       })
@@ -294,7 +332,7 @@ describe('performance utility', () => {
         fetchStart: 0
       }
 
-      mockGetEntriesByType.mockImplementation((type) => {
+      mockGetEntriesByType.mockImplementation(type => {
         if (type === 'navigation') return [mockNavigation]
         return []
       })
@@ -341,7 +379,7 @@ describe('performance utility', () => {
         fetchStart: 0
       }
 
-      mockGetEntriesByType.mockImplementation((type) => {
+      mockGetEntriesByType.mockImplementation(type => {
         if (type === 'navigation') return [mockNavigation]
         return []
       })

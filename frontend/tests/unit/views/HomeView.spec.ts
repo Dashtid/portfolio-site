@@ -8,68 +8,68 @@ import HomeView from '@/views/HomeView.vue'
 vi.mock('@/components/NavBar.vue', () => ({
   default: {
     name: 'NavBar',
-    template: '<nav data-testid="navbar">NavBar</nav>',
-  },
+    template: '<nav data-testid="navbar">NavBar</nav>'
+  }
 }))
 
 vi.mock('@/components/FooterSection.vue', () => ({
   default: {
     name: 'FooterSection',
-    template: '<footer data-testid="footer">Footer</footer>',
-  },
+    template: '<footer data-testid="footer">Footer</footer>'
+  }
 }))
 
 vi.mock('@/components/GitHubStats.vue', () => ({
   default: {
     name: 'GitHubStats',
     template: '<div data-testid="github-stats">GitHub Stats</div>',
-    props: ['username'],
-  },
+    props: ['username']
+  }
 }))
 
 vi.mock('@/components/BackToTop.vue', () => ({
   default: {
     name: 'BackToTop',
-    template: '<button data-testid="back-to-top">Back to Top</button>',
-  },
+    template: '<button data-testid="back-to-top">Back to Top</button>'
+  }
 }))
 
 vi.mock('@/components/DocumentCard.vue', () => ({
   default: {
     name: 'DocumentCard',
     template: '<div data-testid="document-card">Document Card</div>',
-    props: ['document'],
-  },
+    props: ['document']
+  }
 }))
 
 // Mock composables
 vi.mock('@/composables/useScrollAnimations', () => ({
-  useBatchAnimation: vi.fn(),
+  useBatchAnimation: vi.fn()
 }))
 
 // Mock API services
 vi.mock('@/api/services', () => ({
-  getDocuments: vi.fn().mockResolvedValue([]),
+  getDocuments: vi.fn().mockResolvedValue([])
 }))
 
 // Mock service worker
 Object.defineProperty(navigator, 'serviceWorker', {
   value: {
-    register: vi.fn().mockResolvedValue({}),
+    register: vi.fn().mockResolvedValue({})
   },
-  writable: true,
+  writable: true
 })
 
 const routes = [
   { path: '/', component: HomeView, name: 'home' },
-  { path: '/company/:id', component: { template: '<div />' }, name: 'company-detail' },
+  { path: '/company/:id', component: { template: '<div />' }, name: 'company-detail' }
 ]
 
 describe('HomeView', () => {
   const createWrapper = (options = {}) => {
     const router = createRouter({
       history: createMemoryHistory(),
-      routes,
+      routes
     })
 
     return mount(HomeView, {
@@ -82,21 +82,21 @@ describe('HomeView', () => {
                 companies: [],
                 projects: [],
                 education: [],
-                skills: [],
-              },
-            },
+                skills: []
+              }
+            }
           }),
-          router,
+          router
         ],
         stubs: {
           NavBar: true,
           FooterSection: true,
           GitHubStats: true,
           BackToTop: true,
-          DocumentCard: true,
-        },
+          DocumentCard: true
+        }
       },
-      ...options,
+      ...options
     })
   }
 
@@ -251,7 +251,7 @@ describe('HomeView', () => {
       await flushPromises()
 
       const sectionIcons = wrapper.findAll('.section-icon')
-      sectionIcons.forEach((icon) => {
+      sectionIcons.forEach(icon => {
         expect(icon.attributes('loading')).toBe('lazy')
       })
     })

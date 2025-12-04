@@ -15,8 +15,8 @@ const createTestRouter = (): Router => {
       { path: '/admin/login', component: { template: '<div>Login</div>' } },
       { path: '/admin/companies', component: { template: '<div>Companies</div>' } },
       { path: '/admin/skills', component: { template: '<div>Skills</div>' } },
-      { path: '/admin/projects', component: { template: '<div>Projects</div>' } },
-    ],
+      { path: '/admin/projects', component: { template: '<div>Projects</div>' } }
+    ]
   })
 }
 
@@ -39,39 +39,39 @@ describe('AdminDashboard', () => {
                   id: '1',
                   username: 'testuser',
                   name: 'Test User',
-                  avatar_url: 'https://example.com/avatar.jpg',
+                  avatar_url: 'https://example.com/avatar.jpg'
                 },
                 accessToken: 'test-token',
                 refreshToken: 'test-refresh',
                 isLoading: false,
-                error: null,
+                error: null
               },
               portfolio: {
                 companies: [
                   { id: '1', name: 'Company 1' },
-                  { id: '2', name: 'Company 2' },
+                  { id: '2', name: 'Company 2' }
                 ],
                 skills: [
                   { id: '1', name: 'Skill 1' },
                   { id: '2', name: 'Skill 2' },
-                  { id: '3', name: 'Skill 3' },
+                  { id: '3', name: 'Skill 3' }
                 ],
                 projects: [
                   { id: '1', name: 'Project 1', featured: true },
                   { id: '2', name: 'Project 2', featured: false },
                   { id: '3', name: 'Project 3', featured: true },
-                  { id: '4', name: 'Project 4', featured: false },
+                  { id: '4', name: 'Project 4', featured: false }
                 ],
                 education: [],
                 isLoading: false,
-                error: null,
-              },
-            },
+                error: null
+              }
+            }
           }),
-          router,
-        ],
+          router
+        ]
       },
-      ...options,
+      ...options
     })
   }
 
@@ -128,20 +128,20 @@ describe('AdminDashboard', () => {
                     id: '1',
                     username: 'testuser',
                     name: '',
-                    avatar_url: null,
+                    avatar_url: null
                   },
-                  accessToken: 'test-token',
+                  accessToken: 'test-token'
                 },
                 portfolio: {
                   companies: [],
                   skills: [],
-                  projects: [],
-                },
-              },
+                  projects: []
+                }
+              }
             }),
-            router,
-          ],
-        },
+            router
+          ]
+        }
       })
 
       const userName = wrapper.find('.user-name')
@@ -275,18 +275,18 @@ describe('AdminDashboard', () => {
               initialState: {
                 auth: {
                   user: { id: '1', username: 'test' },
-                  accessToken: 'test',
+                  accessToken: 'test'
                 },
                 portfolio: {
                   companies: [],
                   skills: [],
-                  projects: [],
-                },
-              },
+                  projects: []
+                }
+              }
             }),
-            router,
-          ],
-        },
+            router
+          ]
+        }
       })
 
       const statValues = wrapper.findAll('.stat-value')

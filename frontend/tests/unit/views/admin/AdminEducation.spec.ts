@@ -11,8 +11,8 @@ vi.mock('@/api/client', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
-    delete: vi.fn(),
-  },
+    delete: vi.fn()
+  }
 }))
 
 // Mock window.alert and window.confirm
@@ -27,8 +27,8 @@ const createTestRouter = (): Router => {
     history: createWebHistory(),
     routes: [
       { path: '/admin/education', component: { template: '<div>Education</div>' } },
-      { path: '/admin/login', component: { template: '<div>Login</div>' } },
-    ],
+      { path: '/admin/login', component: { template: '<div>Login</div>' } }
+    ]
   })
 }
 
@@ -47,7 +47,7 @@ describe('AdminEducation', () => {
       description: 'Specialized in AI and Machine Learning',
       is_certification: false,
       certificate_number: '',
-      order: 1,
+      order: 1
     },
     {
       id: '2',
@@ -60,7 +60,7 @@ describe('AdminEducation', () => {
       description: '',
       is_certification: true,
       certificate_number: 'AWS-SAP-123456',
-      order: 2,
+      order: 2
     },
     {
       id: '3',
@@ -73,8 +73,8 @@ describe('AdminEducation', () => {
       description: '',
       is_certification: false,
       certificate_number: '',
-      order: 0,
-    },
+      order: 0
+    }
   ]
 
   const createWrapper = async (): Promise<VueWrapper> => {
@@ -91,16 +91,16 @@ describe('AdminEducation', () => {
               auth: {
                 user: { id: '1', username: 'admin' },
                 accessToken: 'test-token',
-                refreshToken: 'test-refresh',
-              },
-            },
+                refreshToken: 'test-refresh'
+              }
+            }
           }),
-          router,
+          router
         ],
         stubs: {
-          teleport: true,
-        },
-      },
+          teleport: true
+        }
+      }
     })
   }
 
@@ -149,7 +149,7 @@ describe('AdminEducation', () => {
 
     it('should display empty state for degrees when none exist', async () => {
       vi.mocked(api.get).mockResolvedValue({
-        data: mockEducationData.filter(e => e.is_certification),
+        data: mockEducationData.filter(e => e.is_certification)
       })
 
       const wrapper = await createWrapper()
@@ -160,7 +160,7 @@ describe('AdminEducation', () => {
 
     it('should display empty state for certifications when none exist', async () => {
       vi.mocked(api.get).mockResolvedValue({
-        data: mockEducationData.filter(e => !e.is_certification),
+        data: mockEducationData.filter(e => !e.is_certification)
       })
 
       const wrapper = await createWrapper()
@@ -182,9 +182,9 @@ describe('AdminEducation', () => {
         data: [
           {
             ...mockEducationData[0],
-            end_date: null,
-          },
-        ],
+            end_date: null
+          }
+        ]
       })
 
       const wrapper = await createWrapper()
@@ -236,18 +236,18 @@ describe('AdminEducation', () => {
       await wrapper.find('.btn-primary').trigger('click')
 
       // Initially certificate number should not be visible
-      expect(wrapper.findAll('input').some(i =>
-        i.element.parentElement?.textContent?.includes('Certificate Number')
-      )).toBe(false)
+      expect(
+        wrapper
+          .findAll('input')
+          .some(i => i.element.parentElement?.textContent?.includes('Certificate Number'))
+      ).toBe(false)
 
       // Check the certification checkbox
       await wrapper.find('#is_certification').setValue(true)
 
       // Now certificate number should be visible
       const formGroups = wrapper.findAll('.form-group')
-      const hasCertField = formGroups.some(fg =>
-        fg.text().includes('Certificate Number')
-      )
+      const hasCertField = formGroups.some(fg => fg.text().includes('Certificate Number'))
       expect(hasCertField).toBe(true)
     })
 
@@ -292,7 +292,7 @@ describe('AdminEducation', () => {
         '/education/',
         expect.objectContaining({
           institution: 'New University',
-          degree: 'PhD',
+          degree: 'PhD'
         })
       )
     })
@@ -428,13 +428,13 @@ describe('AdminEducation', () => {
                 auth: {
                   user: null,
                   accessToken: null,
-                  refreshToken: null,
-                },
-              },
+                  refreshToken: null
+                }
+              }
             }),
-            router,
-          ],
-        },
+            router
+          ]
+        }
       })
 
       await flushPromises()

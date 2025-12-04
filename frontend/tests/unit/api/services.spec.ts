@@ -348,8 +348,12 @@ describe('API services', () => {
 
       global.localStorage = {
         getItem: vi.fn((key: string) => mockLocalStorage[key] || null),
-        setItem: vi.fn((key: string, value: string) => { mockLocalStorage[key] = value }),
-        removeItem: vi.fn((key: string) => { delete mockLocalStorage[key] }),
+        setItem: vi.fn((key: string, value: string) => {
+          mockLocalStorage[key] = value
+        }),
+        removeItem: vi.fn((key: string) => {
+          delete mockLocalStorage[key]
+        }),
         clear: vi.fn(),
         length: 0,
         key: vi.fn()

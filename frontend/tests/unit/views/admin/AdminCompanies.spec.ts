@@ -9,8 +9,8 @@ vi.mock('@/api/client', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
-    delete: vi.fn(),
-  },
+    delete: vi.fn()
+  }
 }))
 
 // Mock window.alert and window.confirm
@@ -30,7 +30,7 @@ describe('AdminCompanies', () => {
       location: 'Stockholm, Sweden',
       description: 'Worked on various projects',
       technologies: ['Python', 'FastAPI'],
-      order_index: 1,
+      order_index: 1
     },
     {
       id: '2',
@@ -41,17 +41,17 @@ describe('AdminCompanies', () => {
       location: 'Remote',
       description: 'Leading a team',
       technologies: ['Vue.js', 'TypeScript'],
-      order_index: 2,
-    },
+      order_index: 2
+    }
   ]
 
   const createWrapper = (): VueWrapper => {
     return mount(AdminCompanies, {
       global: {
         stubs: {
-          teleport: true,
-        },
-      },
+          teleport: true
+        }
+      }
     })
   }
 
@@ -80,9 +80,7 @@ describe('AdminCompanies', () => {
 
     it('should display loading state while fetching', async () => {
       // Create a promise that never resolves to keep loading state
-      vi.mocked(apiClient.get).mockImplementation(
-        () => new Promise(() => {})
-      )
+      vi.mocked(apiClient.get).mockImplementation(() => new Promise(() => {}))
 
       const wrapper = createWrapper()
       // Need to wait for nextTick to let Vue render the loading state
@@ -223,7 +221,7 @@ describe('AdminCompanies', () => {
           name: 'New Company',
           title: 'Developer',
           start_date: '2023-01-01',
-          location: 'Stockholm',
+          location: 'Stockholm'
         })
       )
       expect(mockAlert).toHaveBeenCalledWith('Company added successfully')
@@ -260,7 +258,7 @@ describe('AdminCompanies', () => {
       expect(apiClient.put).toHaveBeenCalledWith(
         '/api/v1/companies/1',
         expect.objectContaining({
-          name: 'Updated Company',
+          name: 'Updated Company'
         })
       )
       expect(mockAlert).toHaveBeenCalledWith('Company updated successfully')

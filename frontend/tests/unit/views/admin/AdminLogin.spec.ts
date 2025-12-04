@@ -10,11 +10,11 @@ describe('AdminLogin', () => {
       global: {
         plugins: [
           createTestingPinia({
-            createSpy: vi.fn,
-          }),
-        ],
+            createSpy: vi.fn
+          })
+        ]
       },
-      ...options,
+      ...options
     })
   }
 

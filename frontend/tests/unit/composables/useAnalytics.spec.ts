@@ -101,7 +101,10 @@ describe('useAnalytics', () => {
     analytics.trackExternalLink('https://example.com')
 
     expect(analyticsUtils.trackOutboundLink).toHaveBeenCalledWith('https://example.com')
-    expect(analyticsUtils.trackEvent).not.toHaveBeenCalledWith(expect.stringContaining('External Link'), expect.any(Object))
+    expect(analyticsUtils.trackEvent).not.toHaveBeenCalledWith(
+      expect.stringContaining('External Link'),
+      expect.any(Object)
+    )
   })
 
   it('tracks contact method', () => {
@@ -136,7 +139,9 @@ describe('useAnalytics', () => {
 
     analytics.trackGitHubStats('testuser')
 
-    expect(analyticsUtils.trackEvent).toHaveBeenCalledWith('GitHub Stats Viewed', { username: 'testuser' })
+    expect(analyticsUtils.trackEvent).toHaveBeenCalledWith('GitHub Stats Viewed', {
+      username: 'testuser'
+    })
   })
 
   it('tracks back to top button clicks', () => {

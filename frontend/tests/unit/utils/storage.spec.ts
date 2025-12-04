@@ -18,13 +18,13 @@ const mockLocalStorage = (() => {
     get length() {
       return Object.keys(store).length
     },
-    key: vi.fn((index: number) => Object.keys(store)[index] || null),
+    key: vi.fn((index: number) => Object.keys(store)[index] || null)
   }
 })()
 
 Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
-  writable: true,
+  writable: true
 })
 
 describe('Storage Utility', () => {
@@ -102,18 +102,15 @@ describe('Storage Utility', () => {
       const data = { theme: 'dark', language: 'en' }
       const result = storage.setJSON(STORAGE_KEYS.USER_PREFERENCES, data)
       expect(result).toBe(true)
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-        'userPreferences',
-        JSON.stringify(data)
-      )
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('userPreferences', JSON.stringify(data))
     })
 
     it('should handle nested objects', () => {
       const data = {
         preferences: {
           theme: 'dark',
-          notifications: { email: true, push: false },
-        },
+          notifications: { email: true, push: false }
+        }
       }
       const result = storage.setJSON(STORAGE_KEYS.USER_PREFERENCES, data)
       expect(result).toBe(true)

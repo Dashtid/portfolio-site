@@ -20,9 +20,15 @@ describe('API client', () => {
     mockLocalStorage = {}
     global.localStorage = {
       getItem: vi.fn((key: string) => mockLocalStorage[key] || null),
-      setItem: vi.fn((key: string, value: string) => { mockLocalStorage[key] = value }),
-      removeItem: vi.fn((key: string) => { delete mockLocalStorage[key] }),
-      clear: vi.fn(() => { mockLocalStorage = {} }),
+      setItem: vi.fn((key: string, value: string) => {
+        mockLocalStorage[key] = value
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete mockLocalStorage[key]
+      }),
+      clear: vi.fn(() => {
+        mockLocalStorage = {}
+      }),
       length: 0,
       key: vi.fn()
     } as any
@@ -148,10 +154,9 @@ describe('API client', () => {
       await errorInterceptor(error)
 
       // Verify refresh endpoint was called
-      expect(axios.post).toHaveBeenCalledWith(
-        'http://localhost:8001/api/v1/auth/refresh',
-        { refresh_token: refreshToken }
-      )
+      expect(axios.post).toHaveBeenCalledWith('http://localhost:8001/api/v1/auth/refresh', {
+        refresh_token: refreshToken
+      })
 
       // Verify tokens were updated
       expect(localStorage.setItem).toHaveBeenCalledWith('accessToken', newAccessToken)
