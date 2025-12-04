@@ -51,7 +51,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   min-height: 100vh;
 }
 
-[data-theme="dark"] .loading-container.full-screen {
+[data-theme='dark'] .loading-container.full-screen {
   background: rgba(0, 0, 0, 0.95);
 }
 
@@ -125,7 +125,8 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -135,12 +136,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
 
 /* Skeleton loader variant */
 .skeleton-loader {
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 25%,
-    #e0e0e0 50%,
-    #f0f0f0 75%
-  );
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
   border-radius: 4px;
@@ -155,13 +151,8 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   }
 }
 
-[data-theme="dark"] .skeleton-loader {
-  background: linear-gradient(
-    90deg,
-    #2a2a2a 25%,
-    #3a3a3a 50%,
-    #2a2a2a 75%
-  );
+[data-theme='dark'] .skeleton-loader {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
   background-size: 200% 100%;
 }
 </style>

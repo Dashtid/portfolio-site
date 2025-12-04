@@ -39,6 +39,13 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        IntersectionObserver: 'readonly',
+        IntersectionObserverEntry: 'readonly',
+        IntersectionObserverInit: 'readonly',
+        ResizeObserver: 'readonly',
+        MutationObserver: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
         // Node globals
         process: 'readonly',
         __dirname: 'readonly',
