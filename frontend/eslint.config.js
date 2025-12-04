@@ -71,6 +71,7 @@ export default [
         performance: 'readonly',
         location: 'readonly',
         history: 'readonly',
+        queueMicrotask: 'readonly',
         // Node globals
         process: 'readonly',
         __dirname: 'readonly',

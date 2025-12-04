@@ -24,7 +24,7 @@
 
 interface Props {
   url: string
-  title: string
+  title?: string
   heading?: string | null
 }
 

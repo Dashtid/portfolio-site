@@ -7,7 +7,7 @@
 
     <div v-else-if="error" class="error-message">
       <p>Failed to load GitHub stats</p>
-      <button @click="fetchGitHubStats" class="retry-button">Retry</button>
+      <button class="retry-button" @click="fetchGitHubStats">Retry</button>
     </div>
 
     <div v-else-if="stats" class="stats-container">

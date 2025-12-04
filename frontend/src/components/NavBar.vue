@@ -7,10 +7,10 @@
   >
     <div class="container">
       <a
+        aria-label="David Dashti - Home"
         class="navbar-brand"
         href="#hero"
         @click="scrollToSection('hero')"
-        aria-label="David Dashti - Home"
       >
         <img
           src="/images/D-dark.svg"
@@ -32,9 +32,9 @@
       >
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
+      <div id="navbarNav" class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item" v-for="item in navItems" :key="item.href">
+          <li v-for="item in navItems" :key="item.href" class="nav-item">
             <a
               class="nav-link"
               :class="{ active: activeSection === item.href }"
