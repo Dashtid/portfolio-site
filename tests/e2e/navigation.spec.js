@@ -1,11 +1,28 @@
 import { test, expect } from '@playwright/test'
 
+// Helper function to open mobile menu if needed
+async function openMobileMenuIfNeeded(page) {
+  const toggle = page.locator('.navbar-toggler')
+  const isToggleVisible = await toggle.isVisible()
+  if (isToggleVisible) {
+    const menu = page.locator('.navbar-collapse')
+    const hasShowClass = await menu.evaluate((el) => el.classList.contains('show'))
+    if (!hasShowClass) {
+      await toggle.click()
+      await page.waitForTimeout(300)
+    }
+  }
+}
+
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
 
   test('navigates to sections via navbar links', async ({ page }) => {
+    // Open mobile menu if on mobile viewport
+    await openMobileMenuIfNeeded(page)
+
     // Click on Experience link
     await page.getByRole('link', { name: /experience/i }).first().click()
     await page.waitForTimeout(500) // Wait for smooth scroll
@@ -16,6 +33,7 @@ test.describe('Navigation', () => {
   })
 
   test('navigates to Education section', async ({ page }) => {
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /education/i }).first().click()
     await page.waitForTimeout(500)
 
@@ -24,6 +42,7 @@ test.describe('Navigation', () => {
   })
 
   test('navigates to Projects section', async ({ page }) => {
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /projects/i }).first().click()
     await page.waitForTimeout(500)
 
@@ -32,6 +51,7 @@ test.describe('Navigation', () => {
   })
 
   test('navigates to About section', async ({ page }) => {
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /about/i }).first().click()
     await page.waitForTimeout(500)
 
@@ -40,6 +60,7 @@ test.describe('Navigation', () => {
   })
 
   test('navigates to Contact section', async ({ page }) => {
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /contact/i }).first().click()
     await page.waitForTimeout(500)
 
@@ -49,10 +70,12 @@ test.describe('Navigation', () => {
 
   test('home link navigates to hero', async ({ page }) => {
     // First navigate away from hero
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /contact/i }).first().click()
     await page.waitForTimeout(500)
 
     // Click home link
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /home/i }).first().click()
     await page.waitForTimeout(500)
 
@@ -63,10 +86,11 @@ test.describe('Navigation', () => {
 
   test('logo link navigates to top', async ({ page }) => {
     // Scroll down
+    await openMobileMenuIfNeeded(page)
     await page.getByRole('link', { name: /contact/i }).first().click()
     await page.waitForTimeout(500)
 
-    // Click logo/brand
+    // Click logo/brand (always visible even on mobile)
     await page.locator('.navbar-brand').click()
     await page.waitForTimeout(500)
 
