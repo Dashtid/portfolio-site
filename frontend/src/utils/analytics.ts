@@ -59,9 +59,14 @@ class Analytics {
    * Initialize Plausible Analytics
    */
   private initPlausible(): void {
+    if (!this.siteId) {
+      analyticsLogger.warn('Plausible site ID not configured')
+      return
+    }
+
     const script = document.createElement('script')
     script.defer = true
-    script.setAttribute('data-domain', this.siteId!)
+    script.setAttribute('data-domain', this.siteId)
     script.src = this.scriptUrl || 'https://plausible.io/js/script.js'
 
     // Optional: track outbound links
@@ -76,9 +81,14 @@ class Analytics {
    * Initialize Umami Analytics
    */
   private initUmami(): void {
+    if (!this.siteId) {
+      analyticsLogger.warn('Umami site ID not configured')
+      return
+    }
+
     const script = document.createElement('script')
     script.defer = true
-    script.setAttribute('data-website-id', this.siteId!)
+    script.setAttribute('data-website-id', this.siteId)
     script.src = this.scriptUrl || 'https://analytics.umami.is/script.js'
 
     document.head.appendChild(script)

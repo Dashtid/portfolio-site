@@ -61,7 +61,12 @@ export function preloadImage(src: string, priority: 'auto' | 'high' = 'auto'): v
  */
 export function createPlaceholder(width: number = 40, height: number = 30): string {
   const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+
+  if (!ctx) {
+    // Return a simple gray placeholder if canvas context unavailable
+    return 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='
+  }
 
   canvas.width = width
   canvas.height = height
@@ -143,7 +148,12 @@ export async function optimizeImage(
 
       img.onload = () => {
         const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')!
+        const ctx = canvas.getContext('2d')
+
+        if (!ctx) {
+          reject(new Error('Canvas context not available'))
+          return
+        }
 
         // Calculate new dimensions
         let { width, height } = img
@@ -184,7 +194,11 @@ export async function optimizeImage(
         reject(new Error('Failed to load image'))
       }
 
-      img.src = e.target!.result as string
+      if (e.target?.result) {
+        img.src = e.target.result as string
+      } else {
+        reject(new Error('Failed to read file result'))
+      }
     }
 
     reader.onerror = () => {
@@ -243,7 +257,7 @@ export class ImageLazyLoader {
         }
 
         img.classList.add('lazy-loaded')
-        this.observer!.unobserve(img)
+        this.observer?.unobserve(img)
       }
     })
   }
