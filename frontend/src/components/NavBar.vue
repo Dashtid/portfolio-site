@@ -21,18 +21,22 @@
         />
         David Dashti
       </a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation menu"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div id="navbarNav" class="collapse navbar-collapse">
+      <!-- Theme toggle always visible on mobile -->
+      <div class="d-flex align-items-center order-lg-2">
+        <ThemeToggle />
+        <button
+          class="navbar-toggler ms-2 d-lg-none"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation menu"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+      <div id="navbarNav" class="collapse navbar-collapse order-lg-1">
         <ul class="navbar-nav ms-auto">
           <li v-for="item in navItems" :key="item.href" class="nav-item">
             <a
@@ -45,9 +49,6 @@
             >
               {{ item.name }}
             </a>
-          </li>
-          <li class="nav-item ms-2">
-            <ThemeToggle />
           </li>
         </ul>
       </div>
