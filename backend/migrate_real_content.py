@@ -72,9 +72,9 @@ async def populate_companies():
                     "order_index": 3,
                 },
                 {
-                    "name": "Södersjukhuset - SÖS",
-                    "title": "Radiology Support",
-                    "description": "Supported radiology equipment and IT system management in a radiology department, contributing to contract evaluations, participating in workgroups, analyzing IT systems for operational improvements, assisting with workflow optimization, and maintaining system documentation.",
+                    "name": "Södersjukhuset (SÖS)",
+                    "title": "Biomedical Engineer",
+                    "description": "Biomedical Engineer in the radiology department, managing radiology equipment and IT systems, contributing to contract evaluations, participating in workgroups, analyzing IT systems for operational improvements, assisting with workflow optimization, and maintaining system documentation.",
                     "location": "Stockholm, Sweden",
                     "start_date": date(2019, 1, 1),
                     "end_date": date(2020, 6, 1),

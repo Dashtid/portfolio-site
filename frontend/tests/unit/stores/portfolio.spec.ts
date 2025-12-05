@@ -50,9 +50,9 @@ const mockCompanies = [
 ]
 
 const mockSkills = [
-  { id: '1', name: 'Python', category: 'programming', proficiency_level: 90 },
-  { id: '2', name: 'TypeScript', category: 'programming', proficiency_level: 85 },
-  { id: '3', name: 'Docker', category: 'devops', proficiency_level: 80 }
+  { id: '1', name: 'Python', category: 'Technical', proficiency_level: 90 },
+  { id: '2', name: 'Docker', category: 'Technical', proficiency_level: 85 },
+  { id: '3', name: 'Cybersecurity', category: 'Domain Expertise', proficiency_level: 80 }
 ]
 
 const mockProjects = [
@@ -191,8 +191,8 @@ describe('Portfolio Store', () => {
 
         const grouped = store.skillsByCategory
 
-        expect(grouped['programming']).toHaveLength(2)
-        expect(grouped['devops']).toHaveLength(1)
+        expect(grouped['Technical']).toHaveLength(2)
+        expect(grouped['Domain Expertise']).toHaveLength(1)
       })
 
       it('should return empty object for no skills', () => {
