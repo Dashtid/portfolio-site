@@ -2,8 +2,6 @@
 Tests for health check endpoints
 """
 
-from unittest.mock import AsyncMock, patch
-
 from fastapi.testclient import TestClient
 
 

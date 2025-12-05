@@ -9,8 +9,8 @@ Run on Fly.io:
     cd /app
     python populate_projects_postgres.py
 """
+
 import asyncio
-import json
 import sys
 import uuid
 from pathlib import Path
@@ -19,9 +19,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from sqlalchemy import delete, select
+
 from app.database import AsyncSessionLocal
 from app.models.project import Project
-
 
 # Projects data extracted from dashti.se GitHub section
 # Note: technologies should be a list, NOT json.dumps() - SQLAlchemy JSON column handles serialization
@@ -43,7 +43,14 @@ PROJECTS_DATA = [
         "name": "Biomedical AI",
         "description": "Medical image segmentation using U-Net architectures. Deep learning models for automated analysis of medical imaging data.",
         "detailed_description": "Implementation of U-Net and other deep learning architectures for medical image segmentation tasks. Includes pre-processing pipelines for various medical imaging modalities, model training utilities, and evaluation metrics specific to healthcare applications.",
-        "technologies": ["Python", "TensorFlow", "PyTorch", "U-Net", "Medical Imaging", "Deep Learning"],
+        "technologies": [
+            "Python",
+            "TensorFlow",
+            "PyTorch",
+            "U-Net",
+            "Medical Imaging",
+            "Deep Learning",
+        ],
         "github_url": "https://github.com/Dashtid/biomedical-ai",
         "live_url": None,
         "image_url": "/images/projects/biomedical-ai.png",
@@ -91,7 +98,15 @@ PROJECTS_DATA = [
         "name": "Portfolio Site",
         "description": "Professional portfolio website built with Vue 3 and FastAPI. Features dynamic content management, GitHub OAuth, and CI/CD deployment.",
         "detailed_description": "Modern, production-ready portfolio website with dynamic content management, authentication, and comprehensive testing. Built with Vue 3 + TypeScript frontend and FastAPI + PostgreSQL backend. Deployed on Vercel (frontend) and Fly.io (backend) with automated CI/CD pipelines.",
-        "technologies": ["Vue.js", "TypeScript", "FastAPI", "Python", "PostgreSQL", "Docker", "CI/CD"],
+        "technologies": [
+            "Vue.js",
+            "TypeScript",
+            "FastAPI",
+            "Python",
+            "PostgreSQL",
+            "Docker",
+            "CI/CD",
+        ],
         "github_url": "https://github.com/Dashtid/portfolio-site",
         "live_url": "https://portfolio-site-jade-five.vercel.app",
         "image_url": "/images/projects/portfolio-site.png",
@@ -159,7 +174,9 @@ async def populate_projects():
             featured = "[*]" if p.featured else "   "
             print(f"{featured} {p.order_index}. {p.name}")
         print("-" * 70)
-        print(f"Total: {len(projects)} projects ({sum(1 for p in projects if p.featured)} featured)")
+        print(
+            f"Total: {len(projects)} projects ({sum(1 for p in projects if p.featured)} featured)"
+        )
         print("=" * 70)
         print()
         print("[SUCCESS] Projects populated successfully!")

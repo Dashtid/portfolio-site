@@ -254,7 +254,7 @@ describe('AdminDashboard', () => {
     })
 
     it('should fetch all data on mount', async () => {
-      const wrapper = await createWrapper()
+      await createWrapper()
       const portfolioStore = usePortfolioStore()
 
       expect(portfolioStore.fetchAllData).toHaveBeenCalled()

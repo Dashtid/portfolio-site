@@ -300,7 +300,7 @@ describe('AdminCompanies', () => {
       vi.mocked(apiClient.get).mockRejectedValue(new Error('Network error'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      const wrapper = createWrapper()
+      createWrapper()
       await flushPromises()
 
       expect(mockAlert).toHaveBeenCalledWith('Failed to load companies')

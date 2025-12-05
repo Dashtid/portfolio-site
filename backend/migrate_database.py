@@ -3,6 +3,8 @@ Database migration script to add missing columns to portfolio.db
 """
 
 import sqlite3
+import sys
+import traceback
 from pathlib import Path
 
 DATABASE_PATH = Path(__file__).parent / "portfolio.db"
@@ -120,8 +122,6 @@ def main():
 
     except Exception as e:
         print(f"[-] ERROR during migration: {type(e).__name__}: {e}")
-        import traceback
-
         traceback.print_exc()
         return 1
     else:
@@ -129,4 +129,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

@@ -3,9 +3,8 @@ Tests for security utilities
 """
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 import jwt
 
 from app.core.security import (
@@ -121,6 +120,7 @@ class TestAccessToken:
 
         # Decode with the actual settings
         from app.config import settings
+
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         assert payload.get("sub") == subject
 
@@ -129,6 +129,7 @@ class TestAccessToken:
         token = create_access_token(subject="test_user")
 
         from app.config import settings
+
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         assert payload.get("type") == "access"
 
@@ -156,6 +157,7 @@ class TestRefreshToken:
         token = create_refresh_token(subject="test_user")
 
         from app.config import settings
+
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         assert payload.get("type") == "refresh"
 

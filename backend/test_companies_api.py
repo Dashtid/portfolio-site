@@ -4,6 +4,7 @@ Test script to diagnose Companies API serialization issue
 
 import asyncio
 import sys
+import traceback
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -50,10 +51,8 @@ async def test_companies():
                     print("✓ Pydantic serialization SUCCESS")
                     print(f"  Response: {response.model_dump_json()[:200]}...")
                 except Exception as e:
-                    print("✗ Pydantic serialization FAILED:")
+                    print("[FAIL] Pydantic serialization FAILED:")
                     print(f"  Error: {type(e).__name__}: {e}")
-                    import traceback
-
                     traceback.print_exc()
         else:
             print("No companies found in database!")

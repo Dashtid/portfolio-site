@@ -419,7 +419,7 @@ describe('AdminEducation', () => {
       await router.push('/admin/education')
       await router.isReady()
 
-      const wrapper = mount(AdminEducation, {
+      mount(AdminEducation, {
         global: {
           plugins: [
             createTestingPinia({

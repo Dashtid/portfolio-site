@@ -1,15 +1,17 @@
 """
 Update production database with COMPLETE experience data including all media (YouTube + Google Maps)
 """
+
 import asyncio
-import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import delete
+
 from app.database import AsyncSessionLocal
 from app.models.company import Company
 
@@ -56,13 +58,13 @@ async def update_complete_data_with_media():
                         "Autonomous troubleshooting and case management (2016)",
                         "Technical documentation creation",
                         "Cross-functional collaboration across production chain",
-                        "Work procedure establishment"
+                        "Work procedure establishment",
                     ],
                     "technologies": [
                         "Engine analysis systems",
                         "Manufacturing troubleshooting tools",
-                        "Production documentation systems"
-                    ]
+                        "Production documentation systems",
+                    ],
                 },
                 {
                     "name": "Finnish Defence Forces - Nyland Brigade",
@@ -98,13 +100,13 @@ async def update_complete_data_with_media():
                         "Leadership of 30-person tactical unit",
                         "Training schedule management",
                         "Personnel development and welfare",
-                        "Tactical coordination and decision-making"
+                        "Tactical coordination and decision-making",
                     ],
                     "technologies": [
                         "Military command systems",
                         "Tactical communication equipment",
-                        "Personnel management systems"
-                    ]
+                        "Personnel management systems",
+                    ],
                 },
                 {
                     "name": "Hermes Medical Solutions AB",
@@ -152,7 +154,7 @@ async def update_complete_data_with_media():
                         "DICOM protocol implementation",
                         "Enterprise architecture development",
                         "Security assessment and controls",
-                        "Cross-functional team collaboration"
+                        "Cross-functional team collaboration",
                     ],
                     "technologies": [
                         "Windows Server",
@@ -160,8 +162,8 @@ async def update_complete_data_with_media():
                         "PowerShell",
                         "Git",
                         "Python",
-                        "DICOM protocols"
-                    ]
+                        "DICOM protocols",
+                    ],
                 },
                 {
                     "name": "Södersjukhuset (SÖS)",
@@ -189,15 +191,15 @@ async def update_complete_data_with_media():
                         "Medical imaging equipment interface support",
                         "Clinical workflow optimization",
                         "Cross-functional collaboration",
-                        "ISO 13485 compliance"
+                        "ISO 13485 compliance",
                     ],
                     "technologies": [
                         "PACS",
                         "DICOM",
                         "Medical imaging equipment",
                         "Healthcare IT infrastructure",
-                        "ISO 13485"
-                    ]
+                        "ISO 13485",
+                    ],
                 },
                 {
                     "name": "SoftPro Medical Solutions",
@@ -228,15 +230,15 @@ Integration of Medusa inventory management system with radiology workflows to im
                         "Radiology workflow optimization",
                         "Quality assurance process improvement",
                         "Healthcare IT integration design",
-                        "Master's thesis research and documentation"
+                        "Master's thesis research and documentation",
                     ],
                     "technologies": [
                         "Medusa inventory management",
                         "RIS (Radiology Information Systems)",
                         "Healthcare IT integration",
                         "Quality management systems",
-                        "Medical equipment tracking"
-                    ]
+                        "Medical equipment tracking",
+                    ],
                 },
                 {
                     "name": "Karolinska University Hospital",
@@ -263,7 +265,7 @@ Integration of Medusa inventory management system with radiology workflows to im
                         "Primary resource for diagnostic imaging systems",
                         "RIS/PACS system integration",
                         "Hospital Information System connectivity",
-                        "Active Directory management"
+                        "Active Directory management",
                     ],
                     "technologies": [
                         "GE Medical Systems",
@@ -273,8 +275,8 @@ Integration of Medusa inventory management system with radiology workflows to im
                         "HL7",
                         "Active Directory",
                         "ITIL",
-                        "RIS/PACS"
-                    ]
+                        "RIS/PACS",
+                    ],
                 },
                 {
                     "name": "Philips AB",
@@ -303,7 +305,7 @@ Integration of Medusa inventory management system with radiology workflows to im
                         "Quality assurance collaboration",
                         "Primary Nordic contact",
                         "Engineer mentorship",
-                        "Dotted-line support for UK & Ireland"
+                        "Dotted-line support for UK & Ireland",
                     ],
                     "technologies": [
                         "Intellispace Portal (ISP)",
@@ -312,9 +314,9 @@ Integration of Medusa inventory management system with radiology workflows to im
                         "Broker engines",
                         "Enterprise architecture",
                         "PACS systems",
-                        "Medical imaging workflows"
-                    ]
-                }
+                        "Medical imaging workflows",
+                    ],
+                },
             ]
 
             # Create companies with all details
@@ -322,9 +324,13 @@ Integration of Medusa inventory management system with radiology workflows to im
             for company_dict in companies_data:
                 # Convert date strings to date objects
                 if company_dict.get("start_date"):
-                    company_dict["start_date"] = datetime.fromisoformat(company_dict["start_date"]).date()
+                    company_dict["start_date"] = datetime.fromisoformat(
+                        company_dict["start_date"]
+                    ).date()
                 if company_dict.get("end_date"):
-                    company_dict["end_date"] = datetime.fromisoformat(company_dict["end_date"]).date()
+                    company_dict["end_date"] = datetime.fromisoformat(
+                        company_dict["end_date"]
+                    ).date()
 
                 company = Company(**company_dict)
                 db.add(company)
@@ -332,7 +338,9 @@ Integration of Medusa inventory management system with radiology workflows to im
                 print(f"[OK] Added: {company.name}")
 
             await db.commit()
-            print(f"\n[SUCCESS] Updated {count} companies with COMPLETE data (descriptions + media)!")
+            print(
+                f"\n[SUCCESS] Updated {count} companies with COMPLETE data (descriptions + media)!"
+            )
 
         except Exception as e:
             print(f"[ERROR] Error updating data: {e}")

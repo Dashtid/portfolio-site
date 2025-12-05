@@ -38,14 +38,13 @@ describe('API services', () => {
     const mockCompany: Company = {
       id: '1',
       name: 'Test Company',
-      role: 'Developer',
+      title: 'Developer',
       start_date: '2020-01-01',
       end_date: '2022-01-01',
       description: 'Test description',
       technologies: ['TypeScript', 'Vue'],
-      logo: '/logo.png',
-      website: 'https://test.com',
-      display_order: 1
+      logo_url: '/logo.png',
+      website: 'https://test.com'
     }
 
     it('gets all companies', async () => {
@@ -103,13 +102,11 @@ describe('API services', () => {
       id: '1',
       institution: 'Test University',
       degree: 'Bachelor of Science',
-      field: 'Computer Science',
+      field_of_study: 'Computer Science',
       start_date: '2016-09-01',
       end_date: '2020-06-01',
       description: 'Test education',
-      grade: 'A',
-      logo: '/uni-logo.png',
-      display_order: 1
+      logo_url: '/uni-logo.png'
     }
 
     it('gets all education', async () => {
@@ -165,16 +162,13 @@ describe('API services', () => {
   describe('Project APIs', () => {
     const mockProject: Project = {
       id: '1',
-      title: 'Test Project',
+      name: 'Test Project',
       description: 'Test description',
       technologies: ['Vue', 'TypeScript'],
       github_url: 'https://github.com/test/project',
       live_url: 'https://test-project.com',
-      image: '/project.png',
-      start_date: '2021-01-01',
-      end_date: '2021-06-01',
-      featured: true,
-      display_order: 1
+      image_url: '/project.png',
+      featured: true
     }
 
     it('gets all projects', async () => {
@@ -208,7 +202,7 @@ describe('API services', () => {
     })
 
     it('updates project', async () => {
-      const updates = { title: 'Updated Project' }
+      const updates = { name: 'Updated Project' }
       const updated = { ...mockProject, ...updates }
       vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
 
@@ -232,10 +226,8 @@ describe('API services', () => {
       id: '1',
       name: 'TypeScript',
       category: 'Programming',
-      proficiency: 90,
-      years_experience: 5,
-      icon: '/ts-icon.png',
-      display_order: 1
+      proficiency_level: 90,
+      years_of_experience: 5
     }
 
     it('gets all skills', async () => {
@@ -269,7 +261,7 @@ describe('API services', () => {
     })
 
     it('updates skill', async () => {
-      const updates = { proficiency: 95 }
+      const updates = { proficiency_level: 95 }
       const updated = { ...mockSkill, ...updates }
       vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
 
@@ -294,11 +286,10 @@ describe('API services', () => {
       title: 'Resume',
       description: 'My resume',
       file_path: '/documents/resume.pdf',
-      file_type: 'application/pdf',
+      document_type: 'resume',
       file_size: 1024,
-      category: 'resume',
-      uploaded_at: '2023-01-01T00:00:00Z',
-      is_public: true
+      file_url: '/api/v1/documents/1/download',
+      created_at: '2023-01-01T00:00:00Z'
     }
 
     it('gets all documents', async () => {

@@ -119,7 +119,11 @@ export const useAuthStore = defineStore('auth', {
           refresh_token: this.refreshToken
         })
 
-        this.setTokens(response.data.access_token, response.data.refresh_token)
+        const newRefreshToken = response.data.refresh_token ?? this.refreshToken
+        if (!newRefreshToken) {
+          throw new Error('No refresh token available')
+        }
+        this.setTokens(response.data.access_token, newRefreshToken)
       } catch (error) {
         console.error('Failed to refresh token:', error)
         this.logout()

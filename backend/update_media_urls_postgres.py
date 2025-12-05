@@ -9,6 +9,7 @@ Run on Fly.io:
     cd /app
     python update_media_urls_postgres.py
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -16,10 +17,10 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from sqlalchemy import select, update
+from sqlalchemy import select
+
 from app.database import AsyncSessionLocal
 from app.models.company import Company
-
 
 # Media content extracted from original dashti.se site
 MEDIA_DATA = {
@@ -79,9 +80,7 @@ async def update_media_urls():
             print(f"Updating: {company_name}")
 
             # Check if company exists
-            result = await db.execute(
-                select(Company).where(Company.name == company_name)
-            )
+            result = await db.execute(select(Company).where(Company.name == company_name))
             company = result.scalar_one_or_none()
 
             if not company:
@@ -98,7 +97,7 @@ async def update_media_urls():
             await db.commit()
             updated_count += 1
 
-            print(f"  [OK] Updated successfully")
+            print("  [OK] Updated successfully")
             print(f"    - Video: {'Yes' if media['video_url'] else 'No'}")
             print(f"    - Map: {'Yes' if media['map_url'] else 'No'}")
             print()
@@ -116,9 +115,7 @@ async def update_media_urls():
         print("Verification - Companies with media:")
         print("-" * 70)
 
-        result = await db.execute(
-            select(Company).order_by(Company.name)
-        )
+        result = await db.execute(select(Company).order_by(Company.name))
         companies = result.scalars().all()
 
         for company in companies:

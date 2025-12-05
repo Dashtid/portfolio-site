@@ -2,8 +2,6 @@
 Tests for database models
 """
 
-import pytest
-
 from app.models.analytics import PageView
 from app.models.company import Company
 from app.models.contact import Contact

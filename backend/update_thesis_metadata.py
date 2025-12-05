@@ -4,11 +4,11 @@ Update Document Metadata
 Script to update thesis titles and descriptions to match original portfolio-site.
 """
 
-import os
 import sqlite3
+from pathlib import Path
 
 # Database path
-DB_PATH = "portfolio.db"
+DB_PATH = Path("portfolio.db")
 
 # Updated document metadata
 UPDATES = [
@@ -27,11 +27,11 @@ UPDATES = [
 
 def main():
     """Update document metadata in database"""
-    if not os.path.exists(DB_PATH):
+    if not DB_PATH.exists():
         print(f"[!] Database not found: {DB_PATH}")
         return
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
     for update in UPDATES:

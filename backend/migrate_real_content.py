@@ -5,6 +5,7 @@ This script populates the database with actual portfolio data
 
 import asyncio
 import sys
+from datetime import date
 from pathlib import Path
 
 # Add app to path
@@ -34,8 +35,6 @@ async def clear_existing_data():
 
 async def populate_companies():
     """Populate companies/experience from original portfolio"""
-    from datetime import date
-
     async with AsyncSessionLocal() as db:
         try:
             companies = [
@@ -131,8 +130,6 @@ async def populate_companies():
 
 async def populate_education():
     """Populate education from original portfolio"""
-    from datetime import date
-
     async with AsyncSessionLocal() as db:
         try:
             education_entries = [

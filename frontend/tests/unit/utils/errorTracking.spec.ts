@@ -12,7 +12,7 @@ describe('errorTracking utility', () => {
   beforeEach(() => {
     // Mock fetch
     mockFetch = vi.fn().mockResolvedValue({ ok: true })
-    global.fetch = mockFetch
+    global.fetch = mockFetch as typeof fetch
 
     // Clear any previous errors
     errorTracker.clearErrors()

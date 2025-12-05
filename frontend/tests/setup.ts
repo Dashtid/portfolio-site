@@ -3,31 +3,20 @@
  * Runs before all tests
  */
 
-// Type definitions for mocks
-interface MediaQueryList {
-  matches: boolean
-  media: string
-  onchange: ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null
-  addListener: (listener: () => void) => void
-  removeListener: (listener: () => void) => void
-  addEventListener: (type: string, listener: () => void) => void
-  removeEventListener: (type: string, listener: () => void) => void
-  dispatchEvent: (event: Event) => boolean
-}
-
 // Mock window.matchMedia for theme tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: (query: string): MediaQueryList => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: (): void => {}, // deprecated
-    removeListener: (): void => {}, // deprecated
-    addEventListener: (): void => {},
-    removeEventListener: (): void => {},
-    dispatchEvent: (): boolean => true
-  })
+  value: (query: string): MediaQueryList =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: (): void => {}, // deprecated
+      removeListener: (): void => {}, // deprecated
+      addEventListener: (): void => {},
+      removeEventListener: (): void => {},
+      dispatchEvent: (): boolean => true
+    }) as MediaQueryList
 })
 
 // Mock IntersectionObserver for scroll animations
@@ -56,33 +45,37 @@ global.cancelAnimationFrame = (id: number): void => {
   clearTimeout(id)
 }
 
-// Mock localStorage
-interface LocalStorageMock {
-  [key: string]: string
-  getItem: (key: string) => string | null
-  setItem: (key: string, value: string) => void
-  removeItem: (key: string) => void
-  clear: () => void
-}
+// Mock localStorage using a class to avoid index signature conflicts
+class LocalStorageMock implements Storage {
+  private store: Record<string, string> = {}
 
-const localStorageMock: LocalStorageMock = {
+  get length(): number {
+    return Object.keys(this.store).length
+  }
+
+  key(index: number): string | null {
+    const keys = Object.keys(this.store)
+    return keys[index] || null
+  }
+
   getItem(key: string): string | null {
-    return this[key] || null
-  },
+    return this.store[key] ?? null
+  }
+
   setItem(key: string, value: string): void {
-    this[key] = value.toString()
-  },
+    this.store[key] = value.toString()
+  }
+
   removeItem(key: string): void {
-    delete this[key]
-  },
+    delete this.store[key]
+  }
+
   clear(): void {
-    Object.keys(this).forEach(key => {
-      if (key !== 'getItem' && key !== 'setItem' && key !== 'removeItem' && key !== 'clear') {
-        delete this[key]
-      }
-    })
+    this.store = {}
   }
 }
+
+const localStorageMock = new LocalStorageMock()
 
 Object.defineProperty(global, 'localStorage', {
   value: localStorageMock,

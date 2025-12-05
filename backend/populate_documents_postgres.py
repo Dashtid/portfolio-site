@@ -9,6 +9,7 @@ Run on Fly.io:
     cd /app
     python populate_documents_postgres.py
 """
+
 import asyncio
 import sys
 import uuid
@@ -18,9 +19,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from sqlalchemy import delete, select
+
 from app.database import AsyncSessionLocal
 from app.models.document import Document
-
 
 # Production backend URL
 BACKEND_URL = "https://dashti-portfolio-backend.fly.dev"
@@ -107,7 +108,9 @@ async def populate_documents():
         for doc in documents:
             size_mb = doc.file_size / 1024 / 1024
             print(f"  - {doc.title[:60]}...")
-            print(f"    Type: {doc.document_type} | Size: {size_mb:.2f} MB | Date: {doc.published_date}")
+            print(
+                f"    Type: {doc.document_type} | Size: {size_mb:.2f} MB | Date: {doc.published_date}"
+            )
             print(f"    URL: {doc.file_url}")
             print()
         print("-" * 70)

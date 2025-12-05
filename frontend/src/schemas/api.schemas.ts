@@ -224,7 +224,7 @@ export function validateApiResponse<T extends z.ZodTypeAny>(
   if (!result.success) {
     if (strict) {
       console.error('[API Validation] Schema validation failed:', {
-        errors: result.error.errors,
+        issues: result.error.issues,
         data
       })
       throw new ApiValidationError(
@@ -235,7 +235,7 @@ export function validateApiResponse<T extends z.ZodTypeAny>(
 
     // In non-strict mode, log warning and return data as-is
     console.warn('[API Validation] Schema validation failed (non-strict mode):', {
-      errors: result.error.errors
+      issues: result.error.issues
     })
     return data as z.infer<T>
   }

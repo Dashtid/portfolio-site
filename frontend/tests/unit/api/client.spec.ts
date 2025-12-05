@@ -39,15 +39,16 @@ describe('API client', () => {
 
     // Mock axios.create to return a mock instance
     // The instance must be callable (like a function) because apiClient(config) is used
-    const mockAxiosInstance = vi.fn().mockResolvedValue({ data: {} })
-    mockAxiosInstance.interceptors = {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() }
-    }
-    mockAxiosInstance.get = vi.fn()
-    mockAxiosInstance.post = vi.fn()
-    mockAxiosInstance.put = vi.fn()
-    mockAxiosInstance.delete = vi.fn()
+    const mockAxiosInstance = Object.assign(vi.fn().mockResolvedValue({ data: {} }), {
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
+      },
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn()
+    })
 
     vi.mocked(axios.create).mockReturnValue(mockAxiosInstance as any)
     vi.mocked(axios.post).mockResolvedValue({ data: {} })

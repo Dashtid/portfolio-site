@@ -41,9 +41,8 @@ class TestGetDb:
     @pytest.mark.asyncio
     async def test_get_db_closes_session(self):
         """Test that get_db properly closes session."""
-        session = None
-        async for s in get_db():
-            session = s
+        async for _ in get_db():
+            # Just iterate once to test session creation
             break
         # After generator exits, session should be closed
         # (we break early, but the finally block still runs)

@@ -16,7 +16,7 @@ describe('performance utility', () => {
   beforeEach(() => {
     // Mock fetch
     mockFetch = vi.fn().mockResolvedValue({ ok: true })
-    global.fetch = mockFetch
+    global.fetch = mockFetch as typeof fetch
 
     // Mock performance API
     mockPerformanceMark = vi.fn()
@@ -24,10 +24,16 @@ describe('performance utility', () => {
     mockGetEntriesByName = vi.fn(() => [{ duration: 100 }])
     mockGetEntriesByType = vi.fn(() => [])
 
-    vi.spyOn(performance, 'mark').mockImplementation(mockPerformanceMark)
-    vi.spyOn(performance, 'measure').mockImplementation(mockPerformanceMeasure)
-    vi.spyOn(performance, 'getEntriesByName').mockImplementation(mockGetEntriesByName)
-    vi.spyOn(performance, 'getEntriesByType').mockImplementation(mockGetEntriesByType)
+    vi.spyOn(performance, 'mark').mockImplementation(mockPerformanceMark as typeof performance.mark)
+    vi.spyOn(performance, 'measure').mockImplementation(
+      mockPerformanceMeasure as typeof performance.measure
+    )
+    vi.spyOn(performance, 'getEntriesByName').mockImplementation(
+      mockGetEntriesByName as typeof performance.getEntriesByName
+    )
+    vi.spyOn(performance, 'getEntriesByType').mockImplementation(
+      mockGetEntriesByType as typeof performance.getEntriesByType
+    )
 
     // Mock PerformanceObserver - must use class syntax for vitest 4
     class MockPerformanceObserver {

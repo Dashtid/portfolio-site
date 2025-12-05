@@ -3,7 +3,6 @@ Tests for logger utility module
 """
 
 import logging
-from unittest.mock import patch
 
 from app.utils.logger import (
     CustomJsonFormatter,

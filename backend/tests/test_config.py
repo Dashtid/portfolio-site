@@ -2,11 +2,6 @@
 Tests for configuration module
 """
 
-import os
-from unittest.mock import patch
-
-import pytest
-
 from app.config import Settings
 
 
@@ -142,7 +137,9 @@ class TestGitHubOAuthConfig:
     def test_github_client_secret_type(self):
         """Test GitHub client secret is string or None."""
         settings = Settings()
-        assert settings.GITHUB_CLIENT_SECRET is None or isinstance(settings.GITHUB_CLIENT_SECRET, str)
+        assert settings.GITHUB_CLIENT_SECRET is None or isinstance(
+            settings.GITHUB_CLIENT_SECRET, str
+        )
 
     def test_github_redirect_uri_default(self):
         """Test GitHub redirect URI default."""

@@ -4,6 +4,7 @@ Test script to diagnose Projects API serialization issue
 
 import asyncio
 import sys
+import traceback
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -50,8 +51,6 @@ async def test_projects():
                 except Exception as e:
                     print("[FAIL] Pydantic serialization FAILED:")
                     print(f"  Error: {type(e).__name__}: {e}")
-                    import traceback
-
                     traceback.print_exc()
         else:
             print("No projects found in database!")

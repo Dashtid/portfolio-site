@@ -5,8 +5,6 @@ Tests for logger utility
 import logging
 from unittest.mock import patch
 
-import pytest
-
 from app.utils.logger import CustomJsonFormatter, SensitiveDataFilter, get_logger, setup_logger
 
 
@@ -18,7 +16,13 @@ class TestCustomJsonFormatter:
         formatter = CustomJsonFormatter()
         log_record = {}
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0, msg="Test message", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Test message",
+            args=(),
+            exc_info=None,
         )
         formatter.add_fields(log_record, record, {})
 
@@ -30,7 +34,13 @@ class TestCustomJsonFormatter:
         formatter = CustomJsonFormatter()
         log_record = {}
         record = logging.LogRecord(
-            name="test", level=logging.WARNING, pathname="", lineno=0, msg="Test", args=(), exc_info=None
+            name="test",
+            level=logging.WARNING,
+            pathname="",
+            lineno=0,
+            msg="Test",
+            args=(),
+            exc_info=None,
         )
         formatter.add_fields(log_record, record, {})
 
@@ -41,7 +51,13 @@ class TestCustomJsonFormatter:
         formatter = CustomJsonFormatter()
         log_record = {}
         record = logging.LogRecord(
-            name="my_logger", level=logging.INFO, pathname="", lineno=0, msg="Test", args=(), exc_info=None
+            name="my_logger",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Test",
+            args=(),
+            exc_info=None,
         )
         formatter.add_fields(log_record, record, {})
 
@@ -52,7 +68,13 @@ class TestCustomJsonFormatter:
         formatter = CustomJsonFormatter()
         log_record = {}
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="test_file.py", lineno=42, msg="Test", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="test_file.py",
+            lineno=42,
+            msg="Test",
+            args=(),
+            exc_info=None,
         )
         formatter.add_fields(log_record, record, {})
 
@@ -102,7 +124,12 @@ class TestSensitiveDataFilter:
     def test_masks_sensitive_data_in_list(self):
         """Test that sensitive data in lists is masked."""
         filter_instance = SensitiveDataFilter()
-        data = {"users": [{"name": "user1", "secret": "secret1"}, {"name": "user2", "secret": "secret2"}]}
+        data = {
+            "users": [
+                {"name": "user1", "secret": "secret1"},
+                {"name": "user2", "secret": "secret2"},
+            ]
+        }
         result = filter_instance._mask_sensitive_data(data)
 
         assert result["users"][0]["name"] == "user1"
@@ -120,7 +147,13 @@ class TestSensitiveDataFilter:
         """Test that filter method returns True (allows log through)."""
         filter_instance = SensitiveDataFilter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0, msg="Test", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Test",
+            args=(),
+            exc_info=None,
         )
 
         assert filter_instance.filter(record) is True

@@ -4,7 +4,6 @@ Populate Documents Table
 Script to populate the documents table with academic thesis PDFs.
 """
 
-import os
 import sqlite3
 import uuid
 from pathlib import Path
@@ -47,7 +46,8 @@ DOCUMENTS = [
 
 def main():
     """Populate documents table"""
-    if not os.path.exists(DB_PATH):
+    db_path = Path(DB_PATH)
+    if not db_path.exists():
         print(f"[!] Database not found: {DB_PATH}")
         print("[i] Please run the FastAPI server first to create the database")
         return
