@@ -187,6 +187,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
 import type { Company } from '../../types/api'
+import { apiLogger } from '../../utils/logger'
 
 const route = useRoute()
 
@@ -226,7 +227,7 @@ const fetchAllCompanies = async (): Promise<void> => {
         ((b as Company & { order_index?: number }).order_index || 0)
     )
   } catch (err) {
-    console.error('Error fetching companies:', err)
+    apiLogger.error('Error fetching companies:', err)
   }
 }
 
@@ -241,7 +242,7 @@ const fetchCompany = async (id: string): Promise<void> => {
     )
     company.value = response.data
   } catch (err) {
-    console.error('Error fetching company:', err)
+    apiLogger.error('Error fetching company:', err)
     const axiosError = err as AxiosError
     if (axiosError.response?.status === 404) {
       error.value = 'Company not found. It may have been removed or the link is incorrect.'

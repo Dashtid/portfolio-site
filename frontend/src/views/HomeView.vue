@@ -318,6 +318,7 @@ import DocumentCard from '../components/DocumentCard.vue'
 import { useBatchAnimation } from '../composables/useScrollAnimations'
 import { getDocuments } from '../api/services'
 import type { Document } from '../types/api'
+import { logger } from '../utils/logger'
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
@@ -387,7 +388,7 @@ onMounted(async () => {
   try {
     await portfolioStore.fetchAllData()
   } catch (error) {
-    console.error('Error loading portfolio data:', error)
+    logger.error('Error loading portfolio data:', error)
   } finally {
     loading.value = false
   }
@@ -397,7 +398,7 @@ onMounted(async () => {
   try {
     documents.value = await getDocuments()
   } catch (error) {
-    console.error('Error loading documents:', error)
+    logger.error('Error loading documents:', error)
     documentsError.value = 'Failed to load publications'
   } finally {
     documentsLoading.value = false
@@ -407,9 +408,9 @@ onMounted(async () => {
   if ('serviceWorker' in navigator) {
     try {
       await navigator.serviceWorker.register('/sw.js')
-      console.log('Service Worker registered successfully')
+      logger.log('Service Worker registered successfully')
     } catch (error) {
-      console.error('Service Worker registration failed:', error)
+      logger.error('Service Worker registration failed:', error)
     }
   }
 

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import apiClient from '../api/client'
 import type { LoginResponse } from '@/types'
 import { storage, STORAGE_KEYS } from '@/utils/storage'
+import { authLogger } from '@/utils/logger'
 
 // Get API URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -63,7 +64,7 @@ export const useAuthStore = defineStore('auth', {
 
       // Clean URL even if tokens are invalid
       if (token || refresh) {
-        console.error('Invalid token format received from OAuth callback')
+        authLogger.error('Invalid token format received from OAuth callback')
         window.history.replaceState({}, '', window.location.pathname)
       }
       return false
@@ -95,7 +96,7 @@ export const useAuthStore = defineStore('auth', {
         const response = await apiClient.get<User>('/api/v1/auth/me')
         this.user = response.data
       } catch (error: unknown) {
-        console.error('Failed to fetch user:', error)
+        authLogger.error('Failed to fetch user:', error)
         if (
           error &&
           typeof error === 'object' &&
@@ -125,7 +126,7 @@ export const useAuthStore = defineStore('auth', {
         }
         this.setTokens(response.data.access_token, newRefreshToken)
       } catch (error) {
-        console.error('Failed to refresh token:', error)
+        authLogger.error('Failed to refresh token:', error)
         this.logout()
       }
     },
@@ -140,7 +141,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         await apiClient.post('/api/v1/auth/logout')
       } catch (error) {
-        console.error('Logout error:', error)
+        authLogger.error('Logout error:', error)
       } finally {
         // Clear local data
         this.user = null

@@ -153,6 +153,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { apiLogger } from '../utils/logger'
 
 interface Language {
   name: string
@@ -202,7 +203,7 @@ const fetchGitHubStats = async (): Promise<void> => {
     )
     stats.value = response.data
   } catch (err) {
-    console.error('Error fetching GitHub stats:', err)
+    apiLogger.error('Error fetching GitHub stats:', err)
     error.value = true
   } finally {
     loading.value = false

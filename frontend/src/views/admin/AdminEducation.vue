@@ -161,6 +161,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import api from '../../api/client'
+import { apiLogger } from '../../utils/logger'
 
 // Education form interface
 interface EducationFormData {
@@ -211,7 +212,7 @@ const fetchEducation = async (): Promise<void> => {
     const response = await api.get<EducationFormData[]>('/education/')
     educationList.value = response.data
   } catch (error) {
-    console.error('Error fetching education:', error)
+    apiLogger.error('Error fetching education:', error)
   }
 }
 
@@ -225,7 +226,7 @@ const saveEducation = async (): Promise<void> => {
     await fetchEducation()
     closeForm()
   } catch (error) {
-    console.error('Error saving education:', error)
+    apiLogger.error('Error saving education:', error)
     alert('Failed to save education. Please try again.')
   }
 }
@@ -244,7 +245,7 @@ const deleteEducation = async (id: string | undefined): Promise<void> => {
     await api.delete(`/education/${id}/`)
     await fetchEducation()
   } catch (error) {
-    console.error('Error deleting education:', error)
+    apiLogger.error('Error deleting education:', error)
     alert('Failed to delete education. Please try again.')
   }
 }

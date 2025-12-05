@@ -7,6 +7,17 @@ import analyticsService from '@/services/analytics'
 
 vi.mock('axios')
 
+// Mock the logger to avoid console output and enable test assertions
+vi.mock('@/utils/logger', () => ({
+  analyticsLogger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    log: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn()
+  }
+}))
+
 describe('analytics service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -99,12 +110,11 @@ describe('analytics service', () => {
 
     it('handles API errors gracefully', async () => {
       vi.mocked(axios.post).mockRejectedValue(new Error('API Error'))
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { analyticsLogger } = await import('@/utils/logger')
 
       await expect(analyticsService.trackPageView('/test')).resolves.not.toThrow()
 
-      expect(consoleError).toHaveBeenCalled()
-      consoleError.mockRestore()
+      expect(analyticsLogger.error).toHaveBeenCalled()
     })
 
     it('does not track when disabled', async () => {
@@ -157,12 +167,12 @@ describe('analytics service', () => {
   })
 
   describe('trackTiming', () => {
-    it('logs timing data', () => {
-      const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
+    it('logs timing data', async () => {
+      const { analyticsLogger } = await import('@/utils/logger')
 
       analyticsService.trackTiming('load', 'page', 1000, 'home')
 
-      expect(consoleLog).toHaveBeenCalledWith(
+      expect(analyticsLogger.debug).toHaveBeenCalledWith(
         'Timing tracked:',
         expect.objectContaining({
           category: 'load',
@@ -172,29 +182,26 @@ describe('analytics service', () => {
           timestamp: expect.any(String)
         })
       )
-
-      consoleLog.mockRestore()
     })
 
-    it('works without label', () => {
-      const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
+    it('works without label', async () => {
+      const { analyticsLogger } = await import('@/utils/logger')
 
       analyticsService.trackTiming('api', 'request', 500)
 
-      expect(consoleLog).toHaveBeenCalled()
-      consoleLog.mockRestore()
+      expect(analyticsLogger.debug).toHaveBeenCalled()
     })
 
-    it('does not log when disabled', () => {
-      const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
+    it('does not log when disabled', async () => {
+      const { analyticsLogger } = await import('@/utils/logger')
+      vi.mocked(analyticsLogger.debug).mockClear()
       analyticsService.setEnabled(false)
 
       analyticsService.trackTiming('test', 'var', 100)
 
-      expect(consoleLog).not.toHaveBeenCalled()
+      expect(analyticsLogger.debug).not.toHaveBeenCalled()
 
       analyticsService.setEnabled(true)
-      consoleLog.mockRestore()
     })
   })
 
@@ -263,12 +270,12 @@ describe('analytics service', () => {
 
     it('returns null on error', async () => {
       vi.mocked(axios.get).mockRejectedValue(new Error('API Error'))
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { analyticsLogger } = await import('@/utils/logger')
 
       const result = await analyticsService.getAnalyticsSummary()
 
       expect(result).toBeNull()
-      consoleError.mockRestore()
+      expect(analyticsLogger.error).toHaveBeenCalled()
     })
   })
 
@@ -303,12 +310,12 @@ describe('analytics service', () => {
 
     it('returns null on error', async () => {
       vi.mocked(axios.get).mockRejectedValue(new Error('API Error'))
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { analyticsLogger } = await import('@/utils/logger')
 
       const result = await analyticsService.getVisitorStats()
 
       expect(result).toBeNull()
-      consoleError.mockRestore()
+      expect(analyticsLogger.error).toHaveBeenCalled()
     })
   })
 

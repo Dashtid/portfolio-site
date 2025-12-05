@@ -3,6 +3,7 @@ Authentication API endpoints with GitHub OAuth
 """
 
 import secrets
+import time
 from typing import Annotated
 
 import httpx
@@ -25,8 +26,28 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
-# Temporary state store (in production, use Redis or database)
-oauth_states: dict[str, bool] = {}
+# OAuth state store with TTL (5 minutes expiration)
+# In production with multiple instances, use Redis instead
+OAUTH_STATE_TTL_SECONDS = 300  # 5 minutes
+oauth_states: dict[str, float] = {}  # state -> expiration timestamp
+
+
+def cleanup_expired_states() -> None:
+    """Remove expired OAuth states to prevent memory leaks"""
+    current_time = time.time()
+    expired_keys = [key for key, expiry in oauth_states.items() if expiry < current_time]
+    for key in expired_keys:
+        del oauth_states[key]
+
+
+def is_valid_state(state: str) -> bool:
+    """Check if OAuth state is valid and not expired"""
+    if state not in oauth_states:
+        return False
+    if oauth_states[state] < time.time():
+        del oauth_states[state]
+        return False
+    return True
 
 
 @router.get("/github")
@@ -38,9 +59,12 @@ async def github_login(request: Request):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="GitHub OAuth not configured"
         )
 
-    # Generate state for CSRF protection
+    # Cleanup expired states periodically
+    cleanup_expired_states()
+
+    # Generate state for CSRF protection with TTL
     state = secrets.token_urlsafe(32)
-    oauth_states[state] = True
+    oauth_states[state] = time.time() + OAUTH_STATE_TTL_SECONDS
 
     # Build GitHub authorization URL
     github_auth_url = (
@@ -58,13 +82,13 @@ async def github_login(request: Request):
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def github_callback(request: Request, code: str, state: str, db: DbSession):
     """Handle GitHub OAuth callback"""
-    # Verify state
-    if state not in oauth_states:
+    # Verify state (includes expiration check)
+    if not is_valid_state(state):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state parameter"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state parameter"
         )
 
-    # Clean up state
+    # Clean up state after validation
     del oauth_states[state]
 
     # Exchange code for access token

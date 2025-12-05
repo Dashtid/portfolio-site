@@ -2,6 +2,7 @@
  * Analytics service for tracking page views and user interactions
  */
 import axios, { type AxiosResponse } from 'axios'
+import { analyticsLogger } from '../utils/logger'
 
 // Get API URL from environment variables
 const BASE_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -77,7 +78,7 @@ class AnalyticsService {
         }
       })
     } catch (error) {
-      console.error('Failed to track page view:', error)
+      analyticsLogger.error('Failed to track page view:', error)
     }
   }
 
@@ -106,7 +107,7 @@ class AnalyticsService {
       // For now, we can track this as a special page view
       await this.trackPageView(`/event/${category}/${action}`, `Event: ${category} - ${action}`)
     } catch (error) {
-      console.error('Failed to track event:', error)
+      analyticsLogger.error('Failed to track event:', error)
     }
   }
 
@@ -126,7 +127,7 @@ class AnalyticsService {
     }
 
     // Could be sent to backend or stored locally
-    console.log('Timing tracked:', timingData)
+    analyticsLogger.debug('Timing tracked:', timingData)
   }
 
   /**
@@ -158,7 +159,7 @@ class AnalyticsService {
       )
       return response.data
     } catch (error) {
-      console.error('Failed to get analytics summary:', error)
+      analyticsLogger.error('Failed to get analytics summary:', error)
       return null
     }
   }
@@ -173,7 +174,7 @@ class AnalyticsService {
       })
       return response.data
     } catch (error) {
-      console.error('Failed to get visitor stats:', error)
+      analyticsLogger.error('Failed to get visitor stats:', error)
       return null
     }
   }

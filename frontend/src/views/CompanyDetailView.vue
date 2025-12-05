@@ -149,6 +149,7 @@ import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
 import type { Company } from '../types/api'
+import { apiLogger } from '../utils/logger'
 
 // Get API URL from environment variables
 const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -218,7 +219,7 @@ const fetchCompanyDetails = async (companyId: string): Promise<void> => {
       error.value = 'Company not found'
     }
   } catch (err) {
-    console.error('Error fetching company details:', err)
+    apiLogger.error('Error fetching company details:', err)
     error.value = 'Failed to load company details. Please try again later.'
   } finally {
     loading.value = false

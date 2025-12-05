@@ -151,6 +151,7 @@
 import { ref, onMounted, computed, type WritableComputedRef } from 'vue'
 import apiClient from '../../api/client'
 import type { Company } from '../../types/api'
+import { apiLogger } from '../../utils/logger'
 
 // Form data interface (extends Company with order_index)
 interface CompanyFormData {
@@ -202,7 +203,7 @@ const fetchCompanies = async (): Promise<void> => {
     const response = await apiClient.get<Company[]>('/api/v1/companies')
     companies.value = response.data
   } catch (error) {
-    console.error('Error fetching companies:', error)
+    apiLogger.error('Error fetching companies:', error)
     alert('Failed to load companies')
   } finally {
     loading.value = false
@@ -245,7 +246,7 @@ const saveCompany = async (): Promise<void> => {
     closeForm()
     fetchCompanies()
   } catch (error) {
-    console.error('Error saving company:', error)
+    apiLogger.error('Error saving company:', error)
     alert('Failed to save company')
   }
 }
@@ -260,7 +261,7 @@ const deleteCompany = async (id: string): Promise<void> => {
     alert('Company deleted successfully')
     fetchCompanies()
   } catch (error) {
-    console.error('Error deleting company:', error)
+    apiLogger.error('Error deleting company:', error)
     alert('Failed to delete company')
   }
 }
