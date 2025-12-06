@@ -172,6 +172,14 @@
             About Me
           </h2>
           <div class="about-content">
+            <div class="profile-photo-container">
+              <img
+                src="/images/profile.png"
+                alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
+                class="profile-photo"
+                loading="lazy"
+              />
+            </div>
             <p>
               I am a biomedical engineer specializing in cybersecurity and regulatory compliance for
               medical software and AI systems. As a QA/RA & Security Specialist at Hermes Medical
@@ -495,6 +503,44 @@ html {
   .education-header-with-logo .card-logo {
     width: 64px;
     height: 64px;
+  }
+}
+
+/* Profile Photo Styles */
+.profile-photo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.profile-photo {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--primary-500, #3b82f6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-photo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .profile-photo {
+  border-color: var(--primary-400, #60a5fa);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .profile-photo:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  .profile-photo {
+    width: 140px;
+    height: 140px;
   }
 }
 </style>
