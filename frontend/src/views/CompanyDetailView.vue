@@ -139,6 +139,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Back to Top Button -->
+    <BackToTop />
   </div>
 </template>
 
@@ -148,6 +151,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
+import BackToTop from '../components/BackToTop.vue'
 import type { Company } from '../types/api'
 
 // Get API URL from environment variables
