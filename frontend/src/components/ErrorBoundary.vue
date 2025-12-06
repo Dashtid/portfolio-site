@@ -111,46 +111,43 @@ defineExpose({
   justify-content: center;
   min-height: 400px;
   padding: 2rem;
+  background: var(--bg-primary, #ffffff);
 }
 
 .error-container {
   text-align: center;
   max-width: 500px;
   padding: 2rem;
-  background: white;
+  background: var(--bg-secondary, #ffffff);
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme='dark'] .error-container {
-  background: #1a1a1a;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
 }
 
 .error-icon {
   display: flex;
   justify-content: center;
   margin-bottom: 1.5rem;
-  color: #dc3545;
+  color: var(--color-error, #dc3545);
 }
 
 .error-title {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: var(--text-color, #333);
+  color: var(--text-primary, #1e293b);
 }
 
 .error-message {
   font-size: 1rem;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary, #64748b);
   margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
 .error-details {
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: var(--bg-tertiary, #f1f5f9);
+  border: 1px solid var(--border-primary, #e2e8f0);
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1.5rem;
@@ -159,15 +156,10 @@ defineExpose({
   overflow-y: auto;
 }
 
-[data-theme='dark'] .error-details {
-  background: #0a0a0a;
-  border-color: #333;
-}
-
 .error-details pre {
   margin: 0;
   font-size: 0.875rem;
-  color: #d73a49;
+  color: var(--color-error, #dc3545);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -176,6 +168,7 @@ defineExpose({
   display: flex;
   gap: 1rem;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .btn-retry,
@@ -190,25 +183,73 @@ defineExpose({
 }
 
 .btn-retry {
-  background: var(--primary-color, #007bff);
+  background: var(--primary-600, #2563eb);
   color: white;
 }
 
 .btn-retry:hover {
-  background: var(--primary-hover, #0056b3);
+  background: var(--primary-700, #1d4ed8);
   transform: translateY(-1px);
+}
+
+.btn-retry:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
 }
 
 .btn-home {
   background: transparent;
-  color: var(--primary-color, #007bff);
-  border: 2px solid var(--primary-color, #007bff);
+  color: var(--primary-600, #2563eb);
+  border: 2px solid var(--primary-600, #2563eb);
 }
 
 .btn-home:hover {
-  background: var(--primary-color, #007bff);
+  background: var(--primary-600, #2563eb);
   color: white;
   transform: translateY(-1px);
+}
+
+.btn-home:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+/* Dark mode */
+[data-theme='dark'] .error-boundary {
+  background: var(--bg-primary, #0f172a);
+}
+
+[data-theme='dark'] .error-container {
+  background: var(--bg-secondary, #1e293b);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .error-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .error-message {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .error-details {
+  background: var(--bg-tertiary, #334155);
+  border-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .error-details pre {
+  color: #f87171;
+}
+
+[data-theme='dark'] .btn-home {
+  color: var(--primary-400, #60a5fa);
+  border-color: var(--primary-400, #60a5fa);
+}
+
+[data-theme='dark'] .btn-home:hover {
+  background: var(--primary-500, #3b82f6);
+  border-color: var(--primary-500, #3b82f6);
+  color: white;
 }
 
 /* Animation */
@@ -223,7 +264,14 @@ defineExpose({
   }
 }
 
-.error-container {
-  animation: slideIn 0.3s ease-out;
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .error-container {
+    animation: none;
+  }
+  .btn-retry:hover,
+  .btn-home:hover {
+    transform: none;
+  }
 }
 </style>

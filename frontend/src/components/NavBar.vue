@@ -189,6 +189,13 @@ onUnmounted(() => {
   background: rgba(37, 99, 235, 0.08) !important;
 }
 
+.nav-link:focus-visible {
+  outline: 2px solid var(--primary-500, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
 .nav-link.active {
   color: var(--primary-600, #2563eb) !important;
   background: rgba(37, 99, 235, 0.1) !important;
@@ -291,6 +298,16 @@ onUnmounted(() => {
   [data-theme='dark'] .nav-link.active {
     background: #3b82f6 !important;
     color: white !important;
+  }
+}
+
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-link,
+  .navbar-custom,
+  .navbar-toggler {
+    transition: none;
   }
 }
 </style>

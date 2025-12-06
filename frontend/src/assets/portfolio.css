@@ -186,6 +186,30 @@
   color: #0f172a;
 }
 
+/* Focus States - Accessibility */
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-outline-primary:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+.project-link:focus-visible,
+.contact-link:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Card focus for keyboard navigation */
+.experience-card:focus-within,
+.education-card:focus-within,
+.project-card:focus-within {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+
 /* Dark Mode - Links */
 [data-theme="dark"] .project-link {
   color: #60a5fa;

@@ -187,6 +187,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
 import type { Company } from '../../types/api'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 

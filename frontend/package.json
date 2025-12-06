@@ -23,6 +23,7 @@
     "@headlessui/vue": "^1.7.23",
     "@vueuse/core": "^14.1.0",
     "axios": "^1.13.2",
+    "dompurify": "^3.3.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@pinia/testing": "^1.0.3",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",

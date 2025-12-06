@@ -189,6 +189,12 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
+.social-link:focus-visible {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+
 .footer-divider {
   width: 60px;
   height: 2px;

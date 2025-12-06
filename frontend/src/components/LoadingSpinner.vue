@@ -84,7 +84,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   border: 3px solid transparent;
   border-radius: 50%;
   animation: spinner-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: var(--primary-color, #007bff) transparent transparent transparent;
+  border-color: var(--primary-500, #3b82f6) transparent transparent transparent;
 }
 
 .spinner-small .spinner-ring {
@@ -136,7 +136,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
 
 /* Skeleton loader variant */
 .skeleton-loader {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--bg-tertiary, #f1f5f9) 25%, var(--slate-200, #e2e8f0) 50%, var(--bg-tertiary, #f1f5f9) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
   border-radius: 4px;
@@ -152,7 +152,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
 }
 
 [data-theme='dark'] .skeleton-loader {
-  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background: linear-gradient(90deg, var(--bg-secondary, #1e293b) 25%, var(--bg-tertiary, #334155) 50%, var(--bg-secondary, #1e293b) 75%);
   background-size: 200% 100%;
 }
 </style>

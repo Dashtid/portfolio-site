@@ -5,6 +5,9 @@
       <iframe
         :src="url"
         :title="title"
+        :aria-label="'Google Maps location: ' + title"
+        role="application"
+        tabindex="0"
         allowfullscreen
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"

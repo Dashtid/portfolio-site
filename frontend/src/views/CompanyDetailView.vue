@@ -153,6 +153,7 @@ import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
 import BackToTop from '../components/BackToTop.vue'
 import type { Company } from '../types/api'
+import DOMPurify from 'dompurify'
 
 // Get API URL from environment variables
 const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000'

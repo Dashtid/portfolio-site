@@ -200,6 +200,12 @@ const formattedDate = computed(() => {
   transform: translateX(4px);
 }
 
+.document-link:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+
 .download-link {
   font-weight: 600;
 }

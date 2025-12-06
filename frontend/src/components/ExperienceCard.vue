@@ -324,4 +324,27 @@ const formatDuration = computed<string>(() => {
     width: 100%;
   }
 }
+
+
+.experience-link:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+.experience-card:focus-within {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .experience-card {
+    transition: none;
+  }
+  .experience-card:hover {
+    transform: none;
+  }
+}
 </style>

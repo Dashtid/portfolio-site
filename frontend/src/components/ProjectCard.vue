@@ -276,4 +276,49 @@ const techStack = computed<string[]>(() => {
     width: 100%;
   }
 }
+
+
+.project-link:focus-visible {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+.project-card:focus-within {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+
+/* Dark mode */
+[data-theme='dark'] .project-card {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .project-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .project-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .project-description {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .tech-tag {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .project-card {
+    transition: none;
+  }
+  .project-card:hover {
+    transform: none;
+  }
+}
 </style>
