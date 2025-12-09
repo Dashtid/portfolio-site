@@ -164,4 +164,21 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
+
+
+/* Dark mode shimmer */
+[data-theme='dark'] .image-placeholder {
+  background: #1e293b;
+}
+
+[data-theme='dark'] .shimmer::before {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::before {
+    animation: none;
+  }
+}
 </style>

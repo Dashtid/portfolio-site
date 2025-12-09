@@ -188,6 +188,7 @@ import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
 import type { Company } from '../../types/api'
 import { apiLogger } from '../../utils/logger'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 

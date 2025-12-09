@@ -5,6 +5,9 @@
       <iframe
         :src="url"
         :title="title"
+        :aria-label="'YouTube video: ' + title"
+        role="application"
+        tabindex="0"
         allow="
           accelerometer;
           autoplay;

@@ -139,6 +139,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Back to Top Button -->
+    <BackToTop />
   </div>
 </template>
 
@@ -148,8 +151,10 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
+import BackToTop from '../components/BackToTop.vue'
 import type { Company } from '../types/api'
 import { apiLogger } from '../utils/logger'
+import DOMPurify from 'dompurify'
 
 // Get API URL from environment variables
 const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -370,13 +375,52 @@ onMounted((): void => {
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .company-header {
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-  }
+[data-theme='dark'] .company-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
 
-  .navigation-buttons {
-    border-top-color: rgba(255, 255, 255, 0.1);
-  }
+[data-theme='dark'] .navigation-buttons {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .detail-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+[data-theme='dark'] .company-name {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .job-title {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .meta-text {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .section-title {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .section-text {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .tech-tag {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .responsibility-item {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .back-link {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .back-link:hover {
+  color: #60a5fa;
 }
 </style>

@@ -124,4 +124,41 @@ const loginWithGitHub = (): void => {
     font-size: var(--font-size-xl);
   }
 }
+
+
+/* Dark mode */
+[data-theme='dark'] .login-card {
+  background: var(--bg-secondary, #1e293b);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='dark'] .login-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .login-subtitle {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .github-login-button {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme='dark'] .github-login-button:hover {
+  background: #e2e8f0;
+}
+
+[data-theme='dark'] .login-note {
+  border-top-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .note-text {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.github-login-button:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
 </style>

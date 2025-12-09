@@ -68,6 +68,163 @@
   --font-weight-bold: 700;
 }
 
+/* Dark Mode Overrides */
+[data-theme="dark"] {
+  /* Color Palette - Dark Theme */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-primary: #475569;
+  --border-secondary: #64748b;
+  
+  /* Primary Colors for Dark Mode */
+  --primary-50: #1e293b;
+  --primary-100: #334155;
+  --primary-700: #93c5fd;
+}
+
+/* Dark Mode - Hero Section */
+[data-theme="dark"] .hero-content {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .custom-hero-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .hero-accent-primary,
+[data-theme="dark"] .hero-accent-secondary {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .custom-hero-lead {
+  color: #cbd5e1;
+}
+
+/* Dark Mode - Cards */
+[data-theme="dark"] .experience-card,
+[data-theme="dark"] .education-card,
+[data-theme="dark"] .project-card {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .company-name,
+[data-theme="dark"] .education-institution,
+[data-theme="dark"] .project-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .job-title,
+[data-theme="dark"] .education-degree {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .company-location,
+[data-theme="dark"] .company-description,
+[data-theme="dark"] .education-field,
+[data-theme="dark"] .education-description,
+[data-theme="dark"] .project-description {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .company-dates,
+[data-theme="dark"] .education-dates {
+  color: #94a3b8;
+}
+
+/* Dark Mode - Tech Badges */
+[data-theme="dark"] .tech-badge {
+  background: #334155;
+  color: #93c5fd;
+}
+
+/* Dark Mode - About Section */
+[data-theme="dark"] .about-content {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .about-content ul li {
+  color: #cbd5e1;
+}
+
+/* Dark Mode - Section Backgrounds */
+[data-theme="dark"] .bg-light {
+  background-color: #1e293b !important;
+}
+
+[data-theme="dark"] .portfolio-section {
+  background-color: #0f172a;
+}
+
+/* Dark Mode - Section Titles */
+[data-theme="dark"] .section-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .portfolio-section .section-title::after {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+/* Dark Mode - Section Icons */
+[data-theme="dark"] .section-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* Dark Mode - Buttons */
+[data-theme="dark"] .btn-outline-primary {
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+  background: #60a5fa;
+  color: #0f172a;
+}
+
+/* Focus States - Accessibility */
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-outline-primary:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+.project-link:focus-visible,
+.contact-link:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Card focus for keyboard navigation */
+.experience-card:focus-within,
+.education-card:focus-within,
+.project-card:focus-within {
+  outline: 2px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+
+/* Dark Mode - Links */
+[data-theme="dark"] .project-link {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .project-link:hover {
+  color: #93c5fd;
+}
+
+/* Dark Mode - GitHub Stats Card */
+[data-theme="dark"] .github-stats-card {
+  background: #1e293b;
+}
+
+
 /* Global Styles */
 * {
   box-sizing: border-box;
