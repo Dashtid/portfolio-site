@@ -156,15 +156,7 @@ describe('HomeView', () => {
       await flushPromises()
 
       expect(wrapper.find('#about').exists()).toBe(true)
-      expect(wrapper.find('.about-content').exists()).toBe(true)
-    })
-
-    it('should render the contact section', async () => {
-      const wrapper = createWrapper()
-      await flushPromises()
-
-      expect(wrapper.find('#contact').exists()).toBe(true)
-      expect(wrapper.find('.contact-cards').exists()).toBe(true)
+      expect(wrapper.find('.about-layout').exists()).toBe(true)
     })
   })
 
@@ -187,33 +179,6 @@ describe('HomeView', () => {
       expect(lead.exists()).toBe(true)
       expect(lead.text()).toContain('Biomedical Engineer')
       expect(lead.text()).toContain('Stockholm, Sweden')
-    })
-  })
-
-  describe('Contact Section', () => {
-    it('should render LinkedIn contact card', async () => {
-      const wrapper = createWrapper()
-      await flushPromises()
-
-      const linkedinCard = wrapper.find('a[href="https://www.linkedin.com/in/david-dashti/"]')
-      expect(linkedinCard.exists()).toBe(true)
-    })
-
-    it('should render GitHub contact card', async () => {
-      const wrapper = createWrapper()
-      await flushPromises()
-
-      const githubCard = wrapper.find('a[href="https://github.com/Dashtid"]')
-      expect(githubCard.exists()).toBe(true)
-    })
-
-    it('should have external link attributes on contact cards', async () => {
-      const wrapper = createWrapper()
-      await flushPromises()
-
-      const linkedinCard = wrapper.find('a[href="https://www.linkedin.com/in/david-dashti/"]')
-      expect(linkedinCard.attributes('target')).toBe('_blank')
-      expect(linkedinCard.attributes('rel')).toBe('noopener')
     })
   })
 

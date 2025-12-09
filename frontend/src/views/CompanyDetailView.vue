@@ -252,6 +252,8 @@ onMounted((): void => {
 .company-detail-view {
   min-height: 100vh;
   padding: 2rem 1rem;
+  background-color: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1e293b);
 }
 
 .loading-container,
@@ -264,8 +266,17 @@ onMounted((): void => {
   text-align: center;
 }
 
+.loading-container p {
+  color: var(--text-secondary, #64748b);
+}
+
+.company-detail-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
 .company-header {
-  border-bottom: 2px solid var(--bs-border-color);
+  border-bottom: 2px solid var(--border-color, #e2e8f0);
   padding-bottom: 1.5rem;
 }
 
@@ -274,41 +285,53 @@ onMounted((): void => {
   height: 64px;
   object-fit: contain;
   border-radius: 8px;
+  background: #fff;
+  padding: 4px;
 }
 
 .company-name {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--bs-body-color);
+  color: var(--text-primary, #1e293b);
 }
 
 .company-title {
   font-weight: 500;
+  color: var(--text-secondary, #64748b);
 }
 
 .company-dates {
   font-size: 1rem;
+  color: var(--text-secondary, #64748b);
 }
 
 .description-content {
   font-size: 1.1rem;
   line-height: 1.8;
-  color: var(--bs-body-color);
+  color: var(--text-primary, #1e293b);
 }
 
-.description-content p {
+.description-content :deep(p) {
   margin-bottom: 1.5rem;
+  color: var(--text-primary, #1e293b);
 }
 
-.description-content strong {
+.description-content :deep(strong) {
   font-weight: 600;
-  color: var(--bs-emphasis-color);
+  color: var(--text-primary, #1e293b);
+}
+
+.technologies-section h3,
+.responsibilities-section h3 {
+  color: var(--text-primary, #1e293b);
 }
 
 .technologies-list .badge {
   font-size: 0.9rem;
   padding: 0.5rem 0.75rem;
   font-weight: 500;
+  background-color: var(--primary-500, #3b82f6) !important;
+  color: #fff !important;
 }
 
 .responsibilities-list {
@@ -319,6 +342,7 @@ onMounted((): void => {
 .responsibilities-list li {
   margin-bottom: 0.75rem;
   line-height: 1.6;
+  color: var(--text-primary, #1e293b);
 }
 
 .breadcrumb {
@@ -329,15 +353,19 @@ onMounted((): void => {
 
 .breadcrumb-item a {
   text-decoration: none;
-  color: var(--bs-link-color);
+  color: var(--primary-500, #3b82f6);
 }
 
 .breadcrumb-item a:hover {
   text-decoration: underline;
 }
 
+.breadcrumb-item.active {
+  color: var(--text-secondary, #64748b);
+}
+
 .navigation-buttons {
-  border-top: 2px solid var(--bs-border-color);
+  border-top: 2px solid var(--border-color, #e2e8f0);
   padding-top: 2rem;
 }
 
@@ -375,52 +403,80 @@ onMounted((): void => {
 }
 
 /* Dark mode support */
+[data-theme='dark'] .company-detail-view {
+  background-color: var(--bg-primary, #0f172a);
+  color: var(--text-primary, #f1f5f9);
+}
+
 [data-theme='dark'] .company-header {
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme='dark'] .navigation-buttons {
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme='dark'] .detail-container {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme='dark'] .company-name {
   color: #f1f5f9;
 }
 
-[data-theme='dark'] .job-title {
-  color: #93c5fd;
-}
-
-[data-theme='dark'] .meta-text {
+[data-theme='dark'] .company-title {
   color: #94a3b8;
 }
 
-[data-theme='dark'] .section-title {
+[data-theme='dark'] .company-dates {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .description-content,
+[data-theme='dark'] .description-content :deep(p),
+[data-theme='dark'] .description-content :deep(strong) {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .technologies-section h3,
+[data-theme='dark'] .responsibilities-section h3 {
   color: #f1f5f9;
 }
 
-[data-theme='dark'] .section-text {
+[data-theme='dark'] .technologies-list .badge {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+  color: #93c5fd !important;
+}
+
+[data-theme='dark'] .responsibilities-list li {
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .tech-tag {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
+[data-theme='dark'] .navigation-buttons {
+  border-top-color: rgba(255, 255, 255, 0.15);
 }
 
-[data-theme='dark'] .responsibility-item {
-  color: #e2e8f0;
-}
-
-[data-theme='dark'] .back-link {
-  color: #93c5fd;
-}
-
-[data-theme='dark'] .back-link:hover {
+[data-theme='dark'] .breadcrumb-item a {
   color: #60a5fa;
+}
+
+[data-theme='dark'] .breadcrumb-item.active {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .loading-container p {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .btn-outline-primary {
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+[data-theme='dark'] .btn-outline-primary:hover {
+  background-color: #60a5fa;
+  color: #0f172a;
+}
+
+[data-theme='dark'] .btn-outline-secondary {
+  color: #94a3b8;
+  border-color: #475569;
+}
+
+[data-theme='dark'] .btn-outline-secondary:hover {
+  background-color: #475569;
+  color: #f1f5f9;
 }
 </style>
