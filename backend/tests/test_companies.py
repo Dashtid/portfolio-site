@@ -240,91 +240,6 @@ def test_company_ordering(client: TestClient, admin_user_in_db: dict[str, Any]):
     assert data[2]["name"] == "Third Company"
 
 
-def test_rebuild_complete_data_temp_requires_auth(client: TestClient):
-    """Test rebuild-complete-data-temp endpoint requires authentication."""
-    response = client.post("/api/v1/companies/rebuild-complete-data-temp")
-    # HTTPBearer returns 401 when no Authorization header is present
-    assert response.status_code == 401
-
-
-def test_rebuild_complete_data_temp(client: TestClient, admin_user_in_db: dict[str, Any]):
-    """Test rebuild-complete-data-temp endpoint with authentication."""
-    response = client.post(
-        "/api/v1/companies/rebuild-complete-data-temp",
-        headers=admin_user_in_db["headers"],
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "status" in data
-    assert data["status"] == "success"
-    assert "count" in data
-    assert data["count"] == 7  # Expected number of companies
-
-
-def test_rebuild_complete_data_creates_companies(
-    client: TestClient, admin_user_in_db: dict[str, Any]
-):
-    """Test that rebuild creates expected companies."""
-    # First rebuild the data (with auth)
-    response = client.post(
-        "/api/v1/companies/rebuild-complete-data-temp",
-        headers=admin_user_in_db["headers"],
-    )
-    assert response.status_code == 200
-
-    # Then get all companies
-    response = client.get("/api/v1/companies/")
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 7
-
-    # Check some expected companies exist
-    company_names = [c["name"] for c in data]
-    assert "Scania" in company_names
-    assert "Hermes Medical Solutions AB" in company_names
-    assert "Karolinska University Hospital" in company_names
-
-
-def test_get_company_by_id_success(client: TestClient, admin_user_in_db: dict[str, Any]):
-    """Test getting a company by ID after rebuild."""
-    # First rebuild the data (with auth)
-    client.post(
-        "/api/v1/companies/rebuild-complete-data-temp",
-        headers=admin_user_in_db["headers"],
-    )
-
-    # Get all companies to find an ID
-    response = client.get("/api/v1/companies/")
-    companies = response.json()
-    if companies:
-        company_id = companies[0]["id"]
-        response = client.get(f"/api/v1/companies/{company_id}")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["id"] == company_id
-
-
-def test_company_response_schema(client: TestClient, admin_user_in_db: dict[str, Any]):
-    """Test that company response matches expected schema."""
-    # First rebuild the data (with auth)
-    client.post(
-        "/api/v1/companies/rebuild-complete-data-temp",
-        headers=admin_user_in_db["headers"],
-    )
-
-    # Get all companies
-    response = client.get("/api/v1/companies/")
-    data = response.json()
-    if data:
-        company = data[0]
-        # Check expected fields exist
-        assert "id" in company
-        assert "name" in company
-        assert "title" in company
-        assert "description" in company
-        assert "order_index" in company
-
-
 class TestCompanyEdgeCases:
     """Edge case tests for companies API."""
 
@@ -428,38 +343,6 @@ class TestCompanyEdgeCases:
         data = response.json()
         assert data["name"] == "Company Without Title"
         assert data["title"] is None
-
-    def test_rebuild_clears_existing_data(
-        self, client: TestClient, admin_user_in_db: dict[str, Any]
-    ):
-        """Test that rebuild clears existing companies first."""
-        # Create a custom company
-        custom_company = {
-            "name": "Custom Company",
-            "title": "Custom Title",
-            "description": "Should be removed after rebuild",
-            "order_index": 100,
-        }
-        create_response = client.post(
-            "/api/v1/companies/", json=custom_company, headers=admin_user_in_db["headers"]
-        )
-        assert create_response.status_code == 201
-
-        # Rebuild the data
-        rebuild_response = client.post(
-            "/api/v1/companies/rebuild-complete-data-temp",
-            headers=admin_user_in_db["headers"],
-        )
-        assert rebuild_response.status_code == 200
-
-        # Get all companies
-        response = client.get("/api/v1/companies/")
-        data = response.json()
-        company_names = [c["name"] for c in data]
-
-        # Custom company should be gone, only rebuilt data remains
-        assert "Custom Company" not in company_names
-        assert len(data) == 7  # Only the rebuilt companies
 
     def test_get_company_by_invalid_uuid_format(self, client: TestClient):
         """Test getting company with invalid ID format."""

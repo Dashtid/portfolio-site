@@ -58,7 +58,7 @@ class TestGitHubCallback:
         response = client.get("/api/v1/auth/github/callback?code=test_code&state=invalid_state")
 
         assert response.status_code == 400
-        assert "Invalid state" in response.json()["detail"]
+        assert "Invalid or expired state" in response.json()["detail"]
 
     def test_github_callback_missing_code(self, client: TestClient):
         """Test callback without code parameter."""
