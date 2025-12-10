@@ -8,7 +8,7 @@
     <p class="project-description">{{ project.description }}</p>
 
     <div class="project-tech">
-      <span v-for="(tech, index) in techStack" :key="index" class="tech-tag">
+      <span v-for="tech in techStack" :key="tech" class="tech-tag">
         {{ tech }}
       </span>
     </div>
@@ -277,7 +277,6 @@ const techStack = computed<string[]>(() => {
   }
 }
 
-
 .project-link:focus-visible {
   outline: 2px solid var(--primary-400, #60a5fa);
   outline-offset: 2px;
@@ -287,7 +286,6 @@ const techStack = computed<string[]>(() => {
   outline: 2px solid var(--primary-400, #60a5fa);
   outline-offset: 2px;
 }
-
 
 /* Dark mode */
 [data-theme='dark'] .project-card {

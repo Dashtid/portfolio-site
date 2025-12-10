@@ -31,15 +31,17 @@ interface AuthState {
   refreshToken: string | null
   isLoading: boolean
   error: string | null
+  isInitialized: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
-    accessToken: storage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
-    refreshToken: storage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+    accessToken: null,
+    refreshToken: null,
     isLoading: false,
-    error: null
+    error: null,
+    isInitialized: false
   }),
 
   getters: {
@@ -169,6 +171,35 @@ export const useAuthStore = defineStore('auth', {
         // Fetch user info
         await this.fetchUser()
       }
+    },
+
+    // Initialize auth state from localStorage (called by route guard)
+    async initializeAuth(): Promise<void> {
+      if (this.isInitialized) return
+
+      // Load tokens from localStorage
+      const storedAccessToken = storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+      const storedRefreshToken = storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+
+      if (storedAccessToken && storedRefreshToken) {
+        this.accessToken = storedAccessToken
+        this.refreshToken = storedRefreshToken
+
+        // Set axios header
+        if (apiClient.defaults.headers.common) {
+          apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedAccessToken}`
+        }
+
+        // Try to fetch user info to validate token
+        try {
+          await this.fetchUser()
+        } catch (error) {
+          authLogger.error('Token validation failed during initialization:', error)
+          // Token might be expired, let the interceptor handle refresh
+        }
+      }
+
+      this.isInitialized = true
     }
   }
 })

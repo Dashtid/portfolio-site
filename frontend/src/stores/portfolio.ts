@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { AxiosError } from 'axios'
 import apiClient from '../api/client'
 import type { Company, Skill, Project, Education } from '@/types'
 import { apiLogger } from '../utils/logger'
@@ -10,6 +11,23 @@ interface PortfolioState {
   education: Education[]
   loading: boolean
   error: string | null
+}
+
+/**
+ * Extract user-friendly error message from various error types
+ */
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof AxiosError) {
+    // Try to get error detail from response body
+    const detail = error.response?.data?.detail
+    if (typeof detail === 'string') return detail
+    // Fallback to status text or generic message
+    return error.response?.statusText || error.message || 'Network error'
+  }
+  if (error instanceof Error) {
+    return error.message
+  }
+  return 'Unknown error occurred'
 }
 
 interface SkillsByCategory {
@@ -64,8 +82,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Company[]>('/api/v1/companies/')
         this.companies = response.data
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        this.error = errorMessage
+        this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching companies:', error)
       } finally {
         this.loading = false
@@ -73,29 +90,41 @@ export const usePortfolioStore = defineStore('portfolio', {
     },
 
     async fetchSkills(): Promise<void> {
+      this.loading = true
       try {
         const response = await apiClient.get<Skill[]>('/api/v1/skills/')
         this.skills = response.data
       } catch (error) {
+        this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching skills:', error)
+      } finally {
+        this.loading = false
       }
     },
 
     async fetchProjects(): Promise<void> {
+      this.loading = true
       try {
         const response = await apiClient.get<Project[]>('/api/v1/projects/')
         this.projects = response.data
       } catch (error) {
+        this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching projects:', error)
+      } finally {
+        this.loading = false
       }
     },
 
     async fetchEducation(): Promise<void> {
+      this.loading = true
       try {
         const response = await apiClient.get<Education[]>('/api/v1/education/')
         this.education = response.data
       } catch (error) {
+        this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching education:', error)
+      } finally {
+        this.loading = false
       }
     },
 

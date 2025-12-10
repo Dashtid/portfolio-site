@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import jwt
 
+from app.config import settings
 from app.core.security import (
-    ALGORITHM,
     create_access_token,
     create_refresh_token,
     decode_token,
@@ -118,19 +118,14 @@ class TestAccessToken:
         subject = "unique_test_user_123"
         token = create_access_token(subject=subject)
 
-        # Decode with the actual settings
-        from app.config import settings
-
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         assert payload.get("sub") == subject
 
     def test_access_token_has_type(self):
         """Test that access token has type 'access'."""
         token = create_access_token(subject="test_user")
 
-        from app.config import settings
-
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         assert payload.get("type") == "access"
 
 
@@ -156,9 +151,7 @@ class TestRefreshToken:
         """Test that refresh token has type 'refresh'."""
         token = create_refresh_token(subject="test_user")
 
-        from app.config import settings
-
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         assert payload.get("type") == "refresh"
 
 

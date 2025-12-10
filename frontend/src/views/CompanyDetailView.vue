@@ -103,7 +103,10 @@
       >
         <h3 class="h5 mb-3">Key Responsibilities</h3>
         <ul class="responsibilities-list">
-          <li v-for="(responsibility, index) in company.responsibilities" :key="index">
+          <li
+            v-for="(responsibility, index) in company.responsibilities"
+            :key="`resp-${index}-${responsibility.slice(0, 20)}`"
+          >
             {{ responsibility }}
           </li>
         </ul>
@@ -174,7 +177,7 @@ const formatDate = (dateString: string | null | undefined): string => {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
 }
 
-// Format detailed description with markdown-like formatting
+// Format detailed description with markdown-like formatting and XSS protection
 const formattedDescription = computed<string>(() => {
   if (!company.value?.detailed_description) return ''
 
@@ -189,20 +192,30 @@ const formattedDescription = computed<string>(() => {
     .map(para => `<p>${para.trim()}</p>`)
     .join('')
 
-  return html
+  // Sanitize HTML to prevent XSS attacks
+  // Configure DOMPurify to only allow safe URL protocols
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'strong', 'em', 'br', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i
+  })
 })
 
 // Get previous and next companies for navigation
 const previousCompany = computed<Company | null>(() => {
   if (!allCompanies.value.length || !company.value) return null
   const currentIndex = allCompanies.value.findIndex(c => c.id === company.value!.id)
-  return currentIndex > 0 ? allCompanies.value[currentIndex - 1] : null
+  // Handle case where company is not found in array (findIndex returns -1)
+  if (currentIndex <= 0) return null
+  return allCompanies.value[currentIndex - 1]
 })
 
 const nextCompany = computed<Company | null>(() => {
   if (!allCompanies.value.length || !company.value) return null
   const currentIndex = allCompanies.value.findIndex(c => c.id === company.value!.id)
-  return currentIndex < allCompanies.value.length - 1 ? allCompanies.value[currentIndex + 1] : null
+  // Handle case where company is not found in array (findIndex returns -1)
+  if (currentIndex === -1 || currentIndex >= allCompanies.value.length - 1) return null
+  return allCompanies.value[currentIndex + 1]
 })
 
 // Fetch company details

@@ -18,7 +18,7 @@ from app.core.security import create_access_token, create_refresh_token, decode_
 from app.database import get_db
 from app.middleware import limiter
 from app.models.user import User
-from app.schemas.auth import Token, UserResponse
+from app.schemas.auth import RefreshTokenRequest, Token, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -91,101 +91,114 @@ async def github_callback(request: Request, code: str, state: str, db: DbSession
     # Clean up state after validation
     del oauth_states[state]
 
-    # Exchange code for access token
-    async with httpx.AsyncClient() as client:
-        # Get access token from GitHub
-        token_response = await client.post(
-            "https://github.com/login/oauth/access_token",
-            data={
-                "client_id": settings.GITHUB_CLIENT_ID,
-                "client_secret": settings.GITHUB_CLIENT_SECRET,
-                "code": code,
-                "redirect_uri": settings.GITHUB_REDIRECT_URI,
-            },
-            headers={"Accept": "application/json"},
+    # Exchange code for access token with proper timeout and error handling
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Get access token from GitHub
+            token_response = await client.post(
+                "https://github.com/login/oauth/access_token",
+                data={
+                    "client_id": settings.GITHUB_CLIENT_ID,
+                    "client_secret": settings.GITHUB_CLIENT_SECRET,
+                    "code": code,
+                    "redirect_uri": settings.GITHUB_REDIRECT_URI,
+                },
+                headers={"Accept": "application/json"},
+            )
+
+            if token_response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to get access token from GitHub",
+                )
+
+            token_data = token_response.json()
+
+            if "error" in token_data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=token_data.get("error_description", "OAuth error"),
+                )
+
+            github_access_token = token_data.get("access_token")
+
+            # Get user info from GitHub
+            user_response = await client.get(
+                "https://api.github.com/user",
+                headers={
+                    "Authorization": f"Bearer {github_access_token}",
+                    "Accept": "application/json",
+                },
+            )
+
+            if user_response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to get user info from GitHub",
+                )
+
+            github_user = user_response.json()
+    except httpx.TimeoutException as err:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="GitHub service is not responding. Please try again later.",
+        ) from err
+    except httpx.RequestError as err:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to communicate with authentication service. Please try again.",
+        ) from err
+
+    # Check if user is the admin
+    github_id = str(github_user.get("id"))
+
+    if settings.ADMIN_GITHUB_ID and github_id != settings.ADMIN_GITHUB_ID:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only the admin can log in"
         )
 
-        if token_response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get access token from GitHub",
-            )
+    # Check if user exists in database
+    result = await db.execute(select(User).where(User.github_id == github_id))
+    user = result.scalar_one_or_none()
 
-        token_data = token_response.json()
-
-        if "error" in token_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=token_data.get("error_description", "OAuth error"),
-            )
-
-        github_access_token = token_data.get("access_token")
-
-        # Get user info from GitHub
-        user_response = await client.get(
-            "https://api.github.com/user",
-            headers={
-                "Authorization": f"Bearer {github_access_token}",
-                "Accept": "application/json",
-            },
+    # Create or update user
+    if not user:
+        user = User(
+            github_id=github_id,
+            username=github_user.get("login"),
+            email=github_user.get("email"),
+            name=github_user.get("name"),
+            avatar_url=github_user.get("avatar_url"),
+            is_admin=True,  # Since we only allow admin login
         )
+        db.add(user)
+    else:
+        # Update user info
+        user.username = github_user.get("login")
+        user.email = github_user.get("email")
+        user.name = github_user.get("name")
+        user.avatar_url = github_user.get("avatar_url")
 
-        if user_response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get user info from GitHub",
-            )
+    await db.commit()
+    await db.refresh(user)
 
-        github_user = user_response.json()
+    # Create JWT tokens
+    access_token = create_access_token(subject=user.id)
+    refresh_token = create_refresh_token(subject=user.id)
 
-        # Check if user is the admin
-        github_id = str(github_user.get("id"))
-
-        if settings.ADMIN_GITHUB_ID and github_id != settings.ADMIN_GITHUB_ID:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Only the admin can log in"
-            )
-
-        # Check if user exists in database
-        result = await db.execute(select(User).where(User.github_id == github_id))
-        user = result.scalar_one_or_none()
-
-        # Create or update user
-        if not user:
-            user = User(
-                github_id=github_id,
-                username=github_user.get("login"),
-                email=github_user.get("email"),
-                name=github_user.get("name"),
-                avatar_url=github_user.get("avatar_url"),
-                is_admin=True,  # Since we only allow admin login
-            )
-            db.add(user)
-        else:
-            # Update user info
-            user.username = github_user.get("login")
-            user.email = github_user.get("email")
-            user.name = github_user.get("name")
-            user.avatar_url = github_user.get("avatar_url")
-
-        await db.commit()
-        await db.refresh(user)
-
-        # Create JWT tokens
-        access_token = create_access_token(subject=user.id)
-        refresh_token = create_refresh_token(subject=user.id)
-
-        # Redirect to frontend with tokens
-        redirect_url = f"{settings.FRONTEND_URL}/admin?token={access_token}&refresh={refresh_token}"
-        return RedirectResponse(url=redirect_url)
+    # Redirect to frontend with tokens
+    redirect_url = f"{settings.FRONTEND_URL}/admin?token={access_token}&refresh={refresh_token}"
+    return RedirectResponse(url=redirect_url)
 
 
 @router.post("/refresh", response_model=Token)
 @limiter.limit(settings.RATE_LIMIT_AUTH)
-async def refresh_token(request: Request, refresh_token: str, db: DbSession):
-    """Refresh access token using refresh token"""
-    # Decode refresh token
-    payload = decode_token(refresh_token)
+async def refresh_token_endpoint(
+    request: Request, token_request: RefreshTokenRequest, db: DbSession
+):
+    """Refresh access token using refresh token with token rotation"""
+    # Decode refresh token (validated by Pydantic schema)
+    payload = decode_token(token_request.refresh_token)
 
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(
@@ -201,13 +214,15 @@ async def refresh_token(request: Request, refresh_token: str, db: DbSession):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Create new access token
+    # Create new tokens (refresh token rotation for security - 2025 best practice)
+    # This prevents refresh token reuse attacks - each token is single-use
     access_token = create_access_token(subject=user.id)
+    new_refresh_token = create_refresh_token(subject=user.id)
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "refresh_token": refresh_token,  # Return same refresh token
+        "refresh_token": new_refresh_token,
     }
 
 

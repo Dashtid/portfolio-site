@@ -39,6 +39,39 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+        # Set CSP based on environment: strict for production, relaxed for development
+        if settings.ENVIRONMENT == "production":
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self'",  # No unsafe-inline or unsafe-eval in production
+                "style-src 'self' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com data:",
+                "img-src 'self' data: https: blob:",
+                "connect-src 'self' https://api.github.com https://*.fly.dev",
+                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'none'",
+            ]
+        else:
+            # Development CSP - allows Vue.js hot-reload and devtools
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Required for Vue dev mode
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com data:",
+                "img-src 'self' data: https: blob:",
+                "connect-src 'self' https://api.github.com https://*.fly.dev ws://localhost:* http://localhost:*",
+                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'none'",
+            ]
+        response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
+
         # Strict-Transport-Security (HSTS) - only for HTTPS in production
         if settings.ENVIRONMENT == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
@@ -77,7 +110,16 @@ if settings.RATE_LIMIT_ENABLED:
     logger.info("Rate limiting enabled", extra={"default_limit": settings.RATE_LIMIT_DEFAULT})
 
 # Add middleware (order matters: first added = outermost layer)
-# Compression should be outermost to compress final response
+# CORS must be outermost so error responses also get CORS headers (2025 best practice)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+)
+
+# Compression (compress final response)
 app.add_middleware(CompressionMiddleware, minimum_size=1000)
 
 # Cache control headers
@@ -96,15 +138,6 @@ if settings.ERROR_TRACKING_ENABLED:
 
 # Request/response logging
 app.add_middleware(LoggingMiddleware)
-
-# CORS (should be close to the app)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
-)
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])

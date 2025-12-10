@@ -85,11 +85,18 @@ router.beforeEach(
   ) => {
     const authStore = useAuthStore()
 
+    // Initialize auth state from localStorage if not already done
+    // This ensures tokens are loaded before checking authentication
+    if (!authStore.isInitialized) {
+      await authStore.initializeAuth()
+    }
+
     // Check if route requires authentication
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!authStore.isAuthenticated) {
         // Redirect to login if not authenticated
-        next({ name: 'admin-login', query: { redirect: to.fullPath } })
+        // Note: Intentionally not passing redirect param to avoid open redirect vulnerabilities
+        next({ name: 'admin-login' })
       } else {
         next()
       }

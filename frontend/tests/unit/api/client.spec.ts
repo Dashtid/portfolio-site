@@ -66,6 +66,7 @@ describe('API client', () => {
     it('creates axios instance with correct base URL', () => {
       expect(axios.create).toHaveBeenCalledWith({
         baseURL: 'http://localhost:8001',
+        timeout: 30000,
         headers: {
           'Content-Type': 'application/json'
         }

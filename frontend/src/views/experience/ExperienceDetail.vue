@@ -154,7 +154,7 @@
         <ul class="list-group list-group-flush">
           <li
             v-for="(responsibility, index) in company.responsibilities"
-            :key="index"
+            :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
             class="list-group-item"
           >
             {{ responsibility }}
@@ -166,7 +166,7 @@
       <div v-if="company.technologies && company.technologies.length > 0" class="mb-5">
         <h3>Technologies & Tools</h3>
         <div class="d-flex flex-wrap gap-2">
-          <span v-for="(tech, index) in company.technologies" :key="index" class="badge bg-primary">
+          <span v-for="tech in company.technologies" :key="tech" class="badge bg-primary">
             {{ tech }}
           </span>
         </div>
@@ -206,14 +206,22 @@ const formatDate = (dateString: string | null | undefined): string => {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-// Format description with HTML (sanitized from backend)
+// Format description with HTML and XSS protection
 const formatDescription = (desc: string | null | undefined): string => {
   if (!desc) return ''
   // Replace newlines with paragraph breaks
-  return desc
+  const html = desc
     .split('\n\n')
     .map(p => `<p>${p}</p>`)
     .join('')
+
+  // Sanitize HTML to prevent XSS attacks
+  // Configure DOMPurify to only allow safe URL protocols
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'strong', 'em', 'br', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i
+  })
 }
 
 // Fetch all companies for navigation

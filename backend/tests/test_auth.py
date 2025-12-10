@@ -78,7 +78,9 @@ class TestRefreshToken:
 
     def test_refresh_token_invalid(self, client: TestClient):
         """Test refresh with invalid token."""
-        response = client.post("/api/v1/auth/refresh?refresh_token=invalid_token")
+        response = client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": "invalid_token_that_is_long_enough"}
+        )
 
         assert response.status_code == 401
         assert "Invalid refresh token" in response.json()["detail"]
@@ -87,7 +89,7 @@ class TestRefreshToken:
         """Test refresh using access token instead of refresh token."""
         access_token = create_access_token(subject="test_user")
 
-        response = client.post(f"/api/v1/auth/refresh?refresh_token={access_token}")
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": access_token})
 
         assert response.status_code == 401
         assert "Invalid refresh token" in response.json()["detail"]
@@ -96,7 +98,7 @@ class TestRefreshToken:
         """Test refresh with valid token but user not in database."""
         refresh_token = create_refresh_token(subject="nonexistent-user-id")
 
-        response = client.post(f"/api/v1/auth/refresh?refresh_token={refresh_token}")
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
 
         assert response.status_code == 404
         assert "User not found" in response.json()["detail"]
@@ -134,12 +136,12 @@ def test_github_login_redirect(client: TestClient):
 
 def test_token_refresh(client: TestClient):
     """Test token refresh endpoint."""
-    # Create a valid refresh token
-    refresh_token = create_refresh_token(subject="test_user")
+    # Create a valid refresh token with nonexistent user - should return 404
+    refresh_token = create_refresh_token(subject="nonexistent_user")
 
     response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
-    # Endpoint should exist and return either success or an error response
-    assert response.status_code in [200, 401, 422]
+    # Endpoint returns 404 for nonexistent user, 401 for invalid token, 200 for success
+    assert response.status_code in [200, 401, 404, 422]
 
 
 def test_protected_endpoint_without_auth(client: TestClient):
@@ -262,7 +264,7 @@ class TestAuthIntegration:
     def test_refresh_token_with_valid_user_in_db(self, client: TestClient, test_user_in_db: dict):
         """Test token refresh with valid user in database."""
         response = client.post(
-            f"/api/v1/auth/refresh?refresh_token={test_user_in_db['refresh_token']}"
+            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200
@@ -276,7 +278,7 @@ class TestAuthIntegration:
         """Test that refreshed access token works for protected endpoints."""
         # First refresh the token
         refresh_response = client.post(
-            f"/api/v1/auth/refresh?refresh_token={test_user_in_db['refresh_token']}"
+            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
         )
         assert refresh_response.status_code == 200
         new_access_token = refresh_response.json()["access_token"]
@@ -393,19 +395,21 @@ class TestRefreshTokenEdgeCases:
     """Tests for refresh token edge cases."""
 
     def test_refresh_with_empty_token(self, client: TestClient):
-        """Test refresh with empty token."""
-        response = client.post("/api/v1/auth/refresh?refresh_token=")
-        assert response.status_code == 401
+        """Test refresh with empty token - validation rejects short tokens."""
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": ""})
+        # Pydantic validation rejects tokens shorter than 10 chars
+        assert response.status_code == 422
 
     def test_refresh_with_whitespace_token(self, client: TestClient):
-        """Test refresh with whitespace token."""
-        response = client.post("/api/v1/auth/refresh?refresh_token=   ")
-        assert response.status_code == 401
+        """Test refresh with whitespace token - validation rejects short tokens."""
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": "   "})
+        # Pydantic validation rejects tokens shorter than 10 chars
+        assert response.status_code == 422
 
     def test_refresh_preserves_same_refresh_token(self, client: TestClient, test_user_in_db: dict):
         """Test that refresh returns the same refresh token."""
         response = client.post(
-            f"/api/v1/auth/refresh?refresh_token={test_user_in_db['refresh_token']}"
+            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200

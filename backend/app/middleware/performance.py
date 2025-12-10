@@ -2,11 +2,12 @@
 Performance monitoring middleware for tracking response times and metrics
 """
 
+import threading
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from collections.abc import Callable
 
-from fastapi import Request, Response
+from fastapi import HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.utils.logger import get_logger
@@ -15,51 +16,61 @@ logger = get_logger(__name__)
 
 
 class PerformanceMetrics:
-    """In-memory storage for performance metrics"""
+    """Thread-safe in-memory storage for performance metrics with bounded memory"""
+
+    # Maximum number of response times to keep per endpoint (prevents memory exhaustion)
+    MAX_RESPONSE_TIMES = 1000
 
     def __init__(self):
+        self._lock = threading.Lock()
         self.request_count = defaultdict(int)
-        self.response_times = defaultdict(list)
+        # Use deque with maxlen to bound memory usage - keeps last N response times
+        self.response_times: dict[str, deque[float]] = defaultdict(
+            lambda: deque(maxlen=self.MAX_RESPONSE_TIMES)
+        )
         self.status_codes = defaultdict(int)
         self.errors = defaultdict(int)
 
     def record_request(self, method: str, path: str, duration_ms: float, status_code: int):
-        """Record request metrics"""
+        """Record request metrics (thread-safe)"""
         endpoint = f"{method} {path}"
 
-        self.request_count[endpoint] += 1
-        self.response_times[endpoint].append(duration_ms)
-        self.status_codes[status_code] += 1
+        with self._lock:
+            self.request_count[endpoint] += 1
+            self.response_times[endpoint].append(duration_ms)
+            self.status_codes[status_code] += 1
 
-        if status_code >= 400:
-            self.errors[endpoint] += 1
+            if status_code >= 400:
+                self.errors[endpoint] += 1
 
     def get_stats(self) -> dict:
-        """Get aggregated statistics"""
-        stats = {
-            "total_requests": sum(self.request_count.values()),
-            "endpoints": {},
-            "status_codes": dict(self.status_codes),
-        }
+        """Get aggregated statistics (thread-safe)"""
+        with self._lock:
+            stats = {
+                "total_requests": sum(self.request_count.values()),
+                "endpoints": {},
+                "status_codes": dict(self.status_codes),
+            }
 
-        for endpoint, times in self.response_times.items():
-            if times:
-                stats["endpoints"][endpoint] = {
-                    "count": self.request_count[endpoint],
-                    "avg_response_time_ms": round(sum(times) / len(times), 2),
-                    "min_response_time_ms": round(min(times), 2),
-                    "max_response_time_ms": round(max(times), 2),
-                    "errors": self.errors.get(endpoint, 0),
-                }
+            for endpoint, times in self.response_times.items():
+                if times:
+                    stats["endpoints"][endpoint] = {
+                        "count": self.request_count[endpoint],
+                        "avg_response_time_ms": round(sum(times) / len(times), 2),
+                        "min_response_time_ms": round(min(times), 2),
+                        "max_response_time_ms": round(max(times), 2),
+                        "errors": self.errors.get(endpoint, 0),
+                    }
 
-        return stats
+            return stats
 
     def reset(self):
-        """Reset all metrics"""
-        self.request_count.clear()
-        self.response_times.clear()
-        self.status_codes.clear()
-        self.errors.clear()
+        """Reset all metrics (thread-safe)"""
+        with self._lock:
+            self.request_count.clear()
+            self.response_times.clear()
+            self.status_codes.clear()
+            self.errors.clear()
 
 
 # Global metrics instance
@@ -109,11 +120,36 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
                         "status_code": response.status_code,
                     },
                 )
-        except Exception:
-            # Calculate duration even on error
+        except HTTPException as exc:
+            # Calculate duration for HTTP exceptions (4xx, 5xx)
             duration_ms = (time.time() - start_time) * 1000
 
-            # Record error metrics (assuming 500 status)
+            # Record with actual HTTP status code
+            metrics.record_request(
+                method=request.method,
+                path=request.url.path,
+                duration_ms=duration_ms,
+                status_code=exc.status_code,
+            )
+
+            # Re-raise HTTP exception
+            raise
+
+        except Exception as exc:
+            # Calculate duration for unexpected errors
+            duration_ms = (time.time() - start_time) * 1000
+
+            # Log unexpected errors
+            logger.exception(
+                f"Unexpected error in request: {exc}",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "duration_ms": round(duration_ms, 2),
+                },
+            )
+
+            # Record as 500 for unexpected exceptions
             metrics.record_request(
                 method=request.method,
                 path=request.url.path,
@@ -123,8 +159,8 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
 
             # Re-raise exception
             raise
-        else:
-            return response
+
+        return response
 
 
 def get_metrics() -> dict:

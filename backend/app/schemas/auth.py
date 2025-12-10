@@ -4,7 +4,7 @@ Authentication schemas
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Token(BaseModel):
@@ -19,6 +19,18 @@ class TokenData(BaseModel):
     """Token data schema"""
 
     user_id: str | None = None
+
+
+class RefreshTokenRequest(BaseModel):
+    """Refresh token request schema with validation"""
+
+    refresh_token: str = Field(
+        ...,
+        min_length=10,
+        max_length=2000,
+        description="JWT refresh token",
+        examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."],
+    )
 
 
 class GitHubUser(BaseModel):

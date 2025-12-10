@@ -69,9 +69,9 @@ class TestAPIRoutes:
         response = client.get("/api/v1/health/")
         assert response.status_code == 200
 
-    def test_metrics_route_registered(self, client: TestClient):
-        """Test that metrics route is registered."""
-        response = client.get("/api/v1/metrics/")
+    def test_metrics_route_registered(self, client: TestClient, admin_user_in_db: dict):
+        """Test that metrics route is registered (requires admin auth)."""
+        response = client.get("/api/v1/metrics/", headers=admin_user_in_db["headers"])
         assert response.status_code == 200
 
 

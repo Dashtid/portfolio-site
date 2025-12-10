@@ -4,7 +4,7 @@
  * Supports fade-in, slide-up, slide-in-left, slide-in-right effects
  */
 import { useIntersectionObserver } from '@vueuse/core'
-import { ref, onMounted, type Ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount, type Ref } from 'vue'
 
 interface AnimationStyles {
   opacity: string
@@ -239,6 +239,9 @@ interface ParallaxOptions {
 export function useParallax(target: Ref<HTMLElement | null>, options: ParallaxOptions = {}): void {
   const { speed = 0.5 } = options
 
+  // Store scroll listener reference for cleanup
+  let scrollListener: (() => void) | null = null
+
   onMounted(() => {
     const handleScroll = (): void => {
       if (!target.value) return
@@ -252,7 +255,7 @@ export function useParallax(target: Ref<HTMLElement | null>, options: ParallaxOp
 
     // Throttle scroll events for performance
     let ticking = false
-    const scrollListener = (): void => {
+    scrollListener = (): void => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           handleScroll()
@@ -263,9 +266,13 @@ export function useParallax(target: Ref<HTMLElement | null>, options: ParallaxOp
     }
 
     window.addEventListener('scroll', scrollListener, { passive: true })
+  })
 
-    return () => {
+  // Properly cleanup scroll listener to prevent memory leaks
+  onBeforeUnmount(() => {
+    if (scrollListener) {
       window.removeEventListener('scroll', scrollListener)
+      scrollListener = null
     }
   })
 }

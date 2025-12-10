@@ -2,9 +2,14 @@
 Application configuration using Pydantic Settings
 """
 
-import secrets
+import os
+import warnings
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
+# Development-only fallback key (clearly marked as insecure)
+_DEV_SECRET_KEY = "INSECURE-DEV-KEY-CHANGE-IN-PRODUCTION"
 
 
 class Settings(BaseSettings):
@@ -40,16 +45,66 @@ class Settings(BaseSettings):
 
         return url
 
-    # CORS
+    # CORS - configure via environment for production
+    # Default allows localhost for development, override with CORS_ORIGINS env var
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from comma-separated string or list"""
+        if isinstance(v, str):
+            # Support comma-separated string from environment
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # Frontend URL (for OAuth redirect)
     FRONTEND_URL: str = "http://localhost:3000"
 
+    @field_validator("FRONTEND_URL")
+    @classmethod
+    def validate_frontend_url(cls, v: str, info) -> str:
+        """Ensure FRONTEND_URL is HTTPS in production"""
+        environment = info.data.get("ENVIRONMENT", "development")
+        if environment == "production" and not v.startswith("https://"):
+            warnings.warn(
+                f"FRONTEND_URL '{v}' should use HTTPS in production",
+                stacklevel=2,
+            )
+        return v
+
     # Security
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    # SECRET_KEY should be set via environment variable in production
+    # Falls back to dev key only in development mode
+    SECRET_KEY: str = os.getenv("SECRET_KEY", _DEV_SECRET_KEY)
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 1 week
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes for security (2025 best practice)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7 days for refresh tokens
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_secret_key(cls, v: str, info) -> str:
+        """Ensure SECRET_KEY is properly configured for production"""
+        # Get environment from values if available
+        environment = info.data.get("ENVIRONMENT", "development")
+
+        if environment == "production":
+            # In production, reject insecure dev key
+            if v == _DEV_SECRET_KEY:
+                raise ValueError(
+                    "SECRET_KEY must be set via environment variable in production. "
+                    'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+                )
+            # Ensure key is sufficiently long
+            if len(v) < 32:
+                raise ValueError("SECRET_KEY must be at least 32 characters in production")
+        elif v == _DEV_SECRET_KEY:
+            # Warn in development but allow
+            warnings.warn(
+                "Using insecure development SECRET_KEY. Set SECRET_KEY environment variable for security.",
+                stacklevel=2,
+            )
+        return v
 
     # GitHub OAuth (will be configured later)
     GITHUB_CLIENT_ID: str | None = None
