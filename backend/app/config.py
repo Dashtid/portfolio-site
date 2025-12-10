@@ -122,9 +122,11 @@ class Settings(BaseSettings):
     ANALYTICS_SITE_ID: str | None = None  # Plausible/Umami site ID
     ANALYTICS_URL: str | None = None  # Analytics server URL
 
-    # Error Tracking
+    # Error Tracking (Sentry)
     ERROR_TRACKING_ENABLED: bool = True
-    ERROR_TRACKING_DSN: str | None = None  # Sentry DSN (optional)
+    SENTRY_DSN: str | None = None  # Sentry DSN for error tracking
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.1  # 10% of transactions for performance monitoring
+    SENTRY_PROFILES_SAMPLE_RATE: float = 0.1  # 10% of sampled transactions for profiling
 
     # Performance Monitoring
     METRICS_ENABLED: bool = True

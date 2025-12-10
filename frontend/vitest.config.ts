@@ -40,8 +40,8 @@ export default defineConfig({
         statements: 74
       }
     },
-    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    include: ['tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'tests/e2e'],
     testTimeout: 10000,
     hookTimeout: 10000
   },

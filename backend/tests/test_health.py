@@ -12,7 +12,11 @@ def test_basic_health_check(client: TestClient):
     data = response.json()
     assert data["status"] == "healthy"
     assert "timestamp" in data
-    assert data["service"] == "portfolio-api"
+    assert data["service"] == "Portfolio API"
+    assert "version" in data
+    assert "environment" in data
+    assert "uptime_seconds" in data
+    assert "uptime_human" in data
 
 
 def test_readiness_check(client: TestClient):
@@ -24,7 +28,9 @@ def test_readiness_check(client: TestClient):
     assert "timestamp" in data
     assert "checks" in data
     assert "database" in data["checks"]
-    assert data["checks"]["database"] == "connected"
+    assert data["checks"]["database"]["status"] == "connected"
+    assert "latency_ms" in data["checks"]["database"]
+    assert "uptime_seconds" in data
 
 
 def test_liveness_check(client: TestClient):
@@ -80,4 +86,8 @@ class TestHealthEndpointsExtended:
         data = response.json()
         assert data["status"] == "ready"
         assert "checks" in data
-        assert data["checks"]["database"] == "connected"
+        assert data["checks"]["database"]["status"] == "connected"
+        assert "latency_ms" in data["checks"]["database"]
+        assert "service" in data
+        assert "version" in data
+        assert "uptime_seconds" in data

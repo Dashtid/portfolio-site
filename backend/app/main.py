@@ -4,6 +4,7 @@ FastAPI main application
 
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -27,6 +28,19 @@ from app.middleware import (
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Initialize Sentry for error tracking and performance monitoring
+if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        release=f"portfolio-api@{settings.APP_VERSION}",
+        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+        profiles_sample_rate=settings.SENTRY_PROFILES_SAMPLE_RATE,
+        send_default_pii=False,
+        enable_tracing=True,
+    )
+    logger.info("Sentry initialized", extra={"environment": settings.ENVIRONMENT})
 
 
 # Security Headers Middleware
