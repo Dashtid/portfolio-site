@@ -91,7 +91,6 @@ export class HomePage extends BasePage {
    */
   async toggleTheme(): Promise<string | null> {
     const htmlElement = this.page.locator('html')
-    const initialTheme = await htmlElement.getAttribute('class')
 
     await this.themeToggle.click()
     await this.page.waitForTimeout(300) // Wait for theme transition

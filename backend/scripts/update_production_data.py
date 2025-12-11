@@ -9,17 +9,18 @@ Run on Fly.io:
     cd /app
     python scripts/update_production_data.py
 """
+
 import asyncio
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import select
+
 from app.database import AsyncSessionLocal
 from app.models.company import Company
-
 
 # Detailed content extracted from dashti.se - using exact company names from database
 COMPANY_DETAILS = {
@@ -37,15 +38,24 @@ As a **Multidisciplinary Specialist** focusing on Quality Assurance, Regulatory 
 **Data Security:** I conduct security assessments and implement data protection measures, ensuring patient data remains secure while maintaining compliance with healthcare data regulations.
 
 **Cross-Functional Collaboration:** I coordinate across development, clinical, and regulatory teams to deliver software solutions that meet both technical specifications and clinical needs.""",
-        "technologies": ["Windows Server", "Docker", "PowerShell", "Git", "Python", "DICOM", "ISO 27001", "NIS2"],
+        "technologies": [
+            "Windows Server",
+            "Docker",
+            "PowerShell",
+            "Git",
+            "Python",
+            "DICOM",
+            "ISO 27001",
+            "NIS2",
+        ],
         "responsibilities": [
             "Ensure regulatory compliance with NIS2 and ISO 27001 standards",
             "Support market clearance processes for medical device software",
             "Lead Verification and Validation (V&V) for nuclear medicine software",
             "Maintain testing protocols for diagnostic imaging tools",
             "Conduct security assessments and data protection implementation",
-            "Coordinate across development, clinical, and regulatory teams"
-        ]
+            "Coordinate across development, clinical, and regulatory teams",
+        ],
     },
     "Scania Engines": {
         "detailed_description": """**Scania** is a leading Swedish manufacturer of commercial vehicles, buses, and industrial engines, with a strong focus on sustainable transport solutions.
@@ -57,14 +67,19 @@ As a **Technician in Engine Analysis**, I worked in the troubleshooting and diag
 **Advanced Engagement (2016):** Returning to Scania in a more independent capacity, I took on end-to-end responsibility for troubleshooting cases. This included initial case intake from the manufacturing line, diagnostic analysis, resolution implementation, and comprehensive documentation for future reference.
 
 **Key Achievements:** I developed strong collaboration skills working with both manufacturing line personnel and construction engineers, contributing to process improvements and documentation standards that enhanced team efficiency.""",
-        "technologies": ["Engine Diagnostics", "Technical Documentation", "Manufacturing Systems", "Quality Control"],
+        "technologies": [
+            "Engine Diagnostics",
+            "Technical Documentation",
+            "Manufacturing Systems",
+            "Quality Control",
+        ],
         "responsibilities": [
             "Perform engine analysis and diagnostics troubleshooting",
             "Handle complete case lifecycle from intake to resolution",
             "Collaborate with manufacturing line and construction engineers",
             "Create and maintain technical documentation",
-            "Implement process improvements for team efficiency"
-        ]
+            "Implement process improvements for team efficiency",
+        ],
     },
     "Finnish Defence Forces": {
         "detailed_description": """**Finnish Defence Forces (Puolustusvoimat)** - specifically **Nylands Brigad** - is a Swedish-speaking coastal defense unit specializing in amphibious operations and marine commando training.
@@ -78,14 +93,20 @@ As a **Platoon Leader** with the rank of **2nd Lieutenant**, I commanded militar
 **Leadership Under Pressure:** The role required decisive decision-making in high-stress situations, balancing mission objectives with personnel safety and welfare. This experience developed my ability to remain calm and effective under pressure.
 
 **Selection and Training:** The officer program at Nylands Brigad is highly selective, focusing on physical capabilities, mental resilience, and leadership potential. The training emphasized amphibious warfare, coastal defense, and rapid deployment operations.""",
-        "technologies": ["Leadership", "Strategic Planning", "Team Management", "Crisis Management", "Training Development"],
+        "technologies": [
+            "Leadership",
+            "Strategic Planning",
+            "Team Management",
+            "Crisis Management",
+            "Training Development",
+        ],
         "responsibilities": [
             "Command and welfare of 150 soldiers in garrison",
             "Lead 30-soldier tactical unit in field operations",
             "Manage training schedules and personnel development",
             "Make decisions under operational pressure",
-            "Ensure mission success while maintaining personnel safety"
-        ]
+            "Ensure mission success while maintaining personnel safety",
+        ],
     },
     "Karolinska University Hospital": {
         "detailed_description": """**Karolinska University Hospital** is one of Europe's largest and most prestigious university hospitals, affiliated with the Karolinska Institute which awards the Nobel Prize in Physiology or Medicine.
@@ -99,14 +120,23 @@ As a **Biomedical Engineer** in the Medical Imaging and Physiology department, I
 **Systems Architecture:** I developed expertise in healthcare IT systems, particularly RIS/PACS integration with the Hospital Information System. This included working with DICOM and HL7 protocols for seamless clinical data flow.
 
 **Infrastructure Management:** I contributed to IT infrastructure management, including Active Directory administration and implementation of ITIL framework practices for service management.""",
-        "technologies": ["DICOM", "HL7", "RIS/PACS", "Active Directory", "GE Healthcare", "Philips", "Siemens", "ITIL"],
+        "technologies": [
+            "DICOM",
+            "HL7",
+            "RIS/PACS",
+            "Active Directory",
+            "GE Healthcare",
+            "Philips",
+            "Siemens",
+            "ITIL",
+        ],
         "responsibilities": [
             "Provide first-line technical support for medical imaging equipment",
             "Manage multi-vendor equipment relationships (GE, Philips, Siemens)",
             "Support RIS/PACS integration with Hospital Information System",
             "Work with DICOM and HL7 healthcare communication protocols",
-            "Administer Active Directory and implement ITIL practices"
-        ]
+            "Administer Active Directory and implement ITIL practices",
+        ],
     },
     "Philips Healthcare": {
         "detailed_description": """**Philips Healthcare** (Enterprise Informatics division) provides advanced medical imaging visualization and cardiovascular PACS solutions to healthcare organizations worldwide.
@@ -122,14 +152,21 @@ As an **Incident Support Specialist** for the Nordic region (with dotted-line re
 **Quality Improvement:** I contributed to upgrade success assessments and identified opportunities for process improvements, helping to enhance service delivery and customer satisfaction across the region.
 
 **Healthcare IT Integration:** I developed deep expertise in healthcare IT integration, including HL7 messaging, broker engines, and enterprise system connectivity.""",
-        "technologies": ["Intellispace Portal", "Intellispace Cardiovascular", "HL7", "PACS", "Healthcare IT", "ITIL"],
+        "technologies": [
+            "Intellispace Portal",
+            "Intellispace Cardiovascular",
+            "HL7",
+            "PACS",
+            "Healthcare IT",
+            "ITIL",
+        ],
         "responsibilities": [
             "Provide Level 1 support for Intellispace Portal and Cardiovascular",
             "Manage complete incident lifecycle from contact to resolution",
             "Lead Nordic operations and mentor junior engineers",
             "Facilitate cross-regional knowledge sharing",
-            "Assess upgrade success and identify process improvements"
-        ]
+            "Assess upgrade success and identify process improvements",
+        ],
     },
     "Södersjukhuset - SÖS": {
         "detailed_description": """**Södersjukhuset (SÖS)** is one of Stockholm's largest emergency hospitals, providing comprehensive healthcare services including advanced radiology and medical imaging.
@@ -145,14 +182,21 @@ As a **Biomedical Engineer** in the Radiology Department, I managed IT infrastru
 **Regulatory Compliance:** I contributed to maintaining compliance with healthcare regulatory requirements, including ISO 13485 for medical device quality management.
 
 **Contract and Vendor Management:** I participated in equipment evaluations and contract reviews, providing technical input to support procurement decisions.""",
-        "technologies": ["PACS", "DICOM", "Medical Imaging", "Healthcare IT", "ISO 13485", "Radiology Systems"],
+        "technologies": [
+            "PACS",
+            "DICOM",
+            "Medical Imaging",
+            "Healthcare IT",
+            "ISO 13485",
+            "Radiology Systems",
+        ],
         "responsibilities": [
             "Manage radiology IT infrastructure including PACS and DICOM",
             "Optimize clinical workflows and reduce system downtime",
             "Collaborate across clinical, IT, and administrative teams",
             "Maintain healthcare regulatory compliance (ISO 13485)",
-            "Support equipment evaluations and procurement decisions"
-        ]
+            "Support equipment evaluations and procurement decisions",
+        ],
     },
     "SoftPro Medical Solutions": {
         "detailed_description": """**SoftPro Medical Solutions** develops healthcare software solutions, including the Medusa inventory management system for medical equipment and supplies.
@@ -164,14 +208,19 @@ As a **Master Thesis Student**, I conducted research on improving quality assura
 **System Integration:** I worked on integrating the Medusa inventory management system with radiology department workflows, exploring opportunities for automation and efficiency improvements.
 
 **Academic Contribution:** The research contributed to understanding how healthcare organizations can optimize their quality assurance processes while maintaining regulatory compliance.""",
-        "technologies": ["Process Modeling", "Quality Assurance", "Healthcare Software", "Research Methods"],
+        "technologies": [
+            "Process Modeling",
+            "Quality Assurance",
+            "Healthcare Software",
+            "Research Methods",
+        ],
         "responsibilities": [
             "Conduct master's thesis research on QA process improvement",
             "Analyze radiology equipment quality assurance workflows",
             "Integrate Medusa inventory system with clinical processes",
-            "Apply process modeling and multi-actor system analysis"
-        ]
-    }
+            "Apply process modeling and multi-actor system analysis",
+        ],
+    },
 }
 
 
@@ -191,9 +240,7 @@ async def update_company_details():
             print(f"Updating: {company_name}")
 
             # Check if company exists
-            result = await db.execute(
-                select(Company).where(Company.name == company_name)
-            )
+            result = await db.execute(select(Company).where(Company.name == company_name))
             company = result.scalar_one_or_none()
 
             if not company:
@@ -209,7 +256,7 @@ async def update_company_details():
             await db.commit()
             updated_count += 1
 
-            print(f"  [OK] Updated successfully")
+            print("  [OK] Updated successfully")
             print(f"    - Description: {len(details['detailed_description'])} chars")
             print(f"    - Technologies: {len(details['technologies'])} items")
             print(f"    - Responsibilities: {len(details['responsibilities'])} items")
@@ -228,9 +275,7 @@ async def update_company_details():
         print("Verification - Companies with detailed content:")
         print("-" * 70)
 
-        result = await db.execute(
-            select(Company).order_by(Company.name)
-        )
+        result = await db.execute(select(Company).order_by(Company.name))
         companies = result.scalars().all()
 
         for company in companies:

@@ -228,7 +228,7 @@ const formatDescription = (desc: string | null | undefined): string => {
 const fetchAllCompanies = async (): Promise<void> => {
   try {
     const response = await axios.get<Company[]>(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/`
+      `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/companies/`
     )
     allCompanies.value = response.data.sort(
       (a, b) =>
@@ -247,7 +247,7 @@ const fetchCompany = async (id: string): Promise<void> => {
 
   try {
     const response = await axios.get<Company>(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/v1/companies/${id}`
+      `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/companies/${id}`
     )
     company.value = response.data
   } catch (err) {

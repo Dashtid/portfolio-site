@@ -84,7 +84,7 @@ test.describe('Home Page', () => {
       }
     })
 
-    test('should persist theme preference', async ({ page, context }) => {
+    test('should persist theme preference', async ({ page }) => {
       const themeToggle = page.locator(
         '[data-testid="theme-toggle"], button:has([class*="sun"]), button:has([class*="moon"])'
       )

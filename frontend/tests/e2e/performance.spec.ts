@@ -169,7 +169,7 @@ test.describe('Performance', () => {
       }
     })
 
-    test('should have appropriate caching headers', async ({ page, request }) => {
+    test('should have appropriate caching headers', async ({ page }) => {
       const response = await page.goto('/')
 
       if (response) {
