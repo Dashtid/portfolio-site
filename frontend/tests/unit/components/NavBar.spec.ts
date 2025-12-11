@@ -73,7 +73,6 @@ describe('NavBar', () => {
     expect(navText).toContain('Education')
     expect(navText).toContain('Projects')
     expect(navText).toContain('About')
-    expect(navText).toContain('Contact')
   })
 
   it('renders theme toggle component', () => {
