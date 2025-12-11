@@ -14,9 +14,11 @@ repos:
       - id: check-json
       - id: check-added-large-files
         args: ['--maxkb=1000']
+        exclude: ^frontend/tests/e2e/.*-snapshots/.*\.png$
       - id: check-merge-conflict
       - id: mixed-line-ending
         args: ['--fix=lf']
+        exclude: ^frontend/tests/e2e/.*-snapshots/
 
   # Frontend: Prettier formatting
   - repo: https://github.com/pre-commit/mirrors-prettier

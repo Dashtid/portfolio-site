@@ -20,9 +20,12 @@ export abstract class BasePage {
 
   /**
    * Wait for page to be fully loaded
+   * Uses domcontentloaded instead of networkidle to avoid timeouts from API calls
    */
   async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle')
+    await this.page.waitForLoadState('domcontentloaded')
+    // Wait for Vue app to mount
+    await this.page.waitForSelector('#app', { state: 'attached' })
   }
 
   /**

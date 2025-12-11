@@ -1,7 +1,16 @@
 import { test, expect } from '@playwright/test'
 
+// Security headers are set by the production server (Vercel), not by Vite preview
+// Skip these tests in local development
+const isProduction =
+  process.env.E2E_BASE_URL?.includes('vercel') ||
+  process.env.E2E_BASE_URL?.includes('dashti.se') ||
+  process.env.CI === 'true'
+
 test.describe('Security Headers', () => {
   test('should have security headers on the home page', async ({ page }) => {
+    test.skip(!isProduction, 'Security headers only available in production (Vercel)')
+
     const response = await page.goto('/')
 
     if (response) {
@@ -39,7 +48,9 @@ test.describe('Security Headers', () => {
     })
 
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
+    // Wait a bit for initial requests to be made
+    await page.waitForTimeout(2000)
 
     // All external requests should use HTTPS (except localhost in dev)
     for (const url of requests) {
@@ -65,7 +76,8 @@ test.describe('XSS Prevention', () => {
   test('should sanitize URL parameters', async ({ page }) => {
     // Try injecting script via URL
     await page.goto('/?test=<script>alert(1)</script>')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
+    await page.waitForTimeout(1000)
 
     // The script should not be executed
     const alertTriggered = await page.evaluate(() => {
@@ -103,22 +115,25 @@ test.describe('CORS and External Resources', () => {
     const failedRequests: string[] = []
 
     page.on('requestfailed', request => {
-      failedRequests.push(request.url())
+      // Only track critical resource failures, not API calls
+      const url = request.url()
+      if (url.includes('.js') || url.includes('.css') || url.includes('fonts')) {
+        failedRequests.push(url)
+      }
     })
 
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
+    // Wait for critical resources to load
+    await page.waitForTimeout(3000)
 
     // Report any failed requests
     if (failedRequests.length > 0) {
-      console.log('Failed requests:', failedRequests)
+      console.log('Failed critical requests:', failedRequests)
     }
 
-    // Critical resources should not fail
-    const criticalFailures = failedRequests.filter(
-      url => url.includes('.js') || url.includes('.css') || url.includes('fonts')
-    )
-    expect(criticalFailures).toHaveLength(0)
+    // Critical resources (JS, CSS, fonts) should not fail
+    expect(failedRequests).toHaveLength(0)
   })
 })
 

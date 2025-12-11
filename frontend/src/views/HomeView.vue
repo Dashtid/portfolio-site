@@ -349,15 +349,8 @@ onMounted(async () => {
     documentsLoading.value = false
   }
 
-  // Register service worker for PWA
-  if ('serviceWorker' in navigator) {
-    try {
-      await navigator.serviceWorker.register('/sw.js')
-      logger.log('Service Worker registered successfully')
-    } catch (error) {
-      logger.error('Service Worker registration failed:', error)
-    }
-  }
+  // Service worker is now handled by vite-plugin-pwa (Workbox)
+  // Manual registration removed - PWA plugin auto-registers SW
 
   // Apply scroll animations to cards with staggered effect
   useBatchAnimation('.experience-card', {

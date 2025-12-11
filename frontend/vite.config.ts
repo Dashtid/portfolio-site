@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import os from 'os'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -10,6 +11,110 @@ export default defineConfig({
   cacheDir: path.join(os.tmpdir(), 'vite-cache-portfolio'),
   plugins: [
     vue(),
+    // PWA with Workbox for better offline support
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'images/*.svg', 'images/*.webp', 'images/*.png'],
+      manifest: {
+        name: 'David Dashti - Portfolio',
+        short_name: 'Dashti',
+        description: 'Biomedical Engineer & Cybersecurity Specialist Portfolio',
+        theme_color: '#0d6efd',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        icons: [
+          {
+            src: '/images/D.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/images/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/images/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      },
+      workbox: {
+        // Precache app shell (exclude large images from precaching)
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
+        // Exclude large images from precaching - they'll be runtime cached
+        globIgnores: ['**/images/stockholm*', '**/images/optimized/*'],
+        // Allow larger files (up to 3MB)
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // Runtime caching strategies
+        runtimeCaching: [
+          {
+            // Cache API responses (network-first with fallback)
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              networkTimeoutSeconds: 10,
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // Cache images (cache-first)
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
+          {
+            // Cache fonts (cache-first)
+            urlPattern: /\.(?:woff|woff2|ttf|eot)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'font-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              }
+            }
+          },
+          {
+            // Cache external resources (stale-while-revalidate)
+            urlPattern: /^https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com)\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              }
+            }
+          }
+        ],
+        // Skip waiting to activate new service worker immediately
+        skipWaiting: true,
+        clientsClaim: true,
+        // Clean up old caches
+        cleanupOutdatedCaches: true
+      },
+      devOptions: {
+        enabled: false // Disable in development
+      }
+    }),
     // Bundle analyzer (optional, only in analysis mode)
     process.env.ANALYZE &&
       visualizer({

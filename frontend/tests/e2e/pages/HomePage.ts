@@ -41,8 +41,8 @@ export class HomePage extends BasePage {
     this.themeToggle = page.locator('[data-testid="theme-toggle"]')
     this.backToTop = page.locator('[data-testid="back-to-top"]')
 
-    // Hero
-    this.heroSection = page.locator('#hero, section:first-of-type')
+    // Hero - use specific ID selector only
+    this.heroSection = page.locator('#hero')
     this.heroTitle = page.locator('h1')
     this.heroSubtitle = page.locator('.hero-subtitle, h1 + p, h1 ~ p')
     this.profilePhoto = page.locator('img[alt*="David"], img[alt*="profile"]')
@@ -156,11 +156,22 @@ export class HomePage extends BasePage {
    * Verify all main sections are present
    */
   async verifySectionsExist(): Promise<void> {
+    // Check for hero section
     await expect(this.heroSection).toBeAttached()
-    // About, Experience, Education sections should exist
-    const sections = this.page.locator('section, #about, #experience, #education')
-    const count = await sections.count()
-    expect(count).toBeGreaterThan(0)
+
+    // Check for main content sections by their IDs
+    const experienceSection = this.page.locator('#experience')
+    const educationSection = this.page.locator('#education')
+    const aboutSection = this.page.locator('#about')
+
+    // At least some of these sections should exist
+    const heroCount = await this.heroSection.count()
+    const expCount = await experienceSection.count()
+    const eduCount = await educationSection.count()
+    const aboutCount = await aboutSection.count()
+
+    const totalSections = heroCount + expCount + eduCount + aboutCount
+    expect(totalSections).toBeGreaterThan(0)
   }
 
   /**
