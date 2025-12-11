@@ -76,8 +76,7 @@ const navItems: NavItem[] = [
   { name: 'Experience', href: 'experience' },
   { name: 'Education', href: 'education' },
   { name: 'Projects', href: 'projects' },
-  { name: 'About', href: 'about' },
-  { name: 'Contact', href: 'contact' }
+  { name: 'About', href: 'about' }
 ]
 
 // Smooth scroll to section
@@ -110,7 +109,7 @@ const handleScroll = (): void => {
   scrolled.value = window.scrollY > 50
 
   // Update active section based on scroll position
-  const sections: string[] = ['hero', 'experience', 'education', 'projects', 'about', 'contact']
+  const sections: string[] = ['hero', 'experience', 'education', 'projects', 'about']
   const scrollPosition = window.scrollY + 100
 
   for (const sectionId of sections) {

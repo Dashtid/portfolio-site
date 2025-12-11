@@ -387,4 +387,92 @@ onMounted((): void => {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Dark Mode */
+[data-theme='dark'] .admin-dashboard {
+  background: var(--bg-primary, #0f172a);
+}
+
+[data-theme='dark'] .admin-header {
+  background: var(--bg-secondary, #1e293b);
+  border-bottom-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .dashboard-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .user-name {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .user-avatar {
+  border-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .logout-button {
+  color: var(--text-secondary, #cbd5e1);
+  border-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .logout-button:hover {
+  background: var(--bg-tertiary, #334155);
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .admin-nav {
+  background: var(--bg-secondary, #1e293b);
+  border-bottom-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .nav-link {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .nav-link:hover {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .nav-link.active {
+  color: var(--primary-400, #60a5fa);
+  border-bottom-color: var(--primary-400, #60a5fa);
+}
+
+[data-theme='dark'] .section-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .stat-card {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .stat-value {
+  color: var(--primary-400, #60a5fa);
+}
+
+[data-theme='dark'] .stat-label {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .quick-actions {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .subsection-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .action-button {
+  background: var(--bg-tertiary, #334155);
+  color: var(--text-secondary, #cbd5e1);
+  border-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .action-button:hover {
+  background: var(--primary-600, #2563eb);
+  color: white;
+  border-color: var(--primary-600, #2563eb);
+}
 </style>

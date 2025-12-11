@@ -570,4 +570,88 @@ onMounted((): void => {
     padding: var(--spacing-4);
   }
 }
+
+/* Dark Mode */
+[data-theme='dark'] .page-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .companies-grid {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .loading-state,
+[data-theme='dark'] .empty-state {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .company-card {
+  background: var(--bg-tertiary, #334155);
+  border-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .company-card:hover {
+  border-color: var(--primary-400, #60a5fa);
+}
+
+[data-theme='dark'] .company-name {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .company-title {
+  color: var(--primary-400, #60a5fa);
+}
+
+[data-theme='dark'] .company-duration,
+[data-theme='dark'] .company-location {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+[data-theme='dark'] .company-description {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .action-btn {
+  border-color: var(--border-primary, #475569);
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .modal-content {
+  background: var(--bg-secondary, #1e293b);
+}
+
+[data-theme='dark'] .modal-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .form-group label {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .form-input,
+[data-theme='dark'] .form-textarea {
+  background: var(--bg-tertiary, #334155);
+  border-color: var(--border-primary, #475569);
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .form-input:focus,
+[data-theme='dark'] .form-textarea:focus {
+  border-color: var(--primary-400, #60a5fa);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+[data-theme='dark'] .form-actions {
+  border-top-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .btn-cancel {
+  color: var(--text-secondary, #cbd5e1);
+  border-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .btn-cancel:hover {
+  background: var(--bg-tertiary, #334155);
+}
 </style>

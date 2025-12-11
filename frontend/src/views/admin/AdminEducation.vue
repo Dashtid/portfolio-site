@@ -382,4 +382,55 @@ onMounted(async (): Promise<void> => {
     overflow-x: auto;
   }
 }
+
+/* Dark Mode */
+[data-theme='dark'] .admin-education {
+  background: var(--bg-primary, #0f172a);
+}
+
+[data-theme='dark'] .admin-education h2,
+[data-theme='dark'] .admin-education h3 {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .modal-content {
+  background: var(--bg-secondary, #1e293b);
+}
+
+[data-theme='dark'] .form-group label {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .form-control {
+  background: var(--bg-tertiary, #334155);
+  border-color: var(--border-primary, #475569);
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .form-control:focus {
+  border-color: var(--primary-400, #60a5fa);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+[data-theme='dark'] .form-check-label {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .table {
+  background: var(--bg-secondary, #1e293b);
+}
+
+[data-theme='dark'] .table th {
+  color: var(--text-primary, #f8fafc);
+  border-top-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .table td {
+  color: var(--text-secondary, #cbd5e1);
+  border-top-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .text-muted {
+  color: var(--text-tertiary, #94a3b8) !important;
+}
 </style>

@@ -63,54 +63,13 @@
         <p class="footer-copyright">&copy; {{ currentYear }} David Dashti. All rights reserved.</p>
       </div>
     </div>
-
-    <!-- Scroll to Top Button -->
-    <Transition name="fade">
-      <button
-        v-if="showScrollTop"
-        class="scroll-to-top"
-        aria-label="Scroll to top"
-        @click="scrollToTop"
-      >
-        <svg
-          width="24"
-          height="24"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          stroke-width="2"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
-        </svg>
-      </button>
-    </Transition>
   </footer>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 
-const showScrollTop = ref<boolean>(false)
 const currentYear = computed<number>(() => new Date().getFullYear())
-
-const scrollToTop = (): void => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  })
-}
-
-const handleScroll = (): void => {
-  showScrollTop.value = window.scrollY > 300
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
 </script>
 
 <style scoped>
@@ -194,7 +153,6 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
-
 .footer-divider {
   width: 60px;
   height: 2px;
@@ -206,51 +164,6 @@ onUnmounted(() => {
   font-size: 0.85rem;
   color: var(--text-tertiary, #64748b);
   margin: 0;
-}
-
-/* Scroll to Top Button */
-.scroll-to-top {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--primary-600, #2563eb);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 1000;
-}
-
-.scroll-to-top:hover {
-  background: var(--primary-700, #1d4ed8);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-}
-
-.scroll-to-top svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Fade transition */
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
 }
 
 /* Dark theme */
@@ -300,13 +213,6 @@ onUnmounted(() => {
 
   .footer-tagline {
     font-size: 0.85rem;
-  }
-
-  .scroll-to-top {
-    bottom: 1.5rem;
-    right: 1.5rem;
-    width: 44px;
-    height: 44px;
   }
 }
 </style>
