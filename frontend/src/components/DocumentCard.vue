@@ -205,7 +205,6 @@ const formattedDate = computed(() => {
   outline-offset: 2px;
 }
 
-
 .download-link {
   font-weight: 600;
 }

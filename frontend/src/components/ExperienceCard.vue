@@ -325,7 +325,6 @@ const formatDuration = computed<string>(() => {
   }
 }
 
-
 .experience-link:focus-visible,
 .btn:focus-visible {
   outline: 2px solid var(--primary-400, #60a5fa);
@@ -336,7 +335,6 @@ const formatDuration = computed<string>(() => {
   outline: 2px solid var(--primary-400, #60a5fa);
   outline-offset: 2px;
 }
-
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
