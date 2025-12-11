@@ -191,7 +191,7 @@ test.describe('Performance', () => {
       page.on('response', async response => {
         const url = response.url()
         if (url.includes('.js') && !url.includes('hot-update')) {
-          const body = await response.body().catch(() => Buffer.from(''))
+          const body = await response.body().catch(() => new Uint8Array(0))
           totalJsSize += body.length
         }
       })
@@ -212,7 +212,7 @@ test.describe('Performance', () => {
         const url = response.url()
         // Only count main app CSS, not all CSS requests
         if (url.includes('.css') && url.includes('assets')) {
-          const body = await response.body().catch(() => Buffer.from(''))
+          const body = await response.body().catch(() => new Uint8Array(0))
           totalCssSize += body.length
         }
       })

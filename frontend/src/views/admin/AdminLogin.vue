@@ -125,7 +125,6 @@ const loginWithGitHub = (): void => {
   }
 }
 
-
 /* Dark mode */
 [data-theme='dark'] .login-card {
   background: var(--bg-secondary, #1e293b);
