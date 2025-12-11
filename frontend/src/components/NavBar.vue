@@ -2,6 +2,7 @@
   <nav
     class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom"
     :class="{ 'navbar-scrolled': scrolled }"
+    data-testid="navbar"
     role="navigation"
     aria-label="Main navigation"
   >
@@ -27,6 +28,7 @@
         <button
           class="navbar-toggler ms-2 d-lg-none"
           type="button"
+          data-testid="mobile-menu-toggle"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
           aria-controls="navbarNav"
@@ -43,6 +45,7 @@
               class="nav-link"
               :class="{ active: activeSection === item.href }"
               :href="`#${item.href}`"
+              :data-testid="`nav-link-${item.href}`"
               :aria-label="`Navigate to ${item.name} section`"
               :aria-current="activeSection === item.href ? 'page' : undefined"
               @click.prevent="scrollToSection(item.href)"
@@ -195,7 +198,6 @@ onUnmounted(() => {
   border-radius: 4px;
 }
 
-
 .nav-link.active {
   color: var(--primary-600, #2563eb) !important;
   background: rgba(37, 99, 235, 0.1) !important;
@@ -300,7 +302,6 @@ onUnmounted(() => {
     color: white !important;
   }
 }
-
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

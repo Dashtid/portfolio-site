@@ -48,9 +48,8 @@ test.describe('Security Headers', () => {
     })
 
     await page.goto('/')
-    await page.waitForLoadState('domcontentloaded')
-    // Wait a bit for initial requests to be made
-    await page.waitForTimeout(2000)
+    // Wait for network to settle
+    await page.waitForLoadState('networkidle')
 
     // All external requests should use HTTPS (except localhost in dev)
     for (const url of requests) {
@@ -76,8 +75,8 @@ test.describe('XSS Prevention', () => {
   test('should sanitize URL parameters', async ({ page }) => {
     // Try injecting script via URL
     await page.goto('/?test=<script>alert(1)</script>')
-    await page.waitForLoadState('domcontentloaded')
-    await page.waitForTimeout(1000)
+    // Wait for page to fully load and any scripts to execute
+    await page.waitForLoadState('networkidle')
 
     // The script should not be executed
     const alertTriggered = await page.evaluate(() => {
@@ -123,9 +122,8 @@ test.describe('CORS and External Resources', () => {
     })
 
     await page.goto('/')
-    await page.waitForLoadState('domcontentloaded')
-    // Wait for critical resources to load
-    await page.waitForTimeout(3000)
+    // Wait for all network activity to complete
+    await page.waitForLoadState('networkidle')
 
     // Report any failed requests
     if (failedRequests.length > 0) {

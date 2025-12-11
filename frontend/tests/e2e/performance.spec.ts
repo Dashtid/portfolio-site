@@ -197,8 +197,8 @@ test.describe('Performance', () => {
       })
 
       await page.goto('/')
-      await page.waitForLoadState('domcontentloaded')
-      await page.waitForTimeout(2000)
+      // Wait for all network requests to complete
+      await page.waitForLoadState('networkidle')
 
       // Total JS should be under 500KB (reasonable for Vue app)
       const totalJsKB = totalJsSize / 1024
@@ -218,8 +218,8 @@ test.describe('Performance', () => {
       })
 
       await page.goto('/')
-      await page.waitForLoadState('domcontentloaded')
-      await page.waitForTimeout(1000)
+      // Wait for all network requests to complete
+      await page.waitForLoadState('networkidle')
 
       // Total CSS should be under 150KB (reasonable for a Vue app)
       const totalCssKB = totalCssSize / 1024
@@ -236,8 +236,8 @@ test.describe('Performance', () => {
       })
 
       await page.goto('/')
-      await page.waitForLoadState('domcontentloaded')
-      await page.waitForTimeout(2000)
+      // Wait for all network requests to complete
+      await page.waitForLoadState('networkidle')
 
       // Should have a reasonable number of requests (under 50)
       expect(requestCount).toBeLessThan(50)

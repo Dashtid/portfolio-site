@@ -1,6 +1,7 @@
 <template>
   <button
     class="theme-toggle"
+    data-testid="theme-toggle"
     :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
     :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
     @click="toggleTheme"

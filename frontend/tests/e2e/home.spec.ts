@@ -33,8 +33,8 @@ test.describe('Home Page', () => {
       const aboutLink = page.locator('nav a[href*="about"], nav a:has-text("About")')
       if ((await aboutLink.count()) > 0) {
         await aboutLink.first().click()
-        await page.waitForTimeout(500)
-        // Verify we scrolled
+        // Wait for scroll animation to complete
+        await page.waitForFunction(() => window.scrollY > 0, { timeout: 5000 })
         const scrollY = await page.evaluate(() => window.scrollY)
         expect(scrollY).toBeGreaterThan(0)
       }
@@ -67,16 +67,19 @@ test.describe('Home Page', () => {
 
   test.describe('Theme Toggle', () => {
     test('should toggle between light and dark themes', async ({ page }) => {
-      const themeToggle = page.locator(
-        '[data-testid="theme-toggle"], button:has([class*="sun"]), button:has([class*="moon"])'
-      )
+      const themeToggle = page.locator('[data-testid="theme-toggle"]')
 
       if ((await themeToggle.count()) > 0) {
         const html = page.locator('html')
         const initialClass = await html.getAttribute('class')
 
         await themeToggle.first().click()
-        await page.waitForTimeout(300)
+        // Wait for theme class to change
+        await page.waitForFunction(
+          initialCls => document.documentElement.getAttribute('class') !== initialCls,
+          initialClass,
+          { timeout: 5000 }
+        )
 
         const newClass = await html.getAttribute('class')
         // Theme class should have changed
@@ -85,21 +88,31 @@ test.describe('Home Page', () => {
     })
 
     test('should persist theme preference', async ({ page }) => {
-      const themeToggle = page.locator(
-        '[data-testid="theme-toggle"], button:has([class*="sun"]), button:has([class*="moon"])'
-      )
+      const themeToggle = page.locator('[data-testid="theme-toggle"]')
 
       if ((await themeToggle.count()) > 0) {
-        await themeToggle.first().click()
-        await page.waitForTimeout(300)
-
         const html = page.locator('html')
+        const initialClass = await html.getAttribute('class')
+
+        await themeToggle.first().click()
+        // Wait for theme class to change
+        await page.waitForFunction(
+          initialCls => document.documentElement.getAttribute('class') !== initialCls,
+          initialClass,
+          { timeout: 5000 }
+        )
+
         const themeAfterToggle = await html.getAttribute('class')
 
         // Reload the page
         await page.reload()
         await page.waitForLoadState('domcontentloaded')
-        await page.waitForTimeout(500)
+        // Wait for theme to be applied from localStorage
+        await page.waitForFunction(
+          expectedTheme => document.documentElement.getAttribute('class') === expectedTheme,
+          themeAfterToggle,
+          { timeout: 5000 }
+        )
 
         // Theme should persist (via localStorage)
         const themeAfterReload = await html.getAttribute('class')
@@ -116,8 +129,8 @@ test.describe('Home Page', () => {
       // Page should still be functional
       await expect(page.locator('h1')).toBeVisible()
 
-      // Navigation might be collapsed
-      const mobileMenu = page.locator('[data-testid="mobile-menu"], button[aria-label*="menu"]')
+      // Navigation might be collapsed - look for mobile menu toggle
+      const mobileMenu = page.locator('[data-testid="mobile-menu-toggle"]')
       if ((await mobileMenu.count()) > 0) {
         await expect(mobileMenu.first()).toBeVisible()
       }

@@ -3,6 +3,7 @@
     <button
       v-if="isVisible"
       class="back-to-top"
+      data-testid="back-to-top"
       :aria-label="'Scroll back to top'"
       title="Back to top"
       @click="scrollToTop"

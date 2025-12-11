@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 
 /**
  * Visual Regression Tests
@@ -8,6 +8,24 @@ import { test, expect } from '@playwright/test'
  *
  * Update baselines: npx playwright test --update-snapshots
  */
+
+/**
+ * Wait for all images in a section to be fully loaded
+ */
+async function waitForImagesToLoad(page: Page, selector?: string): Promise<void> {
+  await page.waitForLoadState('networkidle')
+  await page.waitForFunction(
+    (sel: string | undefined) => {
+      const container = sel ? document.querySelector(sel) : document
+      if (!container) return true
+      const images = container.querySelectorAll('img')
+      return Array.from(images).every(img => img.complete && img.naturalHeight !== 0)
+    },
+    selector,
+    { timeout: 10000 }
+  )
+}
+
 test.describe('Visual Regression', () => {
   test.describe('Home Page', () => {
     test('hero section should match baseline', async ({ page }) => {
@@ -15,7 +33,7 @@ test.describe('Visual Regression', () => {
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('#hero', { state: 'visible' })
       // Wait for images and fonts to load
-      await page.waitForTimeout(1000)
+      await waitForImagesToLoad(page, '#hero')
 
       const heroSection = page.locator('#hero')
       await expect(heroSection).toHaveScreenshot('hero-section.png', {
@@ -29,7 +47,7 @@ test.describe('Visual Regression', () => {
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('#experience', { state: 'visible' })
       await page.locator('#experience').scrollIntoViewIfNeeded()
-      await page.waitForTimeout(1000)
+      await waitForImagesToLoad(page, '#experience')
 
       const experienceSection = page.locator('#experience')
       await expect(experienceSection).toHaveScreenshot('experience-section.png', {
@@ -43,7 +61,7 @@ test.describe('Visual Regression', () => {
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('#education', { state: 'visible' })
       await page.locator('#education').scrollIntoViewIfNeeded()
-      await page.waitForTimeout(1000)
+      await waitForImagesToLoad(page, '#education')
 
       const educationSection = page.locator('#education')
       await expect(educationSection).toHaveScreenshot('education-section.png', {
@@ -57,7 +75,7 @@ test.describe('Visual Regression', () => {
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('#about', { state: 'visible' })
       await page.locator('#about').scrollIntoViewIfNeeded()
-      await page.waitForTimeout(1000)
+      await waitForImagesToLoad(page, '#about')
 
       const aboutSection = page.locator('#about')
       await expect(aboutSection).toHaveScreenshot('about-section.png', {
@@ -70,7 +88,7 @@ test.describe('Visual Regression', () => {
       await page.goto('/')
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('h1', { state: 'visible' })
-      await page.waitForTimeout(1500)
+      await waitForImagesToLoad(page)
 
       await expect(page).toHaveScreenshot('full-page.png', {
         fullPage: true,
@@ -91,7 +109,12 @@ test.describe('Visual Regression', () => {
         document.documentElement.setAttribute('data-theme', 'dark')
         localStorage.setItem('theme', 'dark')
       })
-      await page.waitForTimeout(500)
+      // Wait for theme to be applied
+      await page.waitForFunction(
+        () => document.documentElement.getAttribute('data-theme') === 'dark',
+        { timeout: 5000 }
+      )
+      await waitForImagesToLoad(page, '#hero')
 
       const heroSection = page.locator('#hero')
       await expect(heroSection).toHaveScreenshot('hero-section-dark.png', {
@@ -110,7 +133,12 @@ test.describe('Visual Regression', () => {
         document.documentElement.setAttribute('data-theme', 'dark')
         localStorage.setItem('theme', 'dark')
       })
-      await page.waitForTimeout(1000)
+      // Wait for theme to be applied
+      await page.waitForFunction(
+        () => document.documentElement.getAttribute('data-theme') === 'dark',
+        { timeout: 5000 }
+      )
+      await waitForImagesToLoad(page)
 
       await expect(page).toHaveScreenshot('full-page-dark.png', {
         fullPage: true,
@@ -126,7 +154,7 @@ test.describe('Visual Regression', () => {
       await page.goto('/')
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('h1', { state: 'visible' })
-      await page.waitForTimeout(1000)
+      await waitForImagesToLoad(page)
 
       await expect(page).toHaveScreenshot('mobile-view.png', {
         maxDiffPixels: 200,
@@ -139,7 +167,7 @@ test.describe('Visual Regression', () => {
       await page.goto('/')
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('h1', { state: 'visible' })
-      await page.waitForTimeout(1000)
+      await waitForImagesToLoad(page)
 
       await expect(page).toHaveScreenshot('tablet-view.png', {
         maxDiffPixels: 200,
@@ -153,7 +181,7 @@ test.describe('Visual Regression', () => {
       await page.goto('/')
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('nav', { state: 'visible' })
-      await page.waitForTimeout(500)
+      await waitForImagesToLoad(page, 'nav')
 
       const navbar = page.locator('nav').first()
       await expect(navbar).toHaveScreenshot('navbar.png', {
@@ -167,7 +195,7 @@ test.describe('Visual Regression', () => {
       await page.waitForLoadState('domcontentloaded')
       await page.waitForSelector('footer', { state: 'visible' })
       await page.locator('footer').scrollIntoViewIfNeeded()
-      await page.waitForTimeout(500)
+      await waitForImagesToLoad(page, 'footer')
 
       const footer = page.locator('footer').first()
       await expect(footer).toHaveScreenshot('footer.png', {
