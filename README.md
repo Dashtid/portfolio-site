@@ -14,8 +14,6 @@ Modern, production-ready portfolio website with dynamic content management, auth
 
 **Database**: PostgreSQL on Fly.io (7 companies, 4 education, 6 projects, 2 documents)
 
-**See**: [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) for detailed deployment information
-
 ## Quick Start
 
 ### Prerequisites
@@ -57,33 +55,14 @@ cd frontend && npm install && npm run dev
 │   ├── src/components/
 │   ├── src/views/
 │   └── src/stores/   # Pinia state management
-└── docs/             # Documentation
-    ├── guides/       # MONITORING, TESTING, PERFORMANCE
-    └── migration/    # Phase completion docs
+└── docs/             # Deployment documentation
 ```
 
 ## Documentation
 
-**Root Level**:
-
-- [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) - Current deployment status
 - [CHANGELOG.md](CHANGELOG.md) - Version history
-
-**Guides** ([docs/guides/](docs/guides/)):
-
-- MONITORING.md - Logging and error tracking
-- PERFORMANCE.md - Optimization strategies
-- TESTING.md - Test infrastructure
-- TOOLING.md - Development tooling (ESLint 9, Ruff, mypy)
-
-**Deployment** ([docs/](docs/)):
-
-- DEPLOYMENT.md - Production deployment (Vercel + Fly.io, $0-5/month)
-- DATABASE_SETUP.md - PostgreSQL configuration
-
-**Archive** ([docs/archive/](docs/archive/)):
-
-- Historical migration notes and fix documentation
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Production deployment (Vercel + Fly.io)
+- [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md) - PostgreSQL configuration
 
 ## API Endpoints
 
@@ -177,7 +156,7 @@ cd backend && fly launch --no-deploy && fly deploy
 cd frontend && vercel --prod
 ```
 
-**CI/CD**: Automated deployment via GitHub Actions (`.github/workflows/deploy.yml`)
+**CI/CD**: Automated deployment via GitHub Actions (`.github/workflows/ci-cd.yml`)
 
 ## Migration Status
 
