@@ -120,8 +120,8 @@
                   </p>
                 </div>
               </div>
-              <p class="education-field" v-if="edu.field_of_study">{{ edu.field_of_study }}</p>
-              <p class="education-description" v-if="edu.description">{{ edu.description }}</p>
+              <p v-if="edu.field_of_study" class="education-field">{{ edu.field_of_study }}</p>
+              <p v-if="edu.description" class="education-description">{{ edu.description }}</p>
               <p class="education-dates">
                 {{ formatDate(edu.start_date) }} -
                 {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}

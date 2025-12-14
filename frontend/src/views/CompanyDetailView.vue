@@ -76,7 +76,7 @@
 
       <!-- Detailed Description -->
       <div class="detailed-description mb-5">
-        <div v-html="formattedDescription" class="description-content"></div>
+        <div class="description-content" v-html="formattedDescription"></div>
       </div>
 
       <!-- Technologies (if available) -->
@@ -122,9 +122,9 @@
         <div class="experience-navigation d-flex gap-2 flex-wrap">
           <button
             v-if="previousCompany"
-            @click="navigateToCompany(previousCompany.id)"
             class="btn btn-outline-secondary"
             :aria-label="`Previous: ${previousCompany.name}`"
+            @click="navigateToCompany(previousCompany.id)"
           >
             <i class="bi bi-chevron-left me-1"></i>
             {{ previousCompany.name }}
@@ -132,9 +132,9 @@
 
           <button
             v-if="nextCompany"
-            @click="navigateToCompany(nextCompany.id)"
             class="btn btn-outline-secondary"
             :aria-label="`Next: ${nextCompany.name}`"
+            @click="navigateToCompany(nextCompany.id)"
           >
             {{ nextCompany.name }}
             <i class="bi bi-chevron-right ms-1"></i>
