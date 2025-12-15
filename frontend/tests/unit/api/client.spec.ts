@@ -185,7 +185,7 @@ describe('API client', () => {
 
       try {
         await errorInterceptor(error)
-      } catch (e) {
+      } catch {
         // Expected to reject
       }
 

@@ -1,6 +1,7 @@
 /**
  * Tests for API services (TypeScript)
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as services from '@/api/services'
 import type { Company, Education, Project, Skill, Document, LoginRequest } from '@/types'
