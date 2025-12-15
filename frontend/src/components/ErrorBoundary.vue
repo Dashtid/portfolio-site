@@ -48,14 +48,15 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Extend Window interface for analytics
+/* eslint-disable no-unused-vars */
 declare global {
   interface Window {
     analytics?: {
-      // eslint-disable-next-line no-unused-vars
       trackEvent: (category: string, action: string, label: string) => void
     }
   }
 }
+/* eslint-enable no-unused-vars */
 
 const router = useRouter()
 const hasError = ref<boolean>(false)

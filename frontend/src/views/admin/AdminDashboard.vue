@@ -18,7 +18,7 @@
               authStore.currentUser.name || authStore.currentUser.username
             }}</span>
           </div>
-          <button @click="logout" class="logout-button">Sign Out</button>
+          <button class="logout-button" @click="logout">Sign Out</button>
         </div>
       </div>
     </header>

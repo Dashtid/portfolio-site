@@ -53,9 +53,9 @@
           <div class="form-check mb-3">
             <input
               v-model="formData.is_certification"
+              id="is_certification"
               type="checkbox"
               class="form-check-input"
-              id="is_certification"
             />
             <label class="form-check-label" for="is_certification"> This is a certification </label>
           </div>

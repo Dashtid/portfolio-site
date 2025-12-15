@@ -14,7 +14,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div id="navbarNav" class="collapse navbar-collapse">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
               <router-link to="/" class="nav-link px-3 py-2 border rounded shadow-sm">
@@ -24,7 +24,7 @@
           </ul>
 
           <!-- Experience Navigation -->
-          <div class="d-flex gap-2 flex-wrap" v-if="allCompanies.length > 0">
+          <div v-if="allCompanies.length > 0" class="d-flex gap-2 flex-wrap">
             <router-link
               v-for="comp in allCompanies"
               :key="comp.id"
@@ -60,9 +60,9 @@
     <!-- Company Details -->
     <main v-else-if="company" class="container py-5">
       <!-- Media Section: Video and Map -->
-      <div class="row g-4 mb-5" v-if="company.video_url || company.map_url">
+      <div v-if="company.video_url || company.map_url" class="row g-4 mb-5">
         <!-- YouTube Video -->
-        <div class="col-lg-6" v-if="company.video_url">
+        <div v-if="company.video_url" class="col-lg-6">
           <h2>{{ company.video_title || `${company.name} Video` }}</h2>
           <div class="ratio ratio-16x9">
             <iframe
@@ -84,7 +84,7 @@
         </div>
 
         <!-- Google Maps -->
-        <div class="col-lg-6" v-if="company.map_url">
+        <div v-if="company.map_url" class="col-lg-6">
           <h2>{{ company.map_title || `${company.name} Location` }}</h2>
           <div class="ratio ratio-16x9">
             <iframe
