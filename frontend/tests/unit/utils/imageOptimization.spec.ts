@@ -1,6 +1,7 @@
 /**
  * Tests for imageOptimization utility (TypeScript)
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   generateImageSrcSet,
