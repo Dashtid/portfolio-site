@@ -52,8 +52,8 @@
 
           <div class="form-check mb-3">
             <input
-              v-model="formData.is_certification"
               id="is_certification"
+              v-model="formData.is_certification"
               type="checkbox"
               class="form-check-input"
             />
