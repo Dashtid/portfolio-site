@@ -51,7 +51,7 @@ const props = withDefaults(defineProps<Props>(), {
 declare global {
   interface Window {
     analytics?: {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line no-unused-vars
       trackEvent: (category: string, action: string, label: string) => void
     }
   }

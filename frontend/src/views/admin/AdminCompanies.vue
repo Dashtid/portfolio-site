@@ -2,7 +2,7 @@
   <div class="admin-companies">
     <div class="page-header">
       <h2 class="page-title">Manage Experience</h2>
-      <button @click="showAddForm = true" class="add-button">
+      <button class="add-button" @click="showAddForm = true">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 4v16m8-8H4" />
         </svg>
@@ -23,7 +23,7 @@
           <div class="company-header">
             <h3 class="company-name">{{ company.name }}</h3>
             <div class="company-actions">
-              <button @click="editCompany(company)" class="action-btn edit-btn">
+              <button class="action-btn edit-btn" @click="editCompany(company)">
                 <svg
                   class="icon-sm"
                   viewBox="0 0 24 24"
@@ -35,7 +35,7 @@
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
-              <button @click="deleteCompany(company.id)" class="action-btn delete-btn">
+              <button class="action-btn delete-btn" @click="deleteCompany(company.id)">
                 <svg
                   class="icon-sm"
                   viewBox="0 0 24 24"
@@ -69,7 +69,7 @@
           {{ editingCompany ? 'Edit Company' : 'Add New Company' }}
         </h3>
 
-        <form @submit.prevent="saveCompany" class="company-form">
+        <form class="company-form" @submit.prevent="saveCompany">
           <div class="form-group">
             <label for="name">Company Name *</label>
             <input id="name" v-model="form.name" type="text" required class="form-input" />
@@ -136,7 +136,7 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" @click="closeForm" class="btn-cancel">Cancel</button>
+            <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
             <button type="submit" class="btn-save">
               {{ editingCompany ? 'Update' : 'Add' }} Company
             </button>
