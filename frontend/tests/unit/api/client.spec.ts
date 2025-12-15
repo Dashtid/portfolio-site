@@ -1,6 +1,7 @@
 /**
  * Tests for API client (TypeScript)
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import axios from 'axios'
 import type { InternalAxiosRequestConfig, AxiosError } from 'axios'

@@ -225,7 +225,7 @@ test.describe('Home Page', () => {
       const metaDescription = page.locator('meta[name="description"]')
       const content = await metaDescription.getAttribute('content')
       expect(content).toBeTruthy()
-      expect(content!.length).toBeGreaterThan(50)
+      expect(content?.length ?? 0).toBeGreaterThan(50)
     })
 
     test('should have Open Graph tags', async ({ page }) => {
