@@ -65,7 +65,6 @@
 
                 <!-- Learn More Button (show if company has detailed content) -->
                 <router-link
-                  
                   :to="{ name: 'company-detail', params: { id: company.id } }"
                   class="btn btn-outline-primary btn-sm mt-3"
                 >

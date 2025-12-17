@@ -4,7 +4,8 @@ import { test, expect } from '@playwright/test'
 // Skip these tests in local development
 const isProduction =
   process.env.E2E_BASE_URL?.includes('vercel') ||
-  process.env.E2E_BASE_URL?.includes('dashti.se') || process.env.E2E_BASE_URL?.includes('portfolio-site-jade-five.vercel.app') ||
+  process.env.E2E_BASE_URL?.includes('dashti.se') ||
+  process.env.E2E_BASE_URL?.includes('portfolio-site-jade-five.vercel.app') ||
   false /* CI runs against preview, not production */
 
 test.describe('Security Headers', () => {

@@ -213,6 +213,16 @@ test.describe('Home Page', () => {
 
       for (let i = 0; i < count; i++) {
         const img = images.nth(i)
+        // Scroll image into view to trigger lazy loading
+        await img.scrollIntoViewIfNeeded()
+        // Wait for image to load (either already loaded or wait for load event)
+        await img.evaluate((el: HTMLImageElement) => {
+          if (el.complete) return Promise.resolve()
+          return new Promise(resolve => {
+            el.addEventListener('load', resolve, { once: true })
+            el.addEventListener('error', resolve, { once: true })
+          })
+        })
         const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
         // Images with 0 naturalWidth are broken
         expect(naturalWidth).toBeGreaterThan(0)
