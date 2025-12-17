@@ -71,19 +71,19 @@ test.describe('Home Page', () => {
 
       if ((await themeToggle.count()) > 0) {
         const html = page.locator('html')
-        const initialClass = await html.getAttribute('class')
+        const initialTheme = await html.getAttribute('data-theme')
 
         await themeToggle.first().click()
-        // Wait for theme class to change
+        // Wait for data-theme attribute to change
         await page.waitForFunction(
-          initialCls => document.documentElement.getAttribute('class') !== initialCls,
-          initialClass,
+          initialCls => document.documentElement.getAttribute('data-theme') !== initialCls,
+          initialTheme,
           { timeout: 5000 }
         )
 
-        const newClass = await html.getAttribute('class')
-        // Theme class should have changed
-        expect(newClass).not.toBe(initialClass)
+        const newTheme = await html.getAttribute('data-theme')
+        // Theme should have changed
+        expect(newTheme).not.toBe(initialTheme)
       }
     })
 
@@ -92,30 +92,30 @@ test.describe('Home Page', () => {
 
       if ((await themeToggle.count()) > 0) {
         const html = page.locator('html')
-        const initialClass = await html.getAttribute('class')
+        const initialTheme = await html.getAttribute('data-theme')
 
         await themeToggle.first().click()
-        // Wait for theme class to change
+        // Wait for data-theme attribute to change
         await page.waitForFunction(
-          initialCls => document.documentElement.getAttribute('class') !== initialCls,
-          initialClass,
+          initialCls => document.documentElement.getAttribute('data-theme') !== initialCls,
+          initialTheme,
           { timeout: 5000 }
         )
 
-        const themeAfterToggle = await html.getAttribute('class')
+        const themeAfterToggle = await html.getAttribute('data-theme')
 
         // Reload the page
         await page.reload()
         await page.waitForLoadState('domcontentloaded')
         // Wait for theme to be applied from localStorage
         await page.waitForFunction(
-          expectedTheme => document.documentElement.getAttribute('class') === expectedTheme,
+          expectedTheme => document.documentElement.getAttribute('data-theme') === expectedTheme,
           themeAfterToggle,
           { timeout: 5000 }
         )
 
         // Theme should persist (via localStorage)
-        const themeAfterReload = await html.getAttribute('class')
+        const themeAfterReload = await html.getAttribute('data-theme')
         expect(themeAfterReload).toBe(themeAfterToggle)
       }
     })

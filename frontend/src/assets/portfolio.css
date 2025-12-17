@@ -29,7 +29,7 @@
   --bg-tertiary: var(--primary-100);
   --text-primary: var(--slate-800);
   --text-secondary: var(--slate-600);
-  --text-tertiary: var(--slate-500);
+  --text-tertiary: var(--slate-600); /* Improved contrast for WCAG AA */
   --border-primary: var(--primary-200);
   --border-secondary: var(--primary-300);
 
@@ -76,7 +76,7 @@
   --bg-tertiary: #334155;
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
+  --text-tertiary: #b0bece; /* Improved contrast for WCAG AA */
   --border-primary: #475569;
   --border-secondary: #64748b;
   

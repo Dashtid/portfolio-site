@@ -123,13 +123,13 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox
 
       - name: Build frontend for E2E tests
         run: npm run build
 
       - name: Run Playwright E2E tests
-        run: npx playwright test
+        run: npx playwright test --project=chromium --project=firefox
         continue-on-error: true
 
       - name: Upload Playwright test results
@@ -223,7 +223,7 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     environment:
       name: production
-      url: https://dashti.se
+      url: https://portfolio-site-jade-five.vercel.app  # Will be https://dashti.se
 
     steps:
       - name: Checkout code

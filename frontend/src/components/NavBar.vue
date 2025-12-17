@@ -23,7 +23,7 @@
         David Dashti
       </a>
       <!-- Theme toggle always visible on mobile -->
-      <div class="d-flex align-items-center order-lg-2">
+      <div class="d-flex align-items-center order-lg-2 theme-toggle-container">
         <ThemeToggle />
         <button
           class="navbar-toggler ms-2 d-lg-none"
@@ -299,6 +299,13 @@ onUnmounted(() => {
   [data-theme='dark'] .nav-link.active {
     background: #3b82f6 !important;
     color: white !important;
+  }
+}
+
+/* Theme toggle spacing on desktop */
+@media (min-width: 992px) {
+  .theme-toggle-container {
+    margin-left: 1rem;
   }
 }
 
