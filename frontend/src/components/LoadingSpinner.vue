@@ -46,13 +46,9 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-primary);
   z-index: 9999;
   min-height: 100vh;
-}
-
-[data-theme='dark'] .loading-container.full-screen {
-  background: rgba(0, 0, 0, 0.95);
 }
 
 .loading-spinner {
@@ -118,7 +114,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
 
 .loading-message {
   margin-top: 1rem;
-  color: var(--text-color, #333);
+  color: var(--text-primary);
   font-size: 0.95rem;
   text-align: center;
   animation: pulse 1.5s ease-in-out infinite;
@@ -138,9 +134,9 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
 .skeleton-loader {
   background: linear-gradient(
     90deg,
-    var(--bg-tertiary, #f1f5f9) 25%,
-    var(--slate-200, #e2e8f0) 50%,
-    var(--bg-tertiary, #f1f5f9) 75%
+    var(--bg-tertiary) 25%,
+    var(--slate-200) 50%,
+    var(--bg-tertiary) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
@@ -156,12 +152,13 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   }
 }
 
+/* Dark mode skeleton loader */
 [data-theme='dark'] .skeleton-loader {
   background: linear-gradient(
     90deg,
-    var(--bg-secondary, #1e293b) 25%,
-    var(--bg-tertiary, #334155) 50%,
-    var(--bg-secondary, #1e293b) 75%
+    var(--bg-tertiary) 25%,
+    var(--slate-700) 50%,
+    var(--bg-tertiary) 75%
   );
   background-size: 200% 100%;
 }

@@ -334,7 +334,7 @@ onMounted(async (): Promise<void> => {
 .form-control {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--color-gray-300, #dee2e6);
   border-radius: 4px;
 }
 
@@ -361,14 +361,16 @@ onMounted(async (): Promise<void> => {
 .table th {
   padding: 0.75rem;
   vertical-align: top;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--color-gray-300, #dee2e6);
   font-weight: 600;
+  color: var(--color-gray-900, #1f2937);
 }
 
 .table td {
   padding: 0.75rem;
   vertical-align: top;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--color-gray-300, #dee2e6);
+  color: var(--color-gray-700, #374151);
 }
 
 @media (max-width: 768px) {
@@ -409,7 +411,38 @@ onMounted(async (): Promise<void> => {
 
 [data-theme='dark'] .form-control:focus {
   border-color: var(--primary-400, #60a5fa);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+}
+
+/* Focus visible states for buttons */
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+[data-theme='dark'] .btn:focus-visible {
+  outline-color: var(--primary-400, #60a5fa);
+}
+
+/* Checkbox focus styles */
+.form-check-input:focus {
+  border-color: var(--primary-500, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme='dark'] .form-check-input {
+  background-color: var(--bg-tertiary, #334155);
+  border-color: var(--border-primary, #475569);
+}
+
+[data-theme='dark'] .form-check-input:focus {
+  border-color: var(--primary-400, #60a5fa);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+}
+
+[data-theme='dark'] .form-check-input:checked {
+  background-color: var(--primary-500, #3b82f6);
+  border-color: var(--primary-500, #3b82f6);
 }
 
 [data-theme='dark'] .form-check-label {

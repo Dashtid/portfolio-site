@@ -212,12 +212,10 @@ onUnmounted(() => {
 }
 
 /* Dark mode styles */
-:root[data-theme='dark'] .lazy-image-container,
 [data-theme='dark'] .lazy-image-container {
   --lazy-bg: #1e293b;
 }
 
-:root[data-theme='dark'] .image-placeholder,
 [data-theme='dark'] .image-placeholder {
   background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
   background-size: 200% 100%;

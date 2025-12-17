@@ -1,10 +1,17 @@
 /* Design System Variables - Based on Original Portfolio */
 :root {
-  /* Colors */
+  /* Primary Colors */
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
   --color-primary-light: #3b82f6;
+  --color-primary-lighter: #60a5fa;
   --color-primary-rgb: 37, 99, 235;
+
+  /* Primary Aliases (for component compatibility) */
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
 
   --color-secondary: #64748b;
   --color-secondary-dark: #475569;
@@ -31,6 +38,18 @@
   --color-gray-800: #1e293b;
   --color-gray-900: #0f172a;
   --color-black: #000000;
+
+  /* Slate Aliases (for component compatibility) */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
 
   /* Typography */
   --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
@@ -109,6 +128,13 @@
   --color-hover-bg: rgba(37, 99, 235, 0.1);
   --color-icon: #64748b;
   --color-warning: #fbbf24;
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --color-info: #3b82f6;
+
+  /* Border Aliases */
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
 
   /* Background Colors */
   --bg-primary: #ffffff;
@@ -117,8 +143,22 @@
 
   /* Text Colors */
   --text-primary: #0f172a;
-  --text-secondary: #64748b;
+  --text-secondary: #475569;
   --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  --text-color: #0f172a;
+  --text-inverse: #ffffff;
+
+  /* Link Colors */
+  --link-color: #2563eb;
+  --link-hover: #1d4ed8;
+
+  /* Input Colors */
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-text: #0f172a;
+  --input-placeholder: #94a3b8;
+  --input-focus-border: #3b82f6;
 
   /* Component Specific */
   --navbar-bg: rgba(255, 255, 255, 0.95);
@@ -129,26 +169,39 @@
 
 /* Dark Mode Variables */
 [data-theme="dark"] {
-  --color-white: #0f172a;
-  --color-gray-50: #1e293b;
-  --color-gray-100: #334155;
-  --color-gray-200: #475569;
-  --color-gray-300: #64748b;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #cbd5e1;
-  --color-gray-600: #e2e8f0;
-  --color-gray-700: #f1f5f9;
-  --color-gray-800: #f8fafc;
-  --color-gray-900: #ffffff;
-  --color-black: #ffffff;
+  /* Primary Colors - Dark Mode (lighter for contrast) */
+  --primary-400: #93c5fd;
+  --primary-500: #60a5fa;
+  --primary-600: #3b82f6;
+  --primary-700: #2563eb;
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-lighter: #93c5fd;
 
+  /* Slate Aliases - Dark Mode (inverted for proper contrast) */
+  --slate-50: #0f172a;
+  --slate-100: #1e293b;
+  --slate-200: #334155;
+  --slate-300: #475569;
+  --slate-400: #64748b;
+  --slate-500: #94a3b8;
+  --slate-600: #cbd5e1;
+  --slate-700: #e2e8f0;
+  --slate-800: #f1f5f9;
+  --slate-900: #f8fafc;
+
+  /* Glassmorphism - Dark Mode */
   --glass-bg: rgba(0, 0, 0, 0.2);
   --glass-border: rgba(255, 255, 255, 0.1);
 
   /* Interactive Elements - Dark Mode */
-  --color-border-dark: #334155;
-  --color-hover-bg-dark: rgba(251, 191, 36, 0.1);
-  --color-icon-dark: #94a3b8;
+  --color-border: #334155;
+  --color-hover-bg: rgba(96, 165, 250, 0.15);
+  --color-icon: #94a3b8;
+
+  /* Border Aliases - Dark Mode */
+  --border-primary: #334155;
+  --border-secondary: #475569;
 
   /* Background Colors - Dark Mode */
   --bg-primary: #0f172a;
@@ -156,9 +209,23 @@
   --bg-tertiary: #334155;
 
   /* Text Colors - Dark Mode */
-  --text-primary: #f8fafc;
+  --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
   --text-tertiary: #94a3b8;
+  --text-muted: #94a3b8;
+  --text-color: #f1f5f9;
+  --text-inverse: #0f172a;
+
+  /* Link Colors - Dark Mode */
+  --link-color: #60a5fa;
+  --link-hover: #93c5fd;
+
+  /* Input Colors - Dark Mode */
+  --input-bg: #1e293b;
+  --input-border: #475569;
+  --input-text: #f1f5f9;
+  --input-placeholder: #64748b;
+  --input-focus-border: #60a5fa;
 
   /* Component Specific - Dark Mode */
   --navbar-bg: rgba(15, 23, 42, 0.95);

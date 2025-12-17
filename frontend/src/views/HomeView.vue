@@ -443,11 +443,26 @@ html {
   text-align: center;
   padding: 3rem;
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
 }
 
 .error-state {
-  color: #ff6b6b;
+  color: var(--color-error);
+}
+
+/* Dark mode loading states (inside bg-dark section) */
+.bg-dark .loading-state,
+.bg-dark .error-state {
+  color: var(--slate-300, #cbd5e1);
+}
+
+[data-theme='dark'] .loading-state,
+[data-theme='dark'] .error-state {
+  color: var(--text-secondary);
+}
+
+[data-theme='dark'] .bg-dark .loading-state {
+  color: var(--text-tertiary);
 }
 
 /* Experience Card Improvements */

@@ -122,7 +122,7 @@ const placeholderStyle = computed(() => {
     }
   }
   return {
-    backgroundColor: '#e5e7eb'
+    backgroundColor: 'var(--bg-secondary, #e5e7eb)'
   }
 })
 

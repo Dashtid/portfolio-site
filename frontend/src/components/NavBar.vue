@@ -217,43 +217,43 @@ onUnmounted(() => {
 
 /* Dark theme styles */
 [data-theme='dark'] .navbar-custom {
-  background: rgba(15, 23, 42, 0.9);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--navbar-bg);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 [data-theme='dark'] .navbar-scrolled {
   background: rgba(15, 23, 42, 0.98);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--navbar-shadow);
 }
 
 [data-theme='dark'] .navbar-brand {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .navbar-brand:hover {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme='dark'] .nav-link {
-  color: #94a3b8 !important;
+  color: var(--text-secondary) !important;
 }
 
 [data-theme='dark'] .nav-link:hover {
-  color: #60a5fa !important;
-  background: rgba(96, 165, 250, 0.1) !important;
+  color: var(--link-color) !important;
+  background: var(--color-hover-bg) !important;
 }
 
 [data-theme='dark'] .nav-link.active {
-  color: #60a5fa !important;
-  background: rgba(96, 165, 250, 0.15) !important;
+  color: var(--link-color) !important;
+  background: rgba(96, 165, 250, 0.2) !important;
 }
 
 [data-theme='dark'] .nav-link.active::after {
-  background: #60a5fa;
+  background: var(--link-color);
 }
 
 [data-theme='dark'] .navbar-toggler {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .navbar-toggler-icon {
@@ -263,18 +263,13 @@ onUnmounted(() => {
 /* Mobile styles */
 @media (max-width: 991px) {
   .navbar-collapse {
-    background: rgba(255, 255, 255, 0.98);
+    background: var(--bg-primary);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 12px;
     margin-top: 0.5rem;
     padding: 1rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  }
-
-  [data-theme='dark'] .navbar-collapse {
-    background: rgba(30, 41, 59, 0.98);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
   }
 
   .navbar-nav {
@@ -292,13 +287,8 @@ onUnmounted(() => {
   }
 
   .nav-link.active {
-    background: var(--primary-600, #2563eb) !important;
-    color: white !important;
-  }
-
-  [data-theme='dark'] .nav-link.active {
-    background: #3b82f6 !important;
-    color: white !important;
+    background: var(--primary-600) !important;
+    color: var(--text-inverse) !important;
   }
 }
 

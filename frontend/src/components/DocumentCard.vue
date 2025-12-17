@@ -129,7 +129,7 @@ const formattedDate = computed(() => {
 .document-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--text-primary);
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
 }
@@ -138,7 +138,7 @@ const formattedDate = computed(() => {
   display: inline-block;
   padding: 0.375rem 0.875rem;
   background: rgba(96, 165, 250, 0.2);
-  color: #93c5fd;
+  color: var(--primary-400);
   border-radius: 20px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -146,7 +146,7 @@ const formattedDate = computed(() => {
 }
 
 .document-description {
-  color: #cbd5e1;
+  color: var(--text-secondary);
   line-height: 1.7;
   margin-bottom: 1.25rem;
   flex: 1;
@@ -163,14 +163,14 @@ const formattedDate = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #94a3b8;
+  color: var(--text-tertiary);
   font-size: 0.875rem;
 }
 
 .icon {
   stroke-width: 2;
   opacity: 0.8;
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .card-actions {
@@ -182,7 +182,7 @@ const formattedDate = computed(() => {
 }
 
 .document-link {
-  color: #60a5fa;
+  color: var(--link-color);
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -195,17 +195,60 @@ const formattedDate = computed(() => {
 }
 
 .document-link:hover {
-  color: #93c5fd;
+  color: var(--link-hover);
   background: rgba(96, 165, 250, 0.2);
   transform: translateX(4px);
 }
 
 .document-link:focus-visible {
-  outline: 2px solid #60a5fa;
+  outline: 2px solid var(--link-color);
   outline-offset: 2px;
 }
 
 .download-link {
   font-weight: 600;
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .card-glass {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+[data-theme='dark'] .card-glass:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--primary-400);
+}
+
+[data-theme='dark'] .document-title {
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .document-type {
+  background: rgba(96, 165, 250, 0.15);
+}
+
+[data-theme='dark'] .document-description {
+  color: var(--text-secondary);
+}
+
+[data-theme='dark'] .meta-item {
+  color: var(--text-tertiary);
+}
+
+[data-theme='dark'] .icon {
+  color: var(--text-tertiary);
+}
+
+[data-theme='dark'] .card-actions {
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+[data-theme='dark'] .document-link {
+  background: rgba(96, 165, 250, 0.15);
+}
+
+[data-theme='dark'] .document-link:hover {
+  background: rgba(96, 165, 250, 0.25);
 }
 </style>

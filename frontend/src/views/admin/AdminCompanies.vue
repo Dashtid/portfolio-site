@@ -512,7 +512,7 @@ onMounted((): void => {
 .form-textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 37, 99, 235), 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 37, 99, 235), 0.3);
 }
 
 .form-textarea {
@@ -639,7 +639,17 @@ onMounted((): void => {
 [data-theme='dark'] .form-input:focus,
 [data-theme='dark'] .form-textarea:focus {
   border-color: var(--primary-400, #60a5fa);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+}
+
+/* Focus visible states for action buttons */
+.action-btn:focus-visible {
+  outline: 2px solid var(--color-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+[data-theme='dark'] .action-btn:focus-visible {
+  outline-color: var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .form-actions {
@@ -653,5 +663,14 @@ onMounted((): void => {
 
 [data-theme='dark'] .btn-cancel:hover {
   background: var(--bg-tertiary, #334155);
+}
+
+[data-theme='dark'] .btn-save {
+  background: var(--primary-600, #2563eb);
+  color: white;
+}
+
+[data-theme='dark'] .btn-save:hover {
+  background: var(--primary-500, #3b82f6);
 }
 </style>

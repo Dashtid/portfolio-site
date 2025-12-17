@@ -427,70 +427,70 @@ onMounted((): void => {
 }
 
 [data-theme='dark'] .company-name {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .company-title {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .company-dates {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .description-content,
 [data-theme='dark'] .description-content :deep(p),
 [data-theme='dark'] .description-content :deep(strong) {
-  color: #e2e8f0;
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .technologies-section h3,
 [data-theme='dark'] .responsibilities-section h3 {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .technologies-list .badge {
   background-color: rgba(59, 130, 246, 0.3) !important;
-  color: #93c5fd !important;
+  color: var(--primary-300, #93c5fd) !important;
 }
 
 [data-theme='dark'] .responsibilities-list li {
-  color: #e2e8f0;
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .navigation-buttons {
-  border-top-color: rgba(255, 255, 255, 0.15);
+  border-top-color: var(--border-primary);
 }
 
 [data-theme='dark'] .breadcrumb-item a {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme='dark'] .breadcrumb-item.active {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .loading-container p {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .btn-outline-primary {
-  color: #60a5fa;
-  border-color: #60a5fa;
+  color: var(--link-color);
+  border-color: var(--link-color);
 }
 
 [data-theme='dark'] .btn-outline-primary:hover {
-  background-color: #60a5fa;
-  color: #0f172a;
+  background-color: var(--primary-400);
+  color: var(--bg-primary);
 }
 
 [data-theme='dark'] .btn-outline-secondary {
-  color: #94a3b8;
-  border-color: #475569;
+  color: var(--text-tertiary);
+  border-color: var(--border-secondary);
 }
 
 [data-theme='dark'] .btn-outline-secondary:hover {
-  background-color: #475569;
-  color: #f1f5f9;
+  background-color: var(--border-secondary);
+  color: var(--text-primary);
 }
 </style>

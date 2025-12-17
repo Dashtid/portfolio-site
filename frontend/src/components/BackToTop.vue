@@ -146,12 +146,12 @@ onUnmounted(() => {
 }
 
 /* Dark mode styles */
-:global(html[data-theme='dark']) .back-to-top {
-  background: var(--color-teal, #14b8a6);
+[data-theme='dark'] .back-to-top {
+  background: var(--color-teal);
 }
 
-:global(html[data-theme='dark']) .back-to-top:hover {
-  background: var(--color-teal-dark, #0f766e);
+[data-theme='dark'] .back-to-top:hover {
+  background: var(--color-teal-dark);
 }
 
 /* Responsive sizing */

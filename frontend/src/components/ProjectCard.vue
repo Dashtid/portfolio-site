@@ -219,42 +219,42 @@ const techStack = computed<string[]>(() => {
 
 /* Dark mode adjustments */
 [data-theme='dark'] .project-card {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .project-card:hover {
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary-400);
+  box-shadow: var(--card-hover-shadow);
 }
 
 [data-theme='dark'] .project-title {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .project-description {
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .tech-tag {
-  background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(96, 165, 250, 0.15);
+  color: var(--primary-400);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .tech-tag:hover {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+  background: var(--primary-600);
+  color: var(--text-inverse);
+  border-color: var(--primary-600);
 }
 
 [data-theme='dark'] .github-link {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .github-link:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--slate-700);
 }
 
 /* Responsive design */
@@ -283,31 +283,8 @@ const techStack = computed<string[]>(() => {
 }
 
 .project-card:focus-within {
-  outline: 2px solid var(--primary-400, #60a5fa);
+  outline: 2px solid var(--primary-400);
   outline-offset: 2px;
-}
-
-/* Dark mode */
-[data-theme='dark'] .project-card {
-  background: var(--bg-secondary, #1e293b);
-  border-color: var(--border-primary, #475569);
-}
-
-[data-theme='dark'] .project-card:hover {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme='dark'] .project-title {
-  color: var(--text-primary, #f8fafc);
-}
-
-[data-theme='dark'] .project-description {
-  color: var(--text-secondary, #cbd5e1);
-}
-
-[data-theme='dark'] .tech-tag {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
 }
 
 /* Reduced motion */

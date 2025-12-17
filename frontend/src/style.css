@@ -47,12 +47,19 @@ p {
 /* Links */
 a {
   color: var(--color-primary);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   transition: color var(--transition-fast);
 }
 
 a:hover {
   color: var(--color-primary-dark);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-primary-light, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* Buttons */
@@ -81,8 +88,22 @@ button:focus {
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
+  background: var(--color-gray-400, #94a3b8);
+  border-color: var(--color-gray-400, #94a3b8);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--color-primary-light, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Dark mode disabled button */
+[data-theme="dark"] button:disabled {
+  background: var(--color-gray-600, #475569);
+  border-color: var(--color-gray-600, #475569);
+  color: var(--color-gray-400, #94a3b8);
 }
 
 /* Container */

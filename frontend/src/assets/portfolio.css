@@ -88,40 +88,40 @@
 
 /* Dark Mode - Hero Section */
 [data-theme="dark"] .hero-content {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-primary-rgb, 15, 23, 42), 0.9);
+  border: 1px solid var(--border-primary);
 }
 
 [data-theme="dark"] .custom-hero-title {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .hero-accent-primary,
 [data-theme="dark"] .hero-accent-secondary {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme="dark"] .custom-hero-lead {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 /* Dark Mode - Cards */
 [data-theme="dark"] .experience-card,
 [data-theme="dark"] .education-card,
 [data-theme="dark"] .project-card {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--card-bg);
+  border-color: var(--border-primary);
 }
 
 [data-theme="dark"] .company-name,
 [data-theme="dark"] .education-institution,
 [data-theme="dark"] .project-title {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .job-title,
 [data-theme="dark"] .education-degree {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme="dark"] .company-location,
@@ -129,45 +129,45 @@
 [data-theme="dark"] .education-field,
 [data-theme="dark"] .education-description,
 [data-theme="dark"] .project-description {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .company-dates,
 [data-theme="dark"] .education-dates {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 /* Dark Mode - Tech Badges */
 [data-theme="dark"] .tech-badge {
-  background: #334155;
-  color: #93c5fd;
+  background: var(--bg-tertiary);
+  color: var(--primary-400);
 }
 
 /* Dark Mode - About Section */
 [data-theme="dark"] .about-content {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .about-content ul li {
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 /* Dark Mode - Section Backgrounds */
 [data-theme="dark"] .bg-light {
-  background-color: #1e293b !important;
+  background-color: var(--bg-secondary) !important;
 }
 
 [data-theme="dark"] .portfolio-section {
-  background-color: #0f172a;
+  background-color: var(--bg-primary);
 }
 
 /* Dark Mode - Section Titles */
 [data-theme="dark"] .section-title {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .portfolio-section .section-title::after {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
 /* Dark Mode - Section Icons */
@@ -177,13 +177,13 @@
 
 /* Dark Mode - Buttons */
 [data-theme="dark"] .btn-outline-primary {
-  color: #60a5fa;
-  border-color: #60a5fa;
+  color: var(--link-color);
+  border-color: var(--link-color);
 }
 
 [data-theme="dark"] .btn-outline-primary:hover {
-  background: #60a5fa;
-  color: #0f172a;
+  background: var(--link-color);
+  color: var(--bg-primary);
 }
 
 /* Focus States - Accessibility */
@@ -212,16 +212,16 @@
 
 /* Dark Mode - Links */
 [data-theme="dark"] .project-link {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme="dark"] .project-link:hover {
-  color: #93c5fd;
+  color: var(--link-hover);
 }
 
 /* Dark Mode - GitHub Stats Card */
 [data-theme="dark"] .github-stats-card {
-  background: #1e293b;
+  background: var(--card-bg);
 }
 
 
@@ -314,11 +314,11 @@ body {
 }
 
 .hero-accent-primary {
-  color: #1e3a8a;
+  color: var(--primary-900);
 }
 
 .hero-accent-secondary {
-  color: #1e3a8a;
+  color: var(--primary-900);
 }
 
 /* Section Styles */
@@ -339,12 +339,12 @@ section {
 
 /* Dark Background Section - Publications */
 .bg-dark {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-  color: #f8fafc !important;
+  background: linear-gradient(135deg, var(--slate-800) 0%, var(--slate-900) 100%) !important;
+  color: var(--slate-50) !important;
 }
 
 .bg-dark .section-title {
-  color: #f8fafc !important;
+  color: var(--slate-50) !important;
 }
 
 .bg-dark .section-icon {
@@ -379,7 +379,7 @@ section {
 }
 
 .bg-dark .section-title::after {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, var(--primary-400), var(--primary-500));
 }
 
 /* Experience Cards - Bootstrap Grid Layout */

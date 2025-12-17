@@ -122,21 +122,26 @@ const toggleTheme = handleClick
 }
 
 /* Dark mode specific styles */
-:global(html[data-theme='dark']) .theme-toggle {
-  border-color: var(--color-border-dark, #334155);
+[data-theme='dark'] .theme-toggle {
+  border-color: var(--color-border);
 }
 
-:global(html[data-theme='dark']) .theme-toggle:hover {
-  background: var(--color-hover-bg-dark, rgba(251, 191, 36, 0.1));
-  border-color: var(--color-warning, #fbbf24);
+[data-theme='dark'] .theme-toggle:hover {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: var(--color-warning);
 }
 
-:global(html[data-theme='dark']) .theme-icon {
-  color: var(--color-icon-dark, #94a3b8);
+[data-theme='dark'] .theme-icon {
+  /* Brighter icon color for better visibility on dark backgrounds */
+  color: var(--text-secondary, #cbd5e1);
 }
 
-:global(html[data-theme='dark']) .theme-toggle:hover .theme-icon {
-  color: var(--color-warning, #fbbf24);
+[data-theme='dark'] .theme-toggle:hover .theme-icon {
+  color: var(--color-warning);
+}
+
+[data-theme='dark'] .theme-toggle:focus-visible {
+  outline-color: var(--primary-400, #60a5fa);
 }
 
 /* Responsive sizing */

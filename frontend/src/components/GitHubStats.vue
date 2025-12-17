@@ -247,7 +247,7 @@ onMounted(() => {
 
 .error-message {
   text-align: center;
-  color: #ef4444;
+  color: var(--color-error, #ef4444);
   padding: 2rem;
   background: rgba(239, 68, 68, 0.1);
   border-radius: 12px;
@@ -505,82 +505,88 @@ onMounted(() => {
 
 /* Dark theme adjustments */
 [data-theme='dark'] .stat-card {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .stat-card:hover {
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary-400);
+  box-shadow: var(--card-hover-shadow);
 }
 
 [data-theme='dark'] .stat-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
 }
 
 [data-theme='dark'] .stat-value {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .stat-label {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .languages-section {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .languages-section h3,
 [data-theme='dark'] .recent-repos h3 {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .language-name {
-  color: #e2e8f0;
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .language-percentage {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .progress-bar {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-tertiary);
 }
 
 [data-theme='dark'] .progress-fill {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
 [data-theme='dark'] .repo-card {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .repo-card:hover {
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary-400);
+  box-shadow: var(--card-hover-shadow);
 }
 
 [data-theme='dark'] .repo-card h4 {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme='dark'] .repo-card p {
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .repo-meta {
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .spinner {
-  border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: #60a5fa;
+  border-color: var(--border-primary);
+  border-top-color: var(--link-color);
 }
 
 [data-theme='dark'] .loading-spinner {
-  color: #94a3b8;
+  color: var(--text-tertiary);
+}
+
+[data-theme='dark'] .error-message {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.2);
 }
 
 /* Responsive improvements */

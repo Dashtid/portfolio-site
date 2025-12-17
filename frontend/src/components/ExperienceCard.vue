@@ -248,60 +248,65 @@ const formatDuration = computed<string>(() => {
 
 /* Dark mode adjustments */
 [data-theme='dark'] .card-glass {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .card-glass::before {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
 [data-theme='dark'] .experience-card:hover .card-glass {
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary-400);
+  box-shadow: var(--card-hover-shadow);
 }
 
 [data-theme='dark'] .company-name {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .company-title {
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme='dark'] .company-description {
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .card-meta {
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--border-primary);
 }
 
 [data-theme='dark'] .meta-item {
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .icon {
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .company-link {
   background: rgba(96, 165, 250, 0.15);
-  color: #60a5fa;
+  color: var(--link-color);
 }
 
 [data-theme='dark'] .company-link:hover {
-  background: #3b82f6;
-  color: white;
+  background: var(--primary-600);
+  color: var(--text-inverse);
 }
 
 [data-theme='dark'] .detail-link {
-  background: #3b82f6;
-  color: white;
+  background: var(--primary-600);
+  color: var(--text-inverse);
 }
 
 [data-theme='dark'] .detail-link:hover {
-  background: #60a5fa;
+  background: var(--primary-500);
+}
+
+[data-theme='dark'] .current-badge {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
 }
 
 /* Responsive */

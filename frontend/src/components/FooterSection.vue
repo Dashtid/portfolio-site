@@ -168,33 +168,33 @@ const currentYear = computed<number>(() => new Date().getFullYear())
 
 /* Dark theme */
 [data-theme='dark'] .footer-section {
-  background: linear-gradient(180deg, var(--bg-primary, #0f172a) 0%, #0c1222 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--color-gray-900, #0f172a) 100%);
+  border-top: 1px solid var(--border-primary);
 }
 
 [data-theme='dark'] .footer-name {
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 [data-theme='dark'] .footer-tagline,
 [data-theme='dark'] .footer-copyright {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .social-link {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  background: var(--bg-secondary);
+  border-color: var(--border-primary);
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .social-link:hover {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: white;
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+  color: var(--text-inverse);
 }
 
 [data-theme='dark'] .footer-divider {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
 }
 
 [data-theme='dark'] .footer-logo {
