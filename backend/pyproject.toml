@@ -145,6 +145,7 @@ addopts = [
 filterwarnings = [
     "ignore::DeprecationWarning:passlib",
     "ignore::pydantic.PydanticDeprecatedSince20",
+    "ignore:Using insecure development SECRET_KEY:UserWarning",
 ]
 
 # Coverage configuration
