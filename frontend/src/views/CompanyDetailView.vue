@@ -76,6 +76,7 @@
 
       <!-- Detailed Description -->
       <div class="detailed-description mb-5">
+        <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
         <div class="description-content" v-html="formattedDescription"></div>
       </div>
 

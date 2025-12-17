@@ -139,12 +139,14 @@
       <!-- Description -->
       <div class="mb-5">
         <h3>About {{ company.name }}</h3>
+        <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
         <div v-html="formatDescription(company.description)"></div>
       </div>
 
       <!-- Detailed Description -->
       <div v-if="company.detailed_description" class="mb-5">
         <h3>Role & Responsibilities</h3>
+        <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
         <div v-html="formatDescription(company.detailed_description)"></div>
       </div>
 
