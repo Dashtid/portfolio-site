@@ -36,8 +36,7 @@
     "zod": "^4.1.13"
   },
   "overrides": {
-    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0",
-    "source-map": "^0.7.4"
+    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0"
   },
   "devDependencies": {
     "@pinia/testing": "^1.0.3",
