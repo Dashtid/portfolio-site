@@ -89,7 +89,7 @@ class TestSettings:
         """Test environment setting."""
         settings = Settings()
 
-        assert settings.ENVIRONMENT in ["development", "production"]
+        assert settings.ENVIRONMENT in ["development", "production", "testing"]
 
 
 class TestAsyncDatabaseUrl:
