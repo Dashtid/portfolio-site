@@ -230,12 +230,8 @@ const formatDescription = (desc: string | null | undefined): string => {
 // Fetch all companies for navigation
 const fetchAllCompanies = async (): Promise<void> => {
   try {
-    const response = await axios.get<Company[]>(
-      `${config.apiUrl}/api/v1/companies/`
-    )
-    allCompanies.value = response.data.sort(
-      (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)
-    )
+    const response = await axios.get<Company[]>(`${config.apiUrl}/api/v1/companies/`)
+    allCompanies.value = response.data.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
   } catch (err) {
     apiLogger.error('Error fetching companies:', err)
   }
@@ -247,9 +243,7 @@ const fetchCompany = async (id: string): Promise<void> => {
   error.value = null
 
   try {
-    const response = await axios.get<Company>(
-      `${config.apiUrl}/api/v1/companies/${id}`
-    )
+    const response = await axios.get<Company>(`${config.apiUrl}/api/v1/companies/${id}`)
     company.value = response.data
   } catch (err) {
     apiLogger.error('Error fetching company:', err)

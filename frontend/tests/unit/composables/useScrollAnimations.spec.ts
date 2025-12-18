@@ -49,7 +49,10 @@ describe('useScrollAnimations', () => {
       const element = ref<HTMLElement | null>(null)
       const wrapper = mount(createTestComponent(() => useScrollAnimation(element)))
 
-      const result = wrapper.vm.result as { isVisible: { value: boolean }; hasAnimated: { value: boolean } }
+      const result = wrapper.vm.result as {
+        isVisible: { value: boolean }
+        hasAnimated: { value: boolean }
+      }
       expect(result.isVisible.value).toBe(false)
       expect(result.hasAnimated.value).toBe(false)
       wrapper.unmount()

@@ -31,9 +31,7 @@ function extractErrorMessage(error: unknown): string {
     if (typeof detail === 'string') return detail
     // Handle FastAPI validation errors (array of {msg, loc, type})
     if (Array.isArray(detail)) {
-      return detail
-        .map((err: ValidationError) => err.msg || err.message || String(err))
-        .join(', ')
+      return detail.map((err: ValidationError) => err.msg || err.message || String(err)).join(', ')
     }
     // Fallback to status text or generic message
     return error.response?.statusText || error.message || 'Network error'

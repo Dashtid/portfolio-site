@@ -168,7 +168,11 @@ const formatDuration = computed<string>(() => {
 }
 
 .current-badge {
-  background: linear-gradient(135deg, var(--color-emerald-500, #10b981) 0%, var(--color-emerald-600, #059669) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald-500, #10b981) 0%,
+    var(--color-emerald-600, #059669) 100%
+  );
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -305,7 +309,11 @@ const formatDuration = computed<string>(() => {
 }
 
 [data-theme='dark'] .current-badge {
-  background: linear-gradient(135deg, var(--color-emerald-500, #10b981) 0%, var(--color-emerald-600, #059669) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald-500, #10b981) 0%,
+    var(--color-emerald-600, #059669) 100%
+  );
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
 
