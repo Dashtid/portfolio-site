@@ -188,7 +188,7 @@ onUnmounted(() => {
 
 .nav-link:hover {
   color: var(--primary-600, #2563eb) !important;
-  background: rgba(37, 99, 235, 0.08) !important;
+  background: var(--color-primary-alpha-10, rgba(37, 99, 235, 0.1)) !important;
 }
 
 .nav-link:focus-visible {
@@ -245,7 +245,11 @@ onUnmounted(() => {
 
 [data-theme='dark'] .nav-link.active {
   color: var(--link-color) !important;
-  background: rgba(96, 165, 250, 0.2) !important;
+  background: var(--color-primary-alpha-20) !important;
+}
+
+[data-theme='dark'] .nav-link:focus-visible {
+  outline-color: var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .nav-link.active::after {

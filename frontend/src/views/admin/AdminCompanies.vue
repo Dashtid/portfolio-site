@@ -636,10 +636,14 @@ onMounted((): void => {
   color: var(--text-primary, #f8fafc);
 }
 
+[data-theme='dark'] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
 [data-theme='dark'] .form-input:focus,
 [data-theme='dark'] .form-textarea:focus {
   border-color: var(--primary-400, #60a5fa);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.4);
 }
 
 /* Focus visible states for action buttons */

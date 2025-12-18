@@ -239,7 +239,7 @@ defineExpose({
 }
 
 [data-theme='dark'] .error-details pre {
-  color: #f87171;
+  color: var(--color-error, #f87171);
 }
 
 [data-theme='dark'] .btn-home {

@@ -158,10 +158,8 @@ import MapEmbed from '../components/MapEmbed.vue'
 import BackToTop from '../components/BackToTop.vue'
 import type { Company } from '../types/api'
 import { apiLogger } from '../utils/logger'
+import { config } from '../config'
 import DOMPurify from 'dompurify'
-
-// Get API URL from environment variables
-const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const route = useRoute()
 const router = useRouter()
@@ -226,7 +224,7 @@ const fetchCompanyDetails = async (companyId: string): Promise<void> => {
     error.value = null
 
     // Fetch all companies first (for navigation)
-    const companiesResponse = await axios.get<Company[]>(`${API_URL}/api/v1/companies/`)
+    const companiesResponse = await axios.get<Company[]>(`${config.apiUrl}/api/v1/companies/`)
     allCompanies.value = companiesResponse.data.sort((a, b) => {
       return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
     })

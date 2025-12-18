@@ -24,6 +24,10 @@
 
   --color-emerald: #10b981;
   --color-emerald-light: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
 
   /* Neutral Colors */
   --color-white: #ffffff;
@@ -132,6 +136,12 @@
   --color-success: #22c55e;
   --color-info: #3b82f6;
 
+  /* Alpha variants - Light Mode */
+  --color-primary-alpha-10: rgba(37, 99, 235, 0.1);
+  --color-primary-alpha-15: rgba(37, 99, 235, 0.15);
+  --color-primary-alpha-20: rgba(37, 99, 235, 0.2);
+  --color-primary-alpha-25: rgba(37, 99, 235, 0.25);
+
   /* Border Aliases */
   --border-primary: #e2e8f0;
   --border-secondary: #cbd5e1;
@@ -196,8 +206,20 @@
 
   /* Interactive Elements - Dark Mode */
   --color-border: #334155;
-  --color-hover-bg: rgba(96, 165, 250, 0.15);
+  --color-hover-bg: rgba(96, 165, 250, 0.2);
   --color-icon: #94a3b8;
+
+  /* Semantic Colors - Dark Mode (lighter for contrast) */
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-success: #4ade80;
+  --color-info: #60a5fa;
+
+  /* Alpha variants - Dark Mode (higher opacity for visibility) */
+  --color-primary-alpha-10: rgba(96, 165, 250, 0.2);
+  --color-primary-alpha-15: rgba(96, 165, 250, 0.25);
+  --color-primary-alpha-20: rgba(96, 165, 250, 0.3);
+  --color-primary-alpha-25: rgba(96, 165, 250, 0.35);
 
   /* Border Aliases - Dark Mode */
   --border-primary: #334155;

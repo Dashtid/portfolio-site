@@ -4,6 +4,7 @@ import axios, {
   type AxiosResponse,
   type AxiosError
 } from 'axios'
+import { config } from '@/config'
 
 /**
  * Axios API Client with Authentication
@@ -14,10 +15,6 @@ import axios, {
  * - Automatic logout on refresh failure
  * - Request deduplication for concurrent token refresh
  */
-
-// Get API URL from environment variables
-// Vite exposes env vars as import.meta.env
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Token refresh state management to prevent race conditions
 // When multiple requests get 401 simultaneously, only one refresh should occur
@@ -43,7 +40,7 @@ function onTokenRefreshed(newToken: string): void {
 
 // Create axios instance with default configuration
 const apiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: config.apiUrl,
   timeout: 30000, // 30 second timeout to prevent hanging requests
   headers: {
     'Content-Type': 'application/json'
@@ -92,7 +89,7 @@ apiClient.interceptors.response.use(
 
         try {
           const response = await axios.post<{ access_token: string; refresh_token: string }>(
-            `${API_URL}/api/v1/auth/refresh`,
+            `${config.apiUrl}/api/v1/auth/refresh`,
             { refresh_token: refreshToken }
           )
 

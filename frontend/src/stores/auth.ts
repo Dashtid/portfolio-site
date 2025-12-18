@@ -3,9 +3,8 @@ import apiClient from '../api/client'
 import type { LoginResponse } from '@/types'
 import { storage, STORAGE_KEYS } from '@/utils/storage'
 import { authLogger } from '@/utils/logger'
-
-// Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+import { isUnauthorizedError } from '@/utils/typeGuards'
+import { config } from '@/config'
 
 // JWT format validation regex (header.payload.signature)
 const JWT_REGEX = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
@@ -99,12 +98,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = response.data
       } catch (error: unknown) {
         authLogger.error('Failed to fetch user:', error)
-        if (
-          error &&
-          typeof error === 'object' &&
-          'response' in error &&
-          (error as { response?: { status?: number } }).response?.status === 401
-        ) {
+        if (isUnauthorizedError(error)) {
           await this.refreshAccessToken()
         }
       }
@@ -135,7 +129,7 @@ export const useAuthStore = defineStore('auth', {
 
     // Login with GitHub
     loginWithGitHub(): void {
-      window.location.href = `${API_URL}/api/v1/auth/github`
+      window.location.href = `${config.apiUrl}/api/v1/auth/github`
     },
 
     // Logout

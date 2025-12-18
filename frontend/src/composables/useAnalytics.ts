@@ -10,9 +10,14 @@ interface TrackingProps {
 export function useAnalytics() {
   /**
    * Track a custom event
+   * Wrapped in try-catch to prevent analytics errors from crashing the app
    */
   const track = (eventName: string, props: TrackingProps = {}): void => {
-    trackEvent(eventName, props)
+    try {
+      trackEvent(eventName, props)
+    } catch (error) {
+      console.warn('[Analytics] Failed to track event:', eventName, error)
+    }
   }
 
   /**
@@ -40,7 +45,11 @@ export function useAnalytics() {
    * Track external link clicks
    */
   const trackExternalLink = (url: string, label: string = ''): void => {
-    trackOutboundLink(url)
+    try {
+      trackOutboundLink(url)
+    } catch (error) {
+      console.warn('[Analytics] Failed to track outbound link:', url, error)
+    }
     if (label) {
       track('External Link', { url, label })
     }

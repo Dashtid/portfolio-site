@@ -137,7 +137,7 @@ const formattedDate = computed(() => {
 .document-type {
   display: inline-block;
   padding: 0.375rem 0.875rem;
-  background: rgba(96, 165, 250, 0.2);
+  background: var(--color-primary-alpha-20);
   color: var(--primary-400);
   border-radius: 20px;
   font-size: 0.8125rem;
@@ -191,12 +191,12 @@ const formattedDate = computed(() => {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  background: rgba(96, 165, 250, 0.1);
+  background: var(--color-primary-alpha-10);
 }
 
 .document-link:hover {
   color: var(--link-hover);
-  background: rgba(96, 165, 250, 0.2);
+  background: var(--color-primary-alpha-20);
   transform: translateX(4px);
 }
 
@@ -211,12 +211,12 @@ const formattedDate = computed(() => {
 
 /* Dark mode adjustments */
 [data-theme='dark'] .card-glass {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(71, 85, 105, 0.5);
+  background: var(--bg-secondary);
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .card-glass:hover {
-  background: rgba(30, 41, 59, 0.9);
+  background: var(--bg-tertiary);
   border-color: var(--primary-400);
 }
 
@@ -225,7 +225,7 @@ const formattedDate = computed(() => {
 }
 
 [data-theme='dark'] .document-type {
-  background: rgba(96, 165, 250, 0.15);
+  background: var(--color-primary-alpha-15);
 }
 
 [data-theme='dark'] .document-description {
@@ -241,14 +241,14 @@ const formattedDate = computed(() => {
 }
 
 [data-theme='dark'] .card-actions {
-  border-top-color: rgba(71, 85, 105, 0.5);
+  border-top-color: var(--border-primary);
 }
 
 [data-theme='dark'] .document-link {
-  background: rgba(96, 165, 250, 0.15);
+  background: var(--color-primary-alpha-15);
 }
 
 [data-theme='dark'] .document-link:hover {
-  background: rgba(96, 165, 250, 0.25);
+  background: var(--color-primary-alpha-25);
 }
 </style>

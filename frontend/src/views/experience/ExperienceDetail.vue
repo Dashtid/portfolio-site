@@ -190,6 +190,7 @@ import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
 import type { Company } from '../../types/api'
 import { apiLogger } from '../../utils/logger'
+import { config } from '../../config'
 import DOMPurify from 'dompurify'
 
 const route = useRoute()
@@ -230,12 +231,10 @@ const formatDescription = (desc: string | null | undefined): string => {
 const fetchAllCompanies = async (): Promise<void> => {
   try {
     const response = await axios.get<Company[]>(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/companies/`
+      `${config.apiUrl}/api/v1/companies/`
     )
     allCompanies.value = response.data.sort(
-      (a, b) =>
-        ((a as Company & { order_index?: number }).order_index || 0) -
-        ((b as Company & { order_index?: number }).order_index || 0)
+      (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)
     )
   } catch (err) {
     apiLogger.error('Error fetching companies:', err)
@@ -249,7 +248,7 @@ const fetchCompany = async (id: string): Promise<void> => {
 
   try {
     const response = await axios.get<Company>(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/companies/${id}`
+      `${config.apiUrl}/api/v1/companies/${id}`
     )
     company.value = response.data
   } catch (err) {
@@ -276,10 +275,12 @@ watch(
 )
 
 // Initial load
-onMounted((): void => {
-  fetchAllCompanies()
+onMounted(async (): Promise<void> => {
+  // Fetch companies for navigation (errors handled internally)
+  await fetchAllCompanies()
+  // Fetch current company details if ID is provided
   if (companyId.value) {
-    fetchCompany(companyId.value)
+    await fetchCompany(companyId.value)
   }
 })
 </script>

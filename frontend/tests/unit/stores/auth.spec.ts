@@ -214,7 +214,8 @@ describe('Auth Store', () => {
     })
 
     it('should handle 401 error by refreshing token', async () => {
-      const error = { response: { status: 401 } }
+      // Mock AxiosError with isAxiosError flag for type guard compatibility
+      const error = { isAxiosError: true, response: { status: 401 } }
       vi.mocked(apiClient.get).mockRejectedValue(error)
 
       const store = useAuthStore()

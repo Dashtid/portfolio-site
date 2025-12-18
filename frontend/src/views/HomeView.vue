@@ -462,7 +462,7 @@ html {
 }
 
 [data-theme='dark'] .bg-dark .loading-state {
-  color: var(--text-tertiary);
+  color: var(--text-secondary, #cbd5e1);
 }
 
 /* Experience Card Improvements */

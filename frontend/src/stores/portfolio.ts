@@ -13,14 +13,28 @@ interface PortfolioState {
   error: string | null
 }
 
+interface ValidationError {
+  msg?: string
+  message?: string
+  loc?: string[]
+  type?: string
+}
+
 /**
  * Extract user-friendly error message from various error types
+ * Handles both string details and FastAPI validation error arrays
  */
 function extractErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     // Try to get error detail from response body
     const detail = error.response?.data?.detail
     if (typeof detail === 'string') return detail
+    // Handle FastAPI validation errors (array of {msg, loc, type})
+    if (Array.isArray(detail)) {
+      return detail
+        .map((err: ValidationError) => err.msg || err.message || String(err))
+        .join(', ')
+    }
     // Fallback to status text or generic message
     return error.response?.statusText || error.message || 'Network error'
   }

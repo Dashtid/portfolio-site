@@ -4,7 +4,7 @@
  * and system preference detection
  */
 import { useDark, useToggle } from '@vueuse/core'
-import { watch, type Ref } from 'vue'
+import { watch, onScopeDispose, type Ref } from 'vue'
 import { themeLogger } from '../utils/logger'
 
 type ThemeMode = 'dark' | 'light' | 'system'
@@ -32,7 +32,7 @@ export function useTheme(): UseThemeReturn {
   const toggleTheme = useToggle(isDark)
 
   // Watch for theme changes to update icon variants
-  watch(isDark, (dark: boolean) => {
+  const stopWatcher = watch(isDark, (dark: boolean) => {
     themeLogger.log('Theme changed to:', dark ? 'dark' : 'light')
 
     // Dispatch custom event for components that need to react to theme changes
@@ -41,6 +41,11 @@ export function useTheme(): UseThemeReturn {
         detail: { theme: dark ? 'dark' : 'light' }
       })
     )
+  })
+
+  // Clean up watcher when scope is disposed
+  onScopeDispose(() => {
+    stopWatcher()
   })
 
   // Get current theme as string

@@ -168,7 +168,7 @@ const formatDuration = computed<string>(() => {
 }
 
 .current-badge {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--color-emerald-500, #10b981) 0%, var(--color-emerald-600, #059669) 100%);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -177,7 +177,7 @@ const formatDuration = computed<string>(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
 }
 
 .company-description {
@@ -226,7 +226,7 @@ const formatDuration = computed<string>(() => {
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  background: rgba(37, 99, 235, 0.08);
+  background: var(--color-primary-alpha-10, rgba(37, 99, 235, 0.1));
   transition: all 0.2s ease;
 }
 
@@ -286,7 +286,7 @@ const formatDuration = computed<string>(() => {
 }
 
 [data-theme='dark'] .company-link {
-  background: rgba(96, 165, 250, 0.15);
+  background: var(--color-primary-alpha-15);
   color: var(--link-color);
 }
 
@@ -305,8 +305,8 @@ const formatDuration = computed<string>(() => {
 }
 
 [data-theme='dark'] .current-badge {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
+  background: linear-gradient(135deg, var(--color-emerald-500, #10b981) 0%, var(--color-emerald-600, #059669) 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
 
 /* Responsive */

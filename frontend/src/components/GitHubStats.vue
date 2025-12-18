@@ -584,9 +584,9 @@ onMounted(() => {
 }
 
 [data-theme='dark'] .error-message {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.2);
+  color: var(--color-error, #f87171);
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.25);
 }
 
 /* Responsive improvements */

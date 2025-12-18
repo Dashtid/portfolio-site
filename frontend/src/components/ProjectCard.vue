@@ -237,7 +237,7 @@ const techStack = computed<string[]>(() => {
 }
 
 [data-theme='dark'] .tech-tag {
-  background: rgba(96, 165, 250, 0.15);
+  background: var(--color-primary-alpha-15);
   color: var(--primary-400);
   border-color: var(--border-primary);
 }
@@ -254,7 +254,12 @@ const techStack = computed<string[]>(() => {
 }
 
 [data-theme='dark'] .github-link:hover {
-  background: var(--slate-700);
+  background: var(--border-secondary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .project-link:focus-visible {
+  outline-color: var(--primary-400, #60a5fa);
 }
 
 /* Responsive design */
