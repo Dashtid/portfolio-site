@@ -4,9 +4,6 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Store original env for potential future use
-const _originalEnv = { ...import.meta.env }
-
 // We need to test the Analytics class directly to test different configurations
 // Re-import for each test scenario
 
@@ -17,11 +14,13 @@ describe('analytics utility', () => {
   beforeEach(() => {
     // Mock window.plausible
     mockPlausible = vi.fn()
-    window.plausible = mockPlausible
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(window as any).plausible = mockPlausible
 
     // Mock window.umami
     mockUmamiTrack = vi.fn()
-    window.umami = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(window as any).umami = {
       track: mockUmamiTrack
     }
 
@@ -30,8 +29,10 @@ describe('analytics utility', () => {
   })
 
   afterEach(() => {
-    delete window.plausible
-    delete window.umami
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).plausible
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).umami
     vi.clearAllMocks()
     vi.resetModules()
   })
@@ -268,7 +269,8 @@ describe('analytics utility', () => {
 
   describe('error handling', () => {
     it('handles tracking when plausible throws', async () => {
-      window.plausible = vi.fn().mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(window as any).plausible = vi.fn().mockImplementation(() => {
         throw new Error('Plausible error')
       })
 
@@ -277,7 +279,8 @@ describe('analytics utility', () => {
     })
 
     it('handles tracking when umami throws', async () => {
-      window.umami = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(window as any).umami = {
         track: vi.fn().mockImplementation(() => {
           throw new Error('Umami error')
         })
@@ -288,7 +291,8 @@ describe('analytics utility', () => {
     })
 
     it('handles pageview tracking when plausible throws', async () => {
-      window.plausible = vi.fn().mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(window as any).plausible = vi.fn().mockImplementation(() => {
         throw new Error('Plausible error')
       })
 

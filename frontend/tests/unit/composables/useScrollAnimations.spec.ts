@@ -3,7 +3,7 @@
  * Tests core functionality without requiring full DOM interaction
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, type Ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { useScrollAnimation, useStaggeredAnimation } from '@/composables/useScrollAnimations'
 
@@ -240,7 +240,7 @@ describe('useScrollAnimations', () => {
     })
 
     it('handles empty elements array', () => {
-      const elements: Array<ReturnType<typeof ref<HTMLElement | null>>> = []
+      const elements: Array<Ref<HTMLElement | null>> = []
 
       const wrapper = mount(createTestComponent(() => useStaggeredAnimation(elements)))
 
