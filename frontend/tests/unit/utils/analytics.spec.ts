@@ -4,8 +4,8 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Store original env
-const originalEnv = { ...import.meta.env }
+// Store original env for potential future use
+const _originalEnv = { ...import.meta.env }
 
 // We need to test the Analytics class directly to test different configurations
 // Re-import for each test scenario
