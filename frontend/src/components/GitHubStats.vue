@@ -20,43 +20,45 @@
             :href="repo.html_url"
             target="_blank"
             rel="noopener noreferrer"
-            class="repo-card"
+            class="project-card repo-card-enhanced"
           >
-            <h4>{{ repo.name }}</h4>
-            <p v-if="repo.description">{{ repo.description }}</p>
-            <div class="repo-meta">
-              <span v-if="repo.language" class="repo-language">
-                <span class="language-dot"></span>
-                {{ repo.language }}
-              </span>
-              <span class="repo-stars">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  width="12"
-                  height="12"
-                >
-                  <polygon
-                    points="8 1 10.5 6 16 6.5 12 10.5 13 16 8 13 3 16 4 10.5 0 6.5 5.5 6 8 1"
-                  ></polygon>
-                </svg>
-                {{ repo.stars }}
-              </span>
-              <span class="repo-forks">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  width="12"
-                  height="12"
-                >
-                  <path
-                    d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
-                  ></path>
-                </svg>
-                {{ repo.forks }}
-              </span>
+            <div class="project-content">
+              <h3 class="project-title">{{ repo.name }}</h3>
+              <p v-if="repo.description" class="project-description">
+                {{ repo.description }}
+              </p>
+
+              <div class="repo-meta-enhanced">
+                <span v-if="repo.language" class="repo-language">
+                  <span
+                    class="language-dot"
+                    :style="{ background: getLanguageColor(repo.language) }"
+                  ></span>
+                  {{ repo.language }}
+                </span>
+                <span class="repo-stats">
+                  <span class="repo-stat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                      <polygon
+                        points="8 1 10.5 6 16 6.5 12 10.5 13 16 8 13 3 16 4 10.5 0 6.5 5.5 6 8 1"
+                      ></polygon>
+                    </svg>
+                    {{ repo.stars }}
+                  </span>
+                  <span class="repo-stat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                      <path
+                        d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
+                      ></path>
+                    </svg>
+                    {{ repo.forks }}
+                  </span>
+                </span>
+              </div>
+
+              <div class="project-links">
+                <span class="project-link">View on GitHub</span>
+              </div>
             </div>
           </a>
         </div>
@@ -122,6 +124,33 @@ const props = withDefaults(defineProps<Props>(), {
 const stats = ref<GitHubStatsData | null>(null)
 const loading = ref<boolean>(true)
 const error = ref<boolean>(false)
+
+// GitHub language colors (from linguist)
+const languageColors: Record<string, string> = {
+  TypeScript: '#3178c6',
+  JavaScript: '#f1e05a',
+  Python: '#3572A5',
+  Vue: '#41b883',
+  HTML: '#e34c26',
+  CSS: '#563d7c',
+  SCSS: '#c6538c',
+  Shell: '#89e051',
+  Go: '#00ADD8',
+  Rust: '#dea584',
+  Java: '#b07219',
+  'C++': '#f34b7d',
+  C: '#555555',
+  'C#': '#239120',
+  Ruby: '#701516',
+  PHP: '#4F5D95',
+  Swift: '#F05138',
+  Kotlin: '#A97BFF',
+  Dart: '#00B4AB'
+}
+
+const getLanguageColor = (lang: string): string => {
+  return languageColors[lang] || '#3b82f6'
+}
 
 const fetchGitHubStats = async (): Promise<void> => {
   try {
@@ -353,75 +382,106 @@ onMounted(() => {
 
 .repos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
 }
 
-.repo-card {
+/* Enhanced repo card - matches project-card shape */
+.repo-card-enhanced {
   display: block;
-  padding: 1.25rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--slate-200, #e2e8f0);
-  border-radius: 12px;
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-primary, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
 }
 
-.repo-card:hover {
-  transform: translateY(-3px);
+.repo-card-enhanced:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
   border-color: var(--primary-400, #60a5fa);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.repo-card h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-  font-weight: 700;
+.repo-card-enhanced .project-content {
+  padding: var(--space-6, 1.5rem);
+}
+
+.repo-card-enhanced .project-title {
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: var(--font-weight-semibold, 600);
   color: var(--primary-600, #2563eb);
+  margin: 0 0 var(--space-3, 0.75rem) 0;
 }
 
-.repo-card p {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.875rem;
-  color: var(--slate-600, #475569);
-  line-height: 1.5;
+.repo-card-enhanced .project-description {
+  color: var(--text-secondary, #475569);
+  line-height: 1.6;
+  margin: 0 0 var(--space-4, 1rem) 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-size: 0.9375rem;
 }
 
-.repo-meta {
+.repo-meta-enhanced {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  font-size: 0.8rem;
-  color: var(--slate-500, #64748b);
-}
-
-.repo-meta > span {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  margin-bottom: var(--space-4, 1rem);
+  font-size: 0.875rem;
+  color: var(--text-tertiary, #64748b);
 }
 
 .repo-language {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   font-weight: 600;
 }
 
 .language-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--primary-500, #3b82f6);
+  flex-shrink: 0;
 }
 
-.repo-stars svg,
-.repo-forks svg {
+.repo-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.repo-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.repo-stat svg {
+  width: 14px;
+  height: 14px;
   opacity: 0.7;
+}
+
+.project-links {
+  display: flex;
+  gap: var(--space-4, 1rem);
+}
+
+.project-link {
+  color: var(--primary-600, #2563eb);
+  font-weight: var(--font-weight-medium, 500);
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.repo-card-enhanced:hover .project-link {
+  color: var(--primary-700, #1d4ed8);
 }
 
 @keyframes fadeIn {
@@ -482,26 +542,38 @@ onMounted(() => {
   background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
-[data-theme='dark'] .repo-card {
+[data-theme='dark'] .repo-card-enhanced {
   background: var(--card-bg);
   border-color: var(--border-primary);
 }
 
-[data-theme='dark'] .repo-card:hover {
+[data-theme='dark'] .repo-card-enhanced:hover {
   border-color: var(--primary-400);
   box-shadow: var(--card-hover-shadow);
 }
 
-[data-theme='dark'] .repo-card h4 {
+[data-theme='dark'] .repo-card-enhanced .project-title {
   color: var(--link-color);
 }
 
-[data-theme='dark'] .repo-card p {
+[data-theme='dark'] .repo-card-enhanced .project-description {
   color: var(--text-secondary);
 }
 
-[data-theme='dark'] .repo-meta {
+[data-theme='dark'] .repo-meta-enhanced {
   color: var(--text-tertiary);
+}
+
+[data-theme='dark'] .repo-language {
+  color: var(--text-secondary);
+}
+
+[data-theme='dark'] .project-link {
+  color: var(--link-color);
+}
+
+[data-theme='dark'] .repo-card-enhanced:hover .project-link {
+  color: var(--primary-400);
 }
 
 [data-theme='dark'] .spinner {
@@ -555,7 +627,7 @@ onMounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .stat-card,
   .stat-icon,
-  .repo-card,
+  .repo-card-enhanced,
   .progress-fill {
     transition: none;
     animation: none;
@@ -563,7 +635,7 @@ onMounted(() => {
   }
 
   .stat-card:hover,
-  .repo-card:hover {
+  .repo-card-enhanced:hover {
     transform: none;
   }
 }

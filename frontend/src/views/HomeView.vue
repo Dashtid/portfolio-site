@@ -158,47 +158,7 @@
             GitHub
           </h2>
 
-          <div class="projects-grid">
-            <div
-              v-for="project in displayProjects"
-              :key="project.id || project.name"
-              class="project-card fade-in"
-            >
-              <div class="project-content">
-                <h3 class="project-title">{{ project.name }}</h3>
-                <p class="project-description">{{ project.description }}</p>
-                <div v-if="project.technologies" class="project-tech">
-                  <span
-                    v-for="tech in parseTechnologies(project.technologies)"
-                    :key="tech"
-                    class="tech-badge"
-                  >
-                    {{ tech }}
-                  </span>
-                </div>
-                <div class="project-links">
-                  <a
-                    v-if="project.github_url"
-                    :href="project.github_url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="project-link"
-                    >View on GitHub</a
-                  >
-                  <a
-                    v-if="project.live_url"
-                    :href="project.live_url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="project-link"
-                    >Live Demo</a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- GitHub Stats with Languages -->
+          <!-- GitHub Stats with Featured Projects -->
           <GitHubStats username="Dashtid" />
         </div>
       </section>
@@ -281,32 +241,14 @@ const documents = ref<Document[]>([])
 const documentsLoading = ref(false)
 const documentsError = ref<string | null>(null)
 
-// Static projects data as fallback
-const staticProjects = [
-  {
-    id: 'static-1',
-    name: 'Portfolio Website',
-    description: 'Personal portfolio showcasing professional experience and projects',
-    technologies: ['Vue.js', 'Python', 'FastAPI'],
-    github_url: 'https://github.com/Dashtid/portfolio-site',
-    live_url: null,
-    featured: true
-  }
-]
-
 // Computed properties
 const companies = computed(() => portfolioStore.companies || [])
-const projects = computed(() => portfolioStore.projects || [])
 const companiesByDate = computed(() => {
   return [...companies.value].sort((a, b) => {
     if (!a.start_date) return 1
     if (!b.start_date) return -1
     return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
   })
-})
-
-const displayProjects = computed(() => {
-  return projects.value.length > 0 ? projects.value : staticProjects
 })
 
 // Methods
@@ -317,19 +259,6 @@ const formatDate = (dateString: string | null | undefined): string => {
     year: 'numeric',
     month: 'short'
   })
-}
-
-const parseTechnologies = (technologies: string | string[] | null | undefined): string[] => {
-  if (!technologies) return []
-  // If already an array, return as-is
-  if (Array.isArray(technologies)) return technologies
-  // If string, try to parse as JSON
-  try {
-    const parsed = JSON.parse(technologies)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
 }
 
 // Load data on mount
