@@ -4,22 +4,31 @@ version = "1.0.0"
 description = "Portfolio website backend API"
 requires-python = ">=3.11"
 dependencies = [
+    # Core
     "fastapi==0.123.5",
     "uvicorn[standard]==0.32.1",
+    "gunicorn==23.0.0",
     "python-multipart==0.0.20",
+    # Database
     "sqlalchemy==2.0.44",
     "asyncpg==0.31.0",
     "alembic==1.17.2",
+    "greenlet==3.1.1",
+    # Authentication
     "PyJWT==2.10.1",
     "passlib[bcrypt]==1.7.4",
     "authlib==1.6.5",
     "httpx==0.28.1",
+    # Validation & Serialization
     "pydantic==2.12.5",
     "pydantic-settings==2.12.0",
     "email-validator==2.3.0",
+    # Utilities
     "python-dotenv==1.2.1",
     "python-json-logger==4.0.0",
     "slowapi==0.1.9",
+    # Monitoring
+    "sentry-sdk[fastapi]==2.19.2",
 ]
 
 [project.optional-dependencies]

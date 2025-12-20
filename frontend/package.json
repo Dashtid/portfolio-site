@@ -26,7 +26,6 @@
     "prepare": "husky || true"
   },
   "dependencies": {
-    "@headlessui/vue": "^1.7.23",
     "@sentry/vue": "^8.42.0",
     "@vueuse/core": "^14.1.0",
     "axios": "^1.13.2",
