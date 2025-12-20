@@ -402,11 +402,12 @@ class TestGetPortfolioStats:
             )
             service.get_user_repos = AsyncMock(return_value=[])
             service.get_repo_languages = AsyncMock(return_value={})
+            service.get_pinned_repos = AsyncMock(return_value=[])
 
             result = await service.get_portfolio_stats("newuser")
 
             assert result["total_stars"] == 0
-            assert result["recent_repos"] == []
+            assert result["featured_repos"] == []
 
         new_event_loop.run_until_complete(run_test())
 
