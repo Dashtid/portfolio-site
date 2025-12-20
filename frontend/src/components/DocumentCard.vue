@@ -96,10 +96,11 @@ const formattedDate = computed(() => {
   width: 100%;
 }
 
+/* Light mode - always shown in bg-dark section, so use dark glass effect */
 .card-glass {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 16px;
   padding: 1.75rem;
   transition: all 0.3s ease;
@@ -110,8 +111,8 @@ const formattedDate = computed(() => {
 
 .card-glass:hover {
   transform: translateY(-6px);
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(96, 165, 250, 0.5);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -126,10 +127,11 @@ const formattedDate = computed(() => {
   flex: 1;
 }
 
+/* Text colors - optimized for dark background (bg-dark section) */
 .document-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #f8fafc; /* slate-50 - always light for dark bg */
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
 }
@@ -137,8 +139,8 @@ const formattedDate = computed(() => {
 .document-type {
   display: inline-block;
   padding: 0.375rem 0.875rem;
-  background: var(--color-primary-alpha-20);
-  color: var(--primary-400);
+  background: rgba(96, 165, 250, 0.2);
+  color: #93c5fd; /* primary-300 */
   border-radius: 20px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -146,7 +148,7 @@ const formattedDate = computed(() => {
 }
 
 .document-description {
-  color: var(--text-secondary);
+  color: #cbd5e1; /* slate-300 - readable on dark */
   line-height: 1.7;
   margin-bottom: 1.25rem;
   flex: 1;
@@ -163,14 +165,14 @@ const formattedDate = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--text-tertiary);
+  color: #94a3b8; /* slate-400 */
   font-size: 0.875rem;
 }
 
 .icon {
   stroke-width: 2;
   opacity: 0.8;
-  color: var(--text-tertiary);
+  color: #94a3b8; /* slate-400 */
 }
 
 .card-actions {
@@ -182,7 +184,7 @@ const formattedDate = computed(() => {
 }
 
 .document-link {
-  color: var(--link-color);
+  color: #93c5fd; /* primary-300 */
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -191,12 +193,12 @@ const formattedDate = computed(() => {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  background: var(--color-primary-alpha-10);
+  background: rgba(96, 165, 250, 0.15);
 }
 
 .document-link:hover {
-  color: var(--link-hover);
-  background: var(--color-primary-alpha-20);
+  color: #bfdbfe; /* primary-200 */
+  background: rgba(96, 165, 250, 0.25);
   transform: translateX(4px);
 }
 
@@ -209,82 +211,14 @@ const formattedDate = computed(() => {
   font-weight: 600;
 }
 
-/* Dark mode adjustments */
+/* Dark theme - same styling since this component is always in bg-dark section */
 [data-theme='dark'] .card-glass {
-  background: var(--bg-secondary);
-  border-color: var(--border-primary);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme='dark'] .card-glass:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--primary-400);
-}
-
-[data-theme='dark'] .document-title {
-  color: var(--text-primary);
-}
-
-[data-theme='dark'] .document-type {
-  background: var(--color-primary-alpha-15);
-}
-
-[data-theme='dark'] .document-description {
-  color: var(--text-secondary);
-}
-
-[data-theme='dark'] .meta-item {
-  color: var(--text-tertiary);
-}
-
-[data-theme='dark'] .icon {
-  color: var(--text-tertiary);
-}
-
-[data-theme='dark'] .card-actions {
-  border-top-color: var(--border-primary);
-}
-
-[data-theme='dark'] .document-link {
-  background: var(--color-primary-alpha-15);
-}
-
-[data-theme='dark'] .document-link:hover {
-  background: var(--color-primary-alpha-25);
-}
-
-/* Force light text when inside bg-dark section (regardless of theme) */
-.bg-dark .document-title {
-  color: var(--slate-50, #f8fafc);
-}
-
-.bg-dark .document-type {
-  background: rgba(96, 165, 250, 0.2);
-  color: var(--primary-300, #93c5fd);
-}
-
-.bg-dark .document-description {
-  color: var(--slate-300, #cbd5e1);
-}
-
-.bg-dark .meta-item {
-  color: var(--slate-400, #94a3b8);
-}
-
-.bg-dark .icon {
-  color: var(--slate-400, #94a3b8);
-}
-
-.bg-dark .card-actions {
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-.bg-dark .document-link {
-  color: var(--primary-300, #93c5fd);
-  background: rgba(96, 165, 250, 0.15);
-}
-
-.bg-dark .document-link:hover {
-  color: var(--primary-200, #bfdbfe);
-  background: rgba(96, 165, 250, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(96, 165, 250, 0.5);
 }
 </style>

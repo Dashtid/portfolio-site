@@ -12,7 +12,6 @@
 
     <div v-else-if="stats" class="stats-container">
       <div v-if="stats.featured_repos && stats.featured_repos.length" class="featured-repos">
-        <h3>Featured Projects</h3>
         <div class="repos-grid">
           <a
             v-for="repo in stats.featured_repos"
