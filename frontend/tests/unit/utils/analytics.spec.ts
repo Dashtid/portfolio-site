@@ -308,4 +308,198 @@ describe('analytics utility', () => {
       expect(defaultExport.default.trackEvent).toBeDefined()
     })
   })
+
+  describe('Analytics enabled - Plausible provider', () => {
+    beforeEach(() => {
+      vi.resetModules()
+      // Mock environment variables for enabled Plausible
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'plausible')
+      vi.stubEnv('VITE_ANALYTICS_SITE_ID', 'test-domain.com')
+      vi.stubEnv('VITE_ANALYTICS_URL', 'https://plausible.io/js/script.js')
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('calls plausible when tracking events', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackEvent('Test Event', { key: 'value' })
+      expect(mockPlausible).toHaveBeenCalledWith('Test Event', { props: { key: 'value' } })
+    })
+
+    it('calls plausible for page views', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackPageView('/test-page')
+      expect(mockPlausible).toHaveBeenCalledWith('pageview', {
+        u: expect.stringContaining('/test-page')
+      })
+    })
+
+    it('initializes Plausible script on init', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      const script = document.querySelector('script[data-domain="test-domain.com"]')
+      expect(script).not.toBeNull()
+      expect(script?.getAttribute('src')).toBe('https://plausible.io/js/script.js')
+    })
+
+    it('uses default Plausible URL when not specified', async () => {
+      vi.unstubAllEnvs()
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'plausible')
+      vi.stubEnv('VITE_ANALYTICS_SITE_ID', 'test-domain.com')
+      vi.resetModules()
+
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      const script = document.querySelector('script[data-domain="test-domain.com"]')
+      expect(script?.getAttribute('src')).toBe('https://plausible.io/js/script.js')
+    })
+
+    it('tracks outbound links via trackEvent', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackOutboundLink('https://external.com')
+      expect(mockPlausible).toHaveBeenCalledWith('Outbound Link Click', {
+        props: { url: 'https://external.com' }
+      })
+    })
+
+    it('tracks file downloads via trackEvent', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackDownload('report.pdf')
+      expect(mockPlausible).toHaveBeenCalledWith('File Download', {
+        props: { filename: 'report.pdf' }
+      })
+    })
+
+    it('tracks errors via trackEvent', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackError('Something went wrong', 'NetworkError')
+      expect(mockPlausible).toHaveBeenCalledWith('Error', {
+        props: { message: 'Something went wrong', type: 'NetworkError' }
+      })
+    })
+
+    it('handles missing plausible on window gracefully', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any).plausible
+      const { analytics } = await import('@/utils/analytics')
+      expect(() => analytics.trackEvent('Test')).not.toThrow()
+    })
+
+    it('catches and logs errors when plausible throws', async () => {
+      mockPlausible.mockImplementation(() => {
+        throw new Error('Tracking failed')
+      })
+      const { analytics } = await import('@/utils/analytics')
+      expect(() => analytics.trackEvent('Test')).not.toThrow()
+    })
+  })
+
+  describe('Analytics enabled - Umami provider', () => {
+    beforeEach(() => {
+      vi.resetModules()
+      // Mock environment variables for enabled Umami
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'umami')
+      vi.stubEnv('VITE_ANALYTICS_SITE_ID', 'test-website-id')
+      vi.stubEnv('VITE_ANALYTICS_URL', 'https://analytics.umami.is/script.js')
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('calls umami.track when tracking events', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackEvent('Test Event', { key: 'value' })
+      expect(mockUmamiTrack).toHaveBeenCalledWith('Test Event', { key: 'value' })
+    })
+
+    it('calls umami.track for page views with function callback', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.trackPageView('/test-page')
+      expect(mockUmamiTrack).toHaveBeenCalledWith(expect.any(Function))
+    })
+
+    it('initializes Umami script on init', async () => {
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      const script = document.querySelector('script[data-website-id="test-website-id"]')
+      expect(script).not.toBeNull()
+      expect(script?.getAttribute('src')).toBe('https://analytics.umami.is/script.js')
+    })
+
+    it('uses default Umami URL when not specified', async () => {
+      vi.unstubAllEnvs()
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'umami')
+      vi.stubEnv('VITE_ANALYTICS_SITE_ID', 'test-website-id')
+      vi.resetModules()
+
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      const script = document.querySelector('script[data-website-id="test-website-id"]')
+      expect(script?.getAttribute('src')).toBe('https://analytics.umami.is/script.js')
+    })
+
+    it('handles missing umami on window gracefully', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any).umami
+      const { analytics } = await import('@/utils/analytics')
+      expect(() => analytics.trackEvent('Test')).not.toThrow()
+    })
+
+    it('catches and logs errors when umami throws', async () => {
+      mockUmamiTrack.mockImplementation(() => {
+        throw new Error('Tracking failed')
+      })
+      const { analytics } = await import('@/utils/analytics')
+      expect(() => analytics.trackEvent('Test')).not.toThrow()
+    })
+  })
+
+  describe('Analytics init edge cases', () => {
+    beforeEach(() => {
+      vi.resetModules()
+      document.head.innerHTML = ''
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('does not init when siteId is missing', async () => {
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'plausible')
+      // No VITE_ANALYTICS_SITE_ID
+
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      const scripts = document.querySelectorAll('script')
+      expect(scripts.length).toBe(0)
+    })
+
+    it('handles plausible init without siteId', async () => {
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'plausible')
+
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      // Should not throw and should not add script
+      expect(document.querySelectorAll('script').length).toBe(0)
+    })
+
+    it('handles umami init without siteId', async () => {
+      vi.stubEnv('VITE_ANALYTICS_ENABLED', 'true')
+      vi.stubEnv('VITE_ANALYTICS_PROVIDER', 'umami')
+
+      const { analytics } = await import('@/utils/analytics')
+      analytics.init()
+      // Should not throw and should not add script
+      expect(document.querySelectorAll('script').length).toBe(0)
+    })
+  })
 })
