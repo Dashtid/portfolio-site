@@ -129,9 +129,7 @@ def test_get_user_repos_error(mock_service, client: TestClient):
 @patch("app.api.v1.github.github_service")
 def test_get_user_repos_with_limit(mock_service, client: TestClient):
     """Test getting user repositories with limit parameter."""
-    mock_service.get_user_repos = AsyncMock(
-        return_value=[{"name": f"repo{i}"} for i in range(10)]
-    )
+    mock_service.get_user_repos = AsyncMock(return_value=[{"name": f"repo{i}"} for i in range(10)])
 
     response = client.get("/api/v1/github/repos/testuser?limit=5")
     assert response.status_code == 200

@@ -110,9 +110,7 @@ def setup_logger(name: str | None = None, level: str = "INFO") -> logging.Logger
     handler.setLevel(log_level)
 
     # Create JSON formatter
-    formatter = CustomJsonFormatter(
-        "%(timestamp)s %(level)s %(logger)s %(message)s"
-    )
+    formatter = CustomJsonFormatter("%(timestamp)s %(level)s %(logger)s %(message)s")
 
     handler.setFormatter(formatter)
 

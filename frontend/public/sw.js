@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Console statements are intentional for service worker debugging
 const CACHE_VERSION = '3.0.0'
 const CACHE_NAME = `dashti-portfolio-migration-v${CACHE_VERSION}`
@@ -56,9 +55,7 @@ self.addEventListener('activate', event => {
     caches
       .keys()
       .then(cacheNames => {
-        const oldCaches = cacheNames.filter(
-          cacheName => cacheName !== CACHE_NAME
-        )
+        const oldCaches = cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
         if (oldCaches.length > 0) {
           console.log('[ServiceWorker] Deleting old caches:', oldCaches)
         }
@@ -202,54 +199,33 @@ self.addEventListener('fetch', event => {
       (async () => {
         const preloadResponse = await event.preloadResponse
         if (preloadResponse) {
-          console.log(
-            '[ServiceWorker] Using preloaded response:',
-            event.request.url
-          )
+          console.log('[ServiceWorker] Using preloaded response:', event.request.url)
           return preloadResponse
         }
         return fetch(event.request)
       })()
         .then(response => {
           // Cache the fresh HTML response
-          if (
-            response &&
-            response.status === 200 &&
-            response.type === 'basic'
-          ) {
+          if (response && response.status === 200 && response.type === 'basic') {
             const responseToCache = response.clone()
             caches
               .open(CACHE_NAME)
               .then(cache => {
-                console.log(
-                  '[ServiceWorker] Caching fresh HTML:',
-                  event.request.url
-                )
+                console.log('[ServiceWorker] Caching fresh HTML:', event.request.url)
                 return cache.put(event.request, responseToCache)
               })
               .catch(error => {
-                console.error(
-                  '[ServiceWorker] Failed to cache HTML:',
-                  event.request.url,
-                  error
-                )
+                console.error('[ServiceWorker] Failed to cache HTML:', event.request.url, error)
               })
           }
           return response
         })
         .catch(error => {
-          console.error(
-            '[ServiceWorker] Network fetch failed for HTML:',
-            event.request.url,
-            error
-          )
+          console.error('[ServiceWorker] Network fetch failed for HTML:', event.request.url, error)
           // Fallback to cached version if network fails
           return caches.match(event.request).then(cachedResponse => {
             if (cachedResponse) {
-              console.log(
-                '[ServiceWorker] Serving cached HTML (offline):',
-                event.request.url
-              )
+              console.log('[ServiceWorker] Serving cached HTML (offline):', event.request.url)
               return cachedResponse
             }
             // If no cache, serve offline page
@@ -263,8 +239,7 @@ self.addEventListener('fetch', event => {
 
   // Stale-while-revalidate for CSS/JS, cache-first for images
   const url = new URL(event.request.url)
-  const isStyleOrScript =
-    url.pathname.endsWith('.css') || url.pathname.endsWith('.js')
+  const isStyleOrScript = url.pathname.endsWith('.css') || url.pathname.endsWith('.js')
 
   // Stale-while-revalidate for CSS/JS - serve cached, update in background
   if (isStyleOrScript) {
@@ -273,37 +248,23 @@ self.addEventListener('fetch', event => {
         const fetchPromise = coalescedFetch(event.request)
           .then(response => {
             // Update cache in background
-            if (
-              response &&
-              response.status === 200 &&
-              response.type === 'basic'
-            ) {
+            if (response && response.status === 200 && response.type === 'basic') {
               const responseToCache = response.clone()
               caches.open(CACHE_NAME).then(cache => {
-                console.log(
-                  '[ServiceWorker] Background update:',
-                  event.request.url
-                )
+                console.log('[ServiceWorker] Background update:', event.request.url)
                 cache.put(event.request, responseToCache)
               })
             }
             return response
           })
           .catch(error => {
-            console.warn(
-              '[ServiceWorker] Background fetch failed:',
-              event.request.url,
-              error
-            )
+            console.warn('[ServiceWorker] Background fetch failed:', event.request.url, error)
             return cachedResponse // Fallback to cached if update fails
           })
 
         // Return cached immediately, or wait for network if no cache
         if (cachedResponse) {
-          console.log(
-            '[ServiceWorker] Serving cached (revalidating):',
-            event.request.url
-          )
+          console.log('[ServiceWorker] Serving cached (revalidating):', event.request.url)
           return cachedResponse
         }
         return fetchPromise
@@ -327,11 +288,7 @@ self.addEventListener('fetch', event => {
         return fetch(event.request)
           .then(response => {
             // Don't cache if not a valid response
-            if (
-              !response ||
-              response.status !== 200 ||
-              response.type !== 'basic'
-            ) {
+            if (!response || response.status !== 200 || response.type !== 'basic') {
               console.log(
                 '[ServiceWorker] Not caching response:',
                 event.request.url,
@@ -347,39 +304,24 @@ self.addEventListener('fetch', event => {
             caches
               .open(CACHE_NAME)
               .then(cache => {
-                console.log(
-                  '[ServiceWorker] Caching new resource:',
-                  event.request.url
-                )
+                console.log('[ServiceWorker] Caching new resource:', event.request.url)
                 return cache.put(event.request, responseToCache)
               })
               .catch(error => {
-                console.error(
-                  '[ServiceWorker] Failed to cache resource:',
-                  event.request.url,
-                  error
-                )
+                console.error('[ServiceWorker] Failed to cache resource:', event.request.url, error)
               })
 
             return response
           })
           .catch(error => {
-            console.error(
-              '[ServiceWorker] Fetch failed:',
-              event.request.url,
-              error
-            )
+            console.error('[ServiceWorker] Fetch failed:', event.request.url, error)
             // Return offline response for failed asset requests
             console.log('[ServiceWorker] Serving offline response')
             return new Response('Offline', { status: 200, statusText: 'OK' })
           })
       })
       .catch(error => {
-        console.error(
-          '[ServiceWorker] Cache match failed:',
-          event.request.url,
-          error
-        )
+        console.error('[ServiceWorker] Cache match failed:', event.request.url, error)
         // Try network as fallback
         return fetch(event.request).catch(() => {
           return new Response('Offline', { status: 200, statusText: 'OK' })

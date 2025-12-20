@@ -18,9 +18,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_invalid_token(self):
         """Test get_current_user with invalid token."""
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="invalid_token"
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid_token")
         mock_db = AsyncMock()
 
         with patch("app.core.deps.decode_token", return_value=None):
@@ -33,9 +31,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_missing_subject(self):
         """Test get_current_user when token has no subject."""
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="valid_token"
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
         mock_db = AsyncMock()
 
         with patch("app.core.deps.decode_token", return_value={"type": "access"}):
@@ -47,9 +43,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_user_not_found(self):
         """Test get_current_user when user is not in database."""
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="valid_token"
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
 
         # Mock database session
         mock_result = MagicMock()
@@ -67,9 +61,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_success(self):
         """Test get_current_user successfully returns user."""
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="valid_token"
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
 
         # Create mock user
         mock_user = User(id="user123", username="testuser", github_id=12345)

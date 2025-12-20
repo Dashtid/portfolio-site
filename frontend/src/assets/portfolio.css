@@ -69,7 +69,7 @@
 }
 
 /* Dark Mode Overrides */
-[data-theme="dark"] {
+[data-theme='dark'] {
   /* Color Palette - Dark Theme */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
@@ -79,7 +79,7 @@
   --text-tertiary: #b0bece; /* Improved contrast for WCAG AA */
   --border-primary: #475569;
   --border-secondary: #64748b;
-  
+
   /* Primary Colors for Dark Mode */
   --primary-50: #1e293b;
   --primary-100: #334155;
@@ -87,101 +87,101 @@
 }
 
 /* Dark Mode - Hero Section */
-[data-theme="dark"] .hero-content {
+[data-theme='dark'] .hero-content {
   background: rgba(var(--color-primary-rgb, 15, 23, 42), 0.9);
   border: 1px solid var(--border-primary);
 }
 
-[data-theme="dark"] .custom-hero-title {
+[data-theme='dark'] .custom-hero-title {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .hero-accent-primary,
-[data-theme="dark"] .hero-accent-secondary {
+[data-theme='dark'] .hero-accent-primary,
+[data-theme='dark'] .hero-accent-secondary {
   color: var(--link-color);
 }
 
-[data-theme="dark"] .custom-hero-lead {
+[data-theme='dark'] .custom-hero-lead {
   color: var(--text-secondary);
 }
 
 /* Dark Mode - Cards */
-[data-theme="dark"] .experience-card,
-[data-theme="dark"] .education-card,
-[data-theme="dark"] .project-card {
+[data-theme='dark'] .experience-card,
+[data-theme='dark'] .education-card,
+[data-theme='dark'] .project-card {
   background: var(--card-bg);
   border-color: var(--border-primary);
 }
 
-[data-theme="dark"] .company-name,
-[data-theme="dark"] .education-institution,
-[data-theme="dark"] .project-title {
+[data-theme='dark'] .company-name,
+[data-theme='dark'] .education-institution,
+[data-theme='dark'] .project-title {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .job-title,
-[data-theme="dark"] .education-degree {
+[data-theme='dark'] .job-title,
+[data-theme='dark'] .education-degree {
   color: var(--link-color);
 }
 
-[data-theme="dark"] .company-location,
-[data-theme="dark"] .company-description,
-[data-theme="dark"] .education-field,
-[data-theme="dark"] .education-description,
-[data-theme="dark"] .project-description {
+[data-theme='dark'] .company-location,
+[data-theme='dark'] .company-description,
+[data-theme='dark'] .education-field,
+[data-theme='dark'] .education-description,
+[data-theme='dark'] .project-description {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .company-dates,
-[data-theme="dark"] .education-dates {
+[data-theme='dark'] .company-dates,
+[data-theme='dark'] .education-dates {
   color: var(--text-tertiary);
 }
 
 /* Dark Mode - Tech Badges */
-[data-theme="dark"] .tech-badge {
+[data-theme='dark'] .tech-badge {
   background: var(--bg-tertiary);
   color: var(--primary-400);
 }
 
 /* Dark Mode - About Section */
-[data-theme="dark"] .about-content {
+[data-theme='dark'] .about-content {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .about-content ul li {
+[data-theme='dark'] .about-content ul li {
   color: var(--text-secondary);
 }
 
 /* Dark Mode - Section Backgrounds */
-[data-theme="dark"] .bg-light {
+[data-theme='dark'] .bg-light {
   background-color: var(--bg-secondary) !important;
 }
 
-[data-theme="dark"] .portfolio-section {
+[data-theme='dark'] .portfolio-section {
   background-color: var(--bg-primary);
 }
 
 /* Dark Mode - Section Titles */
-[data-theme="dark"] .section-title {
+[data-theme='dark'] .section-title {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .portfolio-section .section-title::after {
+[data-theme='dark'] .portfolio-section .section-title::after {
   background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
 /* Dark Mode - Section Icons */
-[data-theme="dark"] .section-icon {
+[data-theme='dark'] .section-icon {
   filter: brightness(0) invert(1);
 }
 
 /* Dark Mode - Buttons */
-[data-theme="dark"] .btn-outline-primary {
+[data-theme='dark'] .btn-outline-primary {
   color: var(--link-color);
   border-color: var(--link-color);
 }
 
-[data-theme="dark"] .btn-outline-primary:hover {
+[data-theme='dark'] .btn-outline-primary:hover {
   background: var(--link-color);
   color: var(--bg-primary);
 }
@@ -209,21 +209,19 @@
   outline-offset: 2px;
 }
 
-
 /* Dark Mode - Links */
-[data-theme="dark"] .project-link {
+[data-theme='dark'] .project-link {
   color: var(--link-color);
 }
 
-[data-theme="dark"] .project-link:hover {
+[data-theme='dark'] .project-link:hover {
   color: var(--link-hover);
 }
 
 /* Dark Mode - GitHub Stats Card */
-[data-theme="dark"] .github-stats-card {
+[data-theme='dark'] .github-stats-card {
   background: var(--card-bg);
 }
-
 
 /* Global Styles */
 * {
@@ -236,7 +234,12 @@ html {
 }
 
 body {
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+  font-family:
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Roboto',
+    sans-serif;
   font-size: var(--font-size-base);
   line-height: 1.5;
   color: var(--text-primary);
@@ -732,7 +735,9 @@ section {
   border-radius: 0.75rem;
   background: var(--bg-secondary);
   box-shadow: var(--shadow-lg);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   margin-bottom: 2rem;
 }
 

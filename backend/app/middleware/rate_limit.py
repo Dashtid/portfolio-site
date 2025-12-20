@@ -56,7 +56,9 @@ def get_user_or_ip(request: Request) -> str:
 # Create limiter instance with configurable defaults
 limiter = Limiter(
     key_func=get_user_or_ip,
-    default_limits=[settings.RATE_LIMIT_DEFAULT] if hasattr(settings, "RATE_LIMIT_DEFAULT") else ["100/minute"],
+    default_limits=[settings.RATE_LIMIT_DEFAULT]
+    if hasattr(settings, "RATE_LIMIT_DEFAULT")
+    else ["100/minute"],
     storage_uri=getattr(settings, "RATE_LIMIT_STORAGE_URI", None),
     strategy="fixed-window",
     headers_enabled=False,  # Disable header injection to avoid response issues
