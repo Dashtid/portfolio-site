@@ -11,26 +11,11 @@
     </div>
 
     <div v-else-if="stats" class="stats-container">
-      <div v-if="stats.top_languages && stats.top_languages.length" class="languages-section">
-        <h3>Top Languages</h3>
-        <div class="language-bars">
-          <div v-for="lang in stats.top_languages" :key="lang.name" class="language-bar">
-            <div class="language-info">
-              <span class="language-name">{{ lang.name }}</span>
-              <span class="language-percentage">{{ lang.percentage }}%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="`width: ${lang.percentage}%`"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="stats.recent_repos && stats.recent_repos.length" class="recent-repos">
-        <h3>Recent Projects</h3>
+      <div v-if="stats.featured_repos && stats.featured_repos.length" class="featured-repos">
+        <h3>Featured Projects</h3>
         <div class="repos-grid">
           <a
-            v-for="repo in stats.recent_repos"
+            v-for="repo in stats.featured_repos"
             :key="repo.name"
             :href="repo.html_url"
             target="_blank"
@@ -76,6 +61,21 @@
           </a>
         </div>
       </div>
+
+      <div v-if="stats.top_languages && stats.top_languages.length" class="languages-section">
+        <h3>Top Languages</h3>
+        <div class="language-bars">
+          <div v-for="lang in stats.top_languages" :key="lang.name" class="language-bar">
+            <div class="language-info">
+              <span class="language-name">{{ lang.name }}</span>
+              <span class="language-percentage">{{ lang.percentage }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="`width: ${lang.percentage}%`"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -105,7 +105,7 @@ interface GitHubStatsData {
   followers: number
   total_forks: number
   top_languages?: Language[]
-  recent_repos?: Repository[]
+  featured_repos?: Repository[]
 }
 
 interface Props {
@@ -340,11 +340,11 @@ onMounted(() => {
   transition: width 0.8s ease;
 }
 
-.recent-repos {
+.featured-repos {
   margin-top: 2rem;
 }
 
-.recent-repos h3 {
+.featured-repos h3 {
   margin: 0 0 1.25rem 0;
   font-size: 1.1rem;
   font-weight: 700;
@@ -462,7 +462,7 @@ onMounted(() => {
 }
 
 [data-theme='dark'] .languages-section h3,
-[data-theme='dark'] .recent-repos h3 {
+[data-theme='dark'] .featured-repos h3 {
   color: var(--text-primary);
 }
 

@@ -161,6 +161,24 @@ class GitHubService:
         # Sort languages by usage
         top_languages = sorted(languages.items(), key=lambda x: x[1], reverse=True)[:5]
 
+        # Get pinned repos (or fall back to recent if no pinned)
+        pinned = await self.get_pinned_repos(username)
+        featured_repos = (
+            pinned
+            if pinned
+            else [
+                {
+                    "name": r["name"],
+                    "description": r.get("description"),
+                    "stars": r.get("stargazers_count", 0),
+                    "forks": r.get("forks_count", 0),
+                    "language": r.get("language"),
+                    "html_url": r.get("html_url"),
+                }
+                for r in owned_repos[:6]
+            ]
+        )
+
         return {
             "username": username,
             "avatar_url": user_info.get("avatar_url"),
@@ -175,19 +193,68 @@ class GitHubService:
                 {"name": lang, "percentage": round(bytes_count / sum(languages.values()) * 100, 1)}
                 for lang, bytes_count in top_languages
             ],
-            "recent_repos": [
-                {
-                    "name": r["name"],
-                    "description": r.get("description"),
-                    "stars": r.get("stargazers_count", 0),
-                    "forks": r.get("forks_count", 0),
-                    "language": r.get("language"),
-                    "updated_at": r.get("updated_at"),
-                    "html_url": r.get("html_url"),
-                }
-                for r in owned_repos[:6]  # Top 6 recent repos
-            ],
+            "featured_repos": featured_repos,
         }
+
+    async def get_pinned_repos(self, username: str) -> list[dict]:
+        """Get pinned repositories using GitHub GraphQL API."""
+        query = """
+        query($userName: String!) {
+          user(login: $userName) {
+            pinnedItems(first: 6, types: REPOSITORY) {
+              nodes {
+                ... on Repository {
+                  name
+                  description
+                  url
+                  stargazerCount
+                  forkCount
+                  primaryLanguage {
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    "https://api.github.com/graphql",
+                    json={"query": query, "variables": {"userName": username}},
+                    headers=self.headers,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                if "errors" in data:
+                    logger.warning(f"GraphQL errors for {username}: {data['errors']}")
+                    return []
+
+                nodes = data.get("data", {}).get("user", {}).get("pinnedItems", {}).get("nodes", [])
+
+                # Transform to match existing repo structure
+                return [
+                    {
+                        "name": repo.get("name"),
+                        "description": repo.get("description"),
+                        "html_url": repo.get("url"),
+                        "stars": repo.get("stargazerCount", 0),
+                        "forks": repo.get("forkCount", 0),
+                        "language": (
+                            repo.get("primaryLanguage", {}).get("name")
+                            if repo.get("primaryLanguage")
+                            else None
+                        ),
+                    }
+                    for repo in nodes
+                    if repo  # Filter out null nodes
+                ]
+            except httpx.HTTPError as e:
+                logger.exception(f"Error fetching pinned repos for {username}: {e}")
+                return []
 
     async def get_project_stats(self, owner: str, repo: str) -> dict[str, Any]:
         """Get detailed statistics for a specific project."""

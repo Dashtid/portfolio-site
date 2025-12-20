@@ -114,6 +114,9 @@ class Settings(BaseSettings):
     # Admin
     ADMIN_GITHUB_ID: str | None = None  # Your GitHub user ID
 
+    # GitHub API Token (for authenticated requests and GraphQL)
+    GITHUB_TOKEN: str | None = None
+
     # Logging
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
