@@ -88,7 +88,7 @@
 
 /* Dark Mode - Hero Section */
 [data-theme='dark'] .hero-content {
-  background: rgba(var(--color-primary-rgb, 15, 23, 42), 0.9);
+  background: rgba(15, 23, 42, 0.92);
   border: 1px solid var(--border-primary);
 }
 
@@ -103,24 +103,6 @@
 
 [data-theme='dark'] .custom-hero-lead {
   color: var(--text-secondary);
-}
-
-/* Dark Mode - Stockholm Background */
-[data-theme='dark'] .stockholm-background {
-  background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.88) 100%),
-    url('/images/stockholm.webp') no-repeat center center;
-  background-size: cover;
-  background-attachment: fixed;
-}
-
-[data-theme='dark'] .stockholm-background::before {
-  background: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.85) 0%,
-    rgba(30, 41, 59, 0.8) 50%,
-    rgba(51, 65, 85, 0.75) 100%
-  );
 }
 
 /* Dark Mode - Cards */
