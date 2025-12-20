@@ -14,7 +14,7 @@
         @click="scrollToSection('hero')"
       >
         <img
-          src="/images/D-dark.svg"
+          :src="logoSrc"
           alt="David Dashti Logo"
           height="30"
           class="d-inline-block align-text-top me-2"
@@ -60,8 +60,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import ThemeToggle from './ThemeToggle.vue'
+import { useTheme } from '../composables/useTheme'
+
+const { isDark } = useTheme()
+
+// Compute logo path based on theme
+const logoSrc = computed(() => (isDark.value ? '/images/D-white.svg' : '/images/D-dark.svg'))
 
 interface NavItem {
   name: string

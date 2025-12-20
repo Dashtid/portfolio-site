@@ -251,4 +251,40 @@ const formattedDate = computed(() => {
 [data-theme='dark'] .document-link:hover {
   background: var(--color-primary-alpha-25);
 }
+
+/* Force light text when inside bg-dark section (regardless of theme) */
+.bg-dark .document-title {
+  color: var(--slate-50, #f8fafc);
+}
+
+.bg-dark .document-type {
+  background: rgba(96, 165, 250, 0.2);
+  color: var(--primary-300, #93c5fd);
+}
+
+.bg-dark .document-description {
+  color: var(--slate-300, #cbd5e1);
+}
+
+.bg-dark .meta-item {
+  color: var(--slate-400, #94a3b8);
+}
+
+.bg-dark .icon {
+  color: var(--slate-400, #94a3b8);
+}
+
+.bg-dark .card-actions {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.bg-dark .document-link {
+  color: var(--primary-300, #93c5fd);
+  background: rgba(96, 165, 250, 0.15);
+}
+
+.bg-dark .document-link:hover {
+  color: var(--primary-200, #bfdbfe);
+  background: rgba(96, 165, 250, 0.25);
+}
 </style>

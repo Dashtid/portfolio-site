@@ -140,7 +140,7 @@
               class="section-icon"
               loading="lazy"
             />
-            Publications & Research
+            Academic Work
           </h2>
           <div v-if="documentsLoading" class="loading-state">Loading publications...</div>
           <div v-else-if="documentsError" class="error-state">{{ documentsError }}</div>
@@ -181,6 +181,7 @@
                     v-if="project.github_url"
                     :href="project.github_url"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="project-link"
                     >View on GitHub</a
                   >
@@ -188,6 +189,7 @@
                     v-if="project.live_url"
                     :href="project.live_url"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="project-link"
                     >Live Demo</a
                   >
@@ -195,6 +197,9 @@
               </div>
             </div>
           </div>
+
+          <!-- GitHub Stats with Languages -->
+          <GitHubStats username="Dashtid" />
         </div>
       </section>
 
@@ -230,13 +235,13 @@
                 <li>Preparing frameworks for AI Act compliance in healthcare AI systems</li>
               </ul>
               <p>
-                <strong>Technical skills:</strong> Windows Server, Unix/Linux, Docker, PowerShell
-                scripting, Bash scripting, Python, Git
+                <strong>Technical skills:</strong> Windows Server, Unix/Linux, Docker, Kubernetes,
+                PowerShell, Bash, Python, Rust and Git
               </p>
               <p>
                 I am passionate about making healthcare technology safer and more trustworthy by
                 protecting patient data, ensuring system integrity, and helping organizations
-                navigate the new AI regulatory landscape.
+                navigate the Cybersecurity & AI regulatory landscape.
               </p>
             </div>
           </div>
@@ -259,6 +264,7 @@ import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 import BackToTop from '../components/BackToTop.vue'
 import DocumentCard from '../components/DocumentCard.vue'
+import GitHubStats from '../components/GitHubStats.vue'
 import { useBatchAnimation } from '../composables/useScrollAnimations'
 import { getDocuments } from '../api/services'
 import type { Document } from '../types/api'
@@ -282,7 +288,7 @@ const staticProjects = [
     name: 'Portfolio Website',
     description: 'Personal portfolio showcasing professional experience and projects',
     technologies: ['Vue.js', 'Python', 'FastAPI'],
-    github_url: 'https://github.com/Dashtid',
+    github_url: 'https://github.com/Dashtid/portfolio-site',
     live_url: null,
     featured: true
   }

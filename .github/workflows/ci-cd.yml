@@ -223,7 +223,7 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     environment:
       name: production
-      url: https://portfolio-site-jade-five.vercel.app  # Will be https://dashti.se
+      url: https://dashti.se
 
     steps:
       - name: Checkout code
