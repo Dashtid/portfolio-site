@@ -4,7 +4,14 @@
       "staticDistDir": "./frontend/dist",
       "numberOfRuns": 3,
       "settings": {
-        "preset": "desktop"
+        "preset": "desktop",
+        "chromeFlags": [
+          "--no-sandbox",
+          "--disable-gpu",
+          "--disable-dev-shm-usage",
+          "--disable-software-rasterizer"
+        ],
+        "maxWaitForLoad": 45000
       }
     },
     "assert": {
