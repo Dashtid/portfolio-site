@@ -1,15 +1,17 @@
 """
 Authentication API endpoints with GitHub OAuth
+
+Uses database-backed OAuth state storage for multi-instance deployments.
 """
 
 import secrets
-import time
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -17,6 +19,7 @@ from app.core.deps import get_current_user
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.database import get_db
 from app.middleware import limiter
+from app.models.oauth_state import OAuthState
 from app.models.user import User
 from app.schemas.auth import RefreshTokenRequest, Token, UserResponse
 
@@ -26,33 +29,50 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
-# OAuth state store with TTL (5 minutes expiration)
-# In production with multiple instances, use Redis instead
+# OAuth state TTL
 OAUTH_STATE_TTL_SECONDS = 300  # 5 minutes
-oauth_states: dict[str, float] = {}  # state -> expiration timestamp
 
 
-def cleanup_expired_states() -> None:
-    """Remove expired OAuth states to prevent memory leaks"""
-    current_time = time.time()
-    expired_keys = [key for key, expiry in oauth_states.items() if expiry < current_time]
-    for key in expired_keys:
-        del oauth_states[key]
+async def cleanup_expired_states(db: AsyncSession) -> None:
+    """Remove expired OAuth states from database"""
+    await db.execute(delete(OAuthState).where(OAuthState.expires_at < datetime.now(UTC)))
+    await db.commit()
 
 
-def is_valid_state(state: str) -> bool:
-    """Check if OAuth state is valid and not expired"""
-    if state not in oauth_states:
+async def create_oauth_state(db: AsyncSession) -> str:
+    """Create and store a new OAuth state"""
+    state = secrets.token_urlsafe(32)
+    expires_at = datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TTL_SECONDS)
+
+    oauth_state = OAuthState(state=state, expires_at=expires_at)
+    db.add(oauth_state)
+    await db.commit()
+
+    return state
+
+
+async def validate_and_consume_state(db: AsyncSession, state: str) -> bool:
+    """Validate OAuth state and remove it (single-use)"""
+    result = await db.execute(select(OAuthState).where(OAuthState.state == state))
+    oauth_state = result.scalar_one_or_none()
+
+    if not oauth_state:
         return False
-    if oauth_states[state] < time.time():
-        del oauth_states[state]
+
+    if oauth_state.is_expired():
+        await db.delete(oauth_state)
+        await db.commit()
         return False
+
+    # Consume the state (single-use)
+    await db.delete(oauth_state)
+    await db.commit()
     return True
 
 
 @router.get("/github")
 @limiter.limit(settings.RATE_LIMIT_AUTH)
-async def github_login(request: Request):
+async def github_login(request: Request, db: DbSession):
     """Initiate GitHub OAuth flow"""
     if not settings.GITHUB_CLIENT_ID:
         raise HTTPException(
@@ -60,11 +80,10 @@ async def github_login(request: Request):
         )
 
     # Cleanup expired states periodically
-    cleanup_expired_states()
+    await cleanup_expired_states(db)
 
-    # Generate state for CSRF protection with TTL
-    state = secrets.token_urlsafe(32)
-    oauth_states[state] = time.time() + OAUTH_STATE_TTL_SECONDS
+    # Generate state for CSRF protection with TTL (database-backed)
+    state = await create_oauth_state(db)
 
     # Build GitHub authorization URL
     github_auth_url = (
@@ -82,14 +101,11 @@ async def github_login(request: Request):
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def github_callback(request: Request, code: str, state: str, db: DbSession):
     """Handle GitHub OAuth callback"""
-    # Verify state (includes expiration check)
-    if not is_valid_state(state):
+    # Verify and consume state (single-use, database-backed)
+    if not await validate_and_consume_state(db, state):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state parameter"
         )
-
-    # Clean up state after validation
-    del oauth_states[state]
 
     # Exchange code for access token with proper timeout and error handling
     try:

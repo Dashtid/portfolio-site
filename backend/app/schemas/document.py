@@ -19,6 +19,7 @@ class DocumentBase(BaseModel):
     file_size: int = Field(..., gt=0, description="File size in bytes")
     file_url: str = Field(..., description="Public download URL")
     published_date: str | None = Field(None, description="Publication date (ISO format)")
+    order_index: int = Field(0, description="Display order (lower = first)")
 
 
 class DocumentCreate(DocumentBase):
@@ -45,5 +46,4 @@ class DocumentResponse(DocumentBase):
     id: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True  # Pydantic v2 (was orm_mode in v1)
+    model_config = {"from_attributes": True}

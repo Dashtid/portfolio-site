@@ -3,20 +3,33 @@ Initialize database and create tables
 """
 
 import asyncio
+import os
 from datetime import date
 
 from app.database import AsyncSessionLocal, Base, engine
 from app.models import Company, Project, Skill
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-async def init_db():
-    """Create all tables"""
+async def init_db(drop_existing: bool = False):
+    """Create all tables
+
+    Args:
+        drop_existing: If True, drops all tables first. Requires ALLOW_DB_DROP=true env var.
+    """
     async with engine.begin() as conn:
-        # Drop all tables (for development only)
-        await conn.run_sync(Base.metadata.drop_all)
+        if drop_existing:
+            # Safety check: require explicit env var to drop tables
+            if os.getenv("ALLOW_DB_DROP", "").lower() != "true":
+                logger.error("Cannot drop tables: Set ALLOW_DB_DROP=true environment variable")
+                raise RuntimeError("ALLOW_DB_DROP=true required to drop existing tables")
+            logger.warning("Dropping all existing tables...")
+            await conn.run_sync(Base.metadata.drop_all)
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
-        print("[OK] Database tables created successfully!")
+        logger.info("Database tables created successfully")
 
 
 async def seed_data():
@@ -221,21 +234,21 @@ async def seed_data():
 
             # Commit all changes
             await session.commit()
-            print("[OK] Seed data added successfully!")
+            logger.info("Seed data added successfully")
 
         except Exception as e:
             await session.rollback()
-            print(f"[ERROR] Failed to seed data: {e}")
+            logger.exception("Failed to seed data: %s", e)
             raise
 
 
 async def main():
     """Initialize database and seed data"""
-    print("Initializing database...")
-    await init_db()
-    print("Adding seed data...")
+    logger.info("Initializing database...")
+    await init_db(drop_existing=True)
+    logger.info("Adding seed data...")
     await seed_data()
-    print("[OK] Database initialization complete!")
+    logger.info("Database initialization complete")
 
 
 if __name__ == "__main__":

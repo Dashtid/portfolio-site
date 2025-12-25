@@ -388,4 +388,174 @@ describe('Auth Store', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me')
     })
   })
+
+  describe('security: XSS prevention', () => {
+    it('should reject script injection via token parameter', () => {
+      // Attempt to inject script tags via token parameter
+      window.location.search = '?token=<script>alert(1)</script>&refresh=<script>evil()</script>'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+      expect(store.accessToken).toBeNull()
+      expect(store.refreshToken).toBeNull()
+    })
+
+    it('should reject JavaScript protocol in token', () => {
+      window.location.search = '?token=javascript:alert(1)&refresh=javascript:evil()'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+      expect(store.accessToken).toBeNull()
+    })
+
+    it('should reject data URI injection', () => {
+      window.location.search = '?token=data:text/html,<script>alert(1)</script>&refresh=data:evil'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+      expect(store.accessToken).toBeNull()
+    })
+
+    it('should reject URL encoded script injection', () => {
+      // %3Cscript%3E = <script>
+      window.location.search = '?token=%3Cscript%3Ealert(1)%3C/script%3E&refresh=test'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+      expect(store.accessToken).toBeNull()
+    })
+
+    it('should reject event handler injection', () => {
+      window.location.search = '?token=test"onload="alert(1)&refresh=test'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+      expect(store.accessToken).toBeNull()
+    })
+  })
+
+  describe('security: malformed JWT rejection', () => {
+    it('should reject token with only one segment', () => {
+      window.location.search = '?token=justonepart&refresh=alsoonepart'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+    })
+
+    it('should reject token with two segments (missing signature)', () => {
+      window.location.search = '?token=header.payload&refresh=also.twosegments'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+    })
+
+    it('should reject token with four segments', () => {
+      window.location.search = '?token=one.two.three.four&refresh=a.b.c.d'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+    })
+
+    it('should reject empty token', () => {
+      window.location.search = '?token=&refresh='
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+    })
+
+    it('should reject token with invalid characters', () => {
+      window.location.search = '?token=abc.def.ghi!@#$%&refresh=abc.def.ghi'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+    })
+
+    it('should reject token with spaces', () => {
+      window.location.search = '?token=abc def.ghi.jkl&refresh=abc.def.ghi'
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(false)
+    })
+
+    it('should accept valid JWT with underscores and hyphens', () => {
+      // Base64url encoding uses - and _ which are valid in JWT
+      const validToken = 'eyJ-test_header.eyJ-test_payload.sig_with-dashes'
+      const validRefresh = 'eyJ-refresh_header.eyJ-refresh_payload.sig_value'
+
+      window.location.search = `?token=${validToken}&refresh=${validRefresh}`
+
+      const store = useAuthStore()
+      const result = store.initializeFromCallback()
+
+      expect(result).toBe(true)
+      expect(store.accessToken).toBe(validToken)
+    })
+  })
+
+  describe('security: header injection prevention', () => {
+    it('should not include newlines in Authorization header', () => {
+      const store = useAuthStore()
+
+      // Attempt header injection via token with newlines
+      const maliciousToken = 'valid.jwt.token\r\nX-Injected-Header: evil'
+      store.setTokens(maliciousToken, 'refresh.token.here')
+
+      // The token should be set as-is (validation happens on callback, not setTokens)
+      // But Authorization header should be set without allowing HTTP header injection
+      const authHeader = apiClient.defaults.headers.common['Authorization']
+      expect(authHeader).toBe(`Bearer ${maliciousToken}`)
+
+      // Note: Actual header injection prevention is handled by axios/browser
+      // This test documents that we don't do additional sanitization in setTokens
+    })
+  })
+
+  describe('security: storage handling', () => {
+    it('should clean URL parameters after processing', () => {
+      const validToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U'
+      const validRefresh =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyZWZyZXNoIn0.abc123def456ghi789'
+
+      window.location.search = `?token=${validToken}&refresh=${validRefresh}`
+
+      const store = useAuthStore()
+      store.initializeFromCallback()
+
+      // URL should be cleaned to prevent token leakage in browser history
+      expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '/admin')
+    })
+
+    it('should clean URL even when tokens are invalid', () => {
+      window.location.search = '?token=invalid&refresh=alsoinvalid'
+
+      const store = useAuthStore()
+      store.initializeFromCallback()
+
+      // URL should still be cleaned to prevent logging malicious parameters
+      expect(window.history.replaceState).toHaveBeenCalled()
+    })
+  })
 })

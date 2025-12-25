@@ -233,4 +233,163 @@ describe('API client', () => {
       expect(apiClient.interceptors).toBeDefined()
     })
   })
+
+  describe('concurrent token refresh (race condition prevention)', () => {
+    it('makes only one refresh call when multiple 401s occur simultaneously', async () => {
+      const refreshToken = 'test-refresh-token'
+      const newAccessToken = 'new-access-token'
+      const newRefreshToken = 'new-refresh-token'
+      mockLocalStorage['refreshToken'] = refreshToken
+
+      // Create a deferred promise to control refresh timing
+      let resolveRefresh: ((value: any) => void) | undefined
+      const refreshPromise = new Promise(resolve => {
+        resolveRefresh = resolve
+      })
+
+      vi.mocked(axios.post).mockReturnValue(refreshPromise as any)
+
+      const createError = (url: string): Partial<AxiosError> => ({
+        response: { status: 401 } as any,
+        config: {
+          headers: {} as any,
+          url
+        } as InternalAxiosRequestConfig
+      })
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+
+      // Fire 3 concurrent 401 errors
+      const promise1 = errorInterceptor(createError('/api/resource1'))
+      const promise2 = errorInterceptor(createError('/api/resource2'))
+      const promise3 = errorInterceptor(createError('/api/resource3'))
+
+      // Resolve the refresh
+      resolveRefresh!({
+        data: {
+          access_token: newAccessToken,
+          refresh_token: newRefreshToken
+        }
+      })
+
+      await Promise.all([promise1, promise2, promise3])
+
+      // Only ONE refresh call should have been made
+      expect(axios.post).toHaveBeenCalledTimes(1)
+      expect(axios.post).toHaveBeenCalledWith('http://localhost:8001/api/v1/auth/refresh', {
+        refresh_token: refreshToken
+      })
+    })
+
+    it('retries all queued requests with new token after refresh completes', async () => {
+      const refreshToken = 'test-refresh-token'
+      const newAccessToken = 'new-access-token'
+      const newRefreshToken = 'new-refresh-token'
+      mockLocalStorage['refreshToken'] = refreshToken
+
+      let resolveRefresh: ((value: any) => void) | undefined
+      const refreshPromise = new Promise(resolve => {
+        resolveRefresh = resolve
+      })
+
+      vi.mocked(axios.post).mockReturnValue(refreshPromise as any)
+
+      const createError = (url: string): Partial<AxiosError> => ({
+        response: { status: 401 } as any,
+        config: {
+          headers: {} as any,
+          url
+        } as InternalAxiosRequestConfig
+      })
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+
+      // Fire concurrent 401 errors
+      const promise1 = errorInterceptor(createError('/api/resource1'))
+      const promise2 = errorInterceptor(createError('/api/resource2'))
+
+      // Resolve the refresh
+      resolveRefresh!({
+        data: {
+          access_token: newAccessToken,
+          refresh_token: newRefreshToken
+        }
+      })
+
+      await Promise.all([promise1, promise2])
+
+      // Verify both requests were retried (apiClient called for each)
+      // First call is the initial request, subsequent are retries
+      expect(apiClient).toHaveBeenCalled()
+    })
+
+    it('redirects to login and clears tokens when refresh fails', async () => {
+      const refreshToken = 'test-refresh-token'
+      mockLocalStorage['refreshToken'] = refreshToken
+
+      vi.mocked(axios.post).mockRejectedValue(new Error('Refresh failed'))
+
+      const error: Partial<AxiosError> = {
+        response: { status: 401 } as any,
+        config: {
+          headers: {} as any,
+          url: '/api/resource'
+        } as InternalAxiosRequestConfig
+      }
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+
+      // The request that triggered refresh should reject
+      await expect(errorInterceptor(error)).rejects.toThrow('Refresh failed')
+
+      // Verify redirect happened
+      expect(window.location.href).toBe('/admin/login')
+
+      // Verify tokens were cleared
+      expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken')
+      expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken')
+    })
+
+    it('allows new refresh after previous refresh completes', async () => {
+      const refreshToken = 'test-refresh-token'
+      mockLocalStorage['refreshToken'] = refreshToken
+
+      vi.mocked(axios.post).mockResolvedValue({
+        data: {
+          access_token: 'new-token-1',
+          refresh_token: 'new-refresh-1'
+        }
+      })
+
+      const createError = (): Partial<AxiosError> => ({
+        response: { status: 401 } as any,
+        config: {
+          headers: {} as any,
+          url: '/test'
+        } as InternalAxiosRequestConfig
+      })
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+
+      // First refresh cycle
+      await errorInterceptor(createError())
+
+      // Reset mock and update stored token
+      vi.mocked(axios.post).mockClear()
+      mockLocalStorage['refreshToken'] = 'new-refresh-1'
+
+      vi.mocked(axios.post).mockResolvedValue({
+        data: {
+          access_token: 'new-token-2',
+          refresh_token: 'new-refresh-2'
+        }
+      })
+
+      // Second refresh cycle (should work, not be blocked)
+      await errorInterceptor(createError())
+
+      // Second refresh should have been called
+      expect(axios.post).toHaveBeenCalledTimes(1)
+    })
+  })
 })

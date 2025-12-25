@@ -13,6 +13,9 @@ from app.models.company import Company
 from app.models.education import Education
 from app.models.project import Project
 from app.models.skill import Skill
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 async def clear_existing_data(session: AsyncSession):
@@ -23,7 +26,7 @@ async def clear_existing_data(session: AsyncSession):
     await session.execute(delete(Company))
     await session.execute(delete(Education))
     await session.commit()
-    print("[OK] Cleared existing data")
+    logger.info("Cleared existing data")
 
 
 async def seed_companies(session: AsyncSession):
@@ -66,7 +69,7 @@ async def seed_companies(session: AsyncSession):
         session.add(company)
 
     await session.commit()
-    print(f"[OK] Seeded {len(companies)} companies")
+    logger.info("Seeded %d companies", len(companies))
 
 
 async def seed_projects(session: AsyncSession):
@@ -124,7 +127,7 @@ async def seed_projects(session: AsyncSession):
         session.add(project)
 
     await session.commit()
-    print(f"[OK] Seeded {len(projects)} projects")
+    logger.info("Seeded %d projects", len(projects))
 
 
 async def seed_skills(session: AsyncSession):
@@ -279,7 +282,7 @@ async def seed_skills(session: AsyncSession):
         session.add(skill)
 
     await session.commit()
-    print(f"[OK] Seeded {len(skills)} skills")
+    logger.info("Seeded %d skills", len(skills))
 
 
 async def seed_education(session: AsyncSession):
@@ -347,12 +350,12 @@ async def seed_education(session: AsyncSession):
         session.add(education)
 
     await session.commit()
-    print(f"[OK] Seeded {len(education_items)} education items")
+    logger.info("Seeded %d education items", len(education_items))
 
 
 async def main():
     """Main seeding function"""
-    print("[*] Starting database seeding...")
+    logger.info("Starting database seeding...")
 
     # Create tables if they don't exist
     async with engine.begin() as conn:
@@ -367,10 +370,10 @@ async def main():
             await seed_skills(session)
             await seed_education(session)
 
-            print("[+] Database seeding completed successfully!")
+            logger.info("Database seeding completed successfully")
 
         except Exception as e:
-            print(f"[-] Error during seeding: {e}")
+            logger.exception("Error during seeding: %s", e)
             await session.rollback()
             raise
 

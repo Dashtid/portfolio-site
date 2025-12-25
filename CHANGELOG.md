@@ -4,6 +4,47 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] - 2025-12-25
+
+Technical debt reduction and infrastructure improvements.
+
+### Changed
+
+- **OAuth State Storage**: Migrated from in-memory dict to database-backed storage for multi-instance deployments (Fly.io, Kubernetes)
+- **Pydantic Schemas**: Migrated all schemas from deprecated `class Config` to v2 `model_config` pattern
+- **Frontend Types**: Consolidated types to use Zod schema inference as single source of truth
+- **Logging**: Replaced all `print()` statements with structured logger in init_db.py and seed_data.py
+- **Configuration**: Changed DEBUG default to False (must explicitly enable in development)
+- **Service Worker**: Added debug mode toggle (disabled by default for cleaner production logs)
+- **Storage Keys**: Consolidated to single source of truth in storage.ts
+
+### Added
+
+- Background task for periodic OAuth state cleanup (every 5 minutes)
+- Input validation for error endpoint (max lengths, context dict size limits)
+- package-lock.json for reproducible builds and security auditing
+
+### Fixed
+
+- ProjectCard component type alignment with backend Project schema
+- Timezone-aware datetime comparison in OAuth state expiration
+- Test suite compatibility with database-backed OAuth state
+- GitHub redirect URI port mismatch in .env.example (8001 -> 8000)
+- Added missing VITE_SENTRY_DSN to frontend .env.example
+
+### Security
+
+- OAuth states now persisted securely in database with automatic expiration cleanup
+- States are single-use (consumed on callback) preventing replay attacks
+- Database table drop requires ALLOW_DB_DROP=true environment variable
+- Error endpoint validates request payload sizes to prevent DoS
+
+### Tested
+
+- Backend: 500 tests passing (79.97% coverage)
+- Frontend: 625 tests passing
+- All npm packages audited (0 vulnerabilities)
+
 ## [1.0.0] - 2025-12-14
 
 Production-ready release with Vue 3 + FastAPI architecture.

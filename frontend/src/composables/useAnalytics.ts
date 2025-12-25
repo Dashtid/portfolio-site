@@ -2,6 +2,7 @@
  * Analytics composable for easy integration in Vue components
  */
 import { analytics, trackEvent, trackPageView, trackOutboundLink } from '@/utils/analytics'
+import { analyticsLogger } from '@/utils/logger'
 
 interface TrackingProps {
   [key: string]: string | number | boolean | undefined
@@ -16,7 +17,7 @@ export function useAnalytics() {
     try {
       trackEvent(eventName, props)
     } catch (error) {
-      console.warn('[Analytics] Failed to track event:', eventName, error)
+      analyticsLogger.warn('Failed to track event:', eventName, error)
     }
   }
 
@@ -48,7 +49,7 @@ export function useAnalytics() {
     try {
       trackOutboundLink(url)
     } catch (error) {
-      console.warn('[Analytics] Failed to track outbound link:', url, error)
+      analyticsLogger.warn('Failed to track outbound link:', url, error)
     }
     if (label) {
       track('External Link', { url, label })

@@ -54,7 +54,9 @@ class PerformanceMonitor {
    */
   async init(): Promise<void> {
     if (!this.enabled) {
-      console.log('[Performance] Monitoring disabled')
+      if (import.meta.env.DEV) {
+        console.log('[Performance] Monitoring disabled')
+      }
       return
     }
 
@@ -67,7 +69,9 @@ class PerformanceMonitor {
     // Track resource timing
     this.trackResourceTiming()
 
-    console.log('[Performance] Monitoring initialized')
+    if (import.meta.env.DEV) {
+      console.log('[Performance] Monitoring initialized')
+    }
   }
 
   /**
@@ -252,7 +256,9 @@ class PerformanceMonitor {
       const measure = performance.getEntriesByName(name)[0] as PerformanceMeasure
       this.recordMetric(name, measure.duration)
     } catch (err) {
-      console.warn(`[Performance] Failed to measure ${name}:`, err)
+      if (import.meta.env.DEV) {
+        console.warn(`[Performance] Failed to measure ${name}:`, err)
+      }
     }
   }
 
@@ -263,7 +269,9 @@ class PerformanceMonitor {
     try {
       performance.mark(name)
     } catch (err) {
-      console.warn(`[Performance] Failed to mark ${name}:`, err)
+      if (import.meta.env.DEV) {
+        console.warn(`[Performance] Failed to mark ${name}:`, err)
+      }
     }
   }
 }

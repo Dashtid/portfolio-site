@@ -28,10 +28,12 @@ async def get_documents(db: DbSession):
     Get all documents.
 
     Returns:
-        List of all documents ordered by published_date (most recent first)
+        List of all documents ordered by order_index, then published_date (most recent first)
     """
     try:
-        result = await db.execute(select(Document).order_by(Document.published_date.desc()))
+        result = await db.execute(
+            select(Document).order_by(Document.order_index.asc(), Document.published_date.desc())
+        )
         documents = result.scalars().all()
         logger.info(f"Retrieved {len(documents)} documents")
     except Exception as e:

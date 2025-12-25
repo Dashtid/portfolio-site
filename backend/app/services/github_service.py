@@ -2,6 +2,7 @@
 GitHub API service for fetching live project statistics
 """
 
+import asyncio
 import logging
 import re
 from datetime import datetime, timedelta
@@ -151,11 +152,18 @@ class GitHubService:
         total_forks = sum(r.get("forks_count", 0) for r in owned_repos)
         total_watchers = sum(r.get("watchers_count", 0) for r in owned_repos)
 
-        # Get language statistics
+        # Get language statistics (parallel requests for better performance)
         languages: dict[str, int] = {}
-        for repo in owned_repos[:10]:  # Limit to top 10 repos to avoid rate limiting
-            repo_langs = await self.get_repo_languages(username, repo["name"])
-            for lang, bytes_count in repo_langs.items():
+        repos_to_check = owned_repos[:10]  # Limit to top 10 repos to avoid rate limiting
+        language_results = await asyncio.gather(
+            *[self.get_repo_languages(username, repo["name"]) for repo in repos_to_check],
+            return_exceptions=True,
+        )
+        for result in language_results:
+            if isinstance(result, BaseException):
+                logger.warning(f"Error fetching languages: {result}")
+                continue
+            for lang, bytes_count in result.items():
                 languages[lang] = languages.get(lang, 0) + bytes_count
 
         # Sort languages by usage

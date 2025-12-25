@@ -180,6 +180,11 @@
               />
             </div>
             <div class="about-text">
+              <p class="about-summary">
+                Medical software security specialist focusing on cybersecurity governance,
+                regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
+                frameworks.
+              </p>
               <p>
                 I am a biomedical engineer specializing in cybersecurity and regulatory compliance
                 for medical software and AI systems. As a QA/RA & Security Specialist at Hermes
@@ -227,14 +232,17 @@ import DocumentCard from '../components/DocumentCard.vue'
 import GitHubStats from '../components/GitHubStats.vue'
 import { useBatchAnimation } from '../composables/useScrollAnimations'
 import { getDocuments } from '../api/services'
-import type { Document } from '../types/api'
+import type { Document } from '@/types'
 import { logger } from '../utils/logger'
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
 
-// Computed properties for education from API
-const education = computed(() => portfolioStore.education || [])
+// Computed properties for education from API - sorted by order field
+const education = computed(() => {
+  const items = portfolioStore.education || []
+  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+})
 
 // Documents state
 const documents = ref<Document[]>([])
@@ -506,6 +514,20 @@ html {
 .about-text p {
   margin-bottom: 1rem;
   line-height: 1.7;
+}
+
+.about-summary {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--primary-600);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--primary-200);
+}
+
+[data-theme='dark'] .about-summary {
+  color: var(--primary-300);
+  border-bottom-color: var(--primary-800);
 }
 
 .about-text ul {

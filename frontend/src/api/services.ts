@@ -1,4 +1,5 @@
 import apiClient from './client'
+import { createCrudService, createReadOnlyService } from './createCrudService'
 import type {
   Company,
   Education,
@@ -17,6 +18,20 @@ import type {
  * Uses the configured axios client with auth interceptors.
  */
 
+// ============================================================================
+// CRUD Services (using factory pattern)
+// ============================================================================
+
+const companyService = createCrudService<Company>('/api/v1/companies')
+const educationService = createCrudService<Education>('/api/v1/education')
+const projectService = createCrudService<Project>('/api/v1/projects')
+const skillService = createCrudService<Skill>('/api/v1/skills')
+const documentService = createReadOnlyService<Document>('/api/v1/documents')
+
+// ============================================================================
+// Backward-compatible exports
+// ============================================================================
+
 /**
  * Health Check
  */
@@ -28,126 +43,44 @@ export const healthCheck = async (): Promise<HealthResponse> => {
 /**
  * Company/Experience APIs
  */
-export const getCompanies = async (): Promise<Company[]> => {
-  const response = await apiClient.get<Company[]>('/api/v1/companies/')
-  return response.data
-}
-
-export const getCompanyById = async (id: string): Promise<Company> => {
-  const response = await apiClient.get<Company>(`/api/v1/companies/${id}`)
-  return response.data
-}
-
-export const createCompany = async (company: Omit<Company, 'id'>): Promise<Company> => {
-  const response = await apiClient.post<Company>('/api/v1/companies/', company)
-  return response.data
-}
-
-export const updateCompany = async (id: string, company: Partial<Company>): Promise<Company> => {
-  const response = await apiClient.patch<Company>(`/api/v1/companies/${id}`, company)
-  return response.data
-}
-
-export const deleteCompany = async (id: string): Promise<void> => {
-  await apiClient.delete(`/api/v1/companies/${id}`)
-}
+export const getCompanies = companyService.getAll
+export const getCompanyById = companyService.getById
+export const createCompany = companyService.create
+export const updateCompany = companyService.update
+export const deleteCompany = companyService.delete
 
 /**
  * Education APIs
  */
-export const getEducation = async (): Promise<Education[]> => {
-  const response = await apiClient.get<Education[]>('/api/v1/education/')
-  return response.data
-}
-
-export const getEducationById = async (id: string): Promise<Education> => {
-  const response = await apiClient.get<Education>(`/api/v1/education/${id}`)
-  return response.data
-}
-
-export const createEducation = async (education: Omit<Education, 'id'>): Promise<Education> => {
-  const response = await apiClient.post<Education>('/api/v1/education/', education)
-  return response.data
-}
-
-export const updateEducation = async (
-  id: string,
-  education: Partial<Education>
-): Promise<Education> => {
-  const response = await apiClient.patch<Education>(`/api/v1/education/${id}`, education)
-  return response.data
-}
-
-export const deleteEducation = async (id: string): Promise<void> => {
-  await apiClient.delete(`/api/v1/education/${id}`)
-}
+export const getEducation = educationService.getAll
+export const getEducationById = educationService.getById
+export const createEducation = educationService.create
+export const updateEducation = educationService.update
+export const deleteEducation = educationService.delete
 
 /**
  * Project APIs
  */
-export const getProjects = async (): Promise<Project[]> => {
-  const response = await apiClient.get<Project[]>('/api/v1/projects/')
-  return response.data
-}
-
-export const getProjectById = async (id: string): Promise<Project> => {
-  const response = await apiClient.get<Project>(`/api/v1/projects/${id}`)
-  return response.data
-}
-
-export const createProject = async (project: Omit<Project, 'id'>): Promise<Project> => {
-  const response = await apiClient.post<Project>('/api/v1/projects/', project)
-  return response.data
-}
-
-export const updateProject = async (id: string, project: Partial<Project>): Promise<Project> => {
-  const response = await apiClient.patch<Project>(`/api/v1/projects/${id}`, project)
-  return response.data
-}
-
-export const deleteProject = async (id: string): Promise<void> => {
-  await apiClient.delete(`/api/v1/projects/${id}`)
-}
+export const getProjects = projectService.getAll
+export const getProjectById = projectService.getById
+export const createProject = projectService.create
+export const updateProject = projectService.update
+export const deleteProject = projectService.delete
 
 /**
  * Skills APIs
  */
-export const getSkills = async (): Promise<Skill[]> => {
-  const response = await apiClient.get<Skill[]>('/api/v1/skills/')
-  return response.data
-}
-
-export const getSkillById = async (id: string): Promise<Skill> => {
-  const response = await apiClient.get<Skill>(`/api/v1/skills/${id}`)
-  return response.data
-}
-
-export const createSkill = async (skill: Omit<Skill, 'id'>): Promise<Skill> => {
-  const response = await apiClient.post<Skill>('/api/v1/skills/', skill)
-  return response.data
-}
-
-export const updateSkill = async (id: string, skill: Partial<Skill>): Promise<Skill> => {
-  const response = await apiClient.patch<Skill>(`/api/v1/skills/${id}`, skill)
-  return response.data
-}
-
-export const deleteSkill = async (id: string): Promise<void> => {
-  await apiClient.delete(`/api/v1/skills/${id}`)
-}
+export const getSkills = skillService.getAll
+export const getSkillById = skillService.getById
+export const createSkill = skillService.create
+export const updateSkill = skillService.update
+export const deleteSkill = skillService.delete
 
 /**
  * Document APIs
  */
-export const getDocuments = async (): Promise<Document[]> => {
-  const response = await apiClient.get<Document[]>('/api/v1/documents/')
-  return response.data
-}
-
-export const getDocumentById = async (id: string): Promise<Document> => {
-  const response = await apiClient.get<Document>(`/api/v1/documents/${id}`)
-  return response.data
-}
+export const getDocuments = documentService.getAll
+export const getDocumentById = documentService.getById
 
 /**
  * Authentication APIs

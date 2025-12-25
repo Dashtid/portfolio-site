@@ -44,14 +44,14 @@ class TestAnalyticsSchemas:
     def test_page_view_response(self):
         """Test PageViewResponse schema."""
         data = PageViewResponse(
-            id=1,
+            id="abc123-uuid",
             visitor_id="visitor123",
             page_path="/contact",
             page_title="Contact",
             referrer="https://linkedin.com",
             timestamp=datetime(2025, 1, 15, 10, 30, 0),
         )
-        assert data.id == 1
+        assert data.id == "abc123-uuid"
         assert data.visitor_id == "visitor123"
         assert data.page_path == "/contact"
 

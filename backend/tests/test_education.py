@@ -139,7 +139,7 @@ class TestEducationEndpoints:
 
     def test_education_router_exists(self):
         """Test that education router is properly configured."""
-        from app.api.education import router  # noqa: PLC0415
+        from app.api.v1.education import router  # noqa: PLC0415
 
         assert router is not None
         assert router.prefix == "/education"

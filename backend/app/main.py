@@ -2,7 +2,10 @@
 FastAPI main application
 """
 
+import asyncio
+import contextlib
 from contextlib import asynccontextmanager
+from datetime import UTC
 
 import sentry_sdk
 from fastapi import FastAPI, Request
@@ -11,9 +14,8 @@ from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api import education
-from app.api.v1 import auth, companies, github, projects, skills
-from app.api.v1.endpoints import documents, health, metrics
+from app.api.v1 import analytics, auth, companies, education, github, projects, skills
+from app.api.v1.endpoints import documents, errors, health, metrics
 from app.config import settings
 from app.database import Base, engine
 from app.middleware import (
@@ -92,6 +94,33 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+# Background task for periodic OAuth state cleanup
+async def cleanup_oauth_states_periodically():
+    """Periodically clean up expired OAuth states (every 5 minutes)"""
+    # Local imports to avoid circular dependencies (noqa: PLC0415)
+    from datetime import datetime  # noqa: PLC0415
+
+    from sqlalchemy import delete  # noqa: PLC0415
+
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.models.oauth_state import OAuthState  # noqa: PLC0415
+
+    while True:
+        try:
+            await asyncio.sleep(300)  # Run every 5 minutes
+            async with AsyncSessionLocal() as session:
+                result = await session.execute(
+                    delete(OAuthState).where(OAuthState.expires_at < datetime.now(UTC))
+                )
+                if result.rowcount > 0:
+                    await session.commit()
+                    logger.debug("Cleaned up %d expired OAuth states", result.rowcount)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.exception("Error during OAuth state cleanup: %s", e)
+
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -100,8 +129,16 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
+
+    # Start background cleanup task
+    cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
+
     yield
+
     # Shutdown
+    cleanup_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await cleanup_task
     logger.info("Shutting down application")
     await engine.dispose()
     logger.info("Database connection closed")
@@ -165,6 +202,8 @@ app.include_router(documents.router, prefix="/api/v1/documents", tags=["Document
 # Mount static files for document downloads
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
+app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(errors.router, prefix="/api/v1")
 
 
 # Root endpoint

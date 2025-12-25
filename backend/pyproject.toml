@@ -13,7 +13,7 @@ dependencies = [
     "sqlalchemy==2.0.44",
     "asyncpg==0.31.0",
     "alembic==1.17.2",
-    "greenlet==3.1.1",
+    "greenlet==3.2.4",
     # Authentication
     "PyJWT==2.10.1",
     "passlib[bcrypt]==1.7.4",
@@ -30,7 +30,7 @@ dependencies = [
     # Monitoring
     "sentry-sdk[fastapi]==2.19.2",
     # Security fixes (transitive deps - CVE patches)
-    "starlette>=0.45.0",
+    "starlette==0.50.0",
     "urllib3>=2.6.0",
     "filelock>=3.20.1",
 ]

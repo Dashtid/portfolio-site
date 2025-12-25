@@ -20,21 +20,69 @@ export function generateImageSrcSet(
   return sizes.map(size => `${baseUrl}?w=${size} ${size}w`).join(', ')
 }
 
+// Cache format support results
+let cachedAvifSupport: boolean | null = null
+let cachedWebpSupport: boolean | null = null
+
 /**
- * Get optimal image format based on browser support
+ * Check if browser supports AVIF format
+ * Uses a tiny AVIF test image for detection
  */
-export function getOptimalImageFormat(): 'avif' | 'webp' | 'jpg' {
+async function checkAvifSupport(): Promise<boolean> {
+  if (cachedAvifSupport !== null) return cachedAvifSupport
+
+  return new Promise(resolve => {
+    const img = new Image()
+    // Tiny 1x1 AVIF image (smallest valid AVIF)
+    img.src =
+      'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAEAAAABAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKBzgABpAQ0AIAAwAAAAAAAAD/////8A=='
+    img.onload = () => {
+      cachedAvifSupport = img.width === 1 && img.height === 1
+      resolve(cachedAvifSupport)
+    }
+    img.onerror = () => {
+      cachedAvifSupport = false
+      resolve(false)
+    }
+  })
+}
+
+/**
+ * Check if browser supports WebP format
+ */
+function checkWebpSupport(): boolean {
+  if (cachedWebpSupport !== null) return cachedWebpSupport
+
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 1
+  cachedWebpSupport = canvas.toDataURL('image/webp').indexOf('image/webp') === 5
+  return cachedWebpSupport
+}
 
-  // Check WebP support
-  const supportsWebP = canvas.toDataURL('image/webp').indexOf('image/webp') === 5
+/**
+ * Get optimal image format based on browser support
+ * Returns synchronously using cached values or conservative default
+ */
+export function getOptimalImageFormat(): 'avif' | 'webp' | 'jpg' {
+  // Use cached AVIF result if available
+  if (cachedAvifSupport === true) return 'avif'
 
-  // Check AVIF support (more complex, usually requires feature detection)
-  const supportsAvif = false // Simplified for now
+  // Check WebP synchronously
+  if (checkWebpSupport()) return 'webp'
 
+  return 'jpg'
+}
+
+/**
+ * Get optimal image format with async AVIF detection
+ * Use this for better accuracy when async is acceptable
+ */
+export async function getOptimalImageFormatAsync(): Promise<'avif' | 'webp' | 'jpg'> {
+  const supportsAvif = await checkAvifSupport()
   if (supportsAvif) return 'avif'
-  if (supportsWebP) return 'webp'
+
+  if (checkWebpSupport()) return 'webp'
+
   return 'jpg'
 }
 

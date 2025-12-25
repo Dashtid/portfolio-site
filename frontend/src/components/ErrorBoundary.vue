@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { ref, onErrorCaptured, type ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
+import { errorLogger } from '@/utils/logger'
 
 interface Props {
   title?: string
@@ -80,7 +81,7 @@ const handleGoHome = (): void => {
 }
 
 onErrorCaptured((err: Error, _instance: ComponentPublicInstance | null, info: string) => {
-  console.error('Error caught in boundary:', err)
+  errorLogger.error('Error caught in boundary:', err)
   hasError.value = true
   errorDetails.value = import.meta.env.DEV ? `${err.message}\n\nComponent: ${info}` : null
 

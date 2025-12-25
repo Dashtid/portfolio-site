@@ -1,7 +1,7 @@
 <template>
   <div class="project-card">
     <div class="project-header">
-      <h3 class="project-title">{{ project.title }}</h3>
+      <h3 class="project-title">{{ project.name }}</h3>
       <span v-if="project.featured" class="featured-badge">Featured</span>
     </div>
 
@@ -53,35 +53,21 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Project } from '@/types'
 
-interface ProjectData {
-  title: string
-  description: string
-  featured?: boolean
-  github_url?: string | null
-  live_url?: string | null
-  tech_stack?: string | string[] | null
+// Use shared Project type but allow partial for flexibility
+interface ProjectCardProps {
+  project: Pick<
+    Project,
+    'name' | 'description' | 'technologies' | 'github_url' | 'live_url' | 'featured'
+  >
 }
 
-interface Props {
-  project: ProjectData
-}
+const props = defineProps<ProjectCardProps>()
 
-const props = defineProps<Props>()
-
-// Parse tech stack from JSON or string
+// Technologies is always string[] per the type definition
 const techStack = computed<string[]>(() => {
-  if (!props.project.tech_stack) return []
-
-  if (typeof props.project.tech_stack === 'string') {
-    try {
-      return JSON.parse(props.project.tech_stack) as string[]
-    } catch {
-      return props.project.tech_stack.split(',').map((t: string) => t.trim())
-    }
-  }
-
-  return Array.isArray(props.project.tech_stack) ? props.project.tech_stack : []
+  return props.project.technologies ?? []
 })
 </script>
 

@@ -150,7 +150,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, type WritableComputedRef } from 'vue'
 import apiClient from '../../api/client'
-import type { Company } from '../../types/api'
+import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 
 // Form data interface (extends Company with order_index)
