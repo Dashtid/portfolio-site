@@ -208,13 +208,13 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
+      - name: Install xvfb
+        run: sudo apt-get install -y xvfb
+
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v10
-        with:
-          configPath: './.github/lighthouse/lighthouserc.json'
-          temporaryPublicStorage: true
-          uploadArtifacts: true
-          runs: 3
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' \
+            npx @lhci/cli autorun --config=./.github/lighthouse/lighthouserc.json
 
   # Deployment (placeholder - configure based on hosting provider)
   deploy:
