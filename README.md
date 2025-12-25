@@ -17,7 +17,7 @@ uv pip install -r requirements.txt && uvicorn app.main:app --reload
 cd frontend && npm install && npm run dev
 ```
 
-**Local**: Frontend `http://localhost:3000` | API `http://localhost:8001/docs`
+**Local**: Frontend `http://localhost:5173` | API `http://localhost:8000/docs`
 
 ## Tech Stack
 

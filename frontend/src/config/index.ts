@@ -3,6 +3,8 @@
  * Eliminates duplicate env variable access across the codebase
  */
 
+import { STORAGE_KEYS } from '@/utils/storage'
+
 export const config = {
   /**
    * API base URL - defaults to localhost for development
@@ -28,12 +30,13 @@ export const config = {
    * Application settings
    */
   app: {
-    name: 'Portfolio',
-    storageKeys: {
-      theme: 'portfolio-theme',
-      token: 'access_token'
-    }
-  }
+    name: 'Portfolio'
+  },
+
+  /**
+   * Re-export storage keys for convenience (single source of truth)
+   */
+  storageKeys: STORAGE_KEYS
 } as const
 
 export type Config = typeof config

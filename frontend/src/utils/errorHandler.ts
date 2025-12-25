@@ -295,7 +295,9 @@ export function showErrorNotification(
   options: ErrorNotificationOptions = {}
 ): void {
   // This would integrate with your notification system
-  console.error('Error notification:', message, options)
+  if (import.meta.env.DEV) {
+    console.error('Error notification:', message, options)
+  }
 
   // For now, we'll just use alert in development
   if (import.meta.env.DEV && options.showAlert) {

@@ -6,7 +6,7 @@ import os
 import warnings
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Development-only fallback key (clearly marked as insecure)
 _DEV_SECRET_KEY = "INSECURE-DEV-KEY-CHANGE-IN-PRODUCTION"
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "Portfolio API"
     APP_VERSION: str = "0.1.0"
-    DEBUG: bool = True
+    DEBUG: bool = False  # Must explicitly enable in development
     ENVIRONMENT: str = "development"  # development, production
 
     # Server
@@ -109,7 +109,21 @@ class Settings(BaseSettings):
     # GitHub OAuth (will be configured later)
     GITHUB_CLIENT_ID: str | None = None
     GITHUB_CLIENT_SECRET: str | None = None
-    GITHUB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/github/callback"
+    GITHUB_REDIRECT_URI: str = os.getenv(
+        "GITHUB_REDIRECT_URI", "http://localhost:8000/api/v1/auth/github/callback"
+    )
+
+    @field_validator("GITHUB_REDIRECT_URI")
+    @classmethod
+    def validate_github_redirect(cls, v: str, info) -> str:
+        """Ensure GITHUB_REDIRECT_URI is properly configured for production"""
+        environment = info.data.get("ENVIRONMENT", "development")
+        if environment == "production" and "localhost" in v:
+            raise ValueError(
+                "GITHUB_REDIRECT_URI must not use localhost in production. "
+                "Set GITHUB_REDIRECT_URI environment variable to your production callback URL."
+            )
+        return v
 
     # Admin
     ADMIN_GITHUB_ID: str | None = None  # Your GitHub user ID
@@ -143,9 +157,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_PUBLIC: str = "120/minute"  # Public read-only endpoints
     RATE_LIMIT_STORAGE_URI: str | None = None  # Redis URI for distributed rate limiting
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
 
 settings = Settings()

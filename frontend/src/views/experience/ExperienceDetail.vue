@@ -1,7 +1,7 @@
 <template>
   <div class="experience-detail">
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top mb-4">
+    <nav class="navbar navbar-expand-lg sticky-top mb-4">
       <div class="container">
         <router-link to="/" class="navbar-brand">David Dashti</router-link>
 
@@ -79,6 +79,7 @@
               "
               referrerpolicy="strict-origin-when-cross-origin"
               allowfullscreen
+              loading="lazy"
             ></iframe>
           </div>
         </div>
@@ -92,6 +93,7 @@
               :title="company.map_title || `${company.name} Location Map`"
               allowfullscreen
               loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
               class="border-0"
             ></iframe>
           </div>
@@ -188,7 +190,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
-import type { Company } from '../../types/api'
+import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { config } from '../../config'
 import DOMPurify from 'dompurify'

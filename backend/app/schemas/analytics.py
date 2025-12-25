@@ -18,15 +18,14 @@ class PageViewCreate(BaseModel):
 class PageViewResponse(BaseModel):
     """Response schema for page view."""
 
-    id: int
+    id: str
     visitor_id: str
     page_path: str
     page_title: str | None
     referrer: str | None
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class TopPage(BaseModel):
@@ -63,5 +62,4 @@ class VisitorInfo(BaseModel):
     last_visit: datetime
     page_views: int
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

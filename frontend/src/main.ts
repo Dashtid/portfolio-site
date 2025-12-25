@@ -1,6 +1,5 @@
 import { createApp, type ComponentPublicInstance } from 'vue'
 import { createPinia } from 'pinia'
-import * as Sentry from '@sentry/vue'
 import router from './router'
 import './style.css'
 import './assets/portfolio.css'
@@ -8,35 +7,17 @@ import App from './App.vue'
 import { analytics } from './utils/analytics'
 import { errorTracker } from './utils/errorTracking'
 import { performanceMonitor } from './utils/performance'
+import { initSentry, captureException, isSentryInitialized } from './utils/sentry'
 
 const app = createApp(App)
 const pinia = createPinia()
 
-// Initialize Sentry for error tracking and performance monitoring
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN
-if (sentryDsn) {
-  Sentry.init({
-    app,
-    dsn: sentryDsn,
-    environment: import.meta.env.MODE,
-    release: `portfolio-frontend@${import.meta.env.VITE_APP_VERSION || '0.0.0'}`,
-    integrations: [
-      Sentry.browserTracingIntegration({ router }),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true
-      })
-    ],
-    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-    tracePropagationTargets: [
-      'localhost',
-      /^https:\/\/dashti\.se/,
-      /^https:\/\/dashti-portfolio-backend\.fly\.dev/
-    ]
-  })
-}
+// Initialize Sentry lazily (only loads ~100KB bundle if DSN is configured)
+initSentry(app, router).catch(error => {
+  if (import.meta.env.DEV) {
+    console.warn('[Sentry] Lazy init failed:', error)
+  }
+})
 
 // Initialize analytics (privacy-compliant)
 analytics.init()
@@ -53,19 +34,19 @@ app.config.errorHandler = (
   instance: ComponentPublicInstance | null,
   info: string
 ) => {
-  console.error('Vue Error:', err)
+  if (import.meta.env.DEV) {
+    console.error('Vue Error:', err)
+  }
   const error = err instanceof Error ? err : new Error(String(err))
 
   // Report to custom error tracker
   errorTracker.handleVueError(error, instance, info)
 
   // Also capture with Sentry if initialized
-  if (sentryDsn) {
-    Sentry.captureException(error, {
-      extra: {
-        componentName: (instance as { $options?: { name?: string } })?.$options?.name,
-        errorInfo: info
-      }
+  if (isSentryInitialized()) {
+    captureException(error, {
+      componentName: (instance as { $options?: { name?: string } })?.$options?.name,
+      errorInfo: info
     })
   }
 }

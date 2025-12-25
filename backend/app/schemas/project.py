@@ -78,5 +78,4 @@ class ProjectResponse(ProjectBase):
             return [resp.strip() for resp in v.split(",") if resp.strip()]
         return v
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

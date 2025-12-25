@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_current_admin_user
 from app.database import get_db
@@ -24,14 +25,18 @@ AdminUser = Annotated[User, Depends(get_current_admin_user)]
 @router.get("/", response_model=list[ProjectResponse])
 async def get_projects(db: DbSession):
     """Get all projects"""
-    result = await db.execute(select(Project).order_by(Project.order_index))
+    result = await db.execute(
+        select(Project).options(selectinload(Project.company)).order_by(Project.order_index)
+    )
     return result.scalars().all()
 
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def get_project(project_id: str, db: DbSession):
     """Get a specific project by ID"""
-    result = await db.execute(select(Project).where(Project.id == project_id))
+    result = await db.execute(
+        select(Project).options(selectinload(Project.company)).where(Project.id == project_id)
+    )
     project = result.scalar_one_or_none()
 
     if not project:

@@ -21,7 +21,7 @@ class Project(Base):
     github_url = Column(String(500))
     live_url = Column(String(500))
     image_url = Column(String(500))
-    company_id = Column(String, ForeignKey("companies.id", ondelete="CASCADE"))
+    company_id = Column(String, ForeignKey("companies.id", ondelete="CASCADE"), index=True)
     featured = Column(Boolean, default=False)
     order_index = Column(Integer, default=0, index=True)
 

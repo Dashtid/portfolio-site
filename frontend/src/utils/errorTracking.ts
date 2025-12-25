@@ -38,7 +38,9 @@ class ErrorTracker {
    */
   init(): void {
     if (!this.enabled) {
-      console.log('[Error Tracking] Disabled')
+      if (import.meta.env.DEV) {
+        console.log('[Error Tracking] Disabled')
+      }
       return
     }
 
@@ -48,7 +50,9 @@ class ErrorTracker {
     // Capture unhandled promise rejections
     window.addEventListener('unhandledrejection', this.handleRejection.bind(this))
 
-    console.log('[Error Tracking] Initialized')
+    if (import.meta.env.DEV) {
+      console.log('[Error Tracking] Initialized')
+    }
   }
 
   /**

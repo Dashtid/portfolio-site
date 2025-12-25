@@ -14,6 +14,7 @@
  */
 
 import { z } from 'zod'
+import { apiLogger } from '@/utils/logger'
 
 // ============================================================================
 // Company/Experience Schemas
@@ -35,7 +36,8 @@ export const CompanySchema = z.object({
   map_url: z.string().nullable().optional(),
   map_title: z.string().nullable().optional(),
   technologies: z.array(z.string()).nullable().optional(),
-  responsibilities: z.array(z.string()).nullable().optional()
+  responsibilities: z.array(z.string()).nullable().optional(),
+  order_index: z.number().optional()
 })
 
 export const CompanyArraySchema = z.array(CompanySchema)
@@ -56,7 +58,8 @@ export const EducationSchema = z.object({
   end_date: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
-  logo_url: z.string().nullable().optional()
+  logo_url: z.string().nullable().optional(),
+  order: z.number().optional()
 })
 
 export const EducationArraySchema = z.array(EducationSchema)
@@ -124,7 +127,8 @@ export const DocumentSchema = z.object({
   file_size: z.number(),
   file_url: z.string(),
   published_date: z.string().nullable().optional(),
-  created_at: z.string()
+  created_at: z.string(),
+  order_index: z.number().optional()
 })
 
 export const DocumentArraySchema = z.array(DocumentSchema)
@@ -132,6 +136,11 @@ export const DocumentArraySchema = z.array(DocumentSchema)
 // ============================================================================
 // Auth Schemas
 // ============================================================================
+
+export const LoginRequestSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1)
+})
 
 export const UserSchema = z.object({
   id: z.string(),
@@ -223,7 +232,7 @@ export function validateApiResponse<T extends z.ZodTypeAny>(
 
   if (!result.success) {
     if (strict) {
-      console.error('[API Validation] Schema validation failed:', {
+      apiLogger.error('Schema validation failed:', {
         issues: result.error.issues,
         data
       })
@@ -234,7 +243,7 @@ export function validateApiResponse<T extends z.ZodTypeAny>(
     }
 
     // In non-strict mode, log warning and return data as-is
-    console.warn('[API Validation] Schema validation failed (non-strict mode):', {
+    apiLogger.warn('Schema validation failed (non-strict mode):', {
       issues: result.error.issues
     })
     return data as z.infer<T>
@@ -300,6 +309,7 @@ export type Project = z.infer<typeof ProjectSchema>
 export type Skill = z.infer<typeof SkillSchema>
 export type Document = z.infer<typeof DocumentSchema>
 export type User = z.infer<typeof UserSchema>
+export type LoginRequest = z.infer<typeof LoginRequestSchema>
 export type LoginResponse = z.infer<typeof LoginResponseSchema>
 export type HealthResponse = z.infer<typeof HealthResponseSchema>
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>

@@ -14,14 +14,6 @@ interface PageViewData {
   referrer: string | null
 }
 
-interface EventData {
-  category: string
-  action: string
-  label: string | null
-  value: number | null
-  session_id: string
-}
-
 interface TimingData {
   category: string
   variable: string
@@ -39,11 +31,11 @@ interface VisitorStats {
 }
 
 class AnalyticsService {
-  private sessionId: string
   private isEnabled: boolean
 
   constructor() {
-    this.sessionId = this.getOrCreateSessionId()
+    // Initialize session ID in storage for potential future use
+    this.getOrCreateSessionId()
     this.isEnabled = true // Can be controlled by user preference
   }
 
@@ -84,28 +76,24 @@ class AnalyticsService {
 
   /**
    * Track custom events (e.g., button clicks, form submissions)
+   *
+   * Events are tracked as synthetic page views until a dedicated event endpoint
+   * is implemented on the backend. The event data format follows GA4 conventions.
    */
   async trackEvent(
     category: string,
     action: string,
     label: string | null = null,
-    value: number | null = null
+    _value: number | null = null
   ): Promise<void> {
     if (!this.isEnabled) return
 
     try {
-      // EventData prepared for future use with dedicated event endpoint
-      const _eventData: EventData = {
-        category,
-        action,
-        label,
-        value,
-        session_id: this.sessionId
-      }
-      void _eventData // Suppress unused variable warning
-
-      // For now, we can track this as a special page view
-      await this.trackPageView(`/event/${category}/${action}`, `Event: ${category} - ${action}`)
+      // Track as a synthetic page view with event path
+      await this.trackPageView(
+        `/event/${category}/${action}${label ? `/${label}` : ''}`,
+        `Event: ${category} - ${action}`
+      )
     } catch (error) {
       analyticsLogger.error('Failed to track event:', error)
     }

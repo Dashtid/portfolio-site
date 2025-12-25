@@ -23,6 +23,7 @@ from app.models.company import Company  # noqa: F401
 from app.models.contact import Contact  # noqa: F401
 from app.models.document import Document  # noqa: F401
 from app.models.education import Education  # noqa: F401
+from app.models.oauth_state import OAuthState  # noqa: F401
 from app.models.project import Project  # noqa: F401
 from app.models.skill import Skill  # noqa: F401
 from app.models.user import User  # noqa: F401

@@ -36,6 +36,7 @@ class Document(Base):
     file_size = Column(Integer, nullable=False)  # Size in bytes
     file_url = Column(String, nullable=False)  # Public download URL
     published_date = Column(String, nullable=True)  # ISO date string
+    order_index = Column(Integer, default=0, index=True)  # For custom sorting
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):

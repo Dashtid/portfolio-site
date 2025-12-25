@@ -131,10 +131,25 @@ describe('analytics service', () => {
   })
 
   describe('trackEvent', () => {
-    it('tracks events via page view', async () => {
+    it('tracks events via page view with label', async () => {
       const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
 
       await analyticsService.trackEvent('click', 'button', 'submit', 1)
+
+      expect(mockPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          page_path: '/event/click/button/submit',
+          page_title: 'Event: click - button'
+        }),
+        expect.any(Object)
+      )
+    })
+
+    it('tracks events via page view without label', async () => {
+      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
+
+      await analyticsService.trackEvent('click', 'button')
 
       expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),

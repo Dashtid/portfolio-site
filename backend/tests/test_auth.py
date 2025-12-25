@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from app.api.v1.auth import oauth_states
 from app.core.security import create_access_token, create_refresh_token
 
 
@@ -216,25 +215,6 @@ class TestGitHubOAuthCallbackValidation:
         """Test callback with empty state parameter."""
         response = client.get("/api/v1/auth/github/callback?code=test_code&state=")
         assert response.status_code in [400, 422]
-
-
-class TestOAuthStateManagement:
-    """Tests for OAuth state management."""
-
-    def test_oauth_states_dict_exists(self):
-        """Test that oauth_states dictionary exists."""
-        assert isinstance(oauth_states, dict)
-
-    def test_state_added_on_login(self, client: TestClient):
-        """Test that state is added when login is initiated."""
-        with patch("app.api.v1.auth.settings") as mock_settings:
-            mock_settings.GITHUB_CLIENT_ID = "test_id"
-            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
-
-            initial_count = len(oauth_states)
-            client.get("/api/v1/auth/github", follow_redirects=False)
-            # State should be added
-            assert len(oauth_states) >= initial_count
 
 
 class TestAuthIntegration:
@@ -728,3 +708,127 @@ class TestGitHubCallbackFullFlow:
 
             # Should succeed when no admin restriction
             assert response.status_code == 307
+
+
+class TestAuthNetworkErrors:
+    """Tests for network error handling in auth endpoints."""
+
+    def test_github_token_exchange_timeout(self, client: TestClient):
+        """Test callback handles network timeout during token exchange."""
+        import httpx
+
+        with patch("app.api.v1.auth.settings") as mock_settings:
+            mock_settings.GITHUB_CLIENT_ID = "test_id"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            # Get valid state
+            login_response = client.get("/api/v1/auth/github", follow_redirects=False)
+            location = login_response.headers.get("location", "")
+            parsed = urllib.parse.urlparse(location)
+            params = urllib.parse.parse_qs(parsed.query)
+            state = params.get("state", [""])[0]
+
+            with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+                # Mock network timeout
+                mock_async_client = AsyncMock()
+                mock_async_client.post.side_effect = httpx.TimeoutException("Connection timed out")
+                mock_client.return_value.__aenter__.return_value = mock_async_client
+
+                response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
+                # Should return error for failed token exchange (400 or 504)
+                assert response.status_code in [400, 504]
+
+    def test_github_user_info_timeout(self, client: TestClient):
+        """Test callback handles network timeout during user info fetch."""
+        import httpx
+
+        with patch("app.api.v1.auth.settings") as mock_settings:
+            mock_settings.GITHUB_CLIENT_ID = "test_id"
+            mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
+            mock_settings.RATE_LIMIT_AUTH = "100/minute"
+
+            # Get valid state
+            login_response = client.get("/api/v1/auth/github", follow_redirects=False)
+            location = login_response.headers.get("location", "")
+            parsed = urllib.parse.urlparse(location)
+            params = urllib.parse.parse_qs(parsed.query)
+            state = params.get("state", [""])[0]
+
+            with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+                # Mock token exchange success
+                mock_token_response = MagicMock()
+                mock_token_response.status_code = 200
+                mock_token_response.json.return_value = {"access_token": "gh_token"}
+
+                mock_async_client = AsyncMock()
+                mock_async_client.post.return_value = mock_token_response
+                # Timeout on user info request
+                mock_async_client.get.side_effect = httpx.TimeoutException("Read timed out")
+                mock_client.return_value.__aenter__.return_value = mock_async_client
+
+                response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
+                # Should return error for failed user info fetch (400 or 504)
+                assert response.status_code in [400, 504]
+
+
+class TestAuthSecurityEdgeCases:
+    """Additional security edge case tests for auth endpoints."""
+
+    def test_sql_injection_in_refresh_token(self, client: TestClient):
+        """Test that SQL injection attempts in refresh token are safely handled."""
+        # Attempt SQL injection in token
+        malicious_tokens = [
+            "'; DROP TABLE users; --",
+            "1 OR 1=1",
+            "admin'--",
+            "UNION SELECT * FROM users",
+        ]
+        for token in malicious_tokens:
+            # Pad token to meet minimum length validation
+            padded_token = token.ljust(20, "x")
+            response = client.post("/api/v1/auth/refresh", json={"refresh_token": padded_token})
+            # Should fail safely with 401, not cause database errors
+            assert response.status_code == 401
+
+    def test_xss_in_callback_state(self, client: TestClient):
+        """Test that XSS attempts in state parameter are safely handled."""
+        xss_payloads = [
+            "<script>alert(1)</script>",
+            "javascript:alert(1)",
+            "%3Cscript%3Ealert(1)%3C/script%3E",
+        ]
+        for payload in xss_payloads:
+            response = client.get(f"/api/v1/auth/github/callback?code=test&state={payload}")
+            # Should fail safely with 400, not reflect the XSS
+            assert response.status_code == 400
+            # Response should not contain the unescaped payload
+            response_text = response.text
+            assert "<script>" not in response_text
+
+    def test_very_long_token(self, client: TestClient):
+        """Test handling of extremely long tokens."""
+        # Create a very long token (10KB)
+        long_token = "x" * 10240
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": long_token})
+        # Should fail safely - either 401 (invalid) or 422 (validation) or 413 (too large)
+        assert response.status_code in [401, 413, 422]
+
+    def test_unicode_in_refresh_token(self, client: TestClient):
+        """Test handling of unicode in refresh token."""
+        unicode_tokens = [
+            "🔐🔐🔐🔐🔐🔐🔐🔐🔐🔐",
+            "токен_обновления",
+            "リフレッシュトークン",
+        ]
+        for token in unicode_tokens:
+            response = client.post("/api/v1/auth/refresh", json={"refresh_token": token})
+            # Should fail safely with 401 or 422
+            assert response.status_code in [401, 422]
+
+    def test_null_bytes_in_token(self, client: TestClient):
+        """Test handling of null bytes in token."""
+        null_token = "token_with\x00null_bytes"
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": null_token})
+        # Should fail safely
+        assert response.status_code in [401, 422]
