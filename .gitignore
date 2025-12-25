@@ -74,18 +74,24 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Testing
+.coverage/
 coverage/
 *.lcov
 .nyc_output/
+.test-results/
 test-results/
+.playwright-report/
 playwright-report/
+frontend/.playwright-report/
 frontend/playwright-report/
 *-snapshots/
 
 # CI artifacts
 .lighthouseci/
 .cache/
+.security-reports/
 security-reports/
+.performance-reports/
 performance-reports/
 
 # Logs

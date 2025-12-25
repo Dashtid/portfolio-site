@@ -91,7 +91,9 @@ describe('HomeView', () => {
         stubs: {
           NavBar: true,
           FooterSection: true,
-          GitHubStats: true,
+          GitHubStats: {
+            template: '<div data-testid="github-stats">GitHub Stats</div>'
+          },
           BackToTop: true,
           DocumentCard: true
         }
@@ -148,7 +150,8 @@ describe('HomeView', () => {
       await flushPromises()
 
       expect(wrapper.find('#projects').exists()).toBe(true)
-      expect(wrapper.find('.projects-grid').exists()).toBe(true)
+      // Projects are now rendered via GitHubStats component with featured_repos
+      expect(wrapper.find('[data-testid="github-stats"]').exists()).toBe(true)
     })
 
     it('should render the about section', async () => {
@@ -192,13 +195,12 @@ describe('HomeView', () => {
       expect(wrapper.text()).toContain('Hermes Medical Solutions')
     })
 
-    it('should show static projects when no projects from API', async () => {
+    it('should show GitHub stats component for projects', async () => {
       const wrapper = createWrapper()
       await flushPromises()
 
-      // Static projects should be displayed
-      expect(wrapper.find('.project-card').exists()).toBe(true)
-      expect(wrapper.text()).toContain('Portfolio Website')
+      // Projects are now displayed via GitHubStats component with featured repos
+      expect(wrapper.find('[data-testid="github-stats"]').exists()).toBe(true)
     })
   })
 
