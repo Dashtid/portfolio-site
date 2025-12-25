@@ -90,9 +90,7 @@ frontend/playwright-report/
 .lighthouseci/
 .cache/
 .security-reports/
-security-reports/
 .performance-reports/
-performance-reports/
 
 # Logs
 logs/
