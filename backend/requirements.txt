@@ -53,7 +53,6 @@ pip-requirements-parser==32.0.1
 pip_audit==2.10.0
 platformdirs==4.5.0
 pluggy==1.6.0
--e git+https://github.com/Dashtid/portfolio-site.git@ddaf61d8225e843f29bb99aa685766f3a22e40f1#egg=portfolio_backend&subdirectory=backend
 pre_commit==4.5.0
 py-serializable==2.1.0
 pycparser==2.23
