@@ -546,7 +546,7 @@ html {
   color: var(--primary-600);
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid var(--primary-200);
+  border-bottom: 2px solid var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .about-summary {
