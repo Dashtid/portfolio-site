@@ -182,44 +182,40 @@ async def run_migrations():
 async def migrate_company_dates():
     """Update company dates to correct values from LinkedIn data."""
     # Local imports (noqa: PLC0415)
-    from sqlalchemy import text  # noqa: PLC0415
+    from datetime import date  # noqa: PLC0415
+
+    from sqlalchemy import update  # noqa: PLC0415
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.models.company import Company  # noqa: PLC0415
 
     # Mapping of company names to correct dates (name -> (start_date, end_date, order_index))
     company_updates = {
-        "Hermes Medical Solutions": ("2024-06-01", None, 1),
-        "Philips Healthcare": ("2022-03-01", "2024-05-31", 2),
-        "Karolinska University Hospital": ("2021-06-01", "2021-12-31", 3),
-        "SoftPro Medical Solutions": ("2020-10-01", "2021-06-30", 4),
-        "Södersjukhuset - SÖS": ("2020-06-01", "2021-06-30", 5),
-        "Södersjukhuset": ("2020-06-01", "2021-06-30", 5),
-        "Scania Engines": ("2016-06-01", "2016-08-31", 6),
-        "Scania Group": ("2016-06-01", "2016-08-31", 6),
-        "Finnish Defence Forces": ("2014-01-01", "2015-01-31", 7),
+        "Hermes Medical Solutions": (date(2024, 6, 1), None, 1),
+        "Philips Healthcare": (date(2022, 3, 1), date(2024, 5, 31), 2),
+        "Karolinska University Hospital": (date(2021, 6, 1), date(2021, 12, 31), 3),
+        "SoftPro Medical Solutions": (date(2020, 10, 1), date(2021, 6, 30), 4),
+        "Södersjukhuset - SÖS": (date(2020, 6, 1), date(2021, 6, 30), 5),
+        "Södersjukhuset": (date(2020, 6, 1), date(2021, 6, 30), 5),
+        "Scania Engines": (date(2016, 6, 1), date(2016, 8, 31), 6),
+        "Scania Group": (date(2016, 6, 1), date(2016, 8, 31), 6),
+        "Finnish Defence Forces": (date(2014, 1, 1), date(2015, 1, 31), 7),
     }
 
     async with AsyncSessionLocal() as session:
         for name, (start_date, end_date, order_index) in company_updates.items():
             try:
-                if end_date:
-                    await session.execute(
-                        text(
-                            "UPDATE companies SET start_date = :start, end_date = :end, "
-                            "order_index = :order WHERE name = :name"
-                        ),
-                        {"start": start_date, "end": end_date, "order": order_index, "name": name},
-                    )
-                else:
-                    await session.execute(
-                        text(
-                            "UPDATE companies SET start_date = :start, end_date = NULL, "
-                            "order_index = :order WHERE name = :name"
-                        ),
-                        {"start": start_date, "order": order_index, "name": name},
-                    )
+                # Use SQLAlchemy ORM update for proper type handling
+                stmt = (
+                    update(Company)
+                    .where(Company.name == name)
+                    .values(start_date=start_date, end_date=end_date, order_index=order_index)
+                )
+                result = await session.execute(stmt)
+                if result.rowcount > 0:
+                    logger.info("Updated company: %s", name)
             except Exception as e:
-                logger.debug("Company update skipped for %s: %s", name, e)
+                logger.warning("Company update failed for %s: %s", name, e)
 
         await session.commit()
         logger.info("Company dates migration completed")
