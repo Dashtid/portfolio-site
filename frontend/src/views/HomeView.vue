@@ -125,6 +125,28 @@
                 {{ formatDate(edu.start_date) }} -
                 {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
               </p>
+              <a
+                v-if="edu.certificate_url"
+                :href="edu.certificate_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="certificate-link"
+              >
+                View Certificate
+                <svg
+                  class="external-icon"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
             </div>
           </div>
         </div>
@@ -459,6 +481,40 @@ html {
 
 .education-degree {
   text-align: center;
+}
+
+.certificate-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-500, #3b82f6);
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.certificate-link:hover {
+  background: var(--primary-600, #2563eb);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.certificate-link .external-icon {
+  flex-shrink: 0;
+}
+
+/* Dark mode certificate link */
+[data-theme='dark'] .certificate-link {
+  background: var(--primary-600, #2563eb);
+}
+
+[data-theme='dark'] .certificate-link:hover {
+  background: var(--primary-500, #3b82f6);
 }
 
 /* Project Card Improvements */

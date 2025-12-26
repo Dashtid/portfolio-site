@@ -59,6 +59,9 @@ export const EducationSchema = z.object({
   description: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   logo_url: z.string().nullable().optional(),
+  is_certification: z.boolean().optional(),
+  certificate_number: z.string().nullable().optional(),
+  certificate_url: z.string().nullable().optional(),
   order: z.number().optional()
 })
 

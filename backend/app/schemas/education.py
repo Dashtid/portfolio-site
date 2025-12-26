@@ -14,6 +14,7 @@ class EducationBase(BaseModel):
     logo_url: str | None = None
     is_certification: bool = False
     certificate_number: str | None = None
+    certificate_url: str | None = None
     order: int = 0
 
 
@@ -32,6 +33,7 @@ class EducationUpdate(BaseModel):
     logo_url: str | None = None
     is_certification: bool | None = None
     certificate_number: str | None = None
+    certificate_url: str | None = None
     order: int | None = None
 
 

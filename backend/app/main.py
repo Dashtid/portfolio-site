@@ -142,6 +142,17 @@ async def run_migrations():
             """,
             "description": "Add order_index column to documents table",
         },
+        # Add certificate_url column to education table if it doesn't exist
+        {
+            "check": """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'education' AND column_name = 'certificate_url'
+            """,
+            "migrate": """
+                ALTER TABLE education ADD COLUMN certificate_url VARCHAR(500);
+            """,
+            "description": "Add certificate_url column to education table",
+        },
     ]
 
     async with AsyncSessionLocal() as session:
@@ -159,17 +170,34 @@ async def run_migrations():
                 # For SQLite, info schema doesn't exist - use PRAGMA instead
                 if "information_schema" in str(e).lower() or "no such table" in str(e).lower():
                     try:
-                        # SQLite fallback - check using PRAGMA
-                        result = await session.execute(text("PRAGMA table_info(documents)"))
-                        columns = [row[1] for row in result.fetchall()]
-                        if "order_index" not in columns:
-                            await session.execute(
-                                text(
-                                    "ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0"
+                        # SQLite fallback for documents.order_index
+                        if "documents" in migration["description"]:
+                            result = await session.execute(text("PRAGMA table_info(documents)"))
+                            columns = [row[1] for row in result.fetchall()]
+                            if "order_index" not in columns:
+                                await session.execute(
+                                    text(
+                                        "ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0"
+                                    )
                                 )
-                            )
-                            await session.commit()
-                            logger.info("Migration applied (SQLite): %s", migration["description"])
+                                await session.commit()
+                                logger.info(
+                                    "Migration applied (SQLite): %s", migration["description"]
+                                )
+                        # SQLite fallback for education.certificate_url
+                        elif "education" in migration["description"]:
+                            result = await session.execute(text("PRAGMA table_info(education)"))
+                            columns = [row[1] for row in result.fetchall()]
+                            if "certificate_url" not in columns:
+                                await session.execute(
+                                    text(
+                                        "ALTER TABLE education ADD COLUMN certificate_url VARCHAR(500)"
+                                    )
+                                )
+                                await session.commit()
+                                logger.info(
+                                    "Migration applied (SQLite): %s", migration["description"]
+                                )
                     except Exception as sqlite_err:
                         logger.warning(
                             "Migration skipped: %s - %s", migration["description"], sqlite_err
@@ -319,6 +347,65 @@ async def migrate_company_data():
         logger.info("Company data migration completed")
 
 
+# Data migration to fix education dates and order (one-time migration)
+async def migrate_education_data():
+    """Update education dates and order to correct values from LinkedIn data."""
+    # Local imports (noqa: PLC0415)
+    from datetime import date  # noqa: PLC0415
+
+    from sqlalchemy import update  # noqa: PLC0415
+
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.models.education import Education  # noqa: PLC0415
+
+    # Mapping: institution -> (start_date, end_date, order, certificate_url)
+    education_updates = {
+        "KTH Royal Institute of Technology": (
+            date(2018, 8, 1),
+            date(2021, 6, 30),
+            1,
+            None,
+        ),
+        "Lunds Tekniska Högskola": (
+            date(2015, 8, 1),
+            date(2018, 6, 30),
+            2,
+            None,
+        ),
+        "Företagsuniversitetet": (
+            date(2024, 10, 1),
+            date(2024, 12, 31),
+            3,
+            "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&lang=en",
+        ),
+    }
+
+    async with AsyncSessionLocal() as session:
+        for institution, (start_date, end_date, order, cert_url) in education_updates.items():
+            try:
+                update_values = {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "order": order,
+                }
+                if cert_url:
+                    update_values["certificate_url"] = cert_url
+
+                stmt = (
+                    update(Education)
+                    .where(Education.institution == institution)
+                    .values(**update_values)
+                )
+                result = await session.execute(stmt)
+                if result.rowcount > 0:
+                    logger.info("Updated education: %s", institution)
+            except Exception as e:
+                logger.warning("Education update failed for %s: %s", institution, e)
+
+        await session.commit()
+        logger.info("Education data migration completed")
+
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -333,6 +420,7 @@ async def lifespan(app: FastAPI):
 
     # Run data migrations
     await migrate_company_data()
+    await migrate_education_data()
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())

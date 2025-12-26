@@ -17,4 +17,5 @@ class Education(Base):
     logo_url = Column(String(500))  # Institution logo
     is_certification = Column(Boolean, default=False)
     certificate_number = Column(String(100))
+    certificate_url = Column(String(500))  # URL to certificate/credential
     order = Column(Integer, default=0, index=True)  # For custom sorting
