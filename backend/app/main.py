@@ -121,6 +121,63 @@ async def cleanup_oauth_states_periodically():
             logger.exception("Error during OAuth state cleanup: %s", e)
 
 
+# Database migration helper for adding columns to existing tables
+async def run_migrations():
+    """Run simple migrations to add missing columns to existing tables."""
+    # Local imports to avoid circular dependencies (noqa: PLC0415)
+    from sqlalchemy import text  # noqa: PLC0415
+
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+
+    migrations = [
+        # Add order_index column to documents table if it doesn't exist
+        {
+            "check": """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'documents' AND column_name = 'order_index'
+            """,
+            "migrate": """
+                ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0;
+                CREATE INDEX IF NOT EXISTS ix_documents_order_index ON documents (order_index);
+            """,
+            "description": "Add order_index column to documents table",
+        },
+    ]
+
+    async with AsyncSessionLocal() as session:
+        for migration in migrations:
+            try:
+                result = await session.execute(text(migration["check"]))
+                if result.fetchone() is None:
+                    # Column doesn't exist, run migration
+                    for stmt in migration["migrate"].strip().split(";"):
+                        if stmt.strip():
+                            await session.execute(text(stmt.strip()))
+                    await session.commit()
+                    logger.info("Migration applied: %s", migration["description"])
+            except Exception as e:
+                # For SQLite, info schema doesn't exist - use PRAGMA instead
+                if "information_schema" in str(e).lower() or "no such table" in str(e).lower():
+                    try:
+                        # SQLite fallback - check using PRAGMA
+                        result = await session.execute(text("PRAGMA table_info(documents)"))
+                        columns = [row[1] for row in result.fetchall()]
+                        if "order_index" not in columns:
+                            await session.execute(
+                                text(
+                                    "ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0"
+                                )
+                            )
+                            await session.commit()
+                            logger.info("Migration applied (SQLite): %s", migration["description"])
+                    except Exception as sqlite_err:
+                        logger.warning(
+                            "Migration skipped: %s - %s", migration["description"], sqlite_err
+                        )
+                else:
+                    logger.warning("Migration check failed: %s - %s", migration["description"], e)
+
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -129,6 +186,9 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
+
+    # Run migrations for existing tables
+    await run_migrations()
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
