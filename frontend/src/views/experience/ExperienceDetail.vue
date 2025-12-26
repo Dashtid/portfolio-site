@@ -59,10 +59,10 @@
 
     <!-- Company Details -->
     <main v-else-if="company" class="container py-5">
-      <!-- Media Section: Video and Map -->
-      <div v-if="company.video_url || company.map_url" class="row g-4 mb-5">
+      <!-- Media Section: Video and Map (side-by-side on desktop) -->
+      <div v-if="company.video_url || company.map_url" class="media-section">
         <!-- YouTube Video -->
-        <div v-if="company.video_url" class="col-lg-6">
+        <div v-if="company.video_url" class="media-item">
           <h2>{{ company.video_title || `${company.name} Video` }}</h2>
           <div class="ratio ratio-16x9">
             <iframe
@@ -85,7 +85,7 @@
         </div>
 
         <!-- Google Maps -->
-        <div v-if="company.map_url" class="col-lg-6">
+        <div v-if="company.map_url" class="media-item">
           <h2>{{ company.map_title || `${company.name} Location` }}</h2>
           <div class="ratio ratio-16x9">
             <iframe
@@ -286,6 +286,34 @@ onMounted(async (): Promise<void> => {
   min-height: 100vh;
   background-color: var(--bg-primary, #ffffff);
   color: var(--text-primary, #1e293b);
+}
+
+/* Media Section - Side by side layout for video and map */
+.media-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.media-item {
+  flex: 1 1 400px;
+  min-width: 0;
+}
+
+.media-item h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .media-section {
+    flex-direction: column;
+  }
+
+  .media-item {
+    flex: 1 1 100%;
+  }
 }
 
 .navbar {

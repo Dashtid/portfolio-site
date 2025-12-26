@@ -178,6 +178,53 @@ async def run_migrations():
                     logger.warning("Migration check failed: %s - %s", migration["description"], e)
 
 
+# Data migration to fix company dates (one-time migration)
+async def migrate_company_dates():
+    """Update company dates to correct values from LinkedIn data."""
+    # Local imports (noqa: PLC0415)
+    from sqlalchemy import text  # noqa: PLC0415
+
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+
+    # Mapping of company names to correct dates (name -> (start_date, end_date, order_index))
+    company_updates = {
+        "Hermes Medical Solutions": ("2024-06-01", None, 1),
+        "Philips Healthcare": ("2022-03-01", "2024-05-31", 2),
+        "Karolinska University Hospital": ("2021-06-01", "2021-12-31", 3),
+        "SoftPro Medical Solutions": ("2020-10-01", "2021-06-30", 4),
+        "Södersjukhuset - SÖS": ("2020-06-01", "2021-06-30", 5),
+        "Södersjukhuset": ("2020-06-01", "2021-06-30", 5),
+        "Scania Engines": ("2016-06-01", "2016-08-31", 6),
+        "Scania Group": ("2016-06-01", "2016-08-31", 6),
+        "Finnish Defence Forces": ("2014-01-01", "2015-01-31", 7),
+    }
+
+    async with AsyncSessionLocal() as session:
+        for name, (start_date, end_date, order_index) in company_updates.items():
+            try:
+                if end_date:
+                    await session.execute(
+                        text(
+                            "UPDATE companies SET start_date = :start, end_date = :end, "
+                            "order_index = :order WHERE name = :name"
+                        ),
+                        {"start": start_date, "end": end_date, "order": order_index, "name": name},
+                    )
+                else:
+                    await session.execute(
+                        text(
+                            "UPDATE companies SET start_date = :start, end_date = NULL, "
+                            "order_index = :order WHERE name = :name"
+                        ),
+                        {"start": start_date, "order": order_index, "name": name},
+                    )
+            except Exception as e:
+                logger.debug("Company update skipped for %s: %s", name, e)
+
+        await session.commit()
+        logger.info("Company dates migration completed")
+
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -189,6 +236,9 @@ async def lifespan(app: FastAPI):
 
     # Run migrations for existing tables
     await run_migrations()
+
+    # Run data migrations
+    await migrate_company_dates()
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
