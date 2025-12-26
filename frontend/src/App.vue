@@ -5,8 +5,11 @@ import { useAuthStore } from './stores/auth'
 // Store
 const authStore = useAuthStore()
 
-// Check auth on mount
+// Check auth on mount and remove loading skeleton
 onMounted((): void => {
+  // Remove loading skeleton once Vue has mounted
+  document.getElementById('app-loading')?.remove()
+
   authStore.checkAuth()
   authStore.initializeFromCallback()
 })

@@ -188,7 +188,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [frontend-quality]
     if: github.event_name == 'pull_request'
-    continue-on-error: true  # Non-blocking until NO_FCP issue is resolved
 
     steps:
       - name: Checkout code

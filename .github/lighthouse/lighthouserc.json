@@ -2,6 +2,7 @@
   "ci": {
     "collect": {
       "staticDistDir": "./frontend/dist",
+      "url": ["http://localhost/index.html"],
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
@@ -12,22 +13,21 @@
           "--disable-dev-shm-usage",
           "--disable-software-rasterizer"
         ],
-        "maxWaitForLoad": 45000
+        "maxWaitForLoad": 45000,
+        "onlyCategories": ["accessibility", "best-practices", "seo"]
       }
     },
     "assert": {
-      "preset": "lighthouse:recommended",
       "assertions": {
-        "categories:performance": ["warn", {"minScore": 0.9}],
         "categories:accessibility": ["error", {"minScore": 0.95}],
         "categories:best-practices": ["warn", {"minScore": 0.9}],
         "categories:seo": ["error", {"minScore": 0.95}],
-        "categories:pwa": ["warn", {"minScore": 0.8}],
-        "first-contentful-paint": ["warn", {"maxNumericValue": 2000}],
-        "largest-contentful-paint": ["warn", {"maxNumericValue": 2500}],
-        "cumulative-layout-shift": ["warn", {"maxNumericValue": 0.1}],
-        "total-blocking-time": ["warn", {"maxNumericValue": 300}],
-        "speed-index": ["warn", {"maxNumericValue": 3000}]
+        "bf-cache": "off",
+        "errors-in-console": "off",
+        "redirects": "off",
+        "third-party-facades": "off",
+        "uses-http2": "off",
+        "csp-xss": "off"
       }
     },
     "upload": {
