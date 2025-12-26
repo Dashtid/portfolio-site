@@ -191,7 +191,7 @@ async def migrate_company_dates():
 
     # Mapping of company names to correct dates (name -> (start_date, end_date, order_index))
     company_updates = {
-        "Hermes Medical Solutions": (date(2024, 6, 1), None, 1),
+        "Hermes Medical Solutions": (date(2024, 5, 1), None, 1),
         "Philips Healthcare": (date(2022, 3, 1), date(2024, 5, 31), 2),
         "Karolinska University Hospital": (date(2021, 6, 1), date(2021, 12, 31), 3),
         "SoftPro Medical Solutions": (date(2020, 10, 1), date(2021, 6, 30), 4),

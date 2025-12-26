@@ -37,7 +37,7 @@ async def seed_companies(session: AsyncSession):
             "title": "QA/RA & Security Specialist",
             "description": "QA/RA & Security Specialist at Hermes Medical Solutions, ensuring NIS2/ISO 27001 compliance, regulatory clearance, and V&V processes for nuclear medicine software solutions.",
             "location": "Stockholm, Sweden",
-            "start_date": datetime(2024, 6, 1),
+            "start_date": datetime(2024, 5, 1),
             "end_date": None,
             "website": "https://hermesmedical.com",
             "order_index": 1,
