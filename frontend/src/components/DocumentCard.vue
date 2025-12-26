@@ -211,7 +211,7 @@ const formattedDate = computed(() => {
   font-weight: 600;
 }
 
-/* Dark theme - same styling since this component is always in bg-dark section */
+/* Dark theme - glass effect for dark backgrounds */
 [data-theme='dark'] .card-glass {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
@@ -220,5 +220,50 @@ const formattedDate = computed(() => {
 [data-theme='dark'] .card-glass:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(96, 165, 250, 0.5);
+}
+
+/* Light theme - solid card styling for light bg-dark section */
+[data-theme='light'] .card-glass {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .card-glass:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme='light'] .document-title {
+  color: #1e293b; /* slate-800 */
+}
+
+[data-theme='light'] .document-type {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb; /* primary-600 */
+}
+
+[data-theme='light'] .document-description {
+  color: #475569; /* slate-600 */
+}
+
+[data-theme='light'] .meta-item,
+[data-theme='light'] .icon {
+  color: #64748b; /* slate-500 */
+}
+
+[data-theme='light'] .card-actions {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .document-link {
+  color: #2563eb; /* primary-600 */
+  background: rgba(37, 99, 235, 0.1);
+}
+
+[data-theme='light'] .document-link:hover {
+  color: #1d4ed8; /* primary-700 */
+  background: rgba(37, 99, 235, 0.15);
 }
 </style>

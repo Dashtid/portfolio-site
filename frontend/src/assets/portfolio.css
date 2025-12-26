@@ -385,6 +385,24 @@ section {
   background: linear-gradient(90deg, var(--primary-400), var(--primary-500));
 }
 
+/* Light mode override for bg-dark sections */
+[data-theme='light'] .bg-dark {
+  background: linear-gradient(135deg, var(--slate-100) 0%, var(--slate-200) 100%) !important;
+  color: var(--slate-800) !important;
+}
+
+[data-theme='light'] .bg-dark .section-title {
+  color: var(--slate-800) !important;
+}
+
+[data-theme='light'] .bg-dark .section-icon {
+  filter: none;
+}
+
+[data-theme='light'] .bg-dark .section-title::after {
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+}
+
 /* Experience Cards - Bootstrap Grid Layout */
 .experience-list {
   display: grid;

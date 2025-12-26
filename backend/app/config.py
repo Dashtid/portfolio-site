@@ -45,9 +45,14 @@ class Settings(BaseSettings):
 
         return url
 
-    # CORS - configure via environment for production
-    # Default allows localhost for development, override with CORS_ORIGINS env var
-    CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]
+    # CORS - includes both development and production origins
+    # Can be overridden with CORS_ORIGINS env var
+    CORS_ORIGINS: list = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://dashti.se",
+        "https://www.dashti.se",
+    ]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

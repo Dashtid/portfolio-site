@@ -60,12 +60,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if settings.ENVIRONMENT == "production":
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self'",  # No unsafe-inline or unsafe-eval in production
-                "style-src 'self' https://fonts.googleapis.com",
-                "font-src 'self' https://fonts.gstatic.com data:",
+                "script-src 'self' https://cdn.jsdelivr.net",
+                "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev",
-                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com",
+                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net",
+                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
@@ -75,12 +75,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Development CSP - allows Vue.js hot-reload and devtools
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Required for Vue dev mode
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-                "font-src 'self' https://fonts.gstatic.com data:",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev ws://localhost:* http://localhost:*",
-                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com",
+                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net ws://localhost:* http://localhost:*",
+                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
