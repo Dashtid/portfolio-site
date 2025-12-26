@@ -366,13 +366,13 @@ async def migrate_education_data():
             1,
             None,
         ),
-        "Lunds Tekniska Högskola": (
+        "Lund University": (
             date(2015, 8, 1),
             date(2018, 6, 30),
             2,
             None,
         ),
-        "Företagsuniversitetet": (
+        "Företagsuniversitet": (
             date(2024, 10, 1),
             date(2024, 12, 31),
             3,
