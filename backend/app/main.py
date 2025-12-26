@@ -268,23 +268,52 @@ async def migrate_company_data():
             except Exception as e:
                 logger.warning("Company update failed for %s: %s", name, e)
 
-        # Add Scania 2012 if it doesn't exist
-        scania_2012_name = "Scania Group (Early Career)"
-        result = await session.execute(select(Company).where(Company.name == scania_2012_name))
-        if result.scalar_one_or_none() is None:
-            scania_2012 = Company(
-                id=str(uuid.uuid4()),
-                name=scania_2012_name,
-                title="Technician, Engine Analysis",
-                description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
-                location="Södertälje, Sweden",
-                start_date=date(2012, 6, 1),
-                end_date=date(2012, 8, 31),
-                website="https://www.scania.com",
-                order_index=8,
+        # Rename Scania Engines to Scania Group
+        stmt = update(Company).where(Company.name == "Scania Engines").values(name="Scania Group")
+        result = await session.execute(stmt)
+        if result.rowcount > 0:
+            logger.info("Renamed Scania Engines to Scania Group")
+
+        # Update Scania 2012 entry: rename and add logo
+        stmt = (
+            update(Company)
+            .where(Company.name == "Scania Group (Early Career)")
+            .values(
+                name="Scania Group",
+                logo_url="/images/scania.svg",
             )
-            session.add(scania_2012)
-            logger.info("Added Scania 2012 entry")
+        )
+        result = await session.execute(stmt)
+        if result.rowcount > 0:
+            logger.info("Updated Scania 2012 entry with new name and logo")
+
+        # If Scania 2012 doesn't exist yet, create it
+        result = await session.execute(
+            select(Company).where(
+                Company.start_date == date(2012, 6, 1),
+                Company.name == "Scania Group",
+            )
+        )
+        if result.scalar_one_or_none() is None:
+            # Check if old name exists
+            result = await session.execute(
+                select(Company).where(Company.name == "Scania Group (Early Career)")
+            )
+            if result.scalar_one_or_none() is None:
+                scania_2012 = Company(
+                    id=str(uuid.uuid4()),
+                    name="Scania Group",
+                    title="Technician, Engine Analysis",
+                    description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
+                    location="Södertälje, Sweden",
+                    start_date=date(2012, 6, 1),
+                    end_date=date(2012, 8, 31),
+                    website="https://www.scania.com",
+                    logo_url="/images/scania.svg",
+                    order_index=8,
+                )
+                session.add(scania_2012)
+                logger.info("Added Scania 2012 entry")
 
         await session.commit()
         logger.info("Company data migration completed")

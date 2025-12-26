@@ -65,7 +65,7 @@
 
                 <!-- Learn More Button (show if company has detailed content) -->
                 <router-link
-                  :to="{ name: 'company-detail', params: { id: company.id } }"
+                  :to="{ name: 'company-detail', params: { id: getDetailLinkId(company) } }"
                   class="btn btn-outline-primary btn-sm mt-3"
                 >
                   Learn More
@@ -267,6 +267,25 @@ const formatDate = (dateString: string | null | undefined): string => {
     year: 'numeric',
     month: 'short'
   })
+}
+
+// Get the correct company ID for detail links
+// For Scania 2012 entry, link to the 2016 entry's detail page
+const getDetailLinkId = (company: { id: string; name: string; start_date: string }): string => {
+  if (company.name === 'Scania Group' && company.start_date) {
+    const startYear = new Date(company.start_date).getFullYear()
+    if (startYear === 2012) {
+      // Find the 2016 Scania entry and return its ID
+      const scania2016 = companies.value.find(
+        c =>
+          c.name === 'Scania Group' && c.start_date && new Date(c.start_date).getFullYear() === 2016
+      )
+      if (scania2016) {
+        return scania2016.id
+      }
+    }
+  }
+  return company.id
 }
 
 // Load data on mount
