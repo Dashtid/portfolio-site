@@ -178,38 +178,89 @@ async def run_migrations():
                     logger.warning("Migration check failed: %s - %s", migration["description"], e)
 
 
-# Data migration to fix company dates (one-time migration)
-async def migrate_company_dates():
-    """Update company dates to correct values from LinkedIn data."""
+# Data migration to fix company dates and titles (one-time migration)
+async def migrate_company_data():
+    """Update company dates and titles to correct values from LinkedIn data."""
     # Local imports (noqa: PLC0415)
+    import uuid  # noqa: PLC0415
     from datetime import date  # noqa: PLC0415
 
-    from sqlalchemy import update  # noqa: PLC0415
+    from sqlalchemy import select, update  # noqa: PLC0415
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.company import Company  # noqa: PLC0415
 
-    # Mapping of company names to correct dates (name -> (start_date, end_date, order_index))
+    # Mapping: name -> (title, start_date, end_date, order_index)
     company_updates = {
-        "Hermes Medical Solutions": (date(2024, 5, 1), None, 1),
-        "Philips Healthcare": (date(2022, 3, 1), date(2024, 5, 31), 2),
-        "Karolinska University Hospital": (date(2021, 6, 1), date(2021, 12, 31), 3),
-        "SoftPro Medical Solutions": (date(2020, 10, 1), date(2021, 6, 30), 4),
-        "Södersjukhuset - SÖS": (date(2020, 6, 1), date(2021, 6, 30), 5),
-        "Södersjukhuset": (date(2020, 6, 1), date(2021, 6, 30), 5),
-        "Scania Engines": (date(2016, 6, 1), date(2016, 8, 31), 6),
-        "Scania Group": (date(2016, 6, 1), date(2016, 8, 31), 6),
-        "Finnish Defence Forces": (date(2014, 1, 1), date(2015, 1, 31), 7),
+        "Hermes Medical Solutions": (
+            "QA/RA & Security Specialist",
+            date(2024, 5, 1),
+            None,
+            1,
+        ),
+        "Philips Healthcare": (
+            "Incident Support Specialist, Nordics",
+            date(2022, 3, 1),
+            date(2024, 5, 31),
+            2,
+        ),
+        "Karolinska University Hospital": (
+            "Biomedical Engineer, Medical Imaging and Physiology",
+            date(2021, 6, 1),
+            date(2021, 12, 31),
+            3,
+        ),
+        "SoftPro Medical Solutions": (
+            "Master Thesis Student",
+            date(2020, 10, 1),
+            date(2021, 6, 30),
+            4,
+        ),
+        "Södersjukhuset - SÖS": (
+            "Biomedical Engineer, Radiology Department",
+            date(2020, 6, 1),
+            date(2021, 6, 30),
+            5,
+        ),
+        "Södersjukhuset": (
+            "Biomedical Engineer, Radiology Department",
+            date(2020, 6, 1),
+            date(2021, 6, 30),
+            5,
+        ),
+        "Scania Engines": (
+            "Technician, Engine Analysis",
+            date(2016, 6, 1),
+            date(2016, 8, 31),
+            6,
+        ),
+        "Scania Group": (
+            "Technician, Engine Analysis",
+            date(2016, 6, 1),
+            date(2016, 8, 31),
+            6,
+        ),
+        "Finnish Defence Forces": (
+            "Platoon Leader, 2nd Lieutenant",
+            date(2014, 1, 1),
+            date(2015, 1, 31),
+            7,
+        ),
     }
 
     async with AsyncSessionLocal() as session:
-        for name, (start_date, end_date, order_index) in company_updates.items():
+        # Update existing companies with titles and dates
+        for name, (title, start_date, end_date, order_index) in company_updates.items():
             try:
-                # Use SQLAlchemy ORM update for proper type handling
                 stmt = (
                     update(Company)
                     .where(Company.name == name)
-                    .values(start_date=start_date, end_date=end_date, order_index=order_index)
+                    .values(
+                        title=title,
+                        start_date=start_date,
+                        end_date=end_date,
+                        order_index=order_index,
+                    )
                 )
                 result = await session.execute(stmt)
                 if result.rowcount > 0:
@@ -217,8 +268,26 @@ async def migrate_company_dates():
             except Exception as e:
                 logger.warning("Company update failed for %s: %s", name, e)
 
+        # Add Scania 2012 if it doesn't exist
+        scania_2012_name = "Scania Group (Early Career)"
+        result = await session.execute(select(Company).where(Company.name == scania_2012_name))
+        if result.scalar_one_or_none() is None:
+            scania_2012 = Company(
+                id=str(uuid.uuid4()),
+                name=scania_2012_name,
+                title="Technician, Engine Analysis",
+                description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
+                location="Södertälje, Sweden",
+                start_date=date(2012, 6, 1),
+                end_date=date(2012, 8, 31),
+                website="https://www.scania.com",
+                order_index=8,
+            )
+            session.add(scania_2012)
+            logger.info("Added Scania 2012 entry")
+
         await session.commit()
-        logger.info("Company dates migration completed")
+        logger.info("Company data migration completed")
 
 
 # Lifespan context manager for startup/shutdown
@@ -234,7 +303,7 @@ async def lifespan(app: FastAPI):
     await run_migrations()
 
     # Run data migrations
-    await migrate_company_dates()
+    await migrate_company_data()
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
