@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
@@ -253,6 +253,16 @@ const navigateToCompany = (companyId: string): void => {
 const scrollToSection = (sectionId: string): void => {
   router.push({ path: '/', hash: `#${sectionId}` })
 }
+
+// Watch for route param changes to reload data when navigating between companies
+watch(
+  () => route.params.id,
+  newId => {
+    if (newId) {
+      fetchCompanyDetails(newId as string)
+    }
+  }
+)
 
 // Load company on mount
 onMounted((): void => {

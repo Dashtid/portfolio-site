@@ -514,6 +514,11 @@ html {
 .about-text p {
   margin-bottom: 1rem;
   line-height: 1.7;
+  color: var(--text-primary, #1e293b);
+}
+
+[data-theme='dark'] .about-text p {
+  color: var(--text-secondary, #cbd5e1);
 }
 
 .about-summary {
@@ -537,7 +542,20 @@ html {
 
 .about-text li {
   margin-bottom: 0.5rem;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #475569);
+}
+
+.about-text strong {
+  color: var(--text-primary, #1e293b);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .about-text li {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .about-text strong {
+  color: var(--text-primary, #f1f5f9);
 }
 
 [data-theme='dark'] .profile-photo {
