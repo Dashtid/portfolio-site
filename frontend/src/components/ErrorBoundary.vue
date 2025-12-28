@@ -17,8 +17,13 @@
       </div>
       <h2 class="error-title">{{ title }}</h2>
       <p class="error-message">{{ message }}</p>
-      <div v-if="showDetails && errorDetails" class="error-details">
-        <pre>{{ errorDetails }}</pre>
+      <div
+        v-if="showDetails && errorDetails"
+        class="error-details"
+        role="region"
+        aria-label="Error details"
+      >
+        <pre><code>{{ errorDetails }}</code></pre>
       </div>
       <div class="error-actions">
         <button class="btn-retry" @click="handleRetry">Try Again</button>
@@ -85,9 +90,13 @@ onErrorCaptured((err: Error, _instance: ComponentPublicInstance | null, info: st
   hasError.value = true
   errorDetails.value = import.meta.env.DEV ? `${err.message}\n\nComponent: ${info}` : null
 
-  // Log to analytics if available
-  if (window.analytics) {
-    window.analytics.trackEvent('Error', 'Boundary', err.message)
+  // Log to analytics if available (wrapped to prevent escape)
+  try {
+    if (window.analytics) {
+      window.analytics.trackEvent('Error', 'Boundary', err.message)
+    }
+  } catch {
+    // Silently ignore analytics failures
   }
 
   // Prevent the error from propagating
@@ -95,9 +104,25 @@ onErrorCaptured((err: Error, _instance: ComponentPublicInstance | null, info: st
 })
 
 // Expose method to manually trigger error state
-const showError = (error?: Error | null): void => {
+// Accepts Error object or an object with message and optional context
+interface ErrorInfo {
+  message: string
+  context?: string
+}
+
+const showError = (error?: Error | ErrorInfo | null): void => {
   hasError.value = true
-  errorDetails.value = error?.message || 'Unknown error'
+  if (!error) {
+    errorDetails.value = 'Unknown error'
+  } else if (error instanceof Error) {
+    errorDetails.value = error.message
+  } else if (typeof error === 'object' && 'message' in error) {
+    errorDetails.value = error.context
+      ? `${error.message}\n\nContext: ${error.context}`
+      : error.message
+  } else {
+    errorDetails.value = 'Unknown error'
+  }
 }
 
 defineExpose({

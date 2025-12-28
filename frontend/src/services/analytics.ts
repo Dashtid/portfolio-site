@@ -12,6 +12,7 @@ interface PageViewData {
   page_path: string
   page_title: string
   referrer: string | null
+  visitor_id: string
 }
 
 interface TimingData {
@@ -61,7 +62,8 @@ class AnalyticsService {
       const data: PageViewData = {
         page_path: pagePath || window.location.pathname,
         page_title: pageTitle || document.title,
-        referrer: document.referrer || null
+        referrer: document.referrer || null,
+        visitor_id: this.getOrCreateSessionId()
       }
 
       await axios.post(`${API_URL}/track/pageview`, data, {

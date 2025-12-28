@@ -245,7 +245,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { usePortfolioStore } from '../stores/portfolio'
 import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
@@ -256,14 +256,15 @@ import { useBatchAnimation } from '../composables/useScrollAnimations'
 import { getDocuments } from '../api/services'
 import type { Document } from '@/types'
 import { logger } from '../utils/logger'
+import { getUserMessage } from '../utils/errorHandler'
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
 
-// Computed properties for education from API - sorted by order field
+// Computed properties for education from API - sorted by order_index field
 const education = computed(() => {
   const items = portfolioStore.education || []
-  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  return [...items].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
 })
 
 // Documents state
@@ -310,30 +311,38 @@ const getDetailLinkId = (company: { id: string; name: string; start_date: string
   return company.id
 }
 
-// Load data on mount
+// Load data on mount - use Promise.all to prevent race condition
 onMounted(async () => {
   loading.value = true
-  try {
-    await portfolioStore.fetchAllData()
-  } catch (error) {
-    logger.error('Error loading portfolio data:', error)
-  } finally {
-    loading.value = false
-  }
-
-  // Fetch documents
   documentsLoading.value = true
-  try {
-    documents.value = await getDocuments()
-  } catch (error) {
-    logger.error('Error loading documents:', error)
-    documentsError.value = 'Failed to load publications'
-  } finally {
-    documentsLoading.value = false
-  }
+
+  // Load all data in parallel
+  await Promise.all([
+    // Fetch portfolio data
+    portfolioStore.fetchAllData().catch(error => {
+      logger.error('Error loading portfolio data:', error)
+    }),
+    // Fetch documents
+    getDocuments()
+      .then(docs => {
+        documents.value = docs
+      })
+      .catch(error => {
+        logger.error('Error loading documents:', error)
+        documentsError.value = getUserMessage(error as Error)
+      })
+  ])
+
+  // Set loading states to false only after ALL data is loaded
+  loading.value = false
+  documentsLoading.value = false
 
   // Service worker is now handled by vite-plugin-pwa (Workbox)
   // Manual registration removed - PWA plugin auto-registers SW
+
+  // Wait for DOM to update before applying animations
+  // This ensures elements are rendered before IntersectionObserver setup
+  await nextTick()
 
   // Apply scroll animations to cards with staggered effect
   useBatchAnimation('.experience-card', {

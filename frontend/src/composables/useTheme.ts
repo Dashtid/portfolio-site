@@ -62,6 +62,11 @@ export function useTheme(): UseThemeReturn {
       localStorage.removeItem('portfolio-theme')
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       isDark.value = systemPrefersDark
+    } else if (import.meta.env.DEV) {
+      // Warn in development about invalid theme values
+      console.warn(
+        `[useTheme] Invalid theme value: "${theme}". Expected "dark", "light", or "system".`
+      )
     }
   }
 

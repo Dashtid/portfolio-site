@@ -11,6 +11,8 @@ interface PortfolioState {
   education: Education[]
   loading: boolean
   error: string | null
+  // Track active requests to handle parallel fetches correctly
+  _activeRequests: number
 }
 
 interface ValidationError {
@@ -53,7 +55,8 @@ export const usePortfolioStore = defineStore('portfolio', {
     projects: [],
     education: [],
     loading: false,
-    error: null
+    error: null,
+    _activeRequests: 0
   }),
 
   getters: {
@@ -87,56 +90,73 @@ export const usePortfolioStore = defineStore('portfolio', {
   },
 
   actions: {
-    async fetchCompanies(): Promise<void> {
+    // Helper to manage loading state with request counter
+    _startRequest(): void {
+      this._activeRequests++
       this.loading = true
+    },
+
+    _endRequest(): void {
+      this._activeRequests = Math.max(0, this._activeRequests - 1)
+      // Only set loading to false when all requests complete
+      if (this._activeRequests === 0) {
+        this.loading = false
+      }
+    },
+
+    async fetchCompanies(): Promise<void> {
+      this._startRequest()
       this.error = null
       try {
-        const response = await apiClient.get<Company[]>('/api/v1/companies/')
+        const response = await apiClient.get<Company[]>('/api/v1/companies')
         this.companies = response.data
       } catch (error) {
         this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching companies:', error)
       } finally {
-        this.loading = false
+        this._endRequest()
       }
     },
 
     async fetchSkills(): Promise<void> {
-      this.loading = true
+      this._startRequest()
+      this.error = null
       try {
-        const response = await apiClient.get<Skill[]>('/api/v1/skills/')
+        const response = await apiClient.get<Skill[]>('/api/v1/skills')
         this.skills = response.data
       } catch (error) {
         this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching skills:', error)
       } finally {
-        this.loading = false
+        this._endRequest()
       }
     },
 
     async fetchProjects(): Promise<void> {
-      this.loading = true
+      this._startRequest()
+      this.error = null
       try {
-        const response = await apiClient.get<Project[]>('/api/v1/projects/')
+        const response = await apiClient.get<Project[]>('/api/v1/projects')
         this.projects = response.data
       } catch (error) {
         this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching projects:', error)
       } finally {
-        this.loading = false
+        this._endRequest()
       }
     },
 
     async fetchEducation(): Promise<void> {
-      this.loading = true
+      this._startRequest()
+      this.error = null
       try {
-        const response = await apiClient.get<Education[]>('/api/v1/education/')
+        const response = await apiClient.get<Education[]>('/api/v1/education')
         this.education = response.data
       } catch (error) {
         this.error = extractErrorMessage(error)
         apiLogger.error('Error fetching education:', error)
       } finally {
-        this.loading = false
+        this._endRequest()
       }
     },
 

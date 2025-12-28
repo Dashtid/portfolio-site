@@ -15,8 +15,8 @@ class Skill(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(100), nullable=False, unique=True)
     category = Column(String(50))  # 'language', 'framework', 'tool', 'database', etc.
-    proficiency = Column(Integer)  # 1-5 scale
-    years_experience = Column(Float)
+    proficiency_level = Column(Integer)  # 0-100 percentage scale
+    years_of_experience = Column(Float)
     order_index = Column(Integer, default=0, index=True)
 
     # Timestamps
@@ -28,7 +28,7 @@ class Skill(Base):
             "id": self.id,
             "name": self.name,
             "category": self.category,
-            "proficiency": self.proficiency,
-            "years_experience": self.years_experience,
+            "proficiency_level": self.proficiency_level,
+            "years_of_experience": self.years_of_experience,
             "order_index": self.order_index,
         }

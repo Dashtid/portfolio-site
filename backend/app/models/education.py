@@ -18,4 +18,6 @@ class Education(Base):
     is_certification = Column(Boolean, default=False)
     certificate_number = Column(String(100))
     certificate_url = Column(String(500))  # URL to certificate/credential
-    order = Column(Integer, default=0, index=True)  # For custom sorting
+    order_index = Column(
+        Integer, default=0, index=True
+    )  # For custom sorting (renamed from 'order' for consistency)

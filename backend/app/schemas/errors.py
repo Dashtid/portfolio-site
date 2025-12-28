@@ -3,8 +3,12 @@ Pydantic schemas for frontend error logging
 """
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+# Allowed error types - strict validation to prevent abuse
+ErrorType = Literal["error", "unhandledRejection", "vueError", "manual"]
 
 
 class FrontendErrorCreate(BaseModel):
@@ -12,21 +16,22 @@ class FrontendErrorCreate(BaseModel):
 
     model_config = {"populate_by_name": True}
 
-    type: str = Field(
+    type: ErrorType = Field(
         ...,
-        max_length=50,
         description="Error type: error, unhandledRejection, vueError, manual",
     )
-    message: str = Field(..., max_length=2000)
-    filename: str | None = Field(None, max_length=500)
-    lineno: int | None = Field(None, ge=0, le=1000000)
+    message: str = Field(..., min_length=1, max_length=1000)
+    filename: str | None = Field(None, max_length=300, pattern=r"^[a-zA-Z0-9./_:\-@]+$")
+    lineno: int | None = Field(None, ge=0, le=100000)
     colno: int | None = Field(None, ge=0, le=10000)
-    stack: str | None = Field(None, max_length=10000)
-    component_name: str | None = Field(None, max_length=100, alias="componentName")
+    stack: str | None = Field(None, max_length=5000)
+    component_name: str | None = Field(
+        None, max_length=100, pattern=r"^[a-zA-Z][a-zA-Z0-9_-]*$", alias="componentName"
+    )
     error_info: str | None = Field(None, max_length=500, alias="errorInfo")
-    timestamp: str = Field(..., max_length=50)
-    url: str = Field(..., max_length=2000)
-    user_agent: str = Field(..., max_length=500, alias="userAgent")
+    timestamp: str = Field(..., max_length=50, pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
+    url: str = Field(..., max_length=1000, pattern=r"^https?://")
+    user_agent: str = Field(..., max_length=300, alias="userAgent")
     context: dict | None = Field(None, description="Additional context (max 10 keys)")
 
     @classmethod

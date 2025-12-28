@@ -5,30 +5,18 @@ Provides configurable rate limiting for API endpoints with different limits
 for public and authenticated endpoints.
 """
 
+import hashlib
+
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from app.config import settings
+from app.core.ip_utils import get_client_ip
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-
-def get_client_ip(request: Request) -> str:
-    """
-    Get client IP address from request.
-
-    Handles X-Forwarded-For header for reverse proxy setups (Fly.io, Vercel).
-    """
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        # X-Forwarded-For can contain multiple IPs: client, proxy1, proxy2
-        # The first one is the original client
-        return forwarded.split(",")[0].strip()
-    return get_remote_address(request)
 
 
 def get_user_or_ip(request: Request) -> str:
@@ -42,12 +30,20 @@ def get_user_or_ip(request: Request) -> str:
     if hasattr(request.state, "user") and request.state.user:
         return f"user:{request.state.user.id}"
 
-    # Check for user ID in Authorization header (JWT)
+    # Check for user ID in Authorization header (JWT) or cookie
     auth_header = request.headers.get("Authorization")
+    access_cookie = request.cookies.get("access_token")
+
     if auth_header and auth_header.startswith("Bearer "):
-        # Use the token itself as key (will be same for same user)
-        # This is a simplified approach - in production you might decode the token
-        token_hash = hash(auth_header) % 10**8
+        # Use SHA256 hash of token for secure, consistent rate limit key
+        # Use 32 chars (128 bits) to reduce collision risk
+        token_hash = hashlib.sha256(auth_header.encode()).hexdigest()[:32]
+        return f"token:{token_hash}"
+
+    if access_cookie:
+        # Hash the cookie token for HTTP-only cookie auth
+        # Use 32 chars (128 bits) to reduce collision risk
+        token_hash = hashlib.sha256(access_cookie.encode()).hexdigest()[:32]
         return f"token:{token_hash}"
 
     return get_client_ip(request)
@@ -78,7 +74,16 @@ async def rate_limit_exceeded_handler(request: Request, exc: Exception) -> JSONR
             content={"detail": "Rate limit exceeded"},
         )
 
-    retry_after = exc.detail.split("rate limit exceeded")[-1].strip() if exc.detail else "60"
+    # Safely parse retry_after from exception detail
+    retry_after = "60"  # Default fallback
+    try:
+        if exc.detail:
+            # Try to extract time from "rate limit exceeded" message
+            parts = exc.detail.split("rate limit exceeded")
+            if len(parts) > 1:
+                retry_after = parts[-1].strip() or "60"
+    except (AttributeError, IndexError):
+        pass  # Keep default
 
     logger.warning(
         "Rate limit exceeded",
@@ -86,9 +91,19 @@ async def rate_limit_exceeded_handler(request: Request, exc: Exception) -> JSONR
             "client_ip": get_client_ip(request),
             "path": request.url.path,
             "method": request.method,
-            "limit": str(exc.detail),
+            "limit": str(exc.detail) if exc.detail else "unknown",
         },
     )
+
+    # Safely extract numeric retry value for header
+    retry_header = "60"  # Default fallback
+    try:
+        if retry_after:
+            parts = retry_after.split()
+            if parts:
+                retry_header = parts[-1]
+    except (AttributeError, IndexError):
+        pass  # Keep default
 
     return JSONResponse(
         status_code=429,
@@ -97,7 +112,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: Exception) -> JSONR
             "retry_after": retry_after,
         },
         headers={
-            "Retry-After": retry_after.split()[-1] if retry_after else "60",
+            "Retry-After": retry_header,
             "X-RateLimit-Limit": str(exc.detail) if exc.detail else "",
         },
     )

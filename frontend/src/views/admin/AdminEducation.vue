@@ -6,48 +6,89 @@
     </div>
 
     <!-- Add/Edit Form Modal -->
-    <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
+    <div
+      v-if="showForm"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="education-modal-title"
+      tabindex="0"
+      @click.self="closeForm"
+      @keydown.escape="closeForm"
+    >
       <div class="modal-content">
-        <h3>{{ editingEducation ? 'Edit' : 'Add' }} Education</h3>
+        <h3 id="education-modal-title">{{ editingEducation ? 'Edit' : 'Add' }} Education</h3>
         <form @submit.prevent="saveEducation">
           <div class="form-group">
-            <label>Institution *</label>
-            <input v-model="formData.institution" type="text" class="form-control" required />
+            <label for="edu-institution">Institution *</label>
+            <input
+              id="edu-institution"
+              v-model="formData.institution"
+              type="text"
+              class="form-control"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <label>Degree/Certification *</label>
-            <input v-model="formData.degree" type="text" class="form-control" required />
+            <label for="edu-degree">Degree/Certification *</label>
+            <input
+              id="edu-degree"
+              v-model="formData.degree"
+              type="text"
+              class="form-control"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <label>Field of Study</label>
-            <input v-model="formData.field_of_study" type="text" class="form-control" />
+            <label for="edu-field">Field of Study</label>
+            <input
+              id="edu-field"
+              v-model="formData.field_of_study"
+              type="text"
+              class="form-control"
+            />
           </div>
 
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
-                <label>Start Date</label>
-                <input v-model="formData.start_date" type="date" class="form-control" />
+                <label for="edu-start-date">Start Date</label>
+                <input
+                  id="edu-start-date"
+                  v-model="formData.start_date"
+                  type="date"
+                  class="form-control"
+                />
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label>End Date</label>
-                <input v-model="formData.end_date" type="date" class="form-control" />
+                <label for="edu-end-date">End Date</label>
+                <input
+                  id="edu-end-date"
+                  v-model="formData.end_date"
+                  type="date"
+                  class="form-control"
+                />
               </div>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Location</label>
-            <input v-model="formData.location" type="text" class="form-control" />
+            <label for="edu-location">Location</label>
+            <input id="edu-location" v-model="formData.location" type="text" class="form-control" />
           </div>
 
           <div class="form-group">
-            <label>Description</label>
-            <textarea v-model="formData.description" class="form-control" rows="3"></textarea>
+            <label for="edu-description">Description</label>
+            <textarea
+              id="edu-description"
+              v-model="formData.description"
+              class="form-control"
+              rows="3"
+            ></textarea>
           </div>
 
           <div class="form-check mb-3">
@@ -61,13 +102,24 @@
           </div>
 
           <div v-if="formData.is_certification" class="form-group">
-            <label>Certificate Number</label>
-            <input v-model="formData.certificate_number" type="text" class="form-control" />
+            <label for="edu-cert-number">Certificate Number</label>
+            <input
+              id="edu-cert-number"
+              v-model="formData.certificate_number"
+              type="text"
+              class="form-control"
+            />
           </div>
 
           <div class="form-group">
-            <label>Display Order</label>
-            <input v-model.number="formData.order" type="number" class="form-control" min="0" />
+            <label for="edu-order">Display Order</label>
+            <input
+              id="edu-order"
+              v-model.number="formData.order"
+              type="number"
+              class="form-control"
+              min="0"
+            />
           </div>
 
           <div class="form-actions">
@@ -157,11 +209,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import api from '../../api/client'
 import { apiLogger } from '../../utils/logger'
+import { useToast } from '@/composables/useToast'
+
+// Toast notifications
+const toast = useToast()
 
 // Education form interface
 interface EducationFormData {
@@ -198,6 +255,9 @@ const formData = ref<EducationFormData>({
   order: 0
 })
 
+// AbortController for request cancellation
+let abortController: AbortController | null = null
+
 // Computed properties
 const degrees = computed<EducationFormData[]>(() =>
   educationList.value.filter(e => !e.is_certification)
@@ -208,10 +268,20 @@ const certifications = computed<EducationFormData[]>(() =>
 
 // Methods
 const fetchEducation = async (): Promise<void> => {
+  // Cancel any pending request
+  if (abortController) {
+    abortController.abort()
+  }
+  abortController = new AbortController()
+
   try {
-    const response = await api.get<EducationFormData[]>('/education/')
+    const response = await api.get<EducationFormData[]>('/education/', {
+      signal: abortController.signal
+    })
     educationList.value = response.data
   } catch (error) {
+    // Ignore cancelled requests
+    if (axios.isCancel(error)) return
     apiLogger.error('Error fetching education:', error)
   }
 }
@@ -220,14 +290,16 @@ const saveEducation = async (): Promise<void> => {
   try {
     if (editingEducation.value) {
       await api.put(`/education/${editingEducation.value.id}/`, formData.value)
+      toast.success('Education updated successfully')
     } else {
       await api.post('/education/', formData.value)
+      toast.success('Education added successfully')
     }
     await fetchEducation()
     closeForm()
   } catch (error) {
     apiLogger.error('Error saving education:', error)
-    alert('Failed to save education. Please try again.')
+    toast.error('Failed to save education')
   }
 }
 
@@ -243,10 +315,11 @@ const deleteEducation = async (id: string | undefined): Promise<void> => {
 
   try {
     await api.delete(`/education/${id}/`)
+    toast.success('Education deleted successfully')
     await fetchEducation()
   } catch (error) {
     apiLogger.error('Error deleting education:', error)
-    alert('Failed to delete education. Please try again.')
+    toast.error('Failed to delete education')
   }
 }
 
@@ -269,7 +342,10 @@ const closeForm = (): void => {
 
 const formatDate = (dateStr: string | null | undefined): string => {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  const date = new Date(dateStr)
+  // Check for Invalid Date
+  if (isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short'
   })
@@ -283,6 +359,14 @@ onMounted(async (): Promise<void> => {
   }
 
   await fetchEducation()
+})
+
+// Cancel pending requests on unmount
+onUnmounted(() => {
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
 })
 </script>
 

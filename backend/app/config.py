@@ -4,12 +4,14 @@ Application configuration using Pydantic Settings
 
 import os
 import warnings
+from urllib.parse import urlparse
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Development-only fallback key (clearly marked as insecure)
-_DEV_SECRET_KEY = "INSECURE-DEV-KEY-CHANGE-IN-PRODUCTION"
+# Marker for explicitly allowing insecure development mode
+# Set SECRET_KEY=dev-mode-insecure to explicitly enable insecure development
+_DEV_MODE_MARKER = "dev-mode-insecure"
 
 
 class Settings(BaseSettings):
@@ -45,23 +47,36 @@ class Settings(BaseSettings):
 
         return url
 
-    # CORS - includes both development and production origins
-    # Can be overridden with CORS_ORIGINS env var
-    CORS_ORIGINS: list = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://dashti.se",
-        "https://www.dashti.se",
-    ]
+    # CORS - environment-specific origins
+    # In production, only production origins are allowed (override via CORS_ORIGINS env var)
+    # In development, localhost origins are included
+    CORS_ORIGINS: list = []
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v):
-        """Parse CORS_ORIGINS from comma-separated string or list"""
-        if isinstance(v, str):
+    def parse_cors_origins(cls, v, info):
+        """Parse and set CORS_ORIGINS based on environment"""
+        environment = info.data.get("ENVIRONMENT", "development")
+
+        if isinstance(v, str) and v:
             # Support comma-separated string from environment
             return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
+        if isinstance(v, list) and v:
+            return v
+
+        # Default origins based on environment
+        production_origins = [
+            "https://dashti.se",
+            "https://www.dashti.se",
+        ]
+        development_origins = [
+            "http://localhost:3000",
+            "http://localhost:5173",
+        ]
+
+        if environment == "production":
+            return production_origins
+        return development_origins + production_origins
 
     # Frontend URL (for OAuth redirect)
     FRONTEND_URL: str = "http://localhost:3000"
@@ -79,34 +94,42 @@ class Settings(BaseSettings):
         return v
 
     # Security
-    # SECRET_KEY should be set via environment variable in production
-    # Falls back to dev key only in development mode
-    SECRET_KEY: str = os.getenv("SECRET_KEY", _DEV_SECRET_KEY)
+    # SECRET_KEY MUST be set via environment variable (no fallback for security)
+    # For development: set SECRET_KEY=dev-mode-insecure to explicitly enable insecure mode
+    # For production: generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+    SECRET_KEY: str | None = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes for security (2025 best practice)
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7 days for refresh tokens
 
     @field_validator("SECRET_KEY")
     @classmethod
-    def validate_secret_key(cls, v: str, info) -> str:
-        """Ensure SECRET_KEY is properly configured for production"""
-        # Get environment from values if available
+    def validate_secret_key(cls, v: str | None, info) -> str:
+        """Ensure SECRET_KEY is properly configured"""
         environment = info.data.get("ENVIRONMENT", "development")
 
+        # SECRET_KEY must always be explicitly set
+        if v is None:
+            raise ValueError(
+                "SECRET_KEY environment variable is required. "
+                "For development: set SECRET_KEY=dev-mode-insecure. "
+                'For production: generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+            )
+
         if environment == "production":
-            # In production, reject insecure dev key
-            if v == _DEV_SECRET_KEY:
+            # In production, reject the dev mode marker
+            if v == _DEV_MODE_MARKER:
                 raise ValueError(
-                    "SECRET_KEY must be set via environment variable in production. "
-                    'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+                    "SECRET_KEY=dev-mode-insecure is not allowed in production. "
+                    'Generate a secure key with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
                 )
             # Ensure key is sufficiently long
             if len(v) < 32:
                 raise ValueError("SECRET_KEY must be at least 32 characters in production")
-        elif v == _DEV_SECRET_KEY:
-            # Warn in development but allow
+        elif v == _DEV_MODE_MARKER:
+            # Warn but allow explicit insecure mode in development
             warnings.warn(
-                "Using insecure development SECRET_KEY. Set SECRET_KEY environment variable for security.",
+                "Running with insecure development SECRET_KEY. Do not use in production!",
                 stacklevel=2,
             )
         return v
@@ -123,12 +146,60 @@ class Settings(BaseSettings):
     def validate_github_redirect(cls, v: str, info) -> str:
         """Ensure GITHUB_REDIRECT_URI is properly configured for production"""
         environment = info.data.get("ENVIRONMENT", "development")
-        if environment == "production" and "localhost" in v:
-            raise ValueError(
-                "GITHUB_REDIRECT_URI must not use localhost in production. "
-                "Set GITHUB_REDIRECT_URI environment variable to your production callback URL."
-            )
+        if environment == "production":
+            # Block localhost in production
+            if "localhost" in v or "127.0.0.1" in v:
+                raise ValueError(
+                    "GITHUB_REDIRECT_URI must not use localhost in production. "
+                    "Set GITHUB_REDIRECT_URI environment variable to your production callback URL."
+                )
+            # Require HTTPS in production
+            if not v.startswith("https://"):
+                raise ValueError("GITHUB_REDIRECT_URI must use HTTPS in production for security.")
         return v
+
+    @model_validator(mode="after")
+    def validate_oauth_redirect_domain(self):
+        """
+        Validate that GITHUB_REDIRECT_URI and FRONTEND_URL are consistent.
+
+        In production, both should point to the same domain to prevent
+        OAuth redirect attacks where a malicious domain could intercept tokens.
+        """
+        if self.ENVIRONMENT != "production":
+            return self
+
+        if not self.GITHUB_REDIRECT_URI or not self.FRONTEND_URL:
+            return self
+
+        try:
+            redirect_parsed = urlparse(self.GITHUB_REDIRECT_URI)
+            frontend_parsed = urlparse(self.FRONTEND_URL)
+
+            redirect_domain = redirect_parsed.netloc.lower()
+            frontend_domain = frontend_parsed.netloc.lower()
+
+            # Extract base domain (handle subdomains like api.example.com and www.example.com)
+            def get_base_domain(domain: str) -> str:
+                parts = domain.split(".")
+                if len(parts) >= 2:
+                    return ".".join(parts[-2:])  # Get last 2 parts (e.g., example.com)
+                return domain
+
+            redirect_base = get_base_domain(redirect_domain)
+            frontend_base = get_base_domain(frontend_domain)
+
+            if redirect_base != frontend_base:
+                warnings.warn(
+                    f"GITHUB_REDIRECT_URI domain ({redirect_domain}) differs from "
+                    f"FRONTEND_URL domain ({frontend_domain}). Ensure this is intentional.",
+                    stacklevel=2,
+                )
+        except Exception:
+            # Don't fail on parsing errors, just skip validation
+            pass
+
+        return self
 
     # Admin
     ADMIN_GITHUB_ID: str | None = None  # Your GitHub user ID

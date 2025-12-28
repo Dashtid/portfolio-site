@@ -104,11 +104,12 @@
       <div class="mb-5">
         <div class="d-flex align-items-center mb-3">
           <img
-            v-if="company.logo_url"
+            v-if="company.logo_url && !logoError"
             :src="company.logo_url"
             :alt="`${company.name} logo`"
             class="me-3"
             style="width: 64px; height: 64px; object-fit: contain"
+            @error="logoError = true"
           />
           <div>
             <h1 class="mb-1">{{ company.title }}</h1>
@@ -187,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
 import type { Company } from '@/types'
@@ -195,12 +196,16 @@ import { apiLogger } from '../../utils/logger'
 import { config } from '../../config'
 import DOMPurify from 'dompurify'
 
+// AbortController for cancelling pending requests on route change
+let fetchAbortController: AbortController | null = null
+
 const route = useRoute()
 
 const company = ref<Company | null>(null)
 const allCompanies = ref<Company[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
+const logoError = ref<boolean>(false)
 
 const companyId = computed<string>(() => route.params.id as string)
 
@@ -221,11 +226,12 @@ const formatDescription = (desc: string | null | undefined): string => {
     .join('')
 
   // Sanitize HTML to prevent XSS attacks
-  // Configure DOMPurify to only allow safe URL protocols
+  // Configure DOMPurify to only allow safe URL protocols - block protocol-relative URLs (//evil.com)
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'strong', 'em', 'br', 'ul', 'ol', 'li', 'a'],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i
+    // Only allow absolute http/https URLs and mailto:
+    ALLOWED_URI_REGEXP: /^(?:https?:\/\/[^<>"{}|\\^`\s]+|mailto:[^<>"{}|\\^`\s]+)$/i
   })
 }
 
@@ -235,19 +241,32 @@ const fetchAllCompanies = async (): Promise<void> => {
     const response = await axios.get<Company[]>(`${config.apiUrl}/api/v1/companies/`)
     allCompanies.value = response.data.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
   } catch (err) {
+    // Ignore cancelled requests
+    if (axios.isCancel(err)) return
     apiLogger.error('Error fetching companies:', err)
   }
 }
 
-// Fetch company details
+// Fetch company details with request cancellation support
 const fetchCompany = async (id: string): Promise<void> => {
+  // Cancel any pending request before starting a new one
+  if (fetchAbortController) {
+    fetchAbortController.abort()
+  }
+  fetchAbortController = new AbortController()
+
   loading.value = true
   error.value = null
+  logoError.value = false // Reset logo error state for new company
 
   try {
-    const response = await axios.get<Company>(`${config.apiUrl}/api/v1/companies/${id}`)
+    const response = await axios.get<Company>(`${config.apiUrl}/api/v1/companies/${id}`, {
+      signal: fetchAbortController.signal
+    })
     company.value = response.data
   } catch (err) {
+    // Ignore cancelled requests
+    if (axios.isCancel(err)) return
     apiLogger.error('Error fetching company:', err)
     const axiosError = err as AxiosError
     if (axiosError.response?.status === 404) {
@@ -277,6 +296,14 @@ onMounted(async (): Promise<void> => {
   // Fetch current company details if ID is provided
   if (companyId.value) {
     await fetchCompany(companyId.value)
+  }
+})
+
+// Cleanup: cancel pending requests on unmount
+onUnmounted(() => {
+  if (fetchAbortController) {
+    fetchAbortController.abort()
+    fetchAbortController = null
   }
 })
 </script>

@@ -24,6 +24,9 @@ class OAuthState(Base):
         default=lambda: datetime.now(UTC),
         nullable=False,
     )
+    # Client IP binding for enhanced CSRF protection
+    # The state can only be validated from the same IP that initiated the flow
+    client_ip = Column(String(45), nullable=True)  # IPv6 max length is 45 chars
 
     def is_expired(self) -> bool:
         """Check if the state has expired"""

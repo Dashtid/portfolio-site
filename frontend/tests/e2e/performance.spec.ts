@@ -138,8 +138,11 @@ test.describe('Performance', () => {
         }
       }
 
-      // Most scripts should be optimized
-      expect(scriptAttributes.length).toBeGreaterThanOrEqual(0)
+      // All scripts with src should be optimized (defer, async, or module)
+      // If there are scripts, they should all be optimized
+      if (scripts.length > 0) {
+        expect(scriptAttributes.length).toBe(scripts.length)
+      }
     })
 
     test('should use efficient image formats', async ({ page }) => {
@@ -161,11 +164,11 @@ test.describe('Performance', () => {
         }
       }
 
-      // At least some images should use modern formats
-      // This is a soft check since not all images need to be WebP
+      // At least 25% of images should use modern formats (WebP, AVIF, SVG)
+      // This is a reasonable threshold for modern web apps
       if (totalImages > 0) {
         const modernFormatRatio = modernFormatCount / totalImages
-        expect(modernFormatRatio).toBeGreaterThanOrEqual(0)
+        expect(modernFormatRatio).toBeGreaterThanOrEqual(0.25)
       }
     })
 

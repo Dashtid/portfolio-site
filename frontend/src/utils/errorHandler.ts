@@ -3,6 +3,7 @@
  */
 
 import { ref, type Ref, type App } from 'vue'
+import { isAxiosError, getErrorStatus } from './typeGuards'
 
 /**
  * Error types
@@ -178,7 +179,10 @@ export function getUserMessage(error: ErrorWithResponse | ErrorInfo | string): s
       return error.response.data.detail
     }
     if (Array.isArray(error.response.data.detail)) {
-      return error.response.data.detail.map(d => d.msg).join(', ')
+      return error.response.data.detail
+        .map(d => (typeof d === 'object' && d !== null && 'msg' in d ? d.msg : String(d)))
+        .filter(Boolean)
+        .join(', ')
     }
   }
 
@@ -235,12 +239,9 @@ export async function retryOperation<T>(
     } catch (error) {
       lastError = error as ErrorWithResponse
 
-      // Don't retry on client errors
-      if (
-        lastError.response?.status &&
-        lastError.response.status >= 400 &&
-        lastError.response.status < 500
-      ) {
+      // Don't retry on client errors (4xx status codes)
+      const status = isAxiosError(error) ? getErrorStatus(error) : undefined
+      if (status !== undefined && status >= 400 && status < 500) {
         throw error
       }
 
@@ -268,7 +269,21 @@ export function setupGlobalErrorHandlers(app: App): void {
 
   // Unhandled promise rejection
   window.addEventListener('unhandledrejection', event => {
-    handleError(new Error(event.reason as string) as ErrorWithResponse, {
+    // Safely extract error from rejection reason
+    let error: Error
+    if (event.reason instanceof Error) {
+      error = event.reason
+    } else if (typeof event.reason === 'string') {
+      error = new Error(event.reason)
+    } else if (event.reason && typeof event.reason === 'object') {
+      // Handle objects with message property or convert to string
+      const message = (event.reason as { message?: string }).message || JSON.stringify(event.reason)
+      error = new Error(message)
+    } else {
+      error = new Error(String(event.reason ?? 'Unhandled promise rejection'))
+    }
+
+    handleError(error as ErrorWithResponse, {
       type: 'unhandledRejection'
     })
     event.preventDefault()

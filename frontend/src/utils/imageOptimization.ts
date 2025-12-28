@@ -24,25 +24,47 @@ export function generateImageSrcSet(
 let cachedAvifSupport: boolean | null = null
 let cachedWebpSupport: boolean | null = null
 
+// Timeout for AVIF detection (ms)
+const AVIF_DETECTION_TIMEOUT = 3000
+
 /**
  * Check if browser supports AVIF format
- * Uses a tiny AVIF test image for detection
+ * Uses a tiny AVIF test image for detection with timeout fallback
  */
 async function checkAvifSupport(): Promise<boolean> {
   if (cachedAvifSupport !== null) return cachedAvifSupport
 
   return new Promise(resolve => {
+    let resolved = false
     const img = new Image()
+
+    // Timeout fallback to prevent hanging promise
+    const timeoutId = setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        cachedAvifSupport = false
+        resolve(false)
+      }
+    }, AVIF_DETECTION_TIMEOUT)
+
     // Tiny 1x1 AVIF image (smallest valid AVIF)
     img.src =
       'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAEAAAABAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKBzgABpAQ0AIAAwAAAAAAAAD/////8A=='
     img.onload = () => {
-      cachedAvifSupport = img.width === 1 && img.height === 1
-      resolve(cachedAvifSupport)
+      if (!resolved) {
+        resolved = true
+        clearTimeout(timeoutId)
+        cachedAvifSupport = img.width === 1 && img.height === 1
+        resolve(cachedAvifSupport)
+      }
     }
     img.onerror = () => {
-      cachedAvifSupport = false
-      resolve(false)
+      if (!resolved) {
+        resolved = true
+        clearTimeout(timeoutId)
+        cachedAvifSupport = false
+        resolve(false)
+      }
     }
   })
 }
@@ -168,37 +190,73 @@ interface OptimizeImageOptions {
   maxHeight?: number
   quality?: number
   format?: 'webp' | 'jpeg' | 'png'
+  signal?: AbortSignal
 }
 
 interface OptimizedImage {
   blob: Blob
-  dataUrl: string
+  /** Object URL - call revokeObjectUrl() when done to prevent memory leaks */
+  objectUrl: string
   width: number
   height: number
   size: number
   format: string
+  /** Revoke the object URL to free memory */
+  revokeObjectUrl: () => void
 }
 
 /**
  * Convert image to optimized format
+ * Supports abort signal for cancellation
  */
 export async function optimizeImage(
   file: File,
   options: OptimizeImageOptions = {}
 ): Promise<OptimizedImage> {
-  const { maxWidth = 1920, maxHeight = 1080, quality = 0.85, format = 'webp' } = options
+  const { maxWidth = 1920, maxHeight = 1080, quality = 0.85, format = 'webp', signal } = options
+
+  // Check if already aborted
+  if (signal?.aborted) {
+    throw new DOMException('Image optimization aborted', 'AbortError')
+  }
 
   return new Promise<OptimizedImage>((resolve, reject) => {
     const reader = new FileReader()
 
+    // Handle abort signal
+    const abortHandler = () => {
+      reader.abort()
+      reject(new DOMException('Image optimization aborted', 'AbortError'))
+    }
+    signal?.addEventListener('abort', abortHandler, { once: true })
+
+    const cleanup = () => {
+      signal?.removeEventListener('abort', abortHandler)
+    }
+
     reader.onload = e => {
+      // Check if aborted before proceeding
+      if (signal?.aborted) {
+        cleanup()
+        reject(new DOMException('Image optimization aborted', 'AbortError'))
+        return
+      }
+
       const img = new Image()
 
       img.onload = () => {
+        // Check if aborted before processing
+        if (signal?.aborted) {
+          cleanup()
+          reject(new DOMException('Image optimization aborted', 'AbortError'))
+          return
+        }
+
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')
 
         if (!ctx) {
+          cleanup()
           reject(new Error('Canvas context not available'))
           return
         }
@@ -220,14 +278,21 @@ export async function optimizeImage(
 
         canvas.toBlob(
           blob => {
+            cleanup()
+            if (signal?.aborted) {
+              reject(new DOMException('Image optimization aborted', 'AbortError'))
+              return
+            }
             if (blob) {
+              const objectUrl = URL.createObjectURL(blob)
               resolve({
                 blob,
-                dataUrl: URL.createObjectURL(blob),
+                objectUrl,
                 width,
                 height,
                 size: blob.size,
-                format
+                format,
+                revokeObjectUrl: () => URL.revokeObjectURL(objectUrl)
               })
             } else {
               reject(new Error('Failed to optimize image'))
@@ -239,17 +304,20 @@ export async function optimizeImage(
       }
 
       img.onerror = () => {
+        cleanup()
         reject(new Error('Failed to load image'))
       }
 
       if (e.target?.result) {
         img.src = e.target.result as string
       } else {
+        cleanup()
         reject(new Error('Failed to read file result'))
       }
     }
 
     reader.onerror = () => {
+      cleanup()
       reject(new Error('Failed to read file'))
     }
 

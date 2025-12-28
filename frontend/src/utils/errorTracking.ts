@@ -25,10 +25,14 @@ class ErrorTracker {
   private apiEndpoint: string
   private errorQueue: ErrorData[]
   private maxQueueSize: number
+  private initialized: boolean = false
+  private boundHandleError: ((event: ErrorEvent) => void) | null = null
+  private boundHandleRejection: ((event: PromiseRejectionEvent) => void) | null = null
 
   constructor() {
     this.enabled = import.meta.env.VITE_ERROR_TRACKING_ENABLED === 'true'
-    this.apiEndpoint = import.meta.env.VITE_API_URL + '/api/v1/errors' || '/api/v1/errors'
+    // Use nullish coalescing to properly handle undefined VITE_API_URL
+    this.apiEndpoint = (import.meta.env.VITE_API_URL ?? '') + '/api/v1/errors'
     this.errorQueue = []
     this.maxQueueSize = 10
   }
@@ -37,6 +41,14 @@ class ErrorTracker {
    * Initialize error tracking
    */
   init(): void {
+    // Prevent duplicate initialization and listener leaks
+    if (this.initialized) {
+      if (import.meta.env.DEV) {
+        console.log('[Error Tracking] Already initialized, skipping')
+      }
+      return
+    }
+
     if (!this.enabled) {
       if (import.meta.env.DEV) {
         console.log('[Error Tracking] Disabled')
@@ -44,14 +56,41 @@ class ErrorTracker {
       return
     }
 
+    this.initialized = true
+
+    // Store bound handlers for cleanup
+    this.boundHandleError = this.handleError.bind(this)
+    this.boundHandleRejection = this.handleRejection.bind(this)
+
     // Capture uncaught errors
-    window.addEventListener('error', this.handleError.bind(this))
+    window.addEventListener('error', this.boundHandleError)
 
     // Capture unhandled promise rejections
-    window.addEventListener('unhandledrejection', this.handleRejection.bind(this))
+    window.addEventListener('unhandledrejection', this.boundHandleRejection)
 
     if (import.meta.env.DEV) {
       console.log('[Error Tracking] Initialized')
+    }
+  }
+
+  /**
+   * Cleanup error tracking listeners
+   */
+  destroy(): void {
+    if (this.boundHandleError) {
+      window.removeEventListener('error', this.boundHandleError)
+      this.boundHandleError = null
+    }
+
+    if (this.boundHandleRejection) {
+      window.removeEventListener('unhandledrejection', this.boundHandleRejection)
+      this.boundHandleRejection = null
+    }
+
+    this.initialized = false
+
+    if (import.meta.env.DEV) {
+      console.log('[Error Tracking] Destroyed')
     }
   }
 

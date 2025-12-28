@@ -7,15 +7,18 @@ Provides endpoints for:
 - Getting visitor statistics (admin)
 """
 
+import hashlib
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_admin_user
+from app.core.ip_utils import get_client_ip
 from app.database import get_db
+from app.middleware.rate_limit import rate_limit_public
 from app.models.analytics import PageView
 from app.models.user import User
 from app.schemas.analytics import (
@@ -36,9 +39,10 @@ AdminUser = Annotated[User, Depends(get_current_admin_user)]
 
 
 @router.post("/track/pageview", response_model=PageViewResponse)
+@rate_limit_public
 async def track_pageview(
-    page_view: PageViewCreate,
     request: Request,
+    page_view: PageViewCreate,
     db: DbSession,
 ):
     """
@@ -51,14 +55,16 @@ async def track_pageview(
     2. Set up MaxMind GeoLite2 database or similar
     3. Resolve client_ip to country/city before saving
     """
-    # Get client IP (handle proxies)
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        client_ip = forwarded.split(",")[0].strip()
-    elif request.client:
-        client_ip = request.client.host
+    # Get client IP securely (only trusts X-Forwarded-For from known proxies)
+    client_ip = get_client_ip(request)
+
+    # Determine session_id: use visitor_id from frontend, or generate from IP hash
+    if page_view.visitor_id:
+        session_id = page_view.visitor_id
     else:
-        client_ip = "unknown"
+        # Fallback: generate anonymous session from IP hash (for privacy)
+        ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:16]
+        session_id = f"anon_{ip_hash}"
 
     # Create page view record
     # Note: country/city fields are available but require geo-IP service
@@ -67,6 +73,7 @@ async def track_pageview(
         referrer=page_view.referrer,
         user_agent=request.headers.get("User-Agent"),
         ip_address=client_ip,
+        session_id=session_id,
     )
     db.add(db_pageview)
     await db.commit()
@@ -86,16 +93,13 @@ async def track_pageview(
 async def get_analytics_summary(
     db: DbSession,
     current_user: AdminUser,
-    days: int = 30,
+    days: int = Query(default=30, ge=1, le=365, description="Number of days to include in summary"),
 ):
     """
     Get analytics summary (admin only).
     Returns total views, unique visitors, top pages, and daily views.
     """
     _ = current_user  # Used for authentication
-
-    if days < 1 or days > 365:
-        raise HTTPException(status_code=400, detail="Days must be between 1 and 365")
 
     cutoff = datetime.now(UTC) - timedelta(days=days)
 
@@ -151,16 +155,13 @@ async def get_analytics_summary(
 async def get_visitor_stats(
     db: DbSession,
     current_user: AdminUser,
-    days: int = 7,
+    days: int = Query(default=7, ge=1, le=365, description="Number of days to include in stats"),
 ):
     """
     Get visitor statistics (admin only).
     Returns session counts, geographic data, and visitor trends.
     """
     _ = current_user  # Used for authentication
-
-    if days < 1 or days > 365:
-        raise HTTPException(status_code=400, detail="Days must be between 1 and 365")
 
     cutoff = datetime.now(UTC) - timedelta(days=days)
 

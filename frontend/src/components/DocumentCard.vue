@@ -77,16 +77,24 @@ const documentTypeLabel = computed(() => {
 
 const formattedFileSize = computed(() => {
   const bytes = props.document.file_size
+  // Handle null, undefined, or invalid file sizes
+  if (bytes == null || bytes < 0 || !Number.isFinite(bytes)) {
+    return 'Unknown size'
+  }
   if (bytes === 0) return '0 Bytes'
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+  // Ensure index is within bounds (both lower and upper)
+  const safeIndex = Math.max(0, Math.min(i, sizes.length - 1))
+  return Math.round((bytes / Math.pow(k, safeIndex)) * 100) / 100 + ' ' + sizes[safeIndex]
 })
 
 const formattedDate = computed(() => {
   if (!props.document.published_date) return ''
   const date = new Date(props.document.published_date)
+  // Check for Invalid Date (NaN) before formatting
+  if (isNaN(date.getTime())) return ''
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
 })
 </script>
@@ -265,5 +273,18 @@ const formattedDate = computed(() => {
 [data-theme='light'] .document-link:hover {
   color: #1d4ed8; /* primary-700 */
   background: rgba(37, 99, 235, 0.15);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .card-glass,
+  .document-link {
+    transition: none;
+  }
+
+  .card-glass:hover,
+  .document-link:hover {
+    transform: none;
+  }
 }
 </style>

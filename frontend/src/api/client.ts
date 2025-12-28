@@ -5,6 +5,8 @@ import axios, {
   type AxiosError
 } from 'axios'
 import { config } from '@/config'
+import { storage, STORAGE_KEYS } from '@/utils/storage'
+import router from '@/router'
 
 /**
  * Axios API Client with Authentication
@@ -19,22 +21,29 @@ import { config } from '@/config'
 // Token refresh state management to prevent race conditions
 // When multiple requests get 401 simultaneously, only one refresh should occur
 let isRefreshing = false
-let refreshSubscribers: Array<(token: string) => void> = []
+let refreshSubscribers: Array<{
+  onSuccess: (token: string) => void
+  onError: (error: Error) => void
+}> = []
+
+// Timeout for refresh subscribers to prevent hanging requests
+const REFRESH_TIMEOUT_MS = 10000
 
 /**
- * Subscribe to token refresh completion
- * Queued requests will be retried once refresh completes
- */
-function subscribeTokenRefresh(callback: (token: string) => void): void {
-  refreshSubscribers.push(callback)
-}
-
-/**
- * Notify all subscribers that token refresh completed
+ * Notify all subscribers that token refresh completed successfully
  * This retries all queued requests with the new token
  */
 function onTokenRefreshed(newToken: string): void {
-  refreshSubscribers.forEach(callback => callback(newToken))
+  refreshSubscribers.forEach(({ onSuccess }) => onSuccess(newToken))
+  refreshSubscribers = []
+}
+
+/**
+ * Notify all subscribers that token refresh failed
+ * This rejects all queued requests
+ */
+function onTokenRefreshFailed(error: Error): void {
+  refreshSubscribers.forEach(({ onError }) => onError(error))
   refreshSubscribers = []
 }
 
@@ -42,6 +51,7 @@ function onTokenRefreshed(newToken: string): void {
 const apiClient: AxiosInstance = axios.create({
   baseURL: config.apiUrl,
   timeout: 30000, // 30 second timeout to prevent hanging requests
+  withCredentials: true, // Include HTTP-only cookies in requests
   headers: {
     'Content-Type': 'application/json'
   }
@@ -49,12 +59,12 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    const token = localStorage.getItem('accessToken')
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
+  (reqConfig: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    const token = storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+    if (token && reqConfig.headers) {
+      reqConfig.headers.Authorization = `Bearer ${token}`
     }
-    return config
+    return reqConfig
   },
   (error: AxiosError) => {
     return Promise.reject(error)
@@ -70,17 +80,37 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
-      const refreshToken = localStorage.getItem('refreshToken')
+      const refreshToken = storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
       if (refreshToken) {
         // If already refreshing, queue this request to retry after refresh completes
         if (isRefreshing) {
-          return new Promise(resolve => {
-            subscribeTokenRefresh((newToken: string) => {
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`
+          return new Promise((resolve, reject) => {
+            // Create subscriber object to track for cleanup
+            const subscriber = {
+              onSuccess: (newToken: string) => {
+                clearTimeout(timeoutId)
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${newToken}`
+                }
+                resolve(apiClient(originalRequest))
+              },
+              onError: (refreshError: Error) => {
+                clearTimeout(timeoutId)
+                reject(refreshError)
               }
-              resolve(apiClient(originalRequest))
-            })
+            }
+
+            // Set timeout to prevent requests hanging indefinitely
+            const timeoutId = setTimeout(() => {
+              // Remove subscriber on timeout to prevent memory leak
+              const index = refreshSubscribers.indexOf(subscriber)
+              if (index > -1) {
+                refreshSubscribers.splice(index, 1)
+              }
+              reject(new Error('Token refresh timeout'))
+            }, REFRESH_TIMEOUT_MS)
+
+            refreshSubscribers.push(subscriber)
           })
         }
 
@@ -88,14 +118,23 @@ apiClient.interceptors.response.use(
         isRefreshing = true
 
         try {
+          // Refresh request - cookies will be sent automatically if present
+          // Also send refresh token in body for backwards compatibility
           const response = await axios.post<{ access_token: string; refresh_token: string }>(
             `${config.apiUrl}/api/v1/auth/refresh`,
-            { refresh_token: refreshToken }
+            refreshToken ? { refresh_token: refreshToken } : {},
+            { withCredentials: true }
           )
 
           const newAccessToken = response.data.access_token
-          localStorage.setItem('accessToken', newAccessToken)
-          localStorage.setItem('refreshToken', response.data.refresh_token)
+          // Store in localStorage for backwards compatibility with header-based auth
+          storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+          if (response.data.refresh_token) {
+            storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.refresh_token)
+          }
+
+          // Clear flag before notifying subscribers to allow new refresh attempts
+          isRefreshing = false
 
           // Notify all queued requests that refresh completed
           onTokenRefreshed(newAccessToken)
@@ -106,15 +145,18 @@ apiClient.interceptors.response.use(
           }
           return apiClient(originalRequest)
         } catch (refreshError) {
-          // Refresh failed, logout user
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-          // Clear any queued requests
-          refreshSubscribers = []
-          window.location.href = '/admin/login'
-          return Promise.reject(refreshError)
-        } finally {
+          // Clear flag before notifying subscribers to allow new refresh attempts
           isRefreshing = false
+
+          // Refresh failed, logout user
+          storage.removeMultiple([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN])
+          // Reject all queued requests with the error
+          onTokenRefreshFailed(
+            refreshError instanceof Error ? refreshError : new Error('Token refresh failed')
+          )
+          // Use Vue Router instead of hard redirect to preserve app state
+          router.push('/admin/login')
+          return Promise.reject(refreshError)
         }
       }
     }

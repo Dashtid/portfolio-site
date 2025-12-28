@@ -150,8 +150,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, watch, onUnmounted } from 'vue'
+import { useRoute, useRouter, isNavigationFailure, NavigationFailureType } from 'vue-router'
 import axios from 'axios'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
@@ -168,6 +168,9 @@ const company = ref<Company | null>(null)
 const allCompanies = ref<Company[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
+
+// AbortController for request cancellation (prevents race conditions)
+let abortController: AbortController | null = null
 
 // Format date helper
 const formatDate = (dateString: string | null | undefined): string => {
@@ -192,11 +195,12 @@ const formattedDescription = computed<string>(() => {
     .join('')
 
   // Sanitize HTML to prevent XSS attacks
-  // Configure DOMPurify to only allow safe URL protocols
+  // Configure DOMPurify to only allow safe URL protocols (explicitly block javascript:, data:, vbscript:)
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'strong', 'em', 'br', 'ul', 'ol', 'li', 'a'],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i
+    // Only allow absolute http/https URLs and mailto: - block protocol-relative URLs (//evil.com)
+    ALLOWED_URI_REGEXP: /^(?:https?:\/\/[^<>"{}|\\^`\s]+|mailto:[^<>"{}|\\^`\s]+)$/i
   })
 })
 
@@ -217,16 +221,27 @@ const nextCompany = computed<Company | null>(() => {
   return allCompanies.value[currentIndex + 1]
 })
 
-// Fetch company details
+// Fetch company details with request cancellation to prevent race conditions
 const fetchCompanyDetails = async (companyId: string): Promise<void> => {
+  // Cancel any pending request before starting a new one
+  if (abortController) {
+    abortController.abort()
+  }
+  abortController = new AbortController()
+
   try {
     loading.value = true
     error.value = null
 
     // Fetch all companies first (for navigation)
-    const companiesResponse = await axios.get<Company[]>(`${config.apiUrl}/api/v1/companies/`)
+    const companiesResponse = await axios.get<Company[]>(`${config.apiUrl}/api/v1/companies`, {
+      signal: abortController.signal
+    })
     allCompanies.value = companiesResponse.data.sort((a, b) => {
-      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+      // Handle null/undefined dates - push items without dates to the end
+      const dateA = a.start_date ? new Date(a.start_date).getTime() : 0
+      const dateB = b.start_date ? new Date(b.start_date).getTime() : 0
+      return dateB - dateA
     })
 
     // Find the specific company
@@ -236,6 +251,10 @@ const fetchCompanyDetails = async (companyId: string): Promise<void> => {
       error.value = 'Company not found'
     }
   } catch (err) {
+    // Ignore abort errors - they're expected when navigating quickly
+    if (axios.isCancel(err)) {
+      return
+    }
     apiLogger.error('Error fetching company details:', err)
     error.value = 'Failed to load company details. Please try again later.'
   } finally {
@@ -245,28 +264,46 @@ const fetchCompanyDetails = async (companyId: string): Promise<void> => {
 
 // Navigate to another company
 const navigateToCompany = (companyId: string): void => {
-  router.push({ name: 'company-detail', params: { id: companyId } })
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  router
+    .push({ name: 'company-detail', params: { id: companyId } })
+    .then(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+    .catch(err => {
+      // Ignore duplicated navigation errors (user clicked same link twice)
+      if (!isNavigationFailure(err, NavigationFailureType.duplicated)) {
+        apiLogger.error('Navigation failed:', err)
+      }
+    })
 }
 
 // Scroll to section on home page
 const scrollToSection = (sectionId: string): void => {
-  router.push({ path: '/', hash: `#${sectionId}` })
+  router.push({ path: '/', hash: `#${sectionId}` }).catch(err => {
+    // Ignore duplicated navigation errors
+    if (!isNavigationFailure(err, NavigationFailureType.duplicated)) {
+      apiLogger.error('Navigation to section failed:', err)
+    }
+  })
 }
 
 // Watch for route param changes to reload data when navigating between companies
+// Using immediate: true to trigger on mount, avoiding duplicate fetch calls
 watch(
   () => route.params.id,
   newId => {
     if (newId) {
       fetchCompanyDetails(newId as string)
     }
-  }
+  },
+  { immediate: true }
 )
 
-// Load company on mount
-onMounted((): void => {
-  fetchCompanyDetails(route.params.id as string)
+// Cleanup: cancel any pending requests when component unmounts
+onUnmounted(() => {
+  if (abortController) {
+    abortController.abort()
+  }
 })
 </script>
 

@@ -40,9 +40,11 @@ function isStorageAvailable(): boolean {
  */
 export const storage = {
   /**
-   * Check if storage is available
+   * Check if storage is available (checked dynamically on each access)
    */
-  isAvailable: isStorageAvailable(),
+  get isAvailable(): boolean {
+    return isStorageAvailable()
+  },
 
   /**
    * Get a string value from storage

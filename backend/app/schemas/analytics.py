@@ -13,6 +13,7 @@ class PageViewCreate(BaseModel):
     page_path: str
     page_title: str | None = None
     referrer: str | None = None
+    visitor_id: str | None = None  # Session ID from frontend
 
 
 class PageViewResponse(BaseModel):

@@ -1,5 +1,6 @@
 import apiClient from './client'
 import { createCrudService, createReadOnlyService } from './createCrudService'
+import { storage, STORAGE_KEYS } from '@/utils/storage'
 import type {
   Company,
   Education,
@@ -91,7 +92,12 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
 }
 
 export const logout = async (): Promise<void> => {
-  // Clear local storage
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
+  // Call API to clear HTTP-only cookies on server
+  try {
+    await apiClient.post('/api/v1/auth/logout')
+  } catch {
+    // Continue with local cleanup even if API call fails
+  }
+  // Clear local storage using storage utility (handles errors gracefully)
+  storage.removeMultiple([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN])
 }

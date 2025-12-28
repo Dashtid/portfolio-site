@@ -36,21 +36,25 @@ const handleScroll = (): void => {
   isVisible.value = window.scrollY > scrollThreshold
 }
 
-// Scroll to top with smooth animation
+// Scroll to top - respect reduced motion preferences
 const scrollToTop = (): void => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   window.scrollTo({
     top: 0,
-    behavior: 'smooth'
+    behavior: prefersReducedMotion ? 'auto' : 'smooth'
   })
 }
 
 // Throttle scroll events for performance
 let ticking = false
+let rafId: number | null = null
+
 const throttledScroll = (): void => {
   if (!ticking) {
-    window.requestAnimationFrame(() => {
+    rafId = window.requestAnimationFrame(() => {
       handleScroll()
       ticking = false
+      rafId = null
     })
     ticking = true
   }
@@ -63,6 +67,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', throttledScroll)
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
 })
 </script>
 

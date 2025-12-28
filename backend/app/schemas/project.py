@@ -2,16 +2,34 @@
 Project Pydantic schemas
 """
 
+import re
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
+
+# Pattern for safe URLs: http(s)://, relative paths, or None
+# Blocks javascript:, data:, vbscript: and other XSS vectors
+SAFE_URL_PATTERN = re.compile(r"^(https?://|/[^/]|$)")
+
+# Maximum items in list fields to prevent DoS
+MAX_TECHNOLOGIES = 50
+MAX_RESPONSIBILITIES = 50
+
+
+def validate_safe_url(v: str | None, field_name: str) -> str | None:
+    """Validate URL is safe (HTTP(S) or relative path, no XSS vectors)."""
+    if v is None or v == "":
+        return v
+    if not SAFE_URL_PATTERN.match(v):
+        raise ValueError(f"{field_name} must be an HTTP(S) URL or relative path starting with /")
+    return v
 
 
 class ProjectBase(BaseModel):
-    name: str
-    description: str | None = None
-    detailed_description: str | None = None
-    technologies: list[str] | None = []
+    name: str = Field(..., min_length=1, max_length=200)
+    description: str | None = Field(None, max_length=1000)
+    detailed_description: str | None = Field(None, max_length=10000)
+    technologies: list[str] | None = Field(default=[], max_length=MAX_TECHNOLOGIES)
     github_url: str | None = None
     live_url: str | None = None
     image_url: str | None = None
@@ -21,10 +39,16 @@ class ProjectBase(BaseModel):
 
     # Additional media fields
     video_url: str | None = None
-    video_title: str | None = None
+    video_title: str | None = Field(None, max_length=200)
     map_url: str | None = None
-    map_title: str | None = None
-    responsibilities: list[str] | None = None
+    map_title: str | None = Field(None, max_length=200)
+    responsibilities: list[str] | None = Field(None, max_length=MAX_RESPONSIBILITIES)
+
+    @field_validator("github_url", "live_url", "image_url", "video_url", "map_url", mode="before")
+    @classmethod
+    def validate_urls(cls, v: str | None) -> str | None:
+        """Validate all URL fields are safe."""
+        return validate_safe_url(v, "URL")
 
 
 class ProjectCreate(ProjectBase):
@@ -32,10 +56,10 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    detailed_description: str | None = None
-    technologies: list[str] | None = None
+    name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = Field(None, max_length=1000)
+    detailed_description: str | None = Field(None, max_length=10000)
+    technologies: list[str] | None = Field(None, max_length=MAX_TECHNOLOGIES)
     github_url: str | None = None
     live_url: str | None = None
     image_url: str | None = None
@@ -45,10 +69,16 @@ class ProjectUpdate(BaseModel):
 
     # Additional media fields
     video_url: str | None = None
-    video_title: str | None = None
+    video_title: str | None = Field(None, max_length=200)
     map_url: str | None = None
-    map_title: str | None = None
-    responsibilities: list[str] | None = None
+    map_title: str | None = Field(None, max_length=200)
+    responsibilities: list[str] | None = Field(None, max_length=MAX_RESPONSIBILITIES)
+
+    @field_validator("github_url", "live_url", "image_url", "video_url", "map_url", mode="before")
+    @classmethod
+    def validate_urls(cls, v: str | None) -> str | None:
+        """Validate all URL fields are safe."""
+        return validate_safe_url(v, "URL")
 
 
 class ProjectResponse(ProjectBase):

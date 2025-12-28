@@ -4,16 +4,20 @@ Project API endpoints
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_current_admin_user
 from app.database import get_db
+from app.middleware.rate_limit import rate_limit_public
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -23,8 +27,10 @@ AdminUser = Annotated[User, Depends(get_current_admin_user)]
 
 
 @router.get("/", response_model=list[ProjectResponse])
-async def get_projects(db: DbSession):
+@rate_limit_public
+async def get_projects(request: Request, db: DbSession):
     """Get all projects"""
+    _ = request  # Required for rate limiting
     result = await db.execute(
         select(Project).options(selectinload(Project.company)).order_by(Project.order_index)
     )
@@ -32,17 +38,17 @@ async def get_projects(db: DbSession):
 
 
 @router.get("/{project_id}", response_model=ProjectResponse)
-async def get_project(project_id: str, db: DbSession):
+@rate_limit_public
+async def get_project(request: Request, project_id: str, db: DbSession):
     """Get a specific project by ID"""
+    _ = request  # Required for rate limiting
     result = await db.execute(
         select(Project).options(selectinload(Project.company)).where(Project.id == project_id)
     )
     project = result.scalar_one_or_none()
 
     if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Project with ID {project_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
     return project
 
@@ -75,12 +81,32 @@ async def update_project(
     project = result.scalar_one_or_none()
 
     if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Project with ID {project_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+    # Whitelist of fields that can be updated (defense-in-depth)
+    allowed_update_fields = frozenset(
+        {
+            "name",
+            "description",
+            "detailed_description",
+            "technologies",
+            "github_url",
+            "live_url",
+            "image_url",
+            "company_id",
+            "featured",
+            "order_index",
+            "video_url",
+            "video_title",
+            "map_url",
+            "map_title",
+            "responsibilities",
+        }
+    )
 
     for field, value in project_update.model_dump(exclude_unset=True).items():
-        setattr(project, field, value)
+        if field in allowed_update_fields:
+            setattr(project, field, value)
 
     await db.commit()
     await db.refresh(project)
@@ -99,9 +125,14 @@ async def delete_project(
     project = result.scalar_one_or_none()
 
     if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Project with ID {project_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
-    await db.delete(project)
-    await db.commit()
+    try:
+        await db.delete(project)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        logger.exception(f"Failed to delete project {project_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete project"
+        ) from e

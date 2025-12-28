@@ -53,7 +53,7 @@ export const EducationSchema = z.object({
   id: z.string(),
   institution: z.string(),
   degree: z.string(),
-  field_of_study: z.string(),
+  field_of_study: z.string().nullable().optional(),
   start_date: z.string(),
   end_date: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -62,7 +62,7 @@ export const EducationSchema = z.object({
   is_certification: z.boolean().optional(),
   certificate_number: z.string().nullable().optional(),
   certificate_url: z.string().nullable().optional(),
-  order: z.number().optional()
+  order_index: z.number().optional()
 })
 
 export const EducationArraySchema = z.array(EducationSchema)
@@ -109,7 +109,8 @@ export const SkillSchema = z.object({
   name: z.string(),
   category: z.string(),
   proficiency_level: z.number().min(0).max(100),
-  years_of_experience: z.number().nullable().optional()
+  years_of_experience: z.number().nullable().optional(),
+  created_at: z.string().optional()
 })
 
 export const SkillArraySchema = z.array(SkillSchema)

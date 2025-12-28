@@ -98,6 +98,7 @@ class Logger {
 
 // Export pre-configured loggers for different modules
 export const logger = new Logger()
+export const adminLogger = new Logger({ prefix: 'Admin' })
 export const analyticsLogger = new Logger({ prefix: 'Analytics' })
 export const authLogger = new Logger({ prefix: 'Auth' })
 export const apiLogger = new Logger({ prefix: 'API' })

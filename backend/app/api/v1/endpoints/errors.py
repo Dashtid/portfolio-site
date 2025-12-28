@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Request
 
+from app.middleware.rate_limit import get_client_ip, limiter
 from app.schemas.errors import FrontendErrorCreate, FrontendErrorResponse
 from app.utils.logger import get_logger
 
@@ -18,6 +19,7 @@ router = APIRouter(tags=["errors"])
 
 
 @router.post("/errors", response_model=FrontendErrorResponse)
+@limiter.limit("30/minute")  # Rate limit to prevent log flooding
 async def log_frontend_error(
     error: FrontendErrorCreate,
     request: Request,
@@ -28,13 +30,8 @@ async def log_frontend_error(
     This endpoint receives errors from the frontend error tracker
     and logs them with structured data for debugging and alerting.
     """
-    # Get client info
-    forwarded = request.headers.get("X-Forwarded-For")
-    client_ip = (
-        forwarded.split(",")[0].strip()
-        if forwarded
-        else (request.client.host if request.client else "unknown")
-    )
+    # Get client info (uses trusted proxy validation from rate_limit module)
+    client_ip = get_client_ip(request)
 
     error_id = str(uuid.uuid4())
 

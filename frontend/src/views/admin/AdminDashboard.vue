@@ -59,6 +59,23 @@
       <div v-else class="dashboard-overview">
         <h2 class="section-title">Dashboard Overview</h2>
 
+        <!-- Error State -->
+        <div v-if="loadError" class="error-alert" role="alert">
+          <svg
+            class="error-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>{{ loadError }}</span>
+          <button class="retry-button" @click="retryLoad">Retry</button>
+        </div>
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-value">{{ portfolioStore.companies.length }}</div>
@@ -142,14 +159,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { usePortfolioStore } from '../../stores/portfolio'
+import { adminLogger } from '../../utils/logger'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const portfolioStore = usePortfolioStore()
+
+// State
+const loadError = ref<string | null>(null)
 
 // Computed
 const featuredProjects = computed<number>(() => {
@@ -158,13 +179,30 @@ const featuredProjects = computed<number>(() => {
 
 // Methods
 const logout = async (): Promise<void> => {
-  await authStore.logout()
-  router.push('/admin/login')
+  try {
+    await authStore.logout()
+  } catch (error) {
+    adminLogger.error('Logout failed:', error)
+  } finally {
+    // Always redirect to login, even if logout API call fails
+    router.push('/admin/login')
+  }
 }
 
-// Load data on mount
-onMounted((): void => {
-  portfolioStore.fetchAllData()
+// Retry loading data after error
+const retryLoad = async (): Promise<void> => {
+  try {
+    loadError.value = null
+    await portfolioStore.fetchAllData()
+  } catch (error) {
+    adminLogger.error('Failed to load portfolio data:', error)
+    loadError.value = 'Failed to load dashboard data. Please try again.'
+  }
+}
+
+// Load data on mount with proper error handling
+onMounted(async (): Promise<void> => {
+  await retryLoad()
 })
 </script>
 
@@ -370,6 +408,43 @@ onMounted((): void => {
   flex-shrink: 0;
 }
 
+/* Error Alert */
+.error-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-lg);
+  color: #991b1b;
+  margin-bottom: var(--spacing-6);
+}
+
+.error-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #dc2626;
+}
+
+.retry-button {
+  margin-left: auto;
+  padding: var(--spacing-2) var(--spacing-4);
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background var(--transition-base) ease;
+}
+
+.retry-button:hover {
+  background: #b91c1c;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .header-content {
@@ -474,5 +549,23 @@ onMounted((): void => {
   background: var(--primary-600, #2563eb);
   color: white;
   border-color: var(--primary-600, #2563eb);
+}
+
+[data-theme='dark'] .error-alert {
+  background: #450a0a;
+  border-color: #7f1d1d;
+  color: #fecaca;
+}
+
+[data-theme='dark'] .error-icon {
+  color: #f87171;
+}
+
+[data-theme='dark'] .retry-button {
+  background: #dc2626;
+}
+
+[data-theme='dark'] .retry-button:hover {
+  background: #ef4444;
 }
 </style>

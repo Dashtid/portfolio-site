@@ -11,15 +11,21 @@
     </div>
 
     <div v-else-if="stats" class="stats-container">
-      <div v-if="stats.featured_repos && stats.featured_repos.length" class="featured-repos">
+      <!-- Empty state when no repos found -->
+      <div v-if="!hasContent" class="empty-state">
+        <p>No GitHub repositories found.</p>
+      </div>
+
+      <div v-if="featuredRepos.length" class="featured-repos">
         <div class="repos-grid">
           <a
-            v-for="repo in stats.featured_repos"
+            v-for="repo in featuredRepos"
             :key="repo.name"
             :href="repo.html_url"
             target="_blank"
             rel="noopener noreferrer"
             class="project-card repo-card-enhanced"
+            :aria-label="`${repo.name} repository on GitHub (opens in new tab)`"
           >
             <div class="project-content">
               <h3 class="project-title">{{ repo.name }}</h3>
@@ -37,7 +43,12 @@
                 </span>
                 <span class="repo-stats">
                   <span class="repo-stat">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
                       <polygon
                         points="8 1 10.5 6 16 6.5 12 10.5 13 16 8 13 3 16 4 10.5 0 6.5 5.5 6 8 1"
                       ></polygon>
@@ -45,7 +56,12 @@
                     {{ repo.stars }}
                   </span>
                   <span class="repo-stat">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
                       ></path>
@@ -63,10 +79,10 @@
         </div>
       </div>
 
-      <div v-if="stats.top_languages && stats.top_languages.length" class="languages-section">
+      <div v-if="topLanguages.length" class="languages-section">
         <h3>Top Languages</h3>
         <div class="language-bars">
-          <div v-for="lang in stats.top_languages" :key="lang.name" class="language-bar">
+          <div v-for="lang in topLanguages" :key="lang.name" class="language-bar">
             <div class="language-info">
               <span class="language-name">{{ lang.name }}</span>
               <span class="language-percentage">{{ lang.percentage }}%</span>
@@ -82,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { apiLogger } from '../utils/logger'
 
@@ -124,6 +140,25 @@ const stats = ref<GitHubStatsData | null>(null)
 const loading = ref<boolean>(true)
 const error = ref<boolean>(false)
 
+// Track mounted state to prevent updates after unmount
+let isMounted = false
+
+// AbortController for request cancellation on unmount
+let abortController: AbortController | null = null
+
+// Computed properties with null safety for API data
+const featuredRepos = computed<Repository[]>(() => {
+  return stats.value?.featured_repos ?? []
+})
+
+const topLanguages = computed<Language[]>(() => {
+  return stats.value?.top_languages ?? []
+})
+
+const hasContent = computed<boolean>(() => {
+  return featuredRepos.value.length > 0 || topLanguages.value.length > 0
+})
+
 // GitHub language colors (from linguist)
 const languageColors: Record<string, string> = {
   TypeScript: '#3178c6',
@@ -152,24 +187,51 @@ const getLanguageColor = (lang: string): string => {
 }
 
 const fetchGitHubStats = async (): Promise<void> => {
+  // Cancel any pending request
+  if (abortController) {
+    abortController.abort()
+  }
+  abortController = new AbortController()
+
   try {
     loading.value = true
     error.value = false
 
     const response = await axios.get<GitHubStatsData>(
-      `${API_URL}/api/v1/github/stats/${props.username}`
+      `${API_URL}/api/v1/github/stats/${props.username}`,
+      { signal: abortController.signal }
     )
     stats.value = response.data
   } catch (err) {
+    // Don't set error state if request was intentionally aborted (on unmount)
+    if (axios.isCancel(err)) {
+      return
+    }
     apiLogger.error('Error fetching GitHub stats:', err)
-    error.value = true
+    // Only update error state if component is still mounted
+    if (isMounted) {
+      error.value = true
+    }
   } finally {
-    loading.value = false
+    // Only update loading state if component is still mounted
+    if (isMounted) {
+      loading.value = false
+    }
   }
 }
 
 onMounted(() => {
+  isMounted = true
   fetchGitHubStats()
+})
+
+onUnmounted(() => {
+  isMounted = false
+  // Cancel any pending request on unmount
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
 })
 </script>
 
@@ -210,6 +272,15 @@ onMounted(() => {
   background: rgba(239, 68, 68, 0.1);
   border-radius: 12px;
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--slate-500, #64748b);
+  background: rgba(100, 116, 139, 0.05);
+  border-radius: 12px;
+  border: 1px dashed var(--slate-300, #cbd5e1);
 }
 
 .retry-button {
@@ -588,6 +659,12 @@ onMounted(() => {
   color: var(--color-error, #f87171);
   background: rgba(248, 113, 113, 0.15);
   border-color: rgba(248, 113, 113, 0.25);
+}
+
+[data-theme='dark'] .empty-state {
+  color: var(--text-tertiary);
+  background: rgba(100, 116, 139, 0.1);
+  border-color: var(--border-primary);
 }
 
 /* Responsive improvements */

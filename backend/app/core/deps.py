@@ -2,7 +2,7 @@
 Dependency injection utilities
 """
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,16 +11,44 @@ from app.core.security import decode_token
 from app.database import get_db
 from app.models.user import User
 
-# Bearer token security scheme
-security = HTTPBearer()
+# Bearer token security scheme (optional - can also use cookies)
+security = HTTPBearer(auto_error=False)
+
+
+def get_token_from_request(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = None,
+) -> str | None:
+    """Extract token from cookie or Authorization header.
+
+    Priority: Cookie > Authorization header (for seamless OAuth flow)
+    """
+    # Try cookie first (set by OAuth callback)
+    token = request.cookies.get("access_token")
+    if token:
+        return token
+
+    # Fall back to Authorization header
+    if credentials:
+        return credentials.credentials
+
+    return None
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),  # noqa: B008
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> User:
-    """Get the current authenticated user from JWT token"""
-    token = credentials.credentials
+    """Get the current authenticated user from JWT token (cookie or header)"""
+    token = get_token_from_request(request, credentials)
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # Decode token
     payload = decode_token(token)

@@ -85,9 +85,47 @@ const navItems: NavItem[] = [
   { name: 'About', href: 'about' }
 ]
 
+// Cache for section elements (avoids repeated DOM queries)
+const sectionElementsCache = ref<Map<string, HTMLElement>>(new Map())
+
+// Initialize section element cache
+const initSectionCache = (): void => {
+  const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
+  sectionIds.forEach(id => {
+    const element = document.getElementById(id)
+    if (element) {
+      sectionElementsCache.value.set(id, element)
+    } else if (import.meta.env.DEV) {
+      // Warn in development if expected sections are missing
+      console.warn(`[NavBar] Navigation section "${id}" not found in DOM`)
+    }
+  })
+}
+
+// Simple throttle function (avoids adding lodash dependency)
+const throttle = (func: () => void, limit: number): (() => void) => {
+  let inThrottle = false
+  return () => {
+    if (!inThrottle) {
+      func()
+      inThrottle = true
+      setTimeout(() => {
+        inThrottle = false
+      }, limit)
+    }
+  }
+}
+
 // Smooth scroll to section
 const scrollToSection = (sectionId: string): void => {
-  const element = document.getElementById(sectionId)
+  let element = sectionElementsCache.value.get(sectionId)
+  if (!element) {
+    // Cache miss - query DOM and store result for future use
+    element = document.getElementById(sectionId) ?? undefined
+    if (element) {
+      sectionElementsCache.value.set(sectionId, element)
+    }
+  }
   if (element) {
     const navHeight = 70 // Account for fixed navbar
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
@@ -106,23 +144,41 @@ const scrollToSection = (sectionId: string): void => {
     if (navbarCollapse && navbarCollapse.classList.contains('show')) {
       navbarCollapse.classList.remove('show')
     }
+
+    // Set focus to target section for accessibility (screen readers)
+    // Temporarily set tabindex="-1" to make non-interactive elements focusable
+    const hadTabindex = element.hasAttribute('tabindex')
+    if (!hadTabindex) {
+      element.setAttribute('tabindex', '-1')
+    }
+    element.focus({ preventScroll: true })
+    // Remove the temporary tabindex to avoid polluting the DOM
+    if (!hadTabindex) {
+      element.removeAttribute('tabindex')
+    }
   }
 }
 
-// Handle scroll events
+// Handle scroll events (uses cached elements for performance)
 const handleScroll = (): void => {
   // Update navbar background on scroll
   scrolled.value = window.scrollY > 50
 
   // Update active section based on scroll position
-  const sections: string[] = ['hero', 'experience', 'education', 'projects', 'about']
   const scrollPosition = window.scrollY + 100
+  const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
 
-  for (const sectionId of sections) {
-    const element = document.getElementById(sectionId)
+  for (const sectionId of sectionIds) {
+    const element = sectionElementsCache.value.get(sectionId)
     if (element) {
       const { offsetTop, offsetHeight } = element
-      if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+      // Validate values are finite numbers to prevent comparison issues
+      if (
+        Number.isFinite(offsetTop) &&
+        Number.isFinite(offsetHeight) &&
+        scrollPosition >= offsetTop &&
+        scrollPosition < offsetTop + offsetHeight
+      ) {
         activeSection.value = sectionId
         break
       }
@@ -130,13 +186,20 @@ const handleScroll = (): void => {
   }
 }
 
+// Throttled scroll handler (100ms delay reduces CPU usage significantly)
+const throttledHandleScroll = throttle(handleScroll, 100)
+
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
+  // Initialize element cache after DOM is ready
+  initSectionCache()
+  // Use throttled handler for scroll events
+  window.addEventListener('scroll', throttledHandleScroll, { passive: true })
   handleScroll() // Initial check
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('scroll', throttledHandleScroll)
+  sectionElementsCache.value.clear()
 })
 </script>
 

@@ -6,16 +6,6 @@ import { authLogger } from '@/utils/logger'
 import { isUnauthorizedError } from '@/utils/typeGuards'
 import { config } from '@/config'
 
-// JWT format validation regex (header.payload.signature)
-const JWT_REGEX = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
-
-/**
- * Validate JWT format to prevent XSS via URL parameters
- */
-function isValidJWT(token: string): boolean {
-  return JWT_REGEX.test(token)
-}
-
 interface User {
   id: string
   username: string
@@ -31,6 +21,7 @@ interface AuthState {
   isLoading: boolean
   error: string | null
   isInitialized: boolean
+  initializingPromise: Promise<void> | null
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -40,39 +31,34 @@ export const useAuthStore = defineStore('auth', {
     refreshToken: null,
     isLoading: false,
     error: null,
-    isInitialized: false
+    isInitialized: false,
+    initializingPromise: null
   }),
 
   getters: {
-    isAuthenticated: (state): boolean => !!state.accessToken,
+    // Auth is based on user presence (tokens are in HTTP-only cookies)
+    isAuthenticated: (state): boolean => !!state.user || !!state.accessToken,
     currentUser: (state): User | null => state.user
   },
 
   actions: {
-    // Initialize auth from URL params (after GitHub OAuth callback)
-    initializeFromCallback(): boolean {
-      const params = new URLSearchParams(window.location.search)
-      const token = params.get('token')
-      const refresh = params.get('refresh')
-
-      // Validate JWT format to prevent XSS attacks
-      if (token && refresh && isValidJWT(token) && isValidJWT(refresh)) {
-        this.setTokens(token, refresh)
-        // Clean URL
-        window.history.replaceState({}, '', window.location.pathname)
-        return true
-      }
-
-      // Clean URL even if tokens are invalid
-      if (token || refresh) {
-        authLogger.error('Invalid token format received from OAuth callback')
-        window.history.replaceState({}, '', window.location.pathname)
+    // Check if we're returning from OAuth callback and fetch user
+    // Tokens are now in HTTP-only cookies, not URL params
+    async initializeFromCallback(): Promise<boolean> {
+      // If we're on /admin and just redirected from OAuth, fetch user
+      if (window.location.pathname === '/admin') {
+        try {
+          await this.fetchUser()
+          return !!this.user
+        } catch {
+          return false
+        }
       }
       return false
     },
 
-    // Set tokens and configure axios
-    setTokens(accessToken: string, refreshToken: string): void {
+    // Set tokens for backwards compatibility (localStorage-based auth)
+    async setTokens(accessToken: string, refreshToken: string): Promise<void> {
       this.accessToken = accessToken
       this.refreshToken = refreshToken
 
@@ -80,50 +66,61 @@ export const useAuthStore = defineStore('auth', {
       storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
       storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
 
-      // Configure axios default header
+      // Configure axios default header for backwards compatibility
       if (apiClient.defaults.headers.common) {
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
       }
 
-      // Fetch user info
-      this.fetchUser()
+      // Fetch user info - await to prevent race condition
+      await this.fetchUser()
     },
 
-    // Fetch current user info
+    // Fetch current user info (uses HTTP-only cookies automatically)
     async fetchUser(): Promise<void> {
-      if (!this.accessToken) return
-
       try {
         const response = await apiClient.get<User>('/api/v1/auth/me')
         this.user = response.data
       } catch (error: unknown) {
-        authLogger.error('Failed to fetch user:', error)
+        // Only clear user on auth errors (401/403), not on network issues
         if (isUnauthorizedError(error)) {
-          await this.refreshAccessToken()
+          this.user = null
+        } else {
+          // Log other errors but don't clear user (could be temporary network issue)
+          authLogger.error('Failed to fetch user:', error)
         }
       }
     },
 
     // Refresh access token
     async refreshAccessToken(): Promise<void> {
-      if (!this.refreshToken) {
-        this.logout()
-        return
-      }
-
       try {
-        const response = await apiClient.post<LoginResponse>('/api/v1/auth/refresh', {
-          refresh_token: this.refreshToken
-        })
+        // Cookies are sent automatically; body is for backwards compatibility
+        const response = await apiClient.post<LoginResponse>(
+          '/api/v1/auth/refresh',
+          this.refreshToken ? { refresh_token: this.refreshToken } : {}
+        )
 
-        const newRefreshToken = response.data.refresh_token ?? this.refreshToken
-        if (!newRefreshToken) {
-          throw new Error('No refresh token available')
+        // Update local state if tokens returned in response
+        const newAccessToken = response.data.access_token
+        const newRefreshToken = response.data.refresh_token
+
+        if (newAccessToken) {
+          this.accessToken = newAccessToken
+          storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+          if (apiClient.defaults.headers.common) {
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`
+          }
         }
-        this.setTokens(response.data.access_token, newRefreshToken)
+        if (newRefreshToken) {
+          this.refreshToken = newRefreshToken
+          storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
+        }
+
+        // Fetch updated user info
+        await this.fetchUser()
       } catch (error) {
         authLogger.error('Failed to refresh token:', error)
-        this.logout()
+        await this.logout()
       }
     },
 
@@ -156,44 +153,57 @@ export const useAuthStore = defineStore('auth', {
 
     // Check auth status on app start
     async checkAuth(): Promise<void> {
-      if (this.accessToken) {
-        // Set axios header
+      // With HTTP-only cookies, just try to fetch user
+      // Cookies are sent automatically with requests
+      await this.fetchUser()
+
+      // Also check localStorage for backwards compatibility
+      if (!this.user && this.accessToken) {
         if (apiClient.defaults.headers.common) {
           apiClient.defaults.headers.common['Authorization'] = `Bearer ${this.accessToken}`
         }
-
-        // Fetch user info
         await this.fetchUser()
       }
     },
 
-    // Initialize auth state from localStorage (called by route guard)
+    // Initialize auth state (called by route guard)
+    // Uses Promise-based lock to prevent concurrent initializations
     async initializeAuth(): Promise<void> {
+      // Already initialized - return immediately
       if (this.isInitialized) return
 
-      // Load tokens from localStorage
-      const storedAccessToken = storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-      const storedRefreshToken = storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
-
-      if (storedAccessToken && storedRefreshToken) {
-        this.accessToken = storedAccessToken
-        this.refreshToken = storedRefreshToken
-
-        // Set axios header
-        if (apiClient.defaults.headers.common) {
-          apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedAccessToken}`
-        }
-
-        // Try to fetch user info to validate token
-        try {
-          await this.fetchUser()
-        } catch (error) {
-          authLogger.error('Token validation failed during initialization:', error)
-          // Token might be expired, let the interceptor handle refresh
-        }
+      // Another initialization in progress - wait for it
+      if (this.initializingPromise) {
+        return this.initializingPromise
       }
 
-      this.isInitialized = true
+      // Start initialization with Promise lock
+      this.initializingPromise = (async () => {
+        // Load tokens from localStorage for backwards compatibility
+        const storedAccessToken = storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+        const storedRefreshToken = storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+
+        if (storedAccessToken && storedRefreshToken) {
+          this.accessToken = storedAccessToken
+          this.refreshToken = storedRefreshToken
+
+          // Set axios header for localStorage-based auth
+          if (apiClient.defaults.headers.common) {
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedAccessToken}`
+          }
+        }
+
+        // Try to fetch user (will use cookies or header)
+        await this.fetchUser()
+
+        this.isInitialized = true
+      })()
+
+      try {
+        await this.initializingPromise
+      } finally {
+        this.initializingPromise = null
+      }
     }
   }
 })

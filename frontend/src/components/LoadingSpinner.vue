@@ -1,12 +1,19 @@
 <template>
-  <div class="loading-container" :class="{ 'full-screen': fullScreen }">
-    <div class="loading-spinner" :class="sizeClass">
+  <div
+    class="loading-container"
+    :class="{ 'full-screen': fullScreen }"
+    role="status"
+    aria-live="polite"
+    :aria-label="message || 'Loading'"
+  >
+    <div class="loading-spinner" :class="sizeClass" aria-hidden="true">
       <div class="spinner-ring"></div>
       <div class="spinner-ring"></div>
       <div class="spinner-ring"></div>
       <div class="spinner-ring"></div>
     </div>
     <p v-if="message" class="loading-message">{{ message }}</p>
+    <span v-else class="sr-only">Loading</span>
   </div>
 </template>
 
@@ -161,5 +168,31 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
     var(--bg-tertiary) 75%
   );
   background-size: 200% 100%;
+}
+
+/* Screen reader only - visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-ring,
+  .loading-message,
+  .skeleton-loader {
+    animation: none;
+  }
+
+  .spinner-ring {
+    border-color: var(--primary-500, #3b82f6);
+  }
 }
 </style>

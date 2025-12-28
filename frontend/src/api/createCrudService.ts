@@ -31,8 +31,8 @@ export interface CrudService<T extends { id: string }> {
  * ```
  */
 export function createCrudService<T extends { id: string }>(endpoint: string): CrudService<T> {
-  // Ensure endpoint ends with slash for consistency
-  const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`
+  // Normalize endpoint to not have trailing slash for consistent URL construction
+  const baseUrl = endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint
 
   return {
     getAll: async (): Promise<T[]> => {
@@ -41,7 +41,7 @@ export function createCrudService<T extends { id: string }>(endpoint: string): C
     },
 
     getById: async (id: string): Promise<T> => {
-      const response = await apiClient.get<T>(`${endpoint}/${id}`)
+      const response = await apiClient.get<T>(`${baseUrl}/${id}`)
       return response.data
     },
 
@@ -51,12 +51,12 @@ export function createCrudService<T extends { id: string }>(endpoint: string): C
     },
 
     update: async (id: string, data: Partial<T>): Promise<T> => {
-      const response = await apiClient.patch<T>(`${endpoint}/${id}`, data)
+      const response = await apiClient.put<T>(`${baseUrl}/${id}`, data)
       return response.data
     },
 
     delete: async (id: string): Promise<void> => {
-      await apiClient.delete(`${endpoint}/${id}`)
+      await apiClient.delete(`${baseUrl}/${id}`)
     }
   }
 }
@@ -70,8 +70,8 @@ export function createCrudService<T extends { id: string }>(endpoint: string): C
 export function createReadOnlyService<T extends { id: string }>(
   endpoint: string
 ): Pick<CrudService<T>, 'getAll' | 'getById'> {
-  // Ensure endpoint ends with slash for consistency
-  const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`
+  // Normalize endpoint to not have trailing slash for consistent URL construction
+  const baseUrl = endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint
 
   return {
     getAll: async (): Promise<T[]> => {
@@ -80,7 +80,7 @@ export function createReadOnlyService<T extends { id: string }>(
     },
 
     getById: async (id: string): Promise<T> => {
-      const response = await apiClient.get<T>(`${endpoint}/${id}`)
+      const response = await apiClient.get<T>(`${baseUrl}/${id}`)
       return response.data
     }
   }

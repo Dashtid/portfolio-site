@@ -49,19 +49,22 @@ test.describe('Home Page', () => {
         return
       }
 
-      let linksWithProperRel = 0
+      const linksWithoutProperRel: string[] = []
       for (let i = 0; i < count; i++) {
         const link = externalLinks.nth(i)
         // External links should have rel="noopener noreferrer" for security
         const rel = await link.getAttribute('rel')
-        if (rel && rel.includes('noopener')) {
-          linksWithProperRel++
+        const href = await link.getAttribute('href')
+        if (!rel || !rel.includes('noopener')) {
+          linksWithoutProperRel.push(href || `link-${i}`)
         }
       }
 
-      // At least some external links should have proper rel attribute
-      // This is a best practice check, not a strict requirement
-      expect(linksWithProperRel).toBeGreaterThanOrEqual(0)
+      // ALL external links must have proper rel attribute for security
+      expect(
+        linksWithoutProperRel,
+        `External links missing rel="noopener": ${linksWithoutProperRel.join(', ')}`
+      ).toHaveLength(0)
     })
   })
 

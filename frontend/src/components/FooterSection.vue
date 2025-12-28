@@ -21,7 +21,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="social-link"
-            aria-label="LinkedIn Profile"
+            aria-label="LinkedIn Profile (opens in new tab)"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -40,7 +40,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="social-link"
-            aria-label="GitHub Profile"
+            aria-label="GitHub Profile (opens in new tab)"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -213,6 +213,17 @@ const currentYear = computed<number>(() => new Date().getFullYear())
 
   .footer-tagline {
     font-size: 0.85rem;
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .social-link {
+    transition: none;
+  }
+
+  .social-link:hover {
+    transform: none;
   }
 }
 </style>

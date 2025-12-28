@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,20 +39,29 @@ async def cleanup_expired_states(db: AsyncSession) -> None:
     await db.commit()
 
 
-async def create_oauth_state(db: AsyncSession) -> str:
-    """Create and store a new OAuth state"""
+def get_client_ip(request: Request) -> str | None:
+    """Extract client IP from request, handling proxies"""
+    if request.client:
+        return request.client.host
+    return None
+
+
+async def create_oauth_state(db: AsyncSession, client_ip: str | None = None) -> str:
+    """Create and store a new OAuth state bound to client IP for CSRF protection"""
     state = secrets.token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TTL_SECONDS)
 
-    oauth_state = OAuthState(state=state, expires_at=expires_at)
+    oauth_state = OAuthState(state=state, expires_at=expires_at, client_ip=client_ip)
     db.add(oauth_state)
     await db.commit()
 
     return state
 
 
-async def validate_and_consume_state(db: AsyncSession, state: str) -> bool:
-    """Validate OAuth state and remove it (single-use)"""
+async def validate_and_consume_state(
+    db: AsyncSession, state: str, client_ip: str | None = None
+) -> bool:
+    """Validate OAuth state, verify IP binding, and remove it (single-use)"""
     result = await db.execute(select(OAuthState).where(OAuthState.state == state))
     oauth_state = result.scalar_one_or_none()
 
@@ -60,6 +69,14 @@ async def validate_and_consume_state(db: AsyncSession, state: str) -> bool:
         return False
 
     if oauth_state.is_expired():
+        await db.delete(oauth_state)
+        await db.commit()
+        return False
+
+    # Verify client IP matches (if IP binding was used)
+    # Security: If we stored an IP, require it to match (don't allow None bypass)
+    if oauth_state.client_ip and (not client_ip or oauth_state.client_ip != client_ip):
+        # IP mismatch or missing - possible CSRF attack
         await db.delete(oauth_state)
         await db.commit()
         return False
@@ -79,11 +96,14 @@ async def github_login(request: Request, db: DbSession):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="GitHub OAuth not configured"
         )
 
-    # Cleanup expired states periodically
-    await cleanup_expired_states(db)
+    # Note: Expired states are cleaned up by background task in main.py (every 5 minutes)
+    # Removing duplicate cleanup here to prevent race conditions
 
-    # Generate state for CSRF protection with TTL (database-backed)
-    state = await create_oauth_state(db)
+    # Get client IP for state binding (CSRF protection)
+    client_ip = get_client_ip(request)
+
+    # Generate state for CSRF protection with TTL and IP binding (database-backed)
+    state = await create_oauth_state(db, client_ip=client_ip)
 
     # Build GitHub authorization URL
     github_auth_url = (
@@ -101,8 +121,11 @@ async def github_login(request: Request, db: DbSession):
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def github_callback(request: Request, code: str, state: str, db: DbSession):
     """Handle GitHub OAuth callback"""
-    # Verify and consume state (single-use, database-backed)
-    if not await validate_and_consume_state(db, state):
+    # Get client IP for state verification
+    client_ip = get_client_ip(request)
+
+    # Verify and consume state (single-use, database-backed, IP-bound)
+    if not await validate_and_consume_state(db, state, client_ip=client_ip):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state parameter"
         )
@@ -202,19 +225,64 @@ async def github_callback(request: Request, code: str, state: str, db: DbSession
     access_token = create_access_token(subject=user.id)
     refresh_token = create_refresh_token(subject=user.id)
 
-    # Redirect to frontend with tokens
-    redirect_url = f"{settings.FRONTEND_URL}/admin?token={access_token}&refresh={refresh_token}"
-    return RedirectResponse(url=redirect_url)
+    # Create redirect response with HTTP-only cookies (secure token storage)
+    redirect_url = f"{settings.FRONTEND_URL}/admin"
+    response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+
+    # Set secure cookie options based on environment
+    is_production = settings.ENVIRONMENT == "production"
+
+    # Set access token cookie (shorter expiry)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        path="/",
+    )
+
+    # Set refresh token cookie (longer expiry, restricted path)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/api/v1/auth",  # Only sent to auth endpoints
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+    )
+
+    return response
 
 
 @router.post("/refresh", response_model=Token)
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def refresh_token_endpoint(
-    request: Request, token_request: RefreshTokenRequest, db: DbSession
+    request: Request,
+    response: Response,
+    db: DbSession,
+    token_request: RefreshTokenRequest | None = None,
 ):
-    """Refresh access token using refresh token with token rotation"""
-    # Decode refresh token (validated by Pydantic schema)
-    payload = decode_token(token_request.refresh_token)
+    """Refresh access token using refresh token with token rotation.
+
+    Accepts refresh token from either:
+    - HTTP-only cookie (preferred, set by OAuth callback)
+    - Request body (for backwards compatibility)
+    """
+    # Try cookie first, then request body
+    refresh_token_value = request.cookies.get("refresh_token")
+    if not refresh_token_value and token_request:
+        refresh_token_value = token_request.refresh_token
+
+    if not refresh_token_value:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token required"
+        )
+
+    # Decode refresh token
+    payload = decode_token(refresh_token_value)
 
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(
@@ -235,6 +303,29 @@ async def refresh_token_endpoint(
     access_token = create_access_token(subject=user.id)
     new_refresh_token = create_refresh_token(subject=user.id)
 
+    # Update cookies if request came from cookies
+    if request.cookies.get("refresh_token"):
+        is_production = settings.ENVIRONMENT == "production"
+
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            httponly=True,
+            secure=is_production,
+            samesite="lax",
+            path="/",
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=new_refresh_token,
+            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+            path="/api/v1/auth",
+            httponly=True,
+            secure=is_production,
+            samesite="lax",
+        )
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -251,8 +342,18 @@ async def get_current_user_info(request: Request, current_user: CurrentUser):
 
 @router.post("/logout")
 @limiter.limit(settings.RATE_LIMIT_API)
-async def logout(request: Request):
-    """Logout user (client-side token removal)"""
-    # In a production app, you might want to blacklist the token
-    # For now, we just return a success message
+async def logout(request: Request, response: Response):
+    """Logout user by clearing authentication cookies"""
+    # Clear access token cookie
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+    )
+
+    # Clear refresh token cookie
+    response.delete_cookie(
+        key="refresh_token",
+        path="/api/v1/auth",
+    )
+
     return {"message": "Successfully logged out"}

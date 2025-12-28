@@ -63,21 +63,46 @@
     </div>
 
     <!-- Add/Edit Form Modal -->
-    <div v-if="showAddForm || editingCompany" class="modal-overlay" @click.self="closeForm">
+    <div
+      v-if="showAddForm || editingCompany"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="company-modal-title"
+      tabindex="0"
+      @click.self="closeForm"
+      @keydown.escape="closeForm"
+    >
       <div class="modal-content">
-        <h3 class="modal-title">
+        <h3 id="company-modal-title" class="modal-title">
           {{ editingCompany ? 'Edit Company' : 'Add New Company' }}
         </h3>
 
         <form class="company-form" @submit.prevent="saveCompany">
           <div class="form-group">
             <label for="name">Company Name *</label>
-            <input id="name" v-model="form.name" type="text" required class="form-input" />
+            <input
+              id="name"
+              v-model="form.name"
+              type="text"
+              required
+              class="form-input"
+              :class="{ 'input-error': formErrors.name }"
+            />
+            <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
           </div>
 
           <div class="form-group">
             <label for="title">Job Title *</label>
-            <input id="title" v-model="form.title" type="text" required class="form-input" />
+            <input
+              id="title"
+              v-model="form.title"
+              type="text"
+              required
+              class="form-input"
+              :class="{ 'input-error': formErrors.title }"
+            />
+            <span v-if="formErrors.title" class="error-message">{{ formErrors.title }}</span>
           </div>
 
           <div class="form-row">
@@ -89,18 +114,38 @@
                 type="date"
                 required
                 class="form-input"
+                :class="{ 'input-error': formErrors.start_date }"
               />
+              <span v-if="formErrors.start_date" class="error-message">{{
+                formErrors.start_date
+              }}</span>
             </div>
 
             <div class="form-group">
               <label for="end_date">End Date</label>
-              <input id="end_date" v-model="form.end_date" type="date" class="form-input" />
+              <input
+                id="end_date"
+                v-model="form.end_date"
+                type="date"
+                class="form-input"
+                :class="{ 'input-error': formErrors.end_date }"
+              />
+              <span v-if="formErrors.end_date" class="error-message">{{
+                formErrors.end_date
+              }}</span>
             </div>
           </div>
 
           <div class="form-group">
             <label for="location">Location</label>
-            <input id="location" v-model="form.location" type="text" class="form-input" />
+            <input
+              id="location"
+              v-model="form.location"
+              type="text"
+              class="form-input"
+              :class="{ 'input-error': formErrors.location }"
+            />
+            <span v-if="formErrors.location" class="error-message">{{ formErrors.location }}</span>
           </div>
 
           <div class="form-group">
@@ -110,7 +155,11 @@
               v-model="form.description"
               rows="4"
               class="form-textarea"
+              :class="{ 'input-error': formErrors.description }"
             ></textarea>
+            <span v-if="formErrors.description" class="error-message">{{
+              formErrors.description
+            }}</span>
           </div>
 
           <div class="form-group">
@@ -152,6 +201,10 @@ import { ref, onMounted, computed, type WritableComputedRef } from 'vue'
 import apiClient from '../../api/client'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
+import { useToast } from '@/composables/useToast'
+
+// Toast notifications
+const toast = useToast()
 
 // Form data interface (extends Company with order_index)
 interface CompanyFormData {
@@ -183,6 +236,52 @@ const form = ref<CompanyFormData>({
   order_index: 0
 })
 
+// Form validation errors
+const formErrors = ref<Record<string, string>>({})
+
+// Validation function
+const validateForm = (): boolean => {
+  formErrors.value = {}
+
+  // Required fields
+  if (!form.value.name.trim()) {
+    formErrors.value.name = 'Company name is required'
+  } else if (form.value.name.length > 200) {
+    formErrors.value.name = 'Company name must be 200 characters or less'
+  }
+
+  if (!form.value.title.trim()) {
+    formErrors.value.title = 'Job title is required'
+  } else if (form.value.title.length > 200) {
+    formErrors.value.title = 'Job title must be 200 characters or less'
+  }
+
+  if (!form.value.start_date) {
+    formErrors.value.start_date = 'Start date is required'
+  }
+
+  // Date validation: end_date must be after start_date
+  if (form.value.end_date && form.value.start_date) {
+    const startDate = new Date(form.value.start_date)
+    const endDate = new Date(form.value.end_date)
+    if (endDate < startDate) {
+      formErrors.value.end_date = 'End date must be after start date'
+    }
+  }
+
+  // Description length limit
+  if (form.value.description && form.value.description.length > 5000) {
+    formErrors.value.description = 'Description must be 5000 characters or less'
+  }
+
+  // Location length limit
+  if (form.value.location && form.value.location.length > 200) {
+    formErrors.value.location = 'Location must be 200 characters or less'
+  }
+
+  return Object.keys(formErrors.value).length === 0
+}
+
 // Computed
 const technologiesInput: WritableComputedRef<string> = computed({
   get(): string {
@@ -204,7 +303,7 @@ const fetchCompanies = async (): Promise<void> => {
     companies.value = response.data
   } catch (error) {
     apiLogger.error('Error fetching companies:', error)
-    alert('Failed to load companies')
+    toast.error('Failed to load companies')
   } finally {
     loading.value = false
   }
@@ -212,6 +311,20 @@ const fetchCompanies = async (): Promise<void> => {
 
 const editCompany = (company: Company): void => {
   editingCompany.value = company
+  // Parse technologies safely - handle malformed JSON
+  let technologies: string[] = []
+  if (Array.isArray(company.technologies)) {
+    technologies = company.technologies
+  } else if (typeof company.technologies === 'string' && company.technologies) {
+    try {
+      const parsed = JSON.parse(company.technologies)
+      technologies = Array.isArray(parsed) ? parsed : []
+    } catch {
+      // Malformed JSON - use empty array
+      technologies = []
+    }
+  }
+
   form.value = {
     name: company.name,
     title: company.title,
@@ -219,35 +332,40 @@ const editCompany = (company: Company): void => {
     end_date: company.end_date || '',
     location: company.location || '',
     description: company.description,
-    technologies: Array.isArray(company.technologies)
-      ? company.technologies
-      : JSON.parse((company.technologies as unknown as string) || '[]'),
+    technologies,
     order_index: (company as Company & { order_index?: number }).order_index || 0
   }
 }
 
 const saveCompany = async (): Promise<void> => {
+  // Validate form before submitting
+  if (!validateForm()) {
+    return
+  }
+
   try {
+    // Ensure technologies is an array before stringifying
+    const technologies = Array.isArray(form.value.technologies) ? form.value.technologies : []
     const data = {
       ...form.value,
-      technologies: JSON.stringify(form.value.technologies)
+      technologies: JSON.stringify(technologies)
     }
 
     if (editingCompany.value) {
       // Update existing
       await apiClient.put(`/api/v1/companies/${editingCompany.value.id}`, data)
-      alert('Company updated successfully')
+      toast.success('Company updated successfully')
     } else {
       // Create new
       await apiClient.post('/api/v1/companies', data)
-      alert('Company added successfully')
+      toast.success('Company added successfully')
     }
 
     closeForm()
     fetchCompanies()
   } catch (error) {
     apiLogger.error('Error saving company:', error)
-    alert('Failed to save company')
+    toast.error('Failed to save company')
   }
 }
 
@@ -258,17 +376,18 @@ const deleteCompany = async (id: string): Promise<void> => {
 
   try {
     await apiClient.delete(`/api/v1/companies/${id}`)
-    alert('Company deleted successfully')
+    toast.success('Company deleted successfully')
     fetchCompanies()
   } catch (error) {
     apiLogger.error('Error deleting company:', error)
-    alert('Failed to delete company')
+    toast.error('Failed to delete company')
   }
 }
 
 const closeForm = (): void => {
   showAddForm.value = false
   editingCompany.value = null
+  formErrors.value = {}
   form.value = {
     name: '',
     title: '',
@@ -520,6 +639,21 @@ onMounted((): void => {
   font-family: inherit;
 }
 
+/* Validation error styles */
+.input-error {
+  border-color: #dc2626 !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-1);
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -644,6 +778,18 @@ onMounted((): void => {
 [data-theme='dark'] .form-textarea:focus {
   border-color: var(--primary-400, #60a5fa);
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.4);
+}
+
+[data-theme='dark'] .input-error {
+  border-color: #f87171 !important;
+}
+
+[data-theme='dark'] .input-error:focus {
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.3) !important;
+}
+
+[data-theme='dark'] .error-message {
+  color: #f87171;
 }
 
 /* Focus visible states for action buttons */

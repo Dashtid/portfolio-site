@@ -7,6 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Path, Query
 
+from app.config import settings
 from app.services.github_service import github_service
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,9 @@ async def get_github_stats(username: GitHubUsername):
         stats = await github_service.get_portfolio_stats(username)
     except Exception as e:
         logger.exception(f"Error fetching GitHub stats for {username}: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # Use generic message in production to avoid leaking implementation details
+        detail = str(e) if settings.DEBUG else "Failed to fetch GitHub statistics"
+        raise HTTPException(status_code=500, detail=detail) from e
     else:
         return stats
 
@@ -66,7 +69,9 @@ async def get_project_stats(owner: GitHubUsername, repo: GitHubRepoName):
         stats = await github_service.get_project_stats(owner, repo)
     except Exception as e:
         logger.exception(f"Error fetching project stats for {owner}/{repo}: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # Use generic message in production to avoid leaking implementation details
+        detail = str(e) if settings.DEBUG else "Failed to fetch project statistics"
+        raise HTTPException(status_code=500, detail=detail) from e
     else:
         return stats
 
@@ -87,7 +92,9 @@ async def get_user_repos(
         result = repos[:limit]
     except Exception as e:
         logger.exception(f"Error fetching repos for {username}: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # Use generic message in production to avoid leaking implementation details
+        detail = str(e) if settings.DEBUG else "Failed to fetch repositories"
+        raise HTTPException(status_code=500, detail=detail) from e
     else:
         return result
 
@@ -119,6 +126,8 @@ async def get_repo_languages(owner: GitHubUsername, repo: GitHubRepoName):
         }
     except Exception as e:
         logger.exception(f"Error fetching languages for {owner}/{repo}: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # Use generic message in production to avoid leaking implementation details
+        detail = str(e) if settings.DEBUG else "Failed to fetch repository languages"
+        raise HTTPException(status_code=500, detail=detail) from e
     else:
         return result

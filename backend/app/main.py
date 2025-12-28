@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from app.api.v1 import analytics, auth, companies, education, github, projects, skills
 from app.api.v1.endpoints import documents, errors, health, metrics
@@ -43,6 +44,29 @@ if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
         enable_tracing=True,
     )
     logger.info("Sentry initialized", extra={"environment": settings.ENVIRONMENT})
+
+
+# Maximum request body size (5 MB) to prevent DoS attacks
+MAX_BODY_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+# Body Size Limit Middleware
+class BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    """Limit request body size to prevent DoS attacks."""
+
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > MAX_BODY_SIZE:
+                    return JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request body too large. Maximum size is 5 MB."},
+                    )
+            except ValueError:
+                # Invalid content-length header, let it pass and handle elsewhere
+                pass
+        return await call_next(request)
 
 
 # Security Headers Middleware
@@ -122,36 +146,81 @@ async def cleanup_oauth_states_periodically():
 
 
 # Database migration helper for adding columns to existing tables
+# Whitelist of allowed table names to prevent SQL injection
+_ALLOWED_MIGRATION_TABLES = frozenset({"documents", "education", "skills"})
+
+
+async def _run_sqlite_migration(session, migration: dict) -> bool:  # noqa: ANN001
+    """Run a SQLite-specific migration. Returns True if migration was applied."""
+    from sqlalchemy import text  # noqa: PLC0415
+
+    # SQLite migration configs: (table, new_column, old_column, sql)
+    # Note: table names MUST be in _ALLOWED_MIGRATION_TABLES whitelist
+    sqlite_configs = {
+        "documents": ("documents", "order_index", None, "ADD COLUMN order_index INTEGER DEFAULT 0"),
+        "education": (
+            "education",
+            "certificate_url",
+            None,
+            "ADD COLUMN certificate_url VARCHAR(500)",
+        ),
+        "proficiency_level": (
+            "skills",
+            "proficiency_level",
+            "proficiency",
+            "RENAME COLUMN proficiency TO proficiency_level",
+        ),
+        "years_of_experience": (
+            "skills",
+            "years_of_experience",
+            "years_experience",
+            "RENAME COLUMN years_experience TO years_of_experience",
+        ),
+    }
+
+    for key, (table, new_col, old_col, sql) in sqlite_configs.items():
+        if key in migration["description"]:
+            # Security: Validate table name against whitelist to prevent SQL injection
+            if table not in _ALLOWED_MIGRATION_TABLES:
+                logger.error("Invalid table name in migration: %s", table)
+                return False
+            result = await session.execute(text(f"PRAGMA table_info({table})"))
+            columns = [row[1] for row in result.fetchall()]
+            needs_migration = new_col not in columns and (old_col is None or old_col in columns)
+            if needs_migration:
+                await session.execute(text(f"ALTER TABLE {table} {sql}"))
+                await session.commit()
+                logger.info("Migration applied (SQLite): %s", migration["description"])
+                return True
+    return False
+
+
 async def run_migrations():
     """Run simple migrations to add missing columns to existing tables."""
-    # Local imports to avoid circular dependencies (noqa: PLC0415)
     from sqlalchemy import text  # noqa: PLC0415
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
 
     migrations = [
-        # Add order_index column to documents table if it doesn't exist
         {
-            "check": """
-                SELECT column_name FROM information_schema.columns
-                WHERE table_name = 'documents' AND column_name = 'order_index'
-            """,
-            "migrate": """
-                ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0;
-                CREATE INDEX IF NOT EXISTS ix_documents_order_index ON documents (order_index);
-            """,
+            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'order_index'",
+            "migrate": "ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0; CREATE INDEX IF NOT EXISTS ix_documents_order_index ON documents (order_index);",
             "description": "Add order_index column to documents table",
         },
-        # Add certificate_url column to education table if it doesn't exist
         {
-            "check": """
-                SELECT column_name FROM information_schema.columns
-                WHERE table_name = 'education' AND column_name = 'certificate_url'
-            """,
-            "migrate": """
-                ALTER TABLE education ADD COLUMN certificate_url VARCHAR(500);
-            """,
+            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'education' AND column_name = 'certificate_url'",
+            "migrate": "ALTER TABLE education ADD COLUMN certificate_url VARCHAR(500);",
             "description": "Add certificate_url column to education table",
+        },
+        {
+            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'skills' AND column_name = 'proficiency_level'",
+            "migrate": "ALTER TABLE skills RENAME COLUMN proficiency TO proficiency_level;",
+            "description": "Rename skills.proficiency to skills.proficiency_level",
+        },
+        {
+            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'skills' AND column_name = 'years_of_experience'",
+            "migrate": "ALTER TABLE skills RENAME COLUMN years_experience TO years_of_experience;",
+            "description": "Rename skills.years_experience to skills.years_of_experience",
         },
     ]
 
@@ -160,44 +229,15 @@ async def run_migrations():
             try:
                 result = await session.execute(text(migration["check"]))
                 if result.fetchone() is None:
-                    # Column doesn't exist, run migration
                     for stmt in migration["migrate"].strip().split(";"):
                         if stmt.strip():
                             await session.execute(text(stmt.strip()))
                     await session.commit()
                     logger.info("Migration applied: %s", migration["description"])
             except Exception as e:
-                # For SQLite, info schema doesn't exist - use PRAGMA instead
                 if "information_schema" in str(e).lower() or "no such table" in str(e).lower():
                     try:
-                        # SQLite fallback for documents.order_index
-                        if "documents" in migration["description"]:
-                            result = await session.execute(text("PRAGMA table_info(documents)"))
-                            columns = [row[1] for row in result.fetchall()]
-                            if "order_index" not in columns:
-                                await session.execute(
-                                    text(
-                                        "ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0"
-                                    )
-                                )
-                                await session.commit()
-                                logger.info(
-                                    "Migration applied (SQLite): %s", migration["description"]
-                                )
-                        # SQLite fallback for education.certificate_url
-                        elif "education" in migration["description"]:
-                            result = await session.execute(text("PRAGMA table_info(education)"))
-                            columns = [row[1] for row in result.fetchall()]
-                            if "certificate_url" not in columns:
-                                await session.execute(
-                                    text(
-                                        "ALTER TABLE education ADD COLUMN certificate_url VARCHAR(500)"
-                                    )
-                                )
-                                await session.commit()
-                                logger.info(
-                                    "Migration applied (SQLite): %s", migration["description"]
-                                )
+                        await _run_sqlite_migration(session, migration)
                     except Exception as sqlite_err:
                         logger.warning(
                             "Migration skipped: %s - %s", migration["description"], sqlite_err
@@ -358,7 +398,7 @@ async def migrate_education_data():
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.education import Education  # noqa: PLC0415
 
-    # Mapping: institution -> (start_date, end_date, order, certificate_url)
+    # Mapping: institution -> (start_date, end_date, order_index, certificate_url)
     education_updates = {
         "KTH Royal Institute of Technology": (
             date(2018, 8, 1),
@@ -381,12 +421,12 @@ async def migrate_education_data():
     }
 
     async with AsyncSessionLocal() as session:
-        for institution, (start_date, end_date, order, cert_url) in education_updates.items():
+        for institution, (start_date, end_date, order_index, cert_url) in education_updates.items():
             try:
                 update_values = {
                     "start_date": start_date,
                     "end_date": end_date,
-                    "order": order,
+                    "order_index": order_index,
                 }
                 if cert_url:
                     update_values["certificate_url"] = cert_url
@@ -406,11 +446,73 @@ async def migrate_education_data():
         logger.info("Education data migration completed")
 
 
+# Data migration to convert skill proficiency from 1-5 scale to 0-100 scale
+async def migrate_skill_proficiency():
+    """Convert skill proficiency values from 1-5 scale to 0-100 scale."""
+    from sqlalchemy import select, update  # noqa: PLC0415
+
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.models.skill import Skill  # noqa: PLC0415
+
+    async with AsyncSessionLocal() as session:
+        try:
+            # Check if any skills have proficiency_level <= 5 (old scale)
+            result = await session.execute(
+                select(Skill).where(Skill.proficiency_level <= 5, Skill.proficiency_level > 0)
+            )
+            old_scale_skills = result.scalars().all()
+
+            if old_scale_skills:
+                # Convert 1-5 scale to 0-100: multiply by 20
+                for skill in old_scale_skills:
+                    new_value = skill.proficiency_level * 20
+                    stmt = (
+                        update(Skill)
+                        .where(Skill.id == skill.id)
+                        .values(proficiency_level=new_value)
+                    )
+                    await session.execute(stmt)
+                    logger.info(
+                        "Updated skill %s proficiency: %d -> %d",
+                        skill.name,
+                        skill.proficiency_level,
+                        new_value,
+                    )
+                await session.commit()
+                logger.info("Skill proficiency migration completed")
+        except Exception as e:
+            logger.warning("Skill proficiency migration skipped: %s", e)
+
+
+# Validate CSP configuration to prevent dev CSP leaking to production
+def validate_csp_configuration() -> None:
+    """Validate that CSP configuration is appropriate for the environment."""
+    if settings.ENVIRONMENT == "production":
+        # In production, ensure DEBUG is disabled (which could indicate misconfiguration)
+        if settings.DEBUG:
+            logger.warning(
+                "DEBUG is enabled in production environment! "
+                "This may indicate a configuration issue. "
+                "Development CSP policies are NOT being used (environment check is correct), "
+                "but DEBUG should typically be disabled in production."
+            )
+        logger.info("CSP configured for production (strict mode)")
+    else:
+        # Non-production: using relaxed CSP with unsafe-inline/unsafe-eval
+        logger.info(
+            "CSP configured for development (relaxed mode with unsafe-inline/unsafe-eval)",
+            extra={"environment": settings.ENVIRONMENT},
+        )
+
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up application", extra={"version": settings.APP_VERSION})
+
+    # Validate CSP configuration
+    validate_csp_configuration()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
@@ -421,6 +523,7 @@ async def lifespan(app: FastAPI):
     # Run data migrations
     await migrate_company_data()
     await migrate_education_data()
+    await migrate_skill_proficiency()
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
@@ -458,9 +561,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
 )
+
+# Body size limit (DoS protection) - check early
+app.add_middleware(BodySizeLimitMiddleware)
 
 # Compression (compress final response)
 app.add_middleware(CompressionMiddleware, minimum_size=1000)

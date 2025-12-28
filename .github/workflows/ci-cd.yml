@@ -130,7 +130,6 @@ jobs:
 
       - name: Run Playwright E2E tests
         run: npx playwright test --project=chromium --project=firefox
-        continue-on-error: true
 
       - name: Upload Playwright test results
         uses: actions/upload-artifact@v4
@@ -181,7 +180,6 @@ jobs:
           base: ${{ github.event.before }}
           head: ${{ github.sha }}
           extra_args: --only-verified
-        continue-on-error: true
 
   # Lighthouse Performance Audit
   lighthouse:

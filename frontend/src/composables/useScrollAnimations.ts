@@ -87,6 +87,8 @@ interface ScrollAnimationOptions {
 interface ScrollAnimationReturn {
   isVisible: Ref<boolean>
   hasAnimated: Ref<boolean>
+  /** Stop observing the element (cleanup) */
+  stop: () => void
 }
 
 /**
@@ -159,7 +161,8 @@ export function useScrollAnimation(
 
   return {
     isVisible,
-    hasAnimated
+    hasAnimated,
+    stop
   }
 }
 
@@ -197,7 +200,7 @@ interface BatchAnimationReturn {
 
 /**
  * Batch animate elements with a selector
- * Useful for animating multiple cards, list items, etc.
+ * Uses a single IntersectionObserver for all elements to prevent memory issues
  * @param selector - CSS selector for elements to animate
  * @param options - Animation options
  */
@@ -205,20 +208,87 @@ export function useBatchAnimation(
   selector: string,
   options: StaggeredAnimationOptions = {}
 ): BatchAnimationReturn {
+  const {
+    animation = 'fadeIn',
+    duration = 600,
+    delay = 0,
+    easing = 'ease-out',
+    threshold = 0.1,
+    stagger = 100
+  } = options
+
   const elements = ref<Element[]>([])
   const animations: ScrollAnimationReturn[] = []
+  let observer: IntersectionObserver | null = null
+  const animatedElements = new Set<Element>()
+
+  const animationConfig = ANIMATIONS[animation] || ANIMATIONS.fadeIn
 
   onMounted(() => {
     elements.value = Array.from(document.querySelectorAll(selector))
 
+    if (elements.value.length === 0) return
+
+    // Apply initial styles to all elements
     elements.value.forEach((element, index) => {
-      const elementRef = ref(element as HTMLElement)
-      const animation = useScrollAnimation(elementRef, {
-        ...options,
-        delay: (options.delay || 0) + index * (options.stagger || 100)
+      const el = element as HTMLElement
+      const elementDelay = delay + index * stagger
+      Object.assign(el.style, {
+        ...animationConfig.initial,
+        transition: `all ${duration}ms ${easing} ${elementDelay}ms`
       })
-      animations.push(animation)
+
+      // Create animation return object for each element
+      animations.push({
+        isVisible: ref(false),
+        hasAnimated: ref(false),
+        stop: () => {
+          if (observer) {
+            observer.unobserve(element)
+          }
+        }
+      })
     })
+
+    // Create a single shared IntersectionObserver for all elements
+    observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !animatedElements.has(entry.target)) {
+            const el = entry.target as HTMLElement
+            Object.assign(el.style, animationConfig.animate)
+            animatedElements.add(entry.target)
+
+            // Find and update the animation state
+            const index = elements.value.indexOf(entry.target)
+            if (index !== -1 && animations[index]) {
+              animations[index].isVisible.value = true
+              animations[index].hasAnimated.value = true
+            }
+
+            // Stop observing this element since animation is complete
+            observer?.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold }
+    )
+
+    // Observe all elements with the single observer
+    elements.value.forEach(element => {
+      observer?.observe(element)
+    })
+  })
+
+  // Cleanup observer when component unmounts
+  onBeforeUnmount(() => {
+    if (observer) {
+      observer.disconnect()
+      observer = null
+    }
+    animatedElements.clear()
+    animations.length = 0
+    elements.value = []
   })
 
   return {
@@ -239,8 +309,9 @@ interface ParallaxOptions {
 export function useParallax(target: Ref<HTMLElement | null>, options: ParallaxOptions = {}): void {
   const { speed = 0.5 } = options
 
-  // Store scroll listener reference for cleanup
+  // Store scroll listener and RAF ID for cleanup
   let scrollListener: (() => void) | null = null
+  let rafId: number | null = null
 
   onMounted(() => {
     const handleScroll = (): void => {
@@ -253,23 +324,27 @@ export function useParallax(target: Ref<HTMLElement | null>, options: ParallaxOp
       target.value.style.transform = `translateY(${parallax}px)`
     }
 
-    // Throttle scroll events for performance
-    let ticking = false
+    // Throttle scroll events for performance using RAF
     scrollListener = (): void => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll()
-          ticking = false
-        })
-        ticking = true
-      }
+      // Skip if RAF already scheduled
+      if (rafId !== null) return
+
+      rafId = window.requestAnimationFrame(() => {
+        handleScroll()
+        rafId = null
+      })
     }
 
     window.addEventListener('scroll', scrollListener, { passive: true })
   })
 
-  // Properly cleanup scroll listener to prevent memory leaks
+  // Properly cleanup scroll listener and pending RAF to prevent memory leaks
   onBeforeUnmount(() => {
+    // Cancel any pending animation frame
+    if (rafId !== null) {
+      window.cancelAnimationFrame(rafId)
+      rafId = null
+    }
     if (scrollListener) {
       window.removeEventListener('scroll', scrollListener)
       scrollListener = null

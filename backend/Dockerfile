@@ -34,9 +34,9 @@ ENV PYTHONUNBUFFERED=1
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check using curl (more reliable than Python requests)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/api/v1/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
 
 # Run with uvicorn directly (simpler for debugging)
 CMD ["python", "-m", "uvicorn", "app.main:app", \

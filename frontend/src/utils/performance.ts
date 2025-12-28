@@ -42,10 +42,14 @@ class PerformanceMonitor {
   private enabled: boolean
   private apiEndpoint: string
   private metrics: PerformanceMetrics
+  private initialized: boolean = false
+  private observers: PerformanceObserver[] = []
+  private loadHandler: (() => void) | null = null
 
   constructor() {
     this.enabled = import.meta.env.VITE_METRICS_ENABLED === 'true'
-    this.apiEndpoint = import.meta.env.VITE_API_URL + '/api/v1/performance' || '/api/v1/performance'
+    this.apiEndpoint =
+      (import.meta.env.VITE_API_URL ?? '') + '/api/v1/performance' || '/api/v1/performance'
     this.metrics = {}
   }
 
@@ -53,12 +57,22 @@ class PerformanceMonitor {
    * Initialize performance monitoring
    */
   async init(): Promise<void> {
+    // Prevent duplicate initialization and listener leaks
+    if (this.initialized) {
+      if (import.meta.env.DEV) {
+        console.log('[Performance] Already initialized, skipping')
+      }
+      return
+    }
+
     if (!this.enabled) {
       if (import.meta.env.DEV) {
         console.log('[Performance] Monitoring disabled')
       }
       return
     }
+
+    this.initialized = true
 
     // Track Core Web Vitals
     this.trackCoreWebVitals()
@@ -71,6 +85,33 @@ class PerformanceMonitor {
 
     if (import.meta.env.DEV) {
       console.log('[Performance] Monitoring initialized')
+    }
+  }
+
+  /**
+   * Cleanup all observers and listeners
+   */
+  destroy(): void {
+    // Disconnect all performance observers
+    this.observers.forEach(observer => {
+      try {
+        observer.disconnect()
+      } catch {
+        // Ignore errors during cleanup
+      }
+    })
+    this.observers = []
+
+    // Remove load event listener
+    if (this.loadHandler) {
+      window.removeEventListener('load', this.loadHandler)
+      this.loadHandler = null
+    }
+
+    this.initialized = false
+
+    if (import.meta.env.DEV) {
+      console.log('[Performance] Monitoring destroyed')
     }
   }
 
@@ -119,6 +160,9 @@ class PerformanceMonitor {
       })
 
       observer.observe({ type, buffered: true })
+
+      // Store observer reference for cleanup
+      this.observers.push(observer)
     } catch (err) {
       // PerformanceObserver not supported or metric type not available
       if (import.meta.env.DEV) {
@@ -132,65 +176,82 @@ class PerformanceMonitor {
    * Track Navigation Timing API metrics
    */
   private trackNavigationTiming(): void {
-    window.addEventListener('load', () => {
-      const navigation = performance.getEntriesByType(
-        'navigation'
-      )[0] as PerformanceNavigationTiming
+    // Use a single load handler that's stored for cleanup
+    this.loadHandler = () => {
+      this.collectNavigationMetrics()
+      this.collectResourceMetrics()
+    }
 
-      if (navigation) {
-        this.recordMetric('DNS', navigation.domainLookupEnd - navigation.domainLookupStart)
-        this.recordMetric('TCP', navigation.connectEnd - navigation.connectStart)
-        this.recordMetric('Request', navigation.responseStart - navigation.requestStart)
-        this.recordMetric('Response', navigation.responseEnd - navigation.responseStart)
-        this.recordMetric('DOM_Processing', navigation.domComplete - navigation.domInteractive)
-        this.recordMetric('Load_Complete', navigation.loadEventEnd - navigation.loadEventStart)
-        this.recordMetric('Total_Load_Time', navigation.loadEventEnd - navigation.fetchStart)
+    window.addEventListener('load', this.loadHandler)
+  }
 
-        // Send metrics to backend
-        this.sendMetrics()
-      }
-    })
+  /**
+   * Collect navigation timing metrics
+   */
+  private collectNavigationMetrics(): void {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+
+    if (navigation) {
+      this.recordMetric('DNS', navigation.domainLookupEnd - navigation.domainLookupStart)
+      this.recordMetric('TCP', navigation.connectEnd - navigation.connectStart)
+      this.recordMetric('Request', navigation.responseStart - navigation.requestStart)
+      this.recordMetric('Response', navigation.responseEnd - navigation.responseStart)
+      this.recordMetric('DOM_Processing', navigation.domComplete - navigation.domInteractive)
+      this.recordMetric('Load_Complete', navigation.loadEventEnd - navigation.loadEventStart)
+      this.recordMetric('Total_Load_Time', navigation.loadEventEnd - navigation.fetchStart)
+
+      // Send metrics to backend
+      this.sendMetrics()
+    }
   }
 
   /**
    * Track Resource Timing (images, scripts, styles)
+   * Note: trackResourceTiming is now handled by the single load handler
    */
   private trackResourceTiming(): void {
-    window.addEventListener('load', () => {
-      const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+    // Resource timing is now collected in the single load handler
+    // This method is kept for backward compatibility but does nothing
+    // The actual collection happens in collectResourceMetrics()
+  }
 
-      const resourceStats: ResourceStats = {
-        images: [],
-        scripts: [],
-        stylesheets: [],
-        other: []
+  /**
+   * Collect resource timing metrics
+   */
+  private collectResourceMetrics(): void {
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+
+    const resourceStats: ResourceStats = {
+      images: [],
+      scripts: [],
+      stylesheets: [],
+      other: []
+    }
+
+    resources.forEach(resource => {
+      const duration = resource.responseEnd - resource.startTime
+      const data: ResourceData = {
+        name: resource.name,
+        duration: Math.round(duration),
+        size: resource.transferSize,
+        type: resource.initiatorType
       }
 
-      resources.forEach(resource => {
-        const duration = resource.responseEnd - resource.startTime
-        const data: ResourceData = {
-          name: resource.name,
-          duration: Math.round(duration),
-          size: resource.transferSize,
-          type: resource.initiatorType
-        }
-
-        if (resource.initiatorType === 'img') {
-          resourceStats.images.push(data)
-        } else if (resource.initiatorType === 'script') {
-          resourceStats.scripts.push(data)
-        } else if (resource.initiatorType === 'link') {
-          resourceStats.stylesheets.push(data)
-        } else {
-          resourceStats.other.push(data)
-        }
-      })
-
-      // Calculate averages
-      this.recordMetric('Avg_Image_Load', this.calculateAverage(resourceStats.images))
-      this.recordMetric('Avg_Script_Load', this.calculateAverage(resourceStats.scripts))
-      this.recordMetric('Avg_Style_Load', this.calculateAverage(resourceStats.stylesheets))
+      if (resource.initiatorType === 'img') {
+        resourceStats.images.push(data)
+      } else if (resource.initiatorType === 'script') {
+        resourceStats.scripts.push(data)
+      } else if (resource.initiatorType === 'link') {
+        resourceStats.stylesheets.push(data)
+      } else {
+        resourceStats.other.push(data)
+      }
     })
+
+    // Calculate averages
+    this.recordMetric('Avg_Image_Load', this.calculateAverage(resourceStats.images))
+    this.recordMetric('Avg_Script_Load', this.calculateAverage(resourceStats.scripts))
+    this.recordMetric('Avg_Style_Load', this.calculateAverage(resourceStats.stylesheets))
   }
 
   /**
