@@ -214,6 +214,11 @@ async def run_migrations():
             "description": "Add certificate_url column to education table",
         },
         {
+            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'education' AND column_name = 'order_index'",
+            "migrate": "ALTER TABLE education ADD COLUMN order_index INTEGER DEFAULT 0;",
+            "description": "Add order_index column to education table",
+        },
+        {
             "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'skills' AND column_name = 'proficiency_level'",
             "migrate": "ALTER TABLE skills RENAME COLUMN proficiency TO proficiency_level;",
             "description": "Rename skills.proficiency to skills.proficiency_level",
