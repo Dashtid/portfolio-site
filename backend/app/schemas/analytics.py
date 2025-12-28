@@ -4,16 +4,16 @@ Pydantic schemas for analytics
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PageViewCreate(BaseModel):
     """Schema for creating a page view record."""
 
-    page_path: str
-    page_title: str | None = None
-    referrer: str | None = None
-    visitor_id: str | None = None  # Session ID from frontend
+    page_path: str = Field(..., max_length=2048)
+    page_title: str | None = Field(None, max_length=512)
+    referrer: str | None = Field(None, max_length=2048)
+    visitor_id: str | None = Field(None, max_length=128)  # Session ID from frontend
 
 
 class PageViewResponse(BaseModel):

@@ -103,11 +103,11 @@ async def readiness_check(db: DbSession, response: Response):
             "status": "connected",
             "latency_ms": db_latency_ms,
         }
-    except Exception as e:
+    except Exception:
         all_healthy = False
         checks["database"] = {
             "status": "error",
-            "error": str(e),
+            "error": "Database connection failed",
         }
 
     # Set appropriate status code
@@ -173,11 +173,11 @@ async def detailed_health_check(db: DbSession, response: Response):
             "status": "healthy",
             "latency_ms": db_latency_ms,
         }
-    except Exception as e:
+    except Exception:
         all_healthy = False
         checks["database"] = {
             "status": "unhealthy",
-            "error": str(e),
+            "error": "Database connection failed",
         }
 
     # Calculate total response time

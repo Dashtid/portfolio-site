@@ -28,6 +28,7 @@ from app.middleware import (
     limiter,
     rate_limit_exceeded_handler,
 )
+from app.services.github_service import github_service
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -534,6 +535,11 @@ async def lifespan(app: FastAPI):
     cleanup_task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await cleanup_task
+
+    # Close GitHub service connection pool
+    await github_service.close()
+    logger.info("GitHub service connection pool closed")
+
     logger.info("Shutting down application")
     await engine.dispose()
     logger.info("Database connection closed")

@@ -260,6 +260,7 @@ class GitHubService:
 
         # Sort languages by usage
         top_languages = sorted(languages.items(), key=lambda x: x[1], reverse=True)[:5]
+        total_bytes = sum(languages.values())
 
         # Get pinned repos (or fall back to recent if no pinned)
         pinned = await self.get_pinned_repos(username)
@@ -290,7 +291,12 @@ class GitHubService:
             "total_forks": total_forks,
             "total_watchers": total_watchers,
             "top_languages": [
-                {"name": lang, "percentage": round(bytes_count / sum(languages.values()) * 100, 1)}
+                {
+                    "name": lang,
+                    "percentage": round(bytes_count / total_bytes * 100, 1)
+                    if total_bytes > 0
+                    else 0,
+                }
                 for lang, bytes_count in top_languages
             ],
             "featured_repos": featured_repos,

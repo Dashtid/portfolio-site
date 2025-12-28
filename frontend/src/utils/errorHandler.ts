@@ -276,8 +276,14 @@ export function setupGlobalErrorHandlers(app: App): void {
     } else if (typeof event.reason === 'string') {
       error = new Error(event.reason)
     } else if (event.reason && typeof event.reason === 'object') {
-      // Handle objects with message property or convert to string
-      const message = (event.reason as { message?: string }).message || JSON.stringify(event.reason)
+      // Handle objects with message property or convert to string safely
+      let message: string
+      try {
+        message = (event.reason as { message?: string }).message || JSON.stringify(event.reason)
+      } catch {
+        // Handle circular references or other JSON.stringify failures
+        message = '[Unserializable error object]'
+      }
       error = new Error(message)
     } else {
       error = new Error(String(event.reason ?? 'Unhandled promise rejection'))
