@@ -428,38 +428,61 @@ async def migrate_education_data():
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.education import Education  # noqa: PLC0415
 
-    # Mapping: institution -> (start_date, end_date, order_index, certificate_url)
+    # Mapping: institution -> (start_date, end_date, order_index, certificate_url, description)
+    # description: string to set, None to clear, ... (Ellipsis) to skip
     education_updates = {
         "KTH Royal Institute of Technology": (
             date(2018, 8, 1),
             date(2021, 6, 30),
             1,
             None,
+            ...,  # Keep existing description
         ),
         "Lund University": (
             date(2015, 8, 1),
             date(2018, 6, 30),
             2,
             None,
+            ...,  # Keep existing description
         ),
         "Företagsuniversitet": (
             date(2024, 10, 1),
             date(2024, 12, 31),
             3,
             "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&lang=en",
+            None,  # Remove long description
+        ),
+        "CompTIA": (
+            None,  # Don't update dates
+            None,
+            4,
+            None,
+            "Ongoing certification.",  # Minimalistic description
         ),
     }
 
     async with AsyncSessionLocal() as session:
-        for institution, (start_date, end_date, order_index, cert_url) in education_updates.items():
+        for institution, (
+            start_date,
+            end_date,
+            order_index,
+            cert_url,
+            description,
+        ) in education_updates.items():
             try:
-                update_values = {
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "order_index": order_index,
-                }
+                update_values = {"order_index": order_index}
+
+                # Only update dates if provided
+                if start_date is not None:
+                    update_values["start_date"] = start_date
+                if end_date is not None:
+                    update_values["end_date"] = end_date
                 if cert_url:
                     update_values["certificate_url"] = cert_url
+
+                # Handle description: ... means skip, None clears, string sets
+                if description is not ...:
+                    update_values["description"] = description
 
                 stmt = (
                     update(Education)

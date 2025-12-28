@@ -469,6 +469,8 @@ section {
 }
 
 .education-card {
+  display: flex;
+  flex-direction: column;
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
@@ -511,6 +513,8 @@ section {
 .education-dates {
   color: var(--text-tertiary);
   font-size: var(--font-size-sm);
+  margin-top: auto;
+  padding-top: var(--space-3);
 }
 
 /* Projects Grid */
