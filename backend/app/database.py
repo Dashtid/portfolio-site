@@ -12,19 +12,27 @@ from app.config import settings
 is_sqlite = settings.async_database_url.startswith("sqlite")
 
 # Create async engine with production-ready settings
-engine = create_async_engine(
-    settings.async_database_url,
-    echo=settings.DEBUG
-    and getattr(settings, "DEBUG_SQL", False),  # Only log SQL if explicitly enabled
-    future=True,
-    # Pool settings (not applicable for SQLite async)
-    pool_pre_ping=not is_sqlite,  # Validate connections before use (prevents stale connections)
-    pool_recycle=1800 if not is_sqlite else -1,  # Recycle connections every 30 minutes
-    pool_size=5 if not is_sqlite else 0,  # Base pool size
-    max_overflow=10 if not is_sqlite else 0,  # Additional connections when pool is full
-    # Use NullPool for SQLite (no connection pooling)
-    poolclass=NullPool if is_sqlite else None,
-)
+# SQLite doesn't support pool_size/max_overflow - must exclude them entirely
+_engine_kwargs: dict = {
+    "echo": settings.DEBUG and getattr(settings, "DEBUG_SQL", False),
+    "future": True,
+}
+
+if is_sqlite:
+    # SQLite: use NullPool (no connection pooling)
+    _engine_kwargs["poolclass"] = NullPool
+else:
+    # PostgreSQL/MySQL: use connection pooling
+    _engine_kwargs.update(
+        {
+            "pool_pre_ping": True,  # Validate connections before use
+            "pool_recycle": 1800,  # Recycle connections every 30 minutes
+            "pool_size": 5,  # Base pool size
+            "max_overflow": 10,  # Additional connections when pool is full
+        }
+    )
+
+engine = create_async_engine(settings.async_database_url, **_engine_kwargs)
 
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(
