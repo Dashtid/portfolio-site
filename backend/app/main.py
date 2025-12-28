@@ -303,12 +303,8 @@ async def migrate_company_data():
             date(2016, 8, 31),
             6,
         ),
-        "Scania Group": (
-            "Technician, Engine Analysis",
-            date(2016, 6, 1),
-            date(2016, 8, 31),
-            6,
-        ),
+        # NOTE: "Scania Group" removed - handled separately below to avoid
+        # corrupting the 2012 entry after rename
         "Finnish Defence Forces": (
             "Platoon Leader, 2nd Lieutenant",
             date(2014, 1, 1),
@@ -343,6 +339,21 @@ async def migrate_company_data():
         if result.rowcount > 0:
             logger.info("Renamed Scania Engines to Scania Group")
 
+        # Update Scania 2016 entry specifically (use date to avoid hitting 2012 entry)
+        stmt = (
+            update(Company)
+            .where(Company.name == "Scania Group", Company.start_date == date(2016, 6, 1))
+            .values(
+                title="Technician, Engine Analysis",
+                end_date=date(2016, 8, 31),
+                order_index=6,
+                logo_url="/images/scania.svg",
+            )
+        )
+        result = await session.execute(stmt)
+        if result.rowcount > 0:
+            logger.info("Updated Scania 2016 entry")
+
         # Update Scania 2012 entry: rename and add logo
         stmt = (
             update(Company)
@@ -355,6 +366,24 @@ async def migrate_company_data():
         result = await session.execute(stmt)
         if result.rowcount > 0:
             logger.info("Updated Scania 2012 entry with new name and logo")
+
+        # Fix Scania 2012 entry if dates were corrupted by previous migrations
+        stmt = (
+            update(Company)
+            .where(
+                Company.name == "Scania Group",
+                Company.order_index == 8,  # The 2012 entry has order_index 8
+            )
+            .values(
+                start_date=date(2012, 6, 1),
+                end_date=date(2012, 8, 31),
+                title="Technician, Engine Analysis",
+                description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
+            )
+        )
+        result = await session.execute(stmt)
+        if result.rowcount > 0:
+            logger.info("Fixed Scania 2012 entry dates")
 
         # If Scania 2012 doesn't exist yet, create it
         result = await session.execute(
