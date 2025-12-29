@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { AxiosError } from 'axios'
 import apiClient from '../api/client'
 import type { Company, Skill, Project, Education } from '@/types'
 import { apiLogger } from '../utils/logger'
+import { getErrorMessage } from '../utils/typeGuards'
 
 interface PortfolioState {
   companies: Company[]
@@ -13,35 +13,6 @@ interface PortfolioState {
   error: string | null
   // Track active requests to handle parallel fetches correctly
   _activeRequests: number
-}
-
-interface ValidationError {
-  msg?: string
-  message?: string
-  loc?: string[]
-  type?: string
-}
-
-/**
- * Extract user-friendly error message from various error types
- * Handles both string details and FastAPI validation error arrays
- */
-function extractErrorMessage(error: unknown): string {
-  if (error instanceof AxiosError) {
-    // Try to get error detail from response body
-    const detail = error.response?.data?.detail
-    if (typeof detail === 'string') return detail
-    // Handle FastAPI validation errors (array of {msg, loc, type})
-    if (Array.isArray(detail)) {
-      return detail.map((err: ValidationError) => err.msg || err.message || String(err)).join(', ')
-    }
-    // Fallback to status text or generic message
-    return error.response?.statusText || error.message || 'Network error'
-  }
-  if (error instanceof Error) {
-    return error.message
-  }
-  return 'Unknown error occurred'
 }
 
 interface SkillsByCategory {
@@ -111,7 +82,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Company[]>('/api/v1/companies')
         this.companies = response.data
       } catch (error) {
-        this.error = extractErrorMessage(error)
+        this.error = getErrorMessage(error)
         apiLogger.error('Error fetching companies:', error)
       } finally {
         this._endRequest()
@@ -125,7 +96,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Skill[]>('/api/v1/skills')
         this.skills = response.data
       } catch (error) {
-        this.error = extractErrorMessage(error)
+        this.error = getErrorMessage(error)
         apiLogger.error('Error fetching skills:', error)
       } finally {
         this._endRequest()
@@ -139,7 +110,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Project[]>('/api/v1/projects')
         this.projects = response.data
       } catch (error) {
-        this.error = extractErrorMessage(error)
+        this.error = getErrorMessage(error)
         apiLogger.error('Error fetching projects:', error)
       } finally {
         this._endRequest()
@@ -153,7 +124,7 @@ export const usePortfolioStore = defineStore('portfolio', {
         const response = await apiClient.get<Education[]>('/api/v1/education')
         this.education = response.data
       } catch (error) {
-        this.error = extractErrorMessage(error)
+        this.error = getErrorMessage(error)
         apiLogger.error('Error fetching education:', error)
       } finally {
         this._endRequest()

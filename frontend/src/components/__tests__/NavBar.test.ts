@@ -15,9 +15,9 @@ describe('NavBar', () => {
 
   it('contains all navigation links', () => {
     const links = wrapper.findAll('a.nav-link')
-    const expectedLinks = ['Experience', 'Education', 'Projects', 'About', 'Contact']
+    const expectedLinks = ['Home', 'Experience', 'Education', 'Projects', 'About']
 
-    expect(links.length).toBeGreaterThanOrEqual(expectedLinks.length)
+    expect(links.length).toBe(expectedLinks.length)
 
     expectedLinks.forEach(linkText => {
       const found = links.some(link => link.text().includes(linkText))

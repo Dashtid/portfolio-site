@@ -78,15 +78,33 @@ export function getErrorStatus(error: unknown): number | undefined {
 }
 
 /**
+ * FastAPI validation error structure
+ */
+interface ValidationError {
+  msg?: string
+  message?: string
+  loc?: string[]
+  type?: string
+}
+
+/**
  * Get error message from various error types
+ * Handles AxiosError, FastAPI validation errors, standard Error, and strings
  * @param error - Unknown error
  * @param fallback - Fallback message if extraction fails
  * @returns Error message string
  */
 export function getErrorMessage(error: unknown, fallback = 'An error occurred'): string {
   if (isAxiosError(error)) {
-    const data = error.response?.data as { detail?: string } | undefined
-    return data?.detail || error.message || fallback
+    const detail = error.response?.data?.detail
+    // Handle string detail
+    if (typeof detail === 'string') return detail
+    // Handle FastAPI validation errors (array of {msg, loc, type})
+    if (Array.isArray(detail)) {
+      return detail.map((err: ValidationError) => err.msg || err.message || String(err)).join(', ')
+    }
+    // Fallback to status text or error message
+    return error.response?.statusText || error.message || fallback
   }
   if (error instanceof Error) {
     return error.message
