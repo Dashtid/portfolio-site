@@ -32,7 +32,7 @@ HTMLHeadElement.prototype.appendChild = function <T extends Node>(node: T): T {
   if (node instanceof Element) {
     preventScriptLoad(node)
   }
-  return originalHeadAppendChild.call(this, node)
+  return originalHeadAppendChild.call(this, node) as T
 }
 
 const originalBodyAppendChild = HTMLBodyElement.prototype.appendChild
@@ -40,7 +40,7 @@ HTMLBodyElement.prototype.appendChild = function <T extends Node>(node: T): T {
   if (node instanceof Element) {
     preventScriptLoad(node)
   }
-  return originalBodyAppendChild.call(this, node)
+  return originalBodyAppendChild.call(this, node) as T
 }
 
 // Mock window.matchMedia for theme tests
