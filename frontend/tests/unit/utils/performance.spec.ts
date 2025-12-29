@@ -49,6 +49,8 @@ describe('performance utility', () => {
   })
 
   afterEach(() => {
+    // Reset the singleton state between tests to ensure proper isolation
+    performanceMonitor.destroy()
     vi.clearAllMocks()
     vi.restoreAllMocks()
   })

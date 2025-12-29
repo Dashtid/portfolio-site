@@ -242,7 +242,7 @@ describe('Portfolio Store', () => {
         const store = usePortfolioStore()
         await store.fetchCompanies()
 
-        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/companies/')
+        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/companies')
         expect(store.companies).toEqual(mockCompanies)
         expect(store.loading).toBe(false)
         expect(store.error).toBeNull()
@@ -283,7 +283,7 @@ describe('Portfolio Store', () => {
         const store = usePortfolioStore()
         await store.fetchSkills()
 
-        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/skills/')
+        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/skills')
         expect(store.skills).toEqual(mockSkills)
       })
 
@@ -305,7 +305,7 @@ describe('Portfolio Store', () => {
         const store = usePortfolioStore()
         await store.fetchProjects()
 
-        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/projects/')
+        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/projects')
         expect(store.projects).toEqual(mockProjects)
       })
 
@@ -326,7 +326,7 @@ describe('Portfolio Store', () => {
         const store = usePortfolioStore()
         await store.fetchEducation()
 
-        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/education/')
+        expect(apiClient.get).toHaveBeenCalledWith('/api/v1/education')
         expect(store.education).toEqual(mockEducation)
       })
 

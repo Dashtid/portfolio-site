@@ -66,6 +66,7 @@ class PerformanceMonitor {
     }
 
     if (!this.enabled) {
+      this.initialized = true
       if (import.meta.env.DEV) {
         console.log('[Performance] Monitoring disabled')
       }

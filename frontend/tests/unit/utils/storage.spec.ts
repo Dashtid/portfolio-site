@@ -326,7 +326,9 @@ describe('Storage Utility', () => {
 
     it('should handle removing non-existent keys', () => {
       storage.removeMultiple([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.THEME])
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledTimes(2)
+      // Each removeItem call triggers isAvailable check (setItem+removeItem) plus the actual removeItem
+      // So 2 items = 2 isAvailable checks (2 removeItem) + 2 actual removes = 4 total
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledTimes(4)
     })
   })
 

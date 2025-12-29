@@ -11,6 +11,7 @@ vi.mock('@/api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
+    put: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn()
   }
@@ -54,7 +55,7 @@ describe('API services', () => {
 
       const result = await services.getCompanies()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/companies/')
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/companies')
       expect(result).toEqual(mockCompanies)
     })
 
@@ -74,18 +75,18 @@ describe('API services', () => {
 
       const result = await services.createCompany(newCompany)
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/companies/', newCompany)
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/companies', newCompany)
       expect(result).toEqual(mockCompany)
     })
 
     it('updates company', async () => {
       const updates = { name: 'Updated Company' }
       const updated = { ...mockCompany, ...updates }
-      vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
+      vi.mocked(apiClient.put).mockResolvedValue({ data: updated })
 
       const result = await services.updateCompany('1', updates)
 
-      expect(apiClient.patch).toHaveBeenCalledWith('/api/v1/companies/1', updates)
+      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/companies/1', updates)
       expect(result).toEqual(updated)
     })
 
@@ -116,7 +117,7 @@ describe('API services', () => {
 
       const result = await services.getEducation()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/education/')
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/education')
       expect(result).toEqual(mockEducations)
     })
 
@@ -136,18 +137,18 @@ describe('API services', () => {
 
       const result = await services.createEducation(newEducation)
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/education/', newEducation)
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/education', newEducation)
       expect(result).toEqual(mockEducation)
     })
 
     it('updates education', async () => {
       const updates = { degree: 'Master of Science' }
       const updated = { ...mockEducation, ...updates }
-      vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
+      vi.mocked(apiClient.put).mockResolvedValue({ data: updated })
 
       const result = await services.updateEducation('1', updates)
 
-      expect(apiClient.patch).toHaveBeenCalledWith('/api/v1/education/1', updates)
+      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/education/1', updates)
       expect(result).toEqual(updated)
     })
 
@@ -178,7 +179,7 @@ describe('API services', () => {
 
       const result = await services.getProjects()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/projects/')
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/projects')
       expect(result).toEqual(mockProjects)
     })
 
@@ -198,18 +199,18 @@ describe('API services', () => {
 
       const result = await services.createProject(newProject)
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/projects/', newProject)
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/projects', newProject)
       expect(result).toEqual(mockProject)
     })
 
     it('updates project', async () => {
       const updates = { name: 'Updated Project' }
       const updated = { ...mockProject, ...updates }
-      vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
+      vi.mocked(apiClient.put).mockResolvedValue({ data: updated })
 
       const result = await services.updateProject('1', updates)
 
-      expect(apiClient.patch).toHaveBeenCalledWith('/api/v1/projects/1', updates)
+      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/projects/1', updates)
       expect(result).toEqual(updated)
     })
 
@@ -237,7 +238,7 @@ describe('API services', () => {
 
       const result = await services.getSkills()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/skills/')
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/skills')
       expect(result).toEqual(mockSkills)
     })
 
@@ -257,18 +258,18 @@ describe('API services', () => {
 
       const result = await services.createSkill(newSkill)
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/skills/', newSkill)
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/skills', newSkill)
       expect(result).toEqual(mockSkill)
     })
 
     it('updates skill', async () => {
       const updates = { proficiency_level: 95 }
       const updated = { ...mockSkill, ...updates }
-      vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
+      vi.mocked(apiClient.put).mockResolvedValue({ data: updated })
 
       const result = await services.updateSkill('1', updates)
 
-      expect(apiClient.patch).toHaveBeenCalledWith('/api/v1/skills/1', updates)
+      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/skills/1', updates)
       expect(result).toEqual(updated)
     })
 
@@ -299,7 +300,7 @@ describe('API services', () => {
 
       const result = await services.getDocuments()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/documents/')
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/documents')
       expect(result).toEqual(mockDocuments)
     })
 

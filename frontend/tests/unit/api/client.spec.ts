@@ -9,6 +9,15 @@ import type { InternalAxiosRequestConfig, AxiosError } from 'axios'
 // Mock axios
 vi.mock('axios')
 
+// Mock router to prevent Pinia errors from navigation guards
+vi.mock('@/router', () => ({
+  default: {
+    push: vi.fn()
+  }
+}))
+
+import router from '@/router'
+
 describe('API client', () => {
   let apiClient: any
   let mockLocalStorage: { [key: string]: string }
@@ -68,6 +77,7 @@ describe('API client', () => {
       expect(axios.create).toHaveBeenCalledWith({
         baseURL: 'http://localhost:8001',
         timeout: 30000,
+        withCredentials: true,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -157,9 +167,13 @@ describe('API client', () => {
       await errorInterceptor(error)
 
       // Verify refresh endpoint was called
-      expect(axios.post).toHaveBeenCalledWith('http://localhost:8001/api/v1/auth/refresh', {
-        refresh_token: refreshToken
-      })
+      expect(axios.post).toHaveBeenCalledWith(
+        'http://localhost:8001/api/v1/auth/refresh',
+        {
+          refresh_token: refreshToken
+        },
+        { withCredentials: true }
+      )
 
       // Verify tokens were updated
       expect(localStorage.setItem).toHaveBeenCalledWith('accessToken', newAccessToken)
@@ -193,8 +207,8 @@ describe('API client', () => {
       expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken')
       expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken')
 
-      // Verify redirect
-      expect(window.location.href).toBe('/admin/login')
+      // Verify redirect via router
+      expect(router.push).toHaveBeenCalledWith('/admin/login')
     })
 
     it('does not retry request twice', async () => {
@@ -276,9 +290,13 @@ describe('API client', () => {
 
       // Only ONE refresh call should have been made
       expect(axios.post).toHaveBeenCalledTimes(1)
-      expect(axios.post).toHaveBeenCalledWith('http://localhost:8001/api/v1/auth/refresh', {
-        refresh_token: refreshToken
-      })
+      expect(axios.post).toHaveBeenCalledWith(
+        'http://localhost:8001/api/v1/auth/refresh',
+        {
+          refresh_token: refreshToken
+        },
+        { withCredentials: true }
+      )
     })
 
     it('retries all queued requests with new token after refresh completes', async () => {
@@ -342,8 +360,8 @@ describe('API client', () => {
       // The request that triggered refresh should reject
       await expect(errorInterceptor(error)).rejects.toThrow('Refresh failed')
 
-      // Verify redirect happened
-      expect(window.location.href).toBe('/admin/login')
+      // Verify redirect happened via router
+      expect(router.push).toHaveBeenCalledWith('/admin/login')
 
       // Verify tokens were cleared
       expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken')

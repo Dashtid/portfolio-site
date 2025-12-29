@@ -3,6 +3,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { AxiosError } from 'axios'
 import {
   handleError,
   getUserMessage,
@@ -246,8 +247,13 @@ describe('errorHandler utility', () => {
     })
 
     it('does not retry on client errors', async () => {
-      const error = new Error('Bad request') as any
-      error.response = { status: 400 }
+      const error = new AxiosError('Bad request', 'ERR_BAD_REQUEST', undefined, undefined, {
+        status: 400,
+        statusText: 'Bad Request',
+        data: {},
+        headers: {},
+        config: {} as any
+      } as any)
       const operation = vi.fn().mockRejectedValue(error)
 
       await expect(retryOperation(operation, 3, 10)).rejects.toThrow('Bad request')
@@ -255,8 +261,13 @@ describe('errorHandler utility', () => {
     })
 
     it('retries on server errors', async () => {
-      const serverError = new Error('Server error') as any
-      serverError.response = { status: 500 }
+      const serverError = new AxiosError('Server error', 'ERR_BAD_RESPONSE', undefined, undefined, {
+        status: 500,
+        statusText: 'Internal Server Error',
+        data: {},
+        headers: {},
+        config: {} as any
+      } as any)
       const operation = vi.fn().mockRejectedValueOnce(serverError).mockResolvedValue('success')
 
       const result = await retryOperation(operation, 2, 10)
