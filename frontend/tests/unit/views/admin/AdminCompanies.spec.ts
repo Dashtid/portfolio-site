@@ -13,10 +13,19 @@ vi.mock('@/api/client', () => ({
   }
 }))
 
-// Mock window.alert and window.confirm
-const mockAlert = vi.fn()
+// Mock useToast composable (component uses toast, not window.alert)
+const mockToast = {
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn()
+}
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => mockToast
+}))
+
+// Mock window.confirm
 const mockConfirm = vi.fn()
-window.alert = mockAlert
 window.confirm = mockConfirm
 
 describe('AdminCompanies', () => {
@@ -57,6 +66,11 @@ describe('AdminCompanies', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset toast mocks
+    mockToast.success.mockClear()
+    mockToast.error.mockClear()
+    mockToast.info.mockClear()
+    mockToast.warning.mockClear()
     vi.mocked(apiClient.get).mockResolvedValue({ data: mockCompanies })
   })
 
@@ -224,7 +238,7 @@ describe('AdminCompanies', () => {
           location: 'Stockholm'
         })
       )
-      expect(mockAlert).toHaveBeenCalledWith('Company added successfully')
+      expect(mockToast.success).toHaveBeenCalledWith('Company added successfully')
     })
   })
 
@@ -261,7 +275,7 @@ describe('AdminCompanies', () => {
           name: 'Updated Company'
         })
       )
-      expect(mockAlert).toHaveBeenCalledWith('Company updated successfully')
+      expect(mockToast.success).toHaveBeenCalledWith('Company updated successfully')
     })
   })
 
@@ -291,23 +305,23 @@ describe('AdminCompanies', () => {
       await flushPromises()
 
       expect(apiClient.delete).toHaveBeenCalledWith('/api/v1/companies/1')
-      expect(mockAlert).toHaveBeenCalledWith('Company deleted successfully')
+      expect(mockToast.success).toHaveBeenCalledWith('Company deleted successfully')
     })
   })
 
   describe('Error Handling', () => {
-    it('should show error alert when fetch fails', async () => {
+    it('should show error toast when fetch fails', async () => {
       vi.mocked(apiClient.get).mockRejectedValue(new Error('Network error'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       createWrapper()
       await flushPromises()
 
-      expect(mockAlert).toHaveBeenCalledWith('Failed to load companies')
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to load companies')
       consoleSpy.mockRestore()
     })
 
-    it('should show error alert when save fails', async () => {
+    it('should show error toast when save fails', async () => {
       vi.mocked(apiClient.post).mockRejectedValue(new Error('Save failed'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -320,11 +334,11 @@ describe('AdminCompanies', () => {
       await wrapper.find('.company-form').trigger('submit')
       await flushPromises()
 
-      expect(mockAlert).toHaveBeenCalledWith('Failed to save company')
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to save company')
       consoleSpy.mockRestore()
     })
 
-    it('should show error alert when delete fails', async () => {
+    it('should show error toast when delete fails', async () => {
       mockConfirm.mockReturnValue(true)
       vi.mocked(apiClient.delete).mockRejectedValue(new Error('Delete failed'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -336,7 +350,7 @@ describe('AdminCompanies', () => {
       await firstCard.find('.delete-btn').trigger('click')
       await flushPromises()
 
-      expect(mockAlert).toHaveBeenCalledWith('Failed to delete company')
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to delete company')
       consoleSpy.mockRestore()
     })
   })

@@ -6,6 +6,16 @@ import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePortfolioStore } from '@/stores/portfolio'
 
+// Mock API client to prevent network calls when stubActions: false
+vi.mock('@/api/client', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} })
+  }
+}))
+
 // Mock router
 const createTestRouter = (): Router => {
   return createRouter({
@@ -33,6 +43,7 @@ describe('AdminDashboard', () => {
         plugins: [
           createTestingPinia({
             createSpy: vi.fn,
+            stubActions: false,
             initialState: {
               auth: {
                 user: {
@@ -122,6 +133,7 @@ describe('AdminDashboard', () => {
           plugins: [
             createTestingPinia({
               createSpy: vi.fn,
+              stubActions: false,
               initialState: {
                 auth: {
                   user: {
@@ -272,6 +284,7 @@ describe('AdminDashboard', () => {
           plugins: [
             createTestingPinia({
               createSpy: vi.fn,
+              stubActions: false,
               initialState: {
                 auth: {
                   user: { id: '1', username: 'test' },

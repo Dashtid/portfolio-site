@@ -4,6 +4,16 @@ import { createTestingPinia } from '@pinia/testing'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 
+// Mock API client to prevent network calls when stubActions: false
+vi.mock('@/api/client', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} })
+  }
+}))
+
 // Mock child components
 vi.mock('@/components/NavBar.vue', () => ({
   default: {
@@ -77,6 +87,7 @@ describe('HomeView', () => {
         plugins: [
           createTestingPinia({
             createSpy: vi.fn,
+            stubActions: false,
             initialState: {
               portfolio: {
                 companies: [],

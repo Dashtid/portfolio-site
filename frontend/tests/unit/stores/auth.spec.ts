@@ -126,86 +126,61 @@ describe('Auth Store', () => {
   })
 
   describe('initializeFromCallback', () => {
-    it('should return false when no tokens in URL', () => {
-      window.location.search = ''
+    it('should return false when not on /admin', async () => {
+      window.location.pathname = '/other'
       const store = useAuthStore()
-      const result = store.initializeFromCallback()
+      const result = await store.initializeFromCallback()
       expect(result).toBe(false)
     })
 
-    it('should return true and set tokens for valid JWT tokens', () => {
-      // Valid JWT format: header.payload.signature
-      const validToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U'
-      const validRefresh =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyZWZyZXNoIn0.abc123def456ghi789'
-
-      window.location.search = `?token=${validToken}&refresh=${validRefresh}`
+    it('should return true when user is fetched successfully on /admin', async () => {
+      window.location.pathname = '/admin'
+      const mockUser = { id: '1', username: 'testuser', name: 'Test User' }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
 
       const store = useAuthStore()
-      const result = store.initializeFromCallback()
+      const result = await store.initializeFromCallback()
 
       expect(result).toBe(true)
-      expect(store.accessToken).toBe(validToken)
-      expect(store.refreshToken).toBe(validRefresh)
-      expect(window.history.replaceState).toHaveBeenCalled()
+      expect(store.user).toEqual(mockUser)
     })
 
-    it('should return false and clean URL for invalid token format', () => {
-      window.location.search = '?token=invalid-token&refresh=also-invalid'
+    it('should return false when fetchUser fails on /admin', async () => {
+      window.location.pathname = '/admin'
+      vi.mocked(apiClient.get).mockRejectedValue(new Error('Not authenticated'))
 
       const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-      expect(window.history.replaceState).toHaveBeenCalled()
-    })
-
-    it('should return false when only token is provided', () => {
-      const validToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U'
-      window.location.search = `?token=${validToken}`
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
+      const result = await store.initializeFromCallback()
 
       expect(result).toBe(false)
     })
   })
 
   describe('setTokens', () => {
-    it('should set accessToken and refreshToken', () => {
+    it('should set accessToken and refreshToken', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { id: '1', username: 'test' } })
       const store = useAuthStore()
-      store.setTokens('access-token', 'refresh-token')
+      await store.setTokens('access-token', 'refresh-token')
 
       expect(store.accessToken).toBe('access-token')
       expect(store.refreshToken).toBe('refresh-token')
     })
 
-    it('should set Authorization header on apiClient', () => {
+    it('should set Authorization header on apiClient', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { id: '1', username: 'test' } })
       const store = useAuthStore()
-      store.setTokens('access-token', 'refresh-token')
+      await store.setTokens('access-token', 'refresh-token')
 
       expect(apiClient.defaults.headers.common['Authorization']).toBe('Bearer access-token')
     })
   })
 
   describe('fetchUser', () => {
-    it('should not fetch if no accessToken', async () => {
-      const store = useAuthStore()
-      store.accessToken = null
-
-      await store.fetchUser()
-
-      expect(apiClient.get).not.toHaveBeenCalled()
-    })
-
-    it('should fetch user info and set user', async () => {
+    it('should fetch user info via HTTP-only cookies', async () => {
       const mockUser = { id: '1', username: 'testuser', name: 'Test User' }
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
 
       const store = useAuthStore()
-      store.accessToken = 'valid-token'
 
       await store.fetchUser()
 
@@ -213,21 +188,31 @@ describe('Auth Store', () => {
       expect(store.user).toEqual(mockUser)
     })
 
-    it('should handle 401 error by refreshing token', async () => {
+    it('should clear user on 401 unauthorized error', async () => {
       // Mock AxiosError with isAxiosError flag for type guard compatibility
       const error = { isAxiosError: true, response: { status: 401 } }
       vi.mocked(apiClient.get).mockRejectedValue(error)
 
       const store = useAuthStore()
-      store.accessToken = 'valid-token'
-      store.refreshToken = 'valid-refresh'
-
-      // Mock refreshAccessToken to avoid actual implementation
-      store.refreshAccessToken = vi.fn()
+      store.user = { id: '1', username: 'test' }
 
       await store.fetchUser()
 
-      expect(store.refreshAccessToken).toHaveBeenCalled()
+      expect(store.user).toBeNull()
+    })
+
+    it('should not clear user on network errors', async () => {
+      // Network error (not a 401)
+      const error = new Error('Network error')
+      vi.mocked(apiClient.get).mockRejectedValue(error)
+
+      const store = useAuthStore()
+      store.user = { id: '1', username: 'test' }
+
+      await store.fetchUser()
+
+      // User should NOT be cleared on network errors
+      expect(store.user).toEqual({ id: '1', username: 'test' })
     })
   })
 
@@ -366,18 +351,24 @@ describe('Auth Store', () => {
   })
 
   describe('checkAuth', () => {
-    it('should not fetch user if no accessToken', async () => {
+    it('should fetch user using HTTP-only cookies first', async () => {
+      const mockUser = { id: '1', username: 'testuser' }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
+
       const store = useAuthStore()
-      store.accessToken = null
 
       await store.checkAuth()
 
-      expect(apiClient.get).not.toHaveBeenCalled()
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me')
+      expect(store.user).toEqual(mockUser)
     })
 
-    it('should set Authorization header and fetch user if accessToken exists', async () => {
+    it('should fallback to localStorage token if cookies fail', async () => {
       const mockUser = { id: '1', username: 'testuser' }
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
+      // First call fails (no cookies), second call with header succeeds
+      vi.mocked(apiClient.get)
+        .mockRejectedValueOnce(new Error('No session'))
+        .mockResolvedValueOnce({ data: mockUser })
 
       const store = useAuthStore()
       store.accessToken = 'existing-token'
@@ -385,177 +376,35 @@ describe('Auth Store', () => {
       await store.checkAuth()
 
       expect(apiClient.defaults.headers.common['Authorization']).toBe('Bearer existing-token')
+      expect(apiClient.get).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('security: HTTP-only cookies', () => {
+    it('should use withCredentials for cookie-based auth', async () => {
+      const mockUser = { id: '1', username: 'testuser' }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
+
+      const store = useAuthStore()
+      await store.fetchUser()
+
+      // API client should send cookies automatically (configured in client.ts)
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me')
     })
-  })
 
-  describe('security: XSS prevention', () => {
-    it('should reject script injection via token parameter', () => {
-      // Attempt to inject script tags via token parameter
-      window.location.search = '?token=<script>alert(1)</script>&refresh=<script>evil()</script>'
+    it('should clear local state on logout even if API fails', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue(new Error('Network error'))
 
       const store = useAuthStore()
-      const result = store.initializeFromCallback()
+      store.user = { id: '1', username: 'test' }
+      store.accessToken = 'token'
+      store.refreshToken = 'refresh'
 
-      expect(result).toBe(false)
+      await store.logout()
+
+      expect(store.user).toBeNull()
       expect(store.accessToken).toBeNull()
       expect(store.refreshToken).toBeNull()
-    })
-
-    it('should reject JavaScript protocol in token', () => {
-      window.location.search = '?token=javascript:alert(1)&refresh=javascript:evil()'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-      expect(store.accessToken).toBeNull()
-    })
-
-    it('should reject data URI injection', () => {
-      window.location.search = '?token=data:text/html,<script>alert(1)</script>&refresh=data:evil'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-      expect(store.accessToken).toBeNull()
-    })
-
-    it('should reject URL encoded script injection', () => {
-      // %3Cscript%3E = <script>
-      window.location.search = '?token=%3Cscript%3Ealert(1)%3C/script%3E&refresh=test'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-      expect(store.accessToken).toBeNull()
-    })
-
-    it('should reject event handler injection', () => {
-      window.location.search = '?token=test"onload="alert(1)&refresh=test'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-      expect(store.accessToken).toBeNull()
-    })
-  })
-
-  describe('security: malformed JWT rejection', () => {
-    it('should reject token with only one segment', () => {
-      window.location.search = '?token=justonepart&refresh=alsoonepart'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-
-    it('should reject token with two segments (missing signature)', () => {
-      window.location.search = '?token=header.payload&refresh=also.twosegments'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-
-    it('should reject token with four segments', () => {
-      window.location.search = '?token=one.two.three.four&refresh=a.b.c.d'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-
-    it('should reject empty token', () => {
-      window.location.search = '?token=&refresh='
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-
-    it('should reject token with invalid characters', () => {
-      window.location.search = '?token=abc.def.ghi!@#$%&refresh=abc.def.ghi'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-
-    it('should reject token with spaces', () => {
-      window.location.search = '?token=abc def.ghi.jkl&refresh=abc.def.ghi'
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-
-    it('should accept valid JWT with underscores and hyphens', () => {
-      // Base64url encoding uses - and _ which are valid in JWT
-      const validToken = 'eyJ-test_header.eyJ-test_payload.sig_with-dashes'
-      const validRefresh = 'eyJ-refresh_header.eyJ-refresh_payload.sig_value'
-
-      window.location.search = `?token=${validToken}&refresh=${validRefresh}`
-
-      const store = useAuthStore()
-      const result = store.initializeFromCallback()
-
-      expect(result).toBe(true)
-      expect(store.accessToken).toBe(validToken)
-    })
-  })
-
-  describe('security: header injection prevention', () => {
-    it('should not include newlines in Authorization header', () => {
-      const store = useAuthStore()
-
-      // Attempt header injection via token with newlines
-      const maliciousToken = 'valid.jwt.token\r\nX-Injected-Header: evil'
-      store.setTokens(maliciousToken, 'refresh.token.here')
-
-      // The token should be set as-is (validation happens on callback, not setTokens)
-      // But Authorization header should be set without allowing HTTP header injection
-      const authHeader = apiClient.defaults.headers.common['Authorization']
-      expect(authHeader).toBe(`Bearer ${maliciousToken}`)
-
-      // Note: Actual header injection prevention is handled by axios/browser
-      // This test documents that we don't do additional sanitization in setTokens
-    })
-  })
-
-  describe('security: storage handling', () => {
-    it('should clean URL parameters after processing', () => {
-      const validToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U'
-      const validRefresh =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyZWZyZXNoIn0.abc123def456ghi789'
-
-      window.location.search = `?token=${validToken}&refresh=${validRefresh}`
-
-      const store = useAuthStore()
-      store.initializeFromCallback()
-
-      // URL should be cleaned to prevent token leakage in browser history
-      expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '/admin')
-    })
-
-    it('should clean URL even when tokens are invalid', () => {
-      window.location.search = '?token=invalid&refresh=alsoinvalid'
-
-      const store = useAuthStore()
-      store.initializeFromCallback()
-
-      // URL should still be cleaned to prevent logging malicious parameters
-      expect(window.history.replaceState).toHaveBeenCalled()
     })
   })
 })

@@ -15,10 +15,19 @@ vi.mock('@/api/client', () => ({
   }
 }))
 
-// Mock window.alert and window.confirm
-const mockAlert = vi.fn()
+// Mock useToast composable (component uses toast, not window.alert)
+const mockToast = {
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn()
+}
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => mockToast
+}))
+
+// Mock window.confirm
 const mockConfirm = vi.fn()
-window.alert = mockAlert
 window.confirm = mockConfirm
 
 // Create router
@@ -106,6 +115,11 @@ describe('AdminEducation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset toast mocks
+    mockToast.success.mockClear()
+    mockToast.error.mockClear()
+    mockToast.info.mockClear()
+    mockToast.warning.mockClear()
     vi.mocked(api.get).mockResolvedValue({ data: mockEducationData })
   })
 
@@ -377,7 +391,7 @@ describe('AdminEducation', () => {
       consoleSpy.mockRestore()
     })
 
-    it('should show error alert when save fails', async () => {
+    it('should show error toast when save fails', async () => {
       vi.mocked(api.post).mockRejectedValue(new Error('Save failed'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -392,11 +406,11 @@ describe('AdminEducation', () => {
       await wrapper.find('form').trigger('submit')
       await flushPromises()
 
-      expect(mockAlert).toHaveBeenCalledWith('Failed to save education. Please try again.')
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to save education')
       consoleSpy.mockRestore()
     })
 
-    it('should show error alert when delete fails', async () => {
+    it('should show error toast when delete fails', async () => {
       mockConfirm.mockReturnValue(true)
       vi.mocked(api.delete).mockRejectedValue(new Error('Delete failed'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -408,7 +422,7 @@ describe('AdminEducation', () => {
       await deleteButtons[0].trigger('click')
       await flushPromises()
 
-      expect(mockAlert).toHaveBeenCalledWith('Failed to delete education. Please try again.')
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to delete education')
       consoleSpy.mockRestore()
     })
   })
@@ -448,7 +462,8 @@ describe('AdminEducation', () => {
       await createWrapper()
       await flushPromises()
 
-      expect(api.get).toHaveBeenCalledWith('/education/')
+      // Component uses AbortSignal for request cancellation
+      expect(api.get).toHaveBeenCalledWith('/education/', { signal: expect.any(AbortSignal) })
     })
 
     it('should refetch after successful operations', async () => {
@@ -466,7 +481,8 @@ describe('AdminEducation', () => {
       await wrapper.find('form').trigger('submit')
       await flushPromises()
 
-      expect(api.get).toHaveBeenCalledWith('/education/')
+      // Component uses AbortSignal for request cancellation
+      expect(api.get).toHaveBeenCalledWith('/education/', { signal: expect.any(AbortSignal) })
     })
   })
 })
