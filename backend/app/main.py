@@ -308,6 +308,7 @@ async def migrate_company_data():
     from datetime import date  # noqa: PLC0415
 
     from sqlalchemy import select, update  # noqa: PLC0415
+    from sqlalchemy.exc import OperationalError  # noqa: PLC0415
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.company import Company  # noqa: PLC0415
@@ -369,108 +370,114 @@ async def migrate_company_data():
         ),
     }
 
-    async with AsyncSessionLocal() as session:
-        # Update existing companies with titles and dates
-        for name, (title, start_date, end_date, order_index) in company_updates.items():
-            try:
-                stmt = (
-                    update(Company)
-                    .where(Company.name == name)
-                    .values(
-                        title=title,
-                        start_date=start_date,
-                        end_date=end_date,
-                        order_index=order_index,
+    try:
+        async with AsyncSessionLocal() as session:
+            # Update existing companies with titles and dates
+            for name, (title, start_date, end_date, order_index) in company_updates.items():
+                try:
+                    stmt = (
+                        update(Company)
+                        .where(Company.name == name)
+                        .values(
+                            title=title,
+                            start_date=start_date,
+                            end_date=end_date,
+                            order_index=order_index,
+                        )
                     )
-                )
-                result = await session.execute(stmt)
-                if result.rowcount > 0:  # type: ignore[attr-defined]
-                    logger.info("Updated company: %s", name)
-            except Exception as e:
-                logger.warning("Company update failed for %s: %s", name, e)
+                    result = await session.execute(stmt)
+                    if result.rowcount > 0:  # type: ignore[attr-defined]
+                        logger.info("Updated company: %s", name)
+                except Exception as e:
+                    logger.warning("Company update failed for %s: %s", name, e)
 
-        # Rename Scania Engines to Scania Group
-        stmt = update(Company).where(Company.name == "Scania Engines").values(name="Scania Group")
-        result = await session.execute(stmt)
-        if result.rowcount > 0:  # type: ignore[attr-defined]
-            logger.info("Renamed Scania Engines to Scania Group")
+            # Rename Scania Engines to Scania Group
+            stmt = (
+                update(Company).where(Company.name == "Scania Engines").values(name="Scania Group")
+            )
+            result = await session.execute(stmt)
+            if result.rowcount > 0:  # type: ignore[attr-defined]
+                logger.info("Renamed Scania Engines to Scania Group")
 
-        # Update Scania 2016 entry specifically (use date to avoid hitting 2012 entry)
-        stmt = (
-            update(Company)
-            .where(Company.name == "Scania Group", Company.start_date == date(2016, 6, 1))
-            .values(
-                title="Technician, Engine Analysis",
-                end_date=date(2016, 8, 31),
-                order_index=6,
-                logo_url="/images/scania.svg",
-            )
-        )
-        result = await session.execute(stmt)
-        if result.rowcount > 0:  # type: ignore[attr-defined]
-            logger.info("Updated Scania 2016 entry")
-
-        # Update Scania 2012 entry: rename and add logo
-        stmt = (
-            update(Company)
-            .where(Company.name == "Scania Group (Early Career)")
-            .values(
-                name="Scania Group",
-                logo_url="/images/scania.svg",
-            )
-        )
-        result = await session.execute(stmt)
-        if result.rowcount > 0:  # type: ignore[attr-defined]
-            logger.info("Updated Scania 2012 entry with new name and logo")
-
-        # Fix Scania 2012 entry if dates were corrupted by previous migrations
-        stmt = (
-            update(Company)
-            .where(
-                Company.name == "Scania Group",
-                Company.order_index == 8,  # The 2012 entry has order_index 8
-            )
-            .values(
-                start_date=date(2012, 6, 1),
-                end_date=date(2012, 8, 31),
-                title="Technician, Engine Analysis",
-                description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
-            )
-        )
-        result = await session.execute(stmt)
-        if result.rowcount > 0:  # type: ignore[attr-defined]
-            logger.info("Fixed Scania 2012 entry dates")
-
-        # If Scania 2012 doesn't exist yet, create it
-        result = await session.execute(
-            select(Company).where(
-                Company.start_date == date(2012, 6, 1),
-                Company.name == "Scania Group",
-            )
-        )
-        if result.scalar_one_or_none() is None:
-            # Check if old name exists
-            result = await session.execute(
-                select(Company).where(Company.name == "Scania Group (Early Career)")
-            )
-            if result.scalar_one_or_none() is None:
-                scania_2012 = Company(
-                    id=str(uuid.uuid4()),
-                    name="Scania Group",
+            # Update Scania 2016 entry specifically (use date to avoid hitting 2012 entry)
+            stmt = (
+                update(Company)
+                .where(Company.name == "Scania Group", Company.start_date == date(2016, 6, 1))
+                .values(
                     title="Technician, Engine Analysis",
-                    description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
-                    location="Södertälje, Sweden",
+                    end_date=date(2016, 8, 31),
+                    order_index=6,
+                    logo_url="/images/scania.svg",
+                )
+            )
+            result = await session.execute(stmt)
+            if result.rowcount > 0:  # type: ignore[attr-defined]
+                logger.info("Updated Scania 2016 entry")
+
+            # Update Scania 2012 entry: rename and add logo
+            stmt = (
+                update(Company)
+                .where(Company.name == "Scania Group (Early Career)")
+                .values(
+                    name="Scania Group",
+                    logo_url="/images/scania.svg",
+                )
+            )
+            result = await session.execute(stmt)
+            if result.rowcount > 0:  # type: ignore[attr-defined]
+                logger.info("Updated Scania 2012 entry with new name and logo")
+
+            # Fix Scania 2012 entry if dates were corrupted by previous migrations
+            stmt = (
+                update(Company)
+                .where(
+                    Company.name == "Scania Group",
+                    Company.order_index == 8,  # The 2012 entry has order_index 8
+                )
+                .values(
                     start_date=date(2012, 6, 1),
                     end_date=date(2012, 8, 31),
-                    website="https://www.scania.com",
-                    logo_url="/images/scania.svg",
-                    order_index=8,
+                    title="Technician, Engine Analysis",
+                    description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
                 )
-                session.add(scania_2012)
-                logger.info("Added Scania 2012 entry")
+            )
+            result = await session.execute(stmt)
+            if result.rowcount > 0:  # type: ignore[attr-defined]
+                logger.info("Fixed Scania 2012 entry dates")
 
-        await session.commit()
-        logger.info("Company data migration completed")
+            # If Scania 2012 doesn't exist yet, create it
+            result = await session.execute(
+                select(Company).where(
+                    Company.start_date == date(2012, 6, 1),
+                    Company.name == "Scania Group",
+                )
+            )
+            if result.scalar_one_or_none() is None:
+                # Check if old name exists
+                result = await session.execute(
+                    select(Company).where(Company.name == "Scania Group (Early Career)")
+                )
+                if result.scalar_one_or_none() is None:
+                    scania_2012 = Company(
+                        id=str(uuid.uuid4()),
+                        name="Scania Group",
+                        title="Technician, Engine Analysis",
+                        description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
+                        location="Södertälje, Sweden",
+                        start_date=date(2012, 6, 1),
+                        end_date=date(2012, 8, 31),
+                        website="https://www.scania.com",
+                        logo_url="/images/scania.svg",
+                        order_index=8,
+                    )
+                    session.add(scania_2012)
+                    logger.info("Added Scania 2012 entry")
+
+            await session.commit()
+            logger.info("Company data migration completed")
+    except OperationalError:
+        # Table doesn't exist yet (e.g., during testing before fixture setup)
+        pass
 
 
 # Data migration to fix education dates and order (one-time migration)
