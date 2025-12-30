@@ -2,6 +2,7 @@
 Application configuration using Pydantic Settings
 """
 
+import logging
 import os
 import warnings
 from urllib.parse import urlparse
@@ -195,9 +196,12 @@ class Settings(BaseSettings):
                     f"FRONTEND_URL domain ({frontend_domain}). Ensure this is intentional.",
                     stacklevel=2,
                 )
-        except Exception:
-            # Don't fail on parsing errors, just skip validation
-            pass
+        except Exception as e:
+            # Log parsing errors but don't fail - allows app to start with misconfigured URLs
+            logging.getLogger(__name__).warning(
+                "OAuth domain validation skipped due to parsing error: %s",
+                str(e),
+            )
 
         return self
 

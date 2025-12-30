@@ -582,11 +582,14 @@ class TestRateLimitMiddleware:
         assert hasattr(app.state, "limiter")
 
     def test_get_client_ip_function(self):
-        """Test the get_client_ip function with X-Forwarded-For."""
+        """Test the get_client_ip function with X-Forwarded-For from trusted proxy."""
         from app.middleware.rate_limit import get_client_ip
 
         mock_request = MagicMock(spec=Request)
         mock_request.headers = {"X-Forwarded-For": "1.2.3.4, 5.6.7.8"}
+        # Must be from trusted proxy for X-Forwarded-For to be trusted
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
 
         ip = get_client_ip(mock_request)
         assert ip == "1.2.3.4"
@@ -623,6 +626,7 @@ class TestRateLimitMiddleware:
         mock_request.state = MagicMock()
         mock_request.state.user = None
         mock_request.headers = {}
+        mock_request.cookies = {}
         mock_request.client = MagicMock()
         mock_request.client.host = "10.0.0.1"
 
@@ -731,21 +735,27 @@ class TestRateLimitKeyFunctions:
     """Tests for rate limit key generation functions."""
 
     def test_get_client_ip_multiple_proxies(self):
-        """Test get_client_ip with multiple proxy IPs."""
+        """Test get_client_ip with multiple proxy IPs from trusted source."""
         from app.middleware.rate_limit import get_client_ip
 
         mock_request = MagicMock(spec=Request)
         mock_request.headers = {"X-Forwarded-For": "10.0.0.1, 172.16.0.1, 192.168.1.1"}
+        # Must be from trusted proxy for X-Forwarded-For to be trusted
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
 
         ip = get_client_ip(mock_request)
         assert ip == "10.0.0.1"
 
     def test_get_client_ip_whitespace_handling(self):
-        """Test get_client_ip handles whitespace in header."""
+        """Test get_client_ip handles whitespace in header from trusted proxy."""
         from app.middleware.rate_limit import get_client_ip
 
         mock_request = MagicMock(spec=Request)
         mock_request.headers = {"X-Forwarded-For": "  10.0.0.1  ,  172.16.0.1  "}
+        # Must be from trusted proxy for X-Forwarded-For to be trusted
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
 
         ip = get_client_ip(mock_request)
         assert ip == "10.0.0.1"

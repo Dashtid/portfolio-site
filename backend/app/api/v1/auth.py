@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.deps import get_current_user
+from app.core.ip_utils import get_client_ip
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.database import get_db
 from app.middleware import limiter
@@ -37,13 +38,6 @@ async def cleanup_expired_states(db: AsyncSession) -> None:
     """Remove expired OAuth states from database"""
     await db.execute(delete(OAuthState).where(OAuthState.expires_at < datetime.now(UTC)))
     await db.commit()
-
-
-def get_client_ip(request: Request) -> str | None:
-    """Extract client IP from request, handling proxies"""
-    if request.client:
-        return request.client.host
-    return None
 
 
 async def create_oauth_state(db: AsyncSession, client_ip: str | None = None) -> str:
