@@ -254,7 +254,6 @@ async def run_migrations():
 
 async def cleanup_duplicate_scania_entries():
     """Remove duplicate Scania Group entries, keeping only order_index 6 and 8."""
-    from datetime import date  # noqa: PLC0415
 
     from sqlalchemy import delete, select  # noqa: PLC0415
     from sqlalchemy.exc import OperationalError  # noqa: PLC0415
@@ -275,20 +274,23 @@ async def cleanup_duplicate_scania_entries():
                 return  # No duplicates
 
             logger.warning("Found %d Scania entries, cleaning up duplicates", len(scania_entries))
-            ids_to_keep = {e.id for e in scania_entries if e.order_index in (6, 8)}
 
-            # Fallback: keep oldest (2012) and a 2016 entry if order_index matching failed
-            if len(ids_to_keep) != 2:
-                sorted_entries = sorted(
-                    scania_entries, key=lambda e: (e.start_date or date(1900, 1, 1))
-                )
-                ids_to_keep = {sorted_entries[0].id}
-                for entry in sorted_entries:
-                    if entry.start_date and entry.start_date.year == 2016:
+            # Primary: keep entries by their actual dates (most reliable)
+            ids_to_keep = set()
+            for entry in scania_entries:
+                if entry.start_date:
+                    if entry.start_date.year == 2016 and entry.start_date.month == 6:
                         ids_to_keep.add(entry.id)
-                        break
-                if len(ids_to_keep) < 2 and len(sorted_entries) > 1:
-                    ids_to_keep.add(sorted_entries[-1].id)
+                        logger.info("Keeping 2016 Scania entry by date: id=%s", entry.id)
+                    elif entry.start_date.year == 2012 and entry.start_date.month == 6:
+                        ids_to_keep.add(entry.id)
+                        logger.info("Keeping 2012 Scania entry by date: id=%s", entry.id)
+                if len(ids_to_keep) == 2:
+                    break
+
+            # Fallback: use order_index if date matching didn't work
+            if len(ids_to_keep) != 2:
+                ids_to_keep = {e.id for e in scania_entries if e.order_index in (6, 8)}
 
             ids_to_delete = [e.id for e in scania_entries if e.id not in ids_to_keep]
             if ids_to_delete:
@@ -405,6 +407,7 @@ async def migrate_company_data():
                 .where(Company.name == "Scania Group", Company.start_date == date(2016, 6, 1))
                 .values(
                     title="Technician, Engine Analysis",
+                    description="Autonomous role managing troubleshooting processes, communicating across production chain, and creating documentation and work routines.",
                     end_date=date(2016, 8, 31),
                     order_index=6,
                     logo_url="/images/scania.svg",
@@ -438,7 +441,7 @@ async def migrate_company_data():
                     start_date=date(2012, 6, 1),
                     end_date=date(2012, 8, 31),
                     title="Technician, Engine Analysis",
-                    description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
+                    description="Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
                 )
             )
             result = await session.execute(stmt)
@@ -462,7 +465,7 @@ async def migrate_company_data():
                         id=str(uuid.uuid4()),
                         name="Scania Group",
                         title="Technician, Engine Analysis",
-                        description="Junior role at Scania working with engineers and technicians in second-line support, acquiring troubleshooting skills and understanding of production processes.",
+                        description="Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
                         location="Södertälje, Sweden",
                         start_date=date(2012, 6, 1),
                         end_date=date(2012, 8, 31),
