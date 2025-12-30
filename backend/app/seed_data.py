@@ -5,7 +5,7 @@ Seed data script to populate database with initial portfolio content
 import asyncio
 from datetime import datetime
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base, engine
@@ -114,12 +114,21 @@ async def seed_companies(session: AsyncSession):
         },
     ]
 
+    added_count = 0
     for company_data in companies:
-        company = Company(**company_data)
-        session.add(company)
+        # Check if company already exists by name
+        result = await session.execute(select(Company).where(Company.name == company_data["name"]))
+        if result.scalar_one_or_none() is None:
+            company = Company(**company_data)
+            session.add(company)
+            added_count += 1
+        else:
+            logger.debug("Company '%s' already exists, skipping", company_data["name"])
 
     await session.commit()
-    logger.info("Seeded %d companies", len(companies))
+    logger.info(
+        "Seeded %d companies (%d already existed)", added_count, len(companies) - added_count
+    )
 
 
 async def seed_projects(session: AsyncSession):

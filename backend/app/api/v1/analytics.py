@@ -80,12 +80,12 @@ async def track_pageview(
     await db.refresh(db_pageview)
 
     return PageViewResponse(
-        id=db_pageview.id,
-        visitor_id=db_pageview.session_id or "anonymous",
-        page_path=db_pageview.page_path,
+        id=str(db_pageview.id),
+        visitor_id=str(db_pageview.session_id) if db_pageview.session_id else "anonymous",
+        page_path=str(db_pageview.page_path),
         page_title=None,
-        referrer=db_pageview.referrer,
-        timestamp=db_pageview.created_at or datetime.now(UTC),
+        referrer=str(db_pageview.referrer) if db_pageview.referrer else None,
+        timestamp=db_pageview.created_at or datetime.now(UTC),  # type: ignore[arg-type]
     )
 
 

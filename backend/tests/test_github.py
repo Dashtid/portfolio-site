@@ -4,6 +4,7 @@ Tests for GitHub stats endpoints
 
 from unittest.mock import AsyncMock, patch
 
+import httpx
 from fastapi.testclient import TestClient
 
 
@@ -37,8 +38,8 @@ def test_get_github_stats_invalid_username(client: TestClient):
 @patch("app.api.v1.github.github_service")
 def test_get_github_stats_api_error(mock_service, client: TestClient):
     """Test GitHub stats when API returns error."""
-    # Mock the service to raise an exception
-    mock_service.get_portfolio_stats = AsyncMock(side_effect=Exception("API Error"))
+    # Mock the service to raise an httpx exception
+    mock_service.get_portfolio_stats = AsyncMock(side_effect=httpx.RequestError("API Error"))
 
     response = client.get("/api/v1/github/stats/nonexistentuser")
     # Should return 500 as the endpoint catches the exception
@@ -102,7 +103,7 @@ def test_get_repo_languages(mock_service, client: TestClient):
 @patch("app.api.v1.github.github_service")
 def test_get_repo_languages_error(mock_service, client: TestClient):
     """Test getting repository languages with API error."""
-    mock_service.get_repo_languages = AsyncMock(side_effect=Exception("API Error"))
+    mock_service.get_repo_languages = AsyncMock(side_effect=httpx.RequestError("API Error"))
 
     response = client.get("/api/v1/github/languages/testuser/test-repo")
     assert response.status_code == 500
@@ -111,7 +112,7 @@ def test_get_repo_languages_error(mock_service, client: TestClient):
 @patch("app.api.v1.github.github_service")
 def test_get_project_stats_error(mock_service, client: TestClient):
     """Test getting project statistics with API error."""
-    mock_service.get_project_stats = AsyncMock(side_effect=Exception("API Error"))
+    mock_service.get_project_stats = AsyncMock(side_effect=httpx.RequestError("API Error"))
 
     response = client.get("/api/v1/github/project/testuser/test-repo")
     assert response.status_code == 500
@@ -120,7 +121,7 @@ def test_get_project_stats_error(mock_service, client: TestClient):
 @patch("app.api.v1.github.github_service")
 def test_get_user_repos_error(mock_service, client: TestClient):
     """Test getting user repositories with API error."""
-    mock_service.get_user_repos = AsyncMock(side_effect=Exception("API Error"))
+    mock_service.get_user_repos = AsyncMock(side_effect=httpx.RequestError("API Error"))
 
     response = client.get("/api/v1/github/repos/testuser")
     assert response.status_code == 500

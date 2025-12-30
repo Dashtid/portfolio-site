@@ -96,7 +96,8 @@ interface ValidationError {
  */
 export function getErrorMessage(error: unknown, fallback = 'An error occurred'): string {
   if (isAxiosError(error)) {
-    const detail = error.response?.data?.detail
+    const data = error.response?.data as { detail?: unknown } | undefined
+    const detail = data?.detail
     // Handle string detail
     if (typeof detail === 'string') return detail
     // Handle FastAPI validation errors (array of {msg, loc, type})

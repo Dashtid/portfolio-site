@@ -82,6 +82,7 @@ onUnmounted(() => {
   z-index: var(--z-index-fixed, 1030);
   width: 50px;
   height: 50px;
+  padding: 0; /* Reset global button padding */
   display: flex;
   align-items: center;
   justify-content: center;

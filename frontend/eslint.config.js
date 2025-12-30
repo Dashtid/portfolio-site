@@ -133,6 +133,14 @@ export default [
     }
   },
 
+  // Test files - allow non-null assertions (common pattern in tests)
+  {
+    files: ['tests/**/*.ts', 'tests/**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off'
+    }
+  },
+
   // Vue configuration
   ...vuePlugin.configs['flat/recommended'],
   {

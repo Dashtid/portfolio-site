@@ -137,9 +137,9 @@ async def cleanup_oauth_states_periodically():
                 result = await session.execute(
                     delete(OAuthState).where(OAuthState.expires_at < datetime.now(UTC))
                 )
-                if result.rowcount > 0:
+                if result.rowcount > 0:  # type: ignore[attr-defined]
                     await session.commit()
-                    logger.debug("Cleaned up %d expired OAuth states", result.rowcount)
+                    logger.debug("Cleaned up %d expired OAuth states", result.rowcount)  # type: ignore[attr-defined]
         except asyncio.CancelledError:
             break
         except Exception as e:
@@ -252,6 +252,47 @@ async def run_migrations():
                     logger.warning("Migration check failed: %s - %s", migration["description"], e)
 
 
+async def cleanup_duplicate_scania_entries():
+    """Remove duplicate Scania Group entries, keeping only order_index 6 and 8."""
+    from datetime import date  # noqa: PLC0415
+
+    from sqlalchemy import delete, select  # noqa: PLC0415
+
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.models.company import Company  # noqa: PLC0415
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Company).where(Company.name.in_(["Scania Group", "Scania Group (Early Career)"]))
+        )
+        scania_entries = result.scalars().all()
+
+        if len(scania_entries) <= 2:
+            return  # No duplicates
+
+        logger.warning("Found %d Scania entries, cleaning up duplicates", len(scania_entries))
+        ids_to_keep = {e.id for e in scania_entries if e.order_index in (6, 8)}
+
+        # Fallback: keep oldest (2012) and a 2016 entry if order_index matching failed
+        if len(ids_to_keep) != 2:
+            sorted_entries = sorted(
+                scania_entries, key=lambda e: (e.start_date or date(1900, 1, 1))
+            )
+            ids_to_keep = {sorted_entries[0].id}
+            for entry in sorted_entries:
+                if entry.start_date and entry.start_date.year == 2016:
+                    ids_to_keep.add(entry.id)
+                    break
+            if len(ids_to_keep) < 2 and len(sorted_entries) > 1:
+                ids_to_keep.add(sorted_entries[-1].id)
+
+        ids_to_delete = [e.id for e in scania_entries if e.id not in ids_to_keep]
+        if ids_to_delete:
+            await session.execute(delete(Company).where(Company.id.in_(ids_to_delete)))
+            logger.info("Deleted %d duplicate Scania entries", len(ids_to_delete))
+            await session.commit()
+
+
 # Data migration to fix company dates and titles (one-time migration)
 async def migrate_company_data():
     """Update company dates and titles to correct values from LinkedIn data."""
@@ -263,6 +304,9 @@ async def migrate_company_data():
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.company import Company  # noqa: PLC0415
+
+    # First, clean up any duplicate Scania entries
+    await cleanup_duplicate_scania_entries()
 
     # Mapping: name -> (title, start_date, end_date, order_index)
     company_updates = {
@@ -333,7 +377,7 @@ async def migrate_company_data():
                     )
                 )
                 result = await session.execute(stmt)
-                if result.rowcount > 0:
+                if result.rowcount > 0:  # type: ignore[attr-defined]
                     logger.info("Updated company: %s", name)
             except Exception as e:
                 logger.warning("Company update failed for %s: %s", name, e)
@@ -341,7 +385,7 @@ async def migrate_company_data():
         # Rename Scania Engines to Scania Group
         stmt = update(Company).where(Company.name == "Scania Engines").values(name="Scania Group")
         result = await session.execute(stmt)
-        if result.rowcount > 0:
+        if result.rowcount > 0:  # type: ignore[attr-defined]
             logger.info("Renamed Scania Engines to Scania Group")
 
         # Update Scania 2016 entry specifically (use date to avoid hitting 2012 entry)
@@ -356,7 +400,7 @@ async def migrate_company_data():
             )
         )
         result = await session.execute(stmt)
-        if result.rowcount > 0:
+        if result.rowcount > 0:  # type: ignore[attr-defined]
             logger.info("Updated Scania 2016 entry")
 
         # Update Scania 2012 entry: rename and add logo
@@ -369,7 +413,7 @@ async def migrate_company_data():
             )
         )
         result = await session.execute(stmt)
-        if result.rowcount > 0:
+        if result.rowcount > 0:  # type: ignore[attr-defined]
             logger.info("Updated Scania 2012 entry with new name and logo")
 
         # Fix Scania 2012 entry if dates were corrupted by previous migrations
@@ -387,7 +431,7 @@ async def migrate_company_data():
             )
         )
         result = await session.execute(stmt)
-        if result.rowcount > 0:
+        if result.rowcount > 0:  # type: ignore[attr-defined]
             logger.info("Fixed Scania 2012 entry dates")
 
         # If Scania 2012 doesn't exist yet, create it
@@ -475,7 +519,7 @@ async def migrate_education_data():
             description,
         ) in education_updates.items():
             try:
-                update_values = {"order_index": order_index}
+                update_values: dict[str, object] = {"order_index": order_index}
 
                 # Only update dates if provided
                 if start_date is not None:
@@ -495,7 +539,7 @@ async def migrate_education_data():
                     .values(**update_values)
                 )
                 result = await session.execute(stmt)
-                if result.rowcount > 0:
+                if result.rowcount > 0:  # type: ignore[attr-defined]
                     logger.info("Updated education: %s", institution)
             except Exception as e:
                 logger.warning("Education update failed for %s: %s", institution, e)
@@ -615,7 +659,7 @@ app = FastAPI(
 # Configure rate limiter
 if settings.RATE_LIMIT_ENABLED:
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
     logger.info("Rate limiting enabled", extra={"default_limit": settings.RATE_LIMIT_DEFAULT})
 
 # Add middleware (order matters: first added = outermost layer)

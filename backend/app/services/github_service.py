@@ -121,7 +121,8 @@ class GitHubService:
             return {}
         try:
             response.raise_for_status()
-            return response.json()
+            result: dict[str, Any] = response.json()
+            return result
         except httpx.HTTPStatusError as e:
             logger.exception("Error fetching user info for %s: %s", username, e)
             return {}
@@ -180,7 +181,8 @@ class GitHubService:
             return {}
         try:
             response.raise_for_status()
-            return response.json()
+            result: dict[str, Any] = response.json()
+            return result
         except httpx.HTTPStatusError as e:
             logger.exception("Error fetching repo %s/%s: %s", owner, repo, e)
             return {}
@@ -194,7 +196,8 @@ class GitHubService:
             return {}
         try:
             response.raise_for_status()
-            return response.json()
+            result: dict[str, int] = response.json()
+            return result
         except httpx.HTTPStatusError as e:
             logger.exception("Error fetching languages for %s/%s: %s", owner, repo, e)
             return {}

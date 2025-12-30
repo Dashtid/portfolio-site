@@ -32,7 +32,7 @@ class OAuthState(Base):
         """Check if the state has expired"""
         now = datetime.now(UTC)
         # Handle SQLite returning naive datetimes (assume UTC)
-        expires = self.expires_at
+        expires: datetime = self.expires_at  # type: ignore[assignment]
         if expires.tzinfo is None:
             expires = expires.replace(tzinfo=UTC)
         return now > expires
