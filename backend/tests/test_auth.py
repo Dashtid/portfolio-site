@@ -508,7 +508,7 @@ class TestGitHubCallbackFullFlow:
 
             response = client.get(f"/api/v1/auth/github/callback?code=bad&state={state}")
             assert response.status_code == 400
-            assert "incorrect or expired" in response.json()["detail"]
+            assert "Failed to authenticate with GitHub" in response.json()["detail"]
 
     def test_callback_user_info_failure(self, client: TestClient):
         """Test callback when GitHub user info request fails."""
@@ -614,12 +614,10 @@ class TestGitHubCallbackFullFlow:
                 follow_redirects=False,
             )
 
-            # Should redirect to frontend with tokens
-            assert response.status_code == 307
+            # Should redirect to frontend (tokens are set as HTTP-only cookies)
+            assert response.status_code == 302
             location = response.headers.get("location", "")
             assert "localhost:3000/admin" in location
-            assert "token=" in location
-            assert "refresh=" in location
 
     def test_callback_success_existing_user_updated(self, client: TestClient):
         """Test successful callback updates existing user info."""
@@ -663,7 +661,7 @@ class TestGitHubCallbackFullFlow:
             )
 
             # Should succeed with redirect
-            assert response.status_code == 307
+            assert response.status_code == 302
 
     def test_callback_no_admin_restriction(self, client: TestClient):
         """Test callback when ADMIN_GITHUB_ID is not set (any user allowed)."""
@@ -707,7 +705,7 @@ class TestGitHubCallbackFullFlow:
             )
 
             # Should succeed when no admin restriction
-            assert response.status_code == 307
+            assert response.status_code == 302
 
 
 class TestAuthNetworkErrors:

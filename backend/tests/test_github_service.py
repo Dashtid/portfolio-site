@@ -165,9 +165,7 @@ class TestGetUserInfo:
             mock_response.raise_for_status = MagicMock()
 
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client.return_value.request = AsyncMock(return_value=mock_response)
                 service = GitHubService()
                 result = await service.get_user_info("testuser")
                 assert result["login"] == "testuser"
@@ -179,8 +177,8 @@ class TestGetUserInfo:
 
         async def run_test():
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    side_effect=httpx.HTTPError("Not found")
+                mock_client.return_value.request = AsyncMock(
+                    side_effect=httpx.RequestError("Not found")
                 )
                 service = GitHubService()
                 result = await service.get_user_info("nonexistent")
@@ -197,8 +195,8 @@ class TestGetUserRepos:
 
         async def run_test():
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    side_effect=httpx.HTTPError("Error")
+                mock_client.return_value.request = AsyncMock(
+                    side_effect=httpx.RequestError("Error")
                 )
                 service = GitHubService()
                 result = await service.get_user_repos("testuser")
@@ -220,9 +218,7 @@ class TestGetRepoDetails:
             mock_response.raise_for_status = MagicMock()
 
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client.return_value.request = AsyncMock(return_value=mock_response)
                 service = GitHubService()
                 result = await service.get_repo_details("owner", "test-repo")
                 assert result["name"] == "test-repo"
@@ -234,8 +230,8 @@ class TestGetRepoDetails:
 
         async def run_test():
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    side_effect=httpx.HTTPError("Not found")
+                mock_client.return_value.request = AsyncMock(
+                    side_effect=httpx.RequestError("Not found")
                 )
                 service = GitHubService()
                 result = await service.get_repo_details("owner", "nonexistent")
@@ -257,9 +253,7 @@ class TestGetRepoLanguages:
             mock_response.raise_for_status = MagicMock()
 
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client.return_value.request = AsyncMock(return_value=mock_response)
                 service = GitHubService()
                 result = await service.get_repo_languages("owner", "repo")
                 assert result["Python"] == 50000
@@ -271,8 +265,8 @@ class TestGetRepoLanguages:
 
         async def run_test():
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    side_effect=httpx.HTTPError("Error")
+                mock_client.return_value.request = AsyncMock(
+                    side_effect=httpx.RequestError("Error")
                 )
                 service = GitHubService()
                 result = await service.get_repo_languages("owner", "repo")
@@ -296,9 +290,7 @@ class TestGetRepoCommits:
             }
 
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client.return_value.request = AsyncMock(return_value=mock_response)
                 service = GitHubService()
                 result = await service.get_repo_commits("owner", "repo")
                 assert result == 150
@@ -315,9 +307,7 @@ class TestGetRepoCommits:
             mock_response.headers = {}
 
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client.return_value.request = AsyncMock(return_value=mock_response)
                 service = GitHubService()
                 result = await service.get_repo_commits("owner", "repo")
                 assert result == 2
@@ -329,8 +319,8 @@ class TestGetRepoCommits:
 
         async def run_test():
             with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    side_effect=httpx.HTTPError("Error")
+                mock_client.return_value.request = AsyncMock(
+                    side_effect=httpx.RequestError("Error")
                 )
                 service = GitHubService()
                 result = await service.get_repo_commits("owner", "repo")

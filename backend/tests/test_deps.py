@@ -15,15 +15,22 @@ from app.models.user import User
 class TestGetCurrentUser:
     """Tests for get_current_user dependency."""
 
+    def _create_mock_request(self):
+        """Create a mock request with cookies attribute."""
+        mock_request = MagicMock()
+        mock_request.cookies = {}
+        return mock_request
+
     @pytest.mark.asyncio
     async def test_get_current_user_invalid_token(self):
         """Test get_current_user with invalid token."""
+        mock_request = self._create_mock_request()
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid_token")
         mock_db = AsyncMock()
 
         with patch("app.core.deps.decode_token", return_value=None):
             with pytest.raises(HTTPException) as exc_info:
-                await get_current_user(credentials, mock_db)
+                await get_current_user(mock_request, credentials, mock_db)
 
             assert exc_info.value.status_code == 401
             assert "Invalid authentication credentials" in exc_info.value.detail
@@ -31,18 +38,20 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_missing_subject(self):
         """Test get_current_user when token has no subject."""
+        mock_request = self._create_mock_request()
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
         mock_db = AsyncMock()
 
         with patch("app.core.deps.decode_token", return_value={"type": "access"}):
             with pytest.raises(HTTPException) as exc_info:
-                await get_current_user(credentials, mock_db)
+                await get_current_user(mock_request, credentials, mock_db)
 
             assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_current_user_user_not_found(self):
         """Test get_current_user when user is not in database."""
+        mock_request = self._create_mock_request()
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
 
         # Mock database session
@@ -51,9 +60,9 @@ class TestGetCurrentUser:
         mock_db = AsyncMock()
         mock_db.execute.return_value = mock_result
 
-        with patch("app.core.deps.decode_token", return_value={"sub": "user123"}):
+        with patch("app.core.deps.decode_token", return_value={"sub": "user123", "type": "access"}):
             with pytest.raises(HTTPException) as exc_info:
-                await get_current_user(credentials, mock_db)
+                await get_current_user(mock_request, credentials, mock_db)
 
             assert exc_info.value.status_code == 404
             assert "User not found" in exc_info.value.detail
@@ -61,6 +70,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_success(self):
         """Test get_current_user successfully returns user."""
+        mock_request = self._create_mock_request()
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_token")
 
         # Create mock user
@@ -72,8 +82,8 @@ class TestGetCurrentUser:
         mock_db = AsyncMock()
         mock_db.execute.return_value = mock_result
 
-        with patch("app.core.deps.decode_token", return_value={"sub": "user123"}):
-            result = await get_current_user(credentials, mock_db)
+        with patch("app.core.deps.decode_token", return_value={"sub": "user123", "type": "access"}):
+            result = await get_current_user(mock_request, credentials, mock_db)
 
             assert result == mock_user
             assert result.id == "user123"

@@ -41,7 +41,7 @@ def test_create_education_requires_auth(client: TestClient):
         "start_date": "2018-09-01",
         "end_date": "2022-06-01",
         "is_certification": False,
-        "order": 1,
+        "order_index": 1,
     }
     response = client.post("/api/v1/education/", json=education_data)
     # 401 (no auth) or 403 (forbidden) are both valid for missing/invalid auth
@@ -57,7 +57,7 @@ def test_create_education_with_auth(client: TestClient, admin_headers: dict):
         "start_date": "2018-09-01",
         "end_date": "2022-06-01",
         "is_certification": False,
-        "order": 1,
+        "order_index": 1,
     }
     response = client.post("/api/v1/education/", json=education_data, headers=admin_headers)
     # Note: With in-memory DB and no user, this may fail with 404
@@ -97,7 +97,7 @@ def test_update_education_not_found(client: TestClient, admin_headers: dict):
         "start_date": "2019-09-01",
         "end_date": "2023-06-01",
         "is_certification": False,
-        "order": 2,
+        "order_index": 2,
     }
     response = client.put("/api/v1/education/999999/", json=update_data, headers=admin_headers)
     assert response.status_code == 404
@@ -172,7 +172,7 @@ class TestEducationEndpoints:
             "field_of_study": "Computer Science",
             "start_date": "2018-09-01",
             "is_certification": False,
-            "order": 1,
+            "order_index": 1,
         }
         response = client.post("/api/v1/education/", json=education_data, headers=admin_headers)
         assert response.status_code in [404, 422]
@@ -184,7 +184,7 @@ class TestEducationEndpoints:
             "field_of_study": "Computer Science",
             "start_date": "2018-09-01",
             "is_certification": False,
-            "order": 1,
+            "order_index": 1,
         }
         response = client.post("/api/v1/education/", json=education_data, headers=admin_headers)
         assert response.status_code in [404, 422]
@@ -216,7 +216,7 @@ class TestEducationValidation:
             "field_of_study": "Computer Science",
             "start_date": "invalid-date",
             "is_certification": False,
-            "order": 1,
+            "order_index": 1,
         }
         response = client.post("/api/v1/education/", json=education_data, headers=admin_headers)
         # Either 422 for validation error or 404 for user not found
@@ -231,7 +231,7 @@ class TestEducationValidation:
             "start_date": "2023-01-01",
             "end_date": "2023-01-05",
             "is_certification": True,
-            "order": 1,
+            "order_index": 1,
         }
         response = client.post("/api/v1/education/", json=education_data, headers=admin_headers)
         assert response.status_code in [200, 201, 404]
@@ -249,7 +249,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2020-09-01",
             "end_date": "2022-06-01",
             "is_certification": False,
-            "order": 1,
+            "order_index": 1,
         }
         response = client.post(
             "/api/v1/education/",
@@ -273,7 +273,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2023-03-01",
             "end_date": "2023-03-15",
             "is_certification": True,
-            "order": 1,
+            "order_index": 1,
         }
         response = client.post(
             "/api/v1/education/",
@@ -293,7 +293,7 @@ class TestEducationCRUDWithAdmin:
             "field_of_study": "Machine Learning",
             "start_date": "2018-09-01",
             "is_certification": False,
-            "order": 2,
+            "order_index": 2,
         }
         create_response = client.post(
             "/api/v1/education/",
@@ -320,7 +320,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2015-09-01",
             "end_date": "2019-06-01",
             "is_certification": False,
-            "order": 3,
+            "order_index": 3,
         }
         create_response = client.post(
             "/api/v1/education/",
@@ -356,7 +356,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2016-09-01",
             "end_date": "2019-06-01",
             "is_certification": False,
-            "order": 4,
+            "order_index": 4,
         }
         create_response = client.post(
             "/api/v1/education/",
@@ -371,8 +371,7 @@ class TestEducationCRUDWithAdmin:
             f"/api/v1/education/{created_id}/",
             headers=admin_user_in_db["headers"],
         )
-        assert delete_response.status_code == 200
-        assert "deleted" in delete_response.json()["message"].lower()
+        assert delete_response.status_code == 204
 
         # Verify it's deleted
         get_response = client.get(f"/api/v1/education/{created_id}/")
@@ -388,7 +387,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2014-09-01",
             "end_date": "2018-06-01",
             "is_certification": False,
-            "order": 1,
+            "order_index": 1,
         }
         client.post(
             "/api/v1/education/",
@@ -404,7 +403,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2023-01-01",
             "end_date": "2023-01-10",
             "is_certification": True,
-            "order": 2,
+            "order_index": 2,
         }
         client.post(
             "/api/v1/education/",
@@ -429,7 +428,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2019-09-01",
             "end_date": "2021-06-01",
             "is_certification": False,
-            "order": 1,
+            "order_index": 1,
         }
         client.post(
             "/api/v1/education/",
@@ -445,7 +444,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2023-02-01",
             "end_date": "2023-02-10",
             "is_certification": True,
-            "order": 2,
+            "order_index": 2,
         }
         client.post(
             "/api/v1/education/",
@@ -470,7 +469,7 @@ class TestEducationCRUDWithAdmin:
                 "field_of_study": "Science",
                 "start_date": f"201{i}-09-01",
                 "is_certification": False,
-                "order": 4 - i,  # Reverse order: 3, 2, 1
+                "order_index": 4 - i,  # Reverse order: 3, 2, 1
             }
             client.post(
                 "/api/v1/education/",
@@ -483,9 +482,9 @@ class TestEducationCRUDWithAdmin:
         assert response.status_code == 200
         data = response.json()
 
-        # Should be ordered by 'order' field ascending
+        # Should be ordered by 'order_index' field ascending
         if len(data) >= 3:
-            orders = [e["order"] for e in data]
+            orders = [e["order_index"] for e in data]
             assert orders == sorted(orders)
 
     def test_update_partial_fields(self, client: TestClient, admin_user_in_db: dict):
@@ -498,7 +497,7 @@ class TestEducationCRUDWithAdmin:
             "start_date": "2021-09-01",
             "end_date": "2023-06-01",
             "is_certification": False,
-            "order": 5,
+            "order_index": 5,
             "description": "Original description",
         }
         create_response = client.post(

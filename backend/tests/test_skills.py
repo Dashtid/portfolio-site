@@ -19,7 +19,7 @@ def test_create_skill_requires_auth(client: TestClient):
     skill_data = {
         "name": "Python",
         "category": "Programming Languages",
-        "proficiency": 90,
+        "proficiency_level": 90,
         "order_index": 1,
     }
     response = client.post("/api/v1/skills/", json=skill_data)
@@ -32,7 +32,7 @@ def test_create_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     skill_data = {
         "name": "Python",
         "category": "Programming Languages",
-        "proficiency": 90,
+        "proficiency_level": 90,
         "order_index": 1,
     }
     response = client.post("/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"])
@@ -40,7 +40,7 @@ def test_create_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     data = response.json()
     assert data["name"] == "Python"
     assert data["category"] == "Programming Languages"
-    assert data["proficiency"] == 90
+    assert data["proficiency_level"] == 90
     assert "id" in data
 
 
@@ -50,7 +50,7 @@ def test_get_skill_by_id(client: TestClient, admin_user_in_db: dict[str, Any]):
     skill_data = {
         "name": "JavaScript",
         "category": "Programming Languages",
-        "proficiency": 85,
+        "proficiency_level": 85,
         "order_index": 2,
     }
     create_response = client.post(
@@ -73,7 +73,7 @@ def test_update_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     skill_data = {
         "name": "TypeScript",
         "category": "Programming Languages",
-        "proficiency": 75,
+        "proficiency_level": 75,
         "order_index": 3,
     }
     create_response = client.post(
@@ -86,7 +86,7 @@ def test_update_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     update_data = {
         "name": "TypeScript",
         "category": "Programming Languages",
-        "proficiency": 95,
+        "proficiency_level": 95,
         "order_index": 1,
     }
     response = client.put(
@@ -94,7 +94,7 @@ def test_update_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["proficiency"] == 95
+    assert data["proficiency_level"] == 95
     assert data["order_index"] == 1
 
 
@@ -104,7 +104,7 @@ def test_delete_skill_with_db_auth(client: TestClient, admin_user_in_db: dict[st
     skill_data = {
         "name": "Skill to Delete",
         "category": "Test",
-        "proficiency": 50,
+        "proficiency_level": 50,
         "order_index": 99,
     }
     create_response = client.post(
@@ -153,13 +153,13 @@ def test_skill_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
     assert response.status_code == 422
 
 
-def test_skill_proficiency_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
-    """Test skill proficiency range validation."""
+def test_skill_proficiency_level_validation(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test skill proficiency_level range validation."""
     # Proficiency out of range (should be 0-100)
     invalid_skill = {
         "name": "Test Skill",
         "category": "Test",
-        "proficiency": 150,  # Invalid - over 100
+        "proficiency_level": 150,  # Invalid - over 100
         "order_index": 1,
     }
     response = client.post(
@@ -173,7 +173,7 @@ def test_update_skill_not_found(client: TestClient, admin_user_in_db: dict[str, 
     update_data = {
         "name": "Updated Skill",
         "category": "Updated Category",
-        "proficiency": 85,
+        "proficiency_level": 85,
         "order_index": 1,
     }
     response = client.put(
@@ -197,12 +197,12 @@ def test_get_skills_empty_list(client: TestClient):
     assert len(data) == 0
 
 
-def test_skill_proficiency_negative(client: TestClient, admin_user_in_db: dict[str, Any]):
-    """Test skill with negative proficiency."""
+def test_skill_proficiency_level_negative(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Test skill with negative proficiency_level."""
     invalid_skill = {
         "name": "Test Skill",
         "category": "Test",
-        "proficiency": -10,  # Invalid - negative
+        "proficiency_level": -10,  # Invalid - negative
         "order_index": 1,
     }
     response = client.post(
@@ -215,9 +215,9 @@ def test_skill_ordering(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test that skills are returned ordered by order_index."""
     # Create skills with different order_index values
     skills = [
-        {"name": "Skill C", "category": "Test", "proficiency": 80, "order_index": 3},
-        {"name": "Skill A", "category": "Test", "proficiency": 90, "order_index": 1},
-        {"name": "Skill B", "category": "Test", "proficiency": 85, "order_index": 2},
+        {"name": "Skill C", "category": "Test", "proficiency_level": 80, "order_index": 3},
+        {"name": "Skill A", "category": "Test", "proficiency_level": 90, "order_index": 1},
+        {"name": "Skill B", "category": "Test", "proficiency_level": 85, "order_index": 2},
     ]
 
     for skill_data in skills:
@@ -248,8 +248,8 @@ class TestSkillEdgeCases:
         skill_data = {
             "name": "Full Skill",
             "category": "Frameworks",
-            "proficiency": 95,
-            "years_experience": 5.5,
+            "proficiency_level": 95,
+            "years_of_experience": 5.5,
             "order_index": 1,
         }
         response = client.post(
@@ -259,8 +259,8 @@ class TestSkillEdgeCases:
         data = response.json()
         assert data["name"] == "Full Skill"
         assert data["category"] == "Frameworks"
-        assert data["proficiency"] == 95
-        assert data["years_experience"] == 5.5
+        assert data["proficiency_level"] == 95
+        assert data["years_of_experience"] == 5.5
         assert data["order_index"] == 1
 
     def test_create_skill_minimal_fields(
@@ -275,7 +275,7 @@ class TestSkillEdgeCases:
         data = response.json()
         assert data["name"] == "Minimal Skill"
         assert data["category"] is None
-        assert data["proficiency"] is None
+        assert data["proficiency_level"] is None
 
     def test_update_partial_fields(self, client: TestClient, admin_user_in_db: dict[str, Any]):
         """Test updating only some fields preserves others."""
@@ -283,7 +283,7 @@ class TestSkillEdgeCases:
         skill_data = {
             "name": "Partial Update Skill",
             "category": "Original Category",
-            "proficiency": 70,
+            "proficiency_level": 70,
             "order_index": 5,
         }
         create_response = client.post(
@@ -292,63 +292,63 @@ class TestSkillEdgeCases:
         assert create_response.status_code == 201
         skill_id = create_response.json()["id"]
 
-        # Update only proficiency
+        # Update only proficiency_level
         update_response = client.put(
             f"/api/v1/skills/{skill_id}",
-            json={"proficiency": 90},
+            json={"proficiency_level": 90},
             headers=admin_user_in_db["headers"],
         )
         assert update_response.status_code == 200
         data = update_response.json()
-        assert data["proficiency"] == 90
+        assert data["proficiency_level"] == 90
         assert data["name"] == "Partial Update Skill"
         assert data["category"] == "Original Category"
         assert data["order_index"] == 5
 
-    def test_skill_boundary_proficiency_zero(
+    def test_skill_boundary_proficiency_level_zero(
         self, client: TestClient, admin_user_in_db: dict[str, Any]
     ):
-        """Test skill with proficiency at boundary (0)."""
+        """Test skill with proficiency_level at boundary (0)."""
         skill_data = {
             "name": "Zero Proficiency Skill",
-            "proficiency": 0,
+            "proficiency_level": 0,
             "order_index": 1,
         }
         response = client.post(
             "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
         )
         assert response.status_code == 201
-        assert response.json()["proficiency"] == 0
+        assert response.json()["proficiency_level"] == 0
 
-    def test_skill_boundary_proficiency_hundred(
+    def test_skill_boundary_proficiency_level_hundred(
         self, client: TestClient, admin_user_in_db: dict[str, Any]
     ):
-        """Test skill with proficiency at boundary (100)."""
+        """Test skill with proficiency_level at boundary (100)."""
         skill_data = {
             "name": "Max Proficiency Skill",
-            "proficiency": 100,
+            "proficiency_level": 100,
             "order_index": 1,
         }
         response = client.post(
             "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
         )
         assert response.status_code == 201
-        assert response.json()["proficiency"] == 100
+        assert response.json()["proficiency_level"] == 100
 
-    def test_skill_with_years_experience(
+    def test_skill_with_years_of_experience(
         self, client: TestClient, admin_user_in_db: dict[str, Any]
     ):
         """Test skill with years of experience."""
         skill_data = {
             "name": "Experienced Skill",
-            "years_experience": 3.5,
+            "years_of_experience": 3.5,
             "order_index": 1,
         }
         response = client.post(
             "/api/v1/skills/", json=skill_data, headers=admin_user_in_db["headers"]
         )
         assert response.status_code == 201
-        assert response.json()["years_experience"] == 3.5
+        assert response.json()["years_of_experience"] == 3.5
 
     def test_get_skill_by_invalid_uuid_format(self, client: TestClient):
         """Test getting skill with valid UUID format but non-existent."""
@@ -360,7 +360,7 @@ class TestSkillEdgeCases:
         skill_data = {
             "name": "Schema Test Skill",
             "category": "Test",
-            "proficiency": 85,
+            "proficiency_level": 85,
             "order_index": 1,
         }
         response = client.post(
@@ -372,6 +372,6 @@ class TestSkillEdgeCases:
         assert "id" in data
         assert "name" in data
         assert "category" in data
-        assert "proficiency" in data
+        assert "proficiency_level" in data
         assert "order_index" in data
         assert "created_at" in data

@@ -183,8 +183,8 @@ class TestAnalyticsSummaryEndpoint:
             "/api/v1/analytics/stats/summary?days=0",
             headers=admin_user_in_db["headers"],
         )
-        assert response.status_code == 400
-        assert "Days must be between 1 and 365" in response.json()["detail"]
+        # FastAPI returns 422 for Query parameter validation errors
+        assert response.status_code == 422
 
     def test_summary_period_too_large(self, client: TestClient, admin_user_in_db: dict[str, Any]):
         """Test analytics summary rejects period more than 365 days."""
@@ -192,8 +192,8 @@ class TestAnalyticsSummaryEndpoint:
             "/api/v1/analytics/stats/summary?days=400",
             headers=admin_user_in_db["headers"],
         )
-        assert response.status_code == 400
-        assert "Days must be between 1 and 365" in response.json()["detail"]
+        # FastAPI returns 422 for Query parameter validation errors
+        assert response.status_code == 422
 
     def test_summary_with_tracked_pageviews(
         self, client: TestClient, admin_user_in_db: dict[str, Any]
@@ -283,16 +283,16 @@ class TestVisitorStatsEndpoint:
 
     def test_visitors_period_validation(self, client: TestClient, admin_user_in_db: dict[str, Any]):
         """Test visitor stats validates period range."""
-        # Too small
+        # Too small - FastAPI returns 422 for Query parameter validation errors
         response = client.get(
             "/api/v1/analytics/stats/visitors?days=0",
             headers=admin_user_in_db["headers"],
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
         # Too large
         response = client.get(
             "/api/v1/analytics/stats/visitors?days=500",
             headers=admin_user_in_db["headers"],
         )
-        assert response.status_code == 400
+        assert response.status_code == 422

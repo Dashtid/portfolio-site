@@ -98,12 +98,12 @@ class TestSkillModel:
             id="skill-123",
             name="Python",
             category="Programming Languages",
-            proficiency=90,
+            proficiency_level=90,
             order_index=1,
         )
         assert skill.name == "Python"
         assert skill.category == "Programming Languages"
-        assert skill.proficiency == 90
+        assert skill.proficiency_level == 90
 
     def test_skill_to_dict(self):
         """Test Skill to_dict method."""
@@ -111,16 +111,16 @@ class TestSkillModel:
             id="skill-123",
             name="Python",
             category="Programming Languages",
-            proficiency=90,
-            years_experience=5.0,
+            proficiency_level=90,
+            years_of_experience=5.0,
             order_index=1,
         )
         result = skill.to_dict()
         assert result["id"] == "skill-123"
         assert result["name"] == "Python"
         assert result["category"] == "Programming Languages"
-        assert result["proficiency"] == 90
-        assert result["years_experience"] == 5.0
+        assert result["proficiency_level"] == 90
+        assert result["years_of_experience"] == 5.0
 
 
 class TestEducationModel:
@@ -133,7 +133,7 @@ class TestEducationModel:
             institution="Royal Institute of Technology",
             degree="M.Sc.",
             field_of_study="Computer Science",
-            order=1,
+            order_index=1,
         )
         assert education.institution == "Royal Institute of Technology"
         assert education.degree == "M.Sc."
@@ -278,7 +278,7 @@ class TestModelDefaults:
     def test_skill_with_explicit_values(self):
         """Test Skill model with explicit values."""
         skill = Skill(name="Test Skill", order_index=0)
-        assert skill.years_experience is None
+        assert skill.years_of_experience is None
         assert skill.order_index == 0
 
     def test_contact_with_status(self):
