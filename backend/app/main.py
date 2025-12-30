@@ -425,6 +425,10 @@ async def migrate_company_data():
                     end_date=date(2016, 8, 31),
                     order_index=6,
                     logo_url="/images/scania.svg",
+                    video_url="https://www.youtube.com/embed/jU-Hpr5H5oA",
+                    video_title="Scania - The Journey",
+                    map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2045.8!2d17.6234!3d59.1954!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f10a8e2e2e2e1%3A0x1234567890abcdef!2sScania%20CV%20AB!5e0!3m2!1sen!2sse!4v1234567890",
+                    map_title="Scania Headquarters, Södertälje",
                 )
             )
             result = await session.execute(stmt)
@@ -470,6 +474,10 @@ async def migrate_company_data():
                         "Documentation",
                         "Heavy vehicle systems",
                     ],
+                    video_url="https://www.youtube.com/embed/jU-Hpr5H5oA",
+                    video_title="Scania - The Journey",
+                    map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2045.8!2d17.6234!3d59.1954!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f10a8e2e2e2e1%3A0x1234567890abcdef!2sScania%20CV%20AB!5e0!3m2!1sen!2sse!4v1234567890",
+                    map_title="Scania Headquarters, Södertälje",
                 )
             )
             result = await session.execute(stmt)
@@ -514,6 +522,10 @@ async def migrate_company_data():
                         website="https://www.scania.com",
                         logo_url="/images/scania.svg",
                         order_index=8,
+                        video_url="https://www.youtube.com/embed/jU-Hpr5H5oA",
+                        video_title="Scania - The Journey",
+                        map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2045.8!2d17.6234!3d59.1954!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f10a8e2e2e2e1%3A0x1234567890abcdef!2sScania%20CV%20AB!5e0!3m2!1sen!2sse!4v1234567890",
+                        map_title="Scania Headquarters, Södertälje",
                     )
                     session.add(scania_2012)
                     logger.info("Added Scania 2012 entry")
