@@ -257,40 +257,47 @@ async def cleanup_duplicate_scania_entries():
     from datetime import date  # noqa: PLC0415
 
     from sqlalchemy import delete, select  # noqa: PLC0415
+    from sqlalchemy.exc import OperationalError  # noqa: PLC0415
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.company import Company  # noqa: PLC0415
 
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Company).where(Company.name.in_(["Scania Group", "Scania Group (Early Career)"]))
-        )
-        scania_entries = result.scalars().all()
-
-        if len(scania_entries) <= 2:
-            return  # No duplicates
-
-        logger.warning("Found %d Scania entries, cleaning up duplicates", len(scania_entries))
-        ids_to_keep = {e.id for e in scania_entries if e.order_index in (6, 8)}
-
-        # Fallback: keep oldest (2012) and a 2016 entry if order_index matching failed
-        if len(ids_to_keep) != 2:
-            sorted_entries = sorted(
-                scania_entries, key=lambda e: (e.start_date or date(1900, 1, 1))
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(Company).where(
+                    Company.name.in_(["Scania Group", "Scania Group (Early Career)"])
+                )
             )
-            ids_to_keep = {sorted_entries[0].id}
-            for entry in sorted_entries:
-                if entry.start_date and entry.start_date.year == 2016:
-                    ids_to_keep.add(entry.id)
-                    break
-            if len(ids_to_keep) < 2 and len(sorted_entries) > 1:
-                ids_to_keep.add(sorted_entries[-1].id)
+            scania_entries = result.scalars().all()
 
-        ids_to_delete = [e.id for e in scania_entries if e.id not in ids_to_keep]
-        if ids_to_delete:
-            await session.execute(delete(Company).where(Company.id.in_(ids_to_delete)))
-            logger.info("Deleted %d duplicate Scania entries", len(ids_to_delete))
-            await session.commit()
+            if len(scania_entries) <= 2:
+                return  # No duplicates
+
+            logger.warning("Found %d Scania entries, cleaning up duplicates", len(scania_entries))
+            ids_to_keep = {e.id for e in scania_entries if e.order_index in (6, 8)}
+
+            # Fallback: keep oldest (2012) and a 2016 entry if order_index matching failed
+            if len(ids_to_keep) != 2:
+                sorted_entries = sorted(
+                    scania_entries, key=lambda e: (e.start_date or date(1900, 1, 1))
+                )
+                ids_to_keep = {sorted_entries[0].id}
+                for entry in sorted_entries:
+                    if entry.start_date and entry.start_date.year == 2016:
+                        ids_to_keep.add(entry.id)
+                        break
+                if len(ids_to_keep) < 2 and len(sorted_entries) > 1:
+                    ids_to_keep.add(sorted_entries[-1].id)
+
+            ids_to_delete = [e.id for e in scania_entries if e.id not in ids_to_keep]
+            if ids_to_delete:
+                await session.execute(delete(Company).where(Company.id.in_(ids_to_delete)))
+                logger.info("Deleted %d duplicate Scania entries", len(ids_to_delete))
+                await session.commit()
+    except OperationalError:
+        # Table doesn't exist yet (e.g., during testing before fixture setup)
+        pass
 
 
 # Data migration to fix company dates and titles (one-time migration)
