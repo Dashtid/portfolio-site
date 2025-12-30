@@ -408,6 +408,20 @@ async def migrate_company_data():
                 .values(
                     title="Technician, Engine Analysis",
                     description="Autonomous role managing troubleshooting processes, communicating across production chain, and creating documentation and work routines.",
+                    detailed_description="Returned to Scania for a senior technician role in the Engine Analysis department. Took ownership of troubleshooting processes, coordinated with production teams across the manufacturing chain, and developed comprehensive documentation and standardized work routines. This role built on my earlier experience at Scania and allowed me to work more independently while contributing to process improvements.",
+                    responsibilities=[
+                        "Led troubleshooting processes for engine analysis issues",
+                        "Communicated findings across the production chain",
+                        "Created and maintained technical documentation",
+                        "Developed standardized work routines and procedures",
+                        "Coordinated with engineering teams on complex issues",
+                    ],
+                    technologies=[
+                        "Engine diagnostics",
+                        "Technical documentation",
+                        "Process optimization",
+                        "Quality assurance",
+                    ],
                     end_date=date(2016, 8, 31),
                     order_index=6,
                     logo_url="/images/scania.svg",
@@ -442,6 +456,20 @@ async def migrate_company_data():
                     end_date=date(2012, 8, 31),
                     title="Technician, Engine Analysis",
                     description="Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
+                    detailed_description="My first professional experience in the engineering field, working as a junior technician in Scania's Engine Analysis department. Collaborated closely with experienced engineers and senior technicians in second-line support, learning systematic troubleshooting methodologies and gaining hands-on experience with heavy vehicle engine systems. This summer position provided foundational skills that would later prove valuable in my engineering career.",
+                    responsibilities=[
+                        "Assisted senior technicians with engine diagnostics",
+                        "Performed second-line support troubleshooting",
+                        "Documented technical findings and analysis results",
+                        "Learned systematic problem-solving approaches",
+                        "Collaborated with cross-functional engineering teams",
+                    ],
+                    technologies=[
+                        "Engine diagnostics",
+                        "Technical troubleshooting",
+                        "Documentation",
+                        "Heavy vehicle systems",
+                    ],
                 )
             )
             result = await session.execute(stmt)
@@ -466,6 +494,20 @@ async def migrate_company_data():
                         name="Scania Group",
                         title="Technician, Engine Analysis",
                         description="Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
+                        detailed_description="My first professional experience in the engineering field, working as a junior technician in Scania's Engine Analysis department. Collaborated closely with experienced engineers and senior technicians in second-line support, learning systematic troubleshooting methodologies and gaining hands-on experience with heavy vehicle engine systems. This summer position provided foundational skills that would later prove valuable in my engineering career.",
+                        responsibilities=[
+                            "Assisted senior technicians with engine diagnostics",
+                            "Performed second-line support troubleshooting",
+                            "Documented technical findings and analysis results",
+                            "Learned systematic problem-solving approaches",
+                            "Collaborated with cross-functional engineering teams",
+                        ],
+                        technologies=[
+                            "Engine diagnostics",
+                            "Technical troubleshooting",
+                            "Documentation",
+                            "Heavy vehicle systems",
+                        ],
                         location="Södertälje, Sweden",
                         start_date=date(2012, 6, 1),
                         end_date=date(2012, 8, 31),
