@@ -47,7 +47,13 @@
             <h2 class="company-title h4 text-muted mb-0">{{ company.title }}</h2>
           </div>
         </div>
-        <p class="company-dates text-muted">
+        <!-- Show both employment periods for Scania -->
+        <div v-if="isScania && scaniaEntries.length > 1" class="company-dates text-muted">
+          <p v-for="entry in scaniaEntries" :key="entry.id" class="mb-1">
+            {{ formatDate(entry.start_date) }} - {{ formatDate(entry.end_date) }}
+          </p>
+        </div>
+        <p v-else class="company-dates text-muted">
           {{ formatDate(company.start_date) }} - {{ formatDate(company.end_date) }}
           <span v-if="!company.end_date" class="badge bg-success ms-2">Current</span>
         </p>
@@ -219,6 +225,23 @@ const nextCompany = computed<Company | null>(() => {
   // Handle case where company is not found in array (findIndex returns -1)
   if (currentIndex === -1 || currentIndex >= allCompanies.value.length - 1) return null
   return allCompanies.value[currentIndex + 1]
+})
+
+// Check if this is a Scania company (to show both employment periods)
+const isScania = computed<boolean>(() => {
+  return company.value?.name === 'Scania Group'
+})
+
+// Get all Scania entries sorted by date (newest first)
+const scaniaEntries = computed<Company[]>(() => {
+  if (!isScania.value) return []
+  return allCompanies.value
+    .filter(c => c.name === 'Scania Group')
+    .sort((a, b) => {
+      const dateA = a.start_date ? new Date(a.start_date).getTime() : 0
+      const dateB = b.start_date ? new Date(b.start_date).getTime() : 0
+      return dateB - dateA
+    })
 })
 
 // Fetch company details with request cancellation to prevent race conditions

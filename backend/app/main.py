@@ -426,7 +426,7 @@ Returned in a more autonomous capacity that allowed me to further develop my eng
                     order_index=6,
                     logo_url="/images/scania.svg",
                     video_url="https://www.youtube.com/embed/Rm6grXvyX6I",
-                    video_title="Inside Scania Production: Manufacturing Process at the Truck Factory",
+                    video_title="Manufacturing Process at the Truck Factory",
                     map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
                     map_title="Scania Södertälje Location",
                 )
@@ -475,7 +475,7 @@ Started as part of the second-line support team, working alongside experienced e
                         "Heavy vehicle systems",
                     ],
                     video_url="https://www.youtube.com/embed/Rm6grXvyX6I",
-                    video_title="Inside Scania Production: Manufacturing Process at the Truck Factory",
+                    video_title="Manufacturing Process at the Truck Factory",
                     map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
                     map_title="Scania Södertälje Location",
                 )
@@ -523,7 +523,7 @@ Started as part of the second-line support team, working alongside experienced e
                         logo_url="/images/scania.svg",
                         order_index=8,
                         video_url="https://www.youtube.com/embed/Rm6grXvyX6I",
-                        video_title="Inside Scania Production: Manufacturing Process at the Truck Factory",
+                        video_title="Manufacturing Process at the Truck Factory",
                         map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
                         map_title="Scania Södertälje Location",
                     )
