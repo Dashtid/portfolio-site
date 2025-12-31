@@ -181,11 +181,10 @@ jobs:
           head: ${{ github.sha }}
           extra_args: --only-verified
 
-  # Lighthouse Performance Audit
+  # Lighthouse Performance Audit - runs on PRs and main branch pushes
   lighthouse:
     runs-on: ubuntu-latest
     needs: [frontend-quality]
-    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code

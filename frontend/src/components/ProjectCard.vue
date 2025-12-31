@@ -1,5 +1,5 @@
 <template>
-  <div class="project-card">
+  <div ref="cardRef" class="project-card">
     <div class="project-header">
       <h3 class="project-title">{{ project.name }}</h3>
       <span v-if="project.featured" class="featured-badge">Featured</span>
@@ -53,8 +53,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Project } from '@/types'
+import { useTiltEffect } from '@/composables/useMicroInteractions'
 
 // Use shared Project type but allow partial for flexibility
 interface ProjectCardProps {
@@ -65,6 +66,18 @@ interface ProjectCardProps {
 }
 
 const props = defineProps<ProjectCardProps>()
+
+// Ref for tilt effect
+const cardRef = ref<HTMLElement | null>(null)
+
+// Apply 3D tilt effect on hover
+useTiltEffect(cardRef, {
+  maxTilt: 8,
+  scale: 1.02,
+  speed: 300,
+  glare: true,
+  glareOpacity: 0.15
+})
 
 // Technologies is always string[] per the type definition
 const techStack = computed<string[]>(() => {
@@ -87,9 +100,29 @@ const techStack = computed<string[]>(() => {
 }
 
 .project-card:hover {
-  transform: translateY(-6px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   border-color: var(--primary-400, #60a5fa);
+}
+
+/* 3D depth effect for inner elements */
+.project-header {
+  transform: translateZ(20px);
+}
+
+.project-title {
+  transform: translateZ(30px);
+}
+
+.project-description {
+  transform: translateZ(15px);
+}
+
+.project-tech {
+  transform: translateZ(10px);
+}
+
+.project-links {
+  transform: translateZ(25px);
 }
 
 .project-header {

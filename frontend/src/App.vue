@@ -18,7 +18,11 @@ onMounted((): void => {
 
 <template>
   <a href="#main-content" class="skip-link">Skip to main content</a>
-  <router-view />
+  <router-view v-slot="{ Component, route }">
+    <Transition name="page-fade" mode="out-in">
+      <component :is="Component" :key="route.path" />
+    </Transition>
+  </router-view>
   <ToastContainer />
 </template>
 
@@ -55,6 +59,37 @@ onMounted((): void => {
 @media (prefers-reduced-motion: reduce) {
   .skip-link {
     transition: none;
+  }
+}
+
+/* Page transitions */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-enter-active,
+  .page-fade-leave-active {
+    transition: none;
+  }
+
+  .page-fade-enter-from,
+  .page-fade-leave-to {
+    opacity: 1;
+    transform: none;
   }
 }
 </style>

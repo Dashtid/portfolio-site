@@ -114,8 +114,8 @@ const currentYear = computed<number>(() => new Date().getFullYear())
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   background: var(--bg-secondary, #f8fafc);
   color: var(--text-secondary, #475569);
@@ -132,8 +132,8 @@ const currentYear = computed<number>(() => new Date().getFullYear())
 }
 
 .social-link:focus-visible {
-  outline: 2px solid var(--primary-400, #60a5fa);
-  outline-offset: 2px;
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 3px;
 }
 
 .footer-divider {

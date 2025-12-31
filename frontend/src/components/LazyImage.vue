@@ -18,7 +18,6 @@
     <!-- Main image with blur-to-clear transition -->
     <img
       v-show="isIntersecting && !error"
-      ref="mainImage"
       :src="currentSrc"
       :alt="alt"
       :class="[imageClass, { 'image--loaded': loaded, 'image--blur': !loaded && isIntersecting }]"
@@ -71,7 +70,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const imageContainer = ref<HTMLDivElement | null>(null)
-const mainImage = ref<HTMLImageElement | null>(null)
 const loaded = ref<boolean>(false)
 const error = ref<boolean>(false)
 const isIntersecting = ref<boolean>(false)

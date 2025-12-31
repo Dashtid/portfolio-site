@@ -7,6 +7,7 @@
     <main id="main-content" role="main">
       <!-- Hero Section with Stockholm Background -->
       <div class="stockholm-background">
+        <ThreeHeroBackground />
         <section id="hero" class="hero-section">
           <div class="hero-content">
             <h1 class="custom-hero-title fade-in">
@@ -249,14 +250,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import { usePortfolioStore } from '../stores/portfolio'
 import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 import BackToTop from '../components/BackToTop.vue'
 import DocumentCard from '../components/DocumentCard.vue'
 import GitHubStats from '../components/GitHubStats.vue'
-import { useBatchAnimation } from '../composables/useScrollAnimations'
+import { useGsapBatchAnimation } from '../composables/useGsapAnimations'
+
+// Lazy load Three.js hero background to reduce initial bundle size (~172KB gzipped)
+const ThreeHeroBackground = defineAsyncComponent({
+  loader: () => import('../components/ThreeHeroBackground.vue'),
+  delay: 0,
+  timeout: 10000
+})
 import { getDocuments } from '../api/services'
 import type { Document } from '@/types'
 import { logger } from '../utils/logger'
@@ -352,36 +360,28 @@ onMounted(async () => {
   // This ensures elements are rendered before IntersectionObserver setup
   await nextTick()
 
-  // Apply scroll animations to cards with staggered effect
-  useBatchAnimation('.experience-card', {
+  // Apply GSAP scroll animations to cards with staggered effect
+  useGsapBatchAnimation('.experience-card', {
     animation: 'slideUp',
-    duration: 600,
-    delay: 0,
-    stagger: 150,
-    threshold: 0.1
+    duration: 0.6,
+    stagger: 0.15
   })
 
-  useBatchAnimation('.education-card', {
+  useGsapBatchAnimation('.education-card', {
     animation: 'slideUp',
-    duration: 600,
-    delay: 0,
-    stagger: 150,
-    threshold: 0.1
+    duration: 0.6,
+    stagger: 0.15
   })
 
-  useBatchAnimation('.project-card', {
+  useGsapBatchAnimation('.project-card', {
     animation: 'slideUp',
-    duration: 600,
-    delay: 0,
-    stagger: 150,
-    threshold: 0.1
+    duration: 0.6,
+    stagger: 0.15
   })
 
-  useBatchAnimation('.section-title', {
+  useGsapBatchAnimation('.section-title', {
     animation: 'fadeIn',
-    duration: 800,
-    delay: 0,
-    threshold: 0.2
+    duration: 0.8
   })
 })
 </script>

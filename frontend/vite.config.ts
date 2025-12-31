@@ -158,8 +158,16 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Manual chunk splitting for better caching
+        // Manual chunk splitting for better caching and performance
         manualChunks: (id: string) => {
+          // Three.js - isolated for lazy loading (~172KB gzipped)
+          if (id.includes('node_modules/three')) {
+            return 'three'
+          }
+          // GSAP - isolated for potential lazy loading (~60KB gzipped)
+          if (id.includes('node_modules/gsap')) {
+            return 'gsap'
+          }
           // Vue ecosystem
           if (id.includes('node_modules/vue') || id.includes('node_modules/@vue')) {
             return 'vue-vendor'
@@ -201,8 +209,8 @@ export default defineConfig({
         }
       }
     },
-    // Chunk size warning limit (in KB)
-    chunkSizeWarningLimit: 500,
+    // Chunk size warning limit (in KB) - stricter for performance budget
+    chunkSizeWarningLimit: 200,
     // CSS code splitting
     cssCodeSplit: true,
     // Report compressed size

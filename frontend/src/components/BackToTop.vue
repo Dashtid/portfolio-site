@@ -108,8 +108,8 @@ onUnmounted(() => {
 }
 
 .back-to-top:focus-visible {
-  outline: 2px solid var(--color-primary, #2563eb);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-primary, #2563eb);
+  outline-offset: 3px;
 }
 
 .arrow-icon {
@@ -180,8 +180,8 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .back-to-top {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     bottom: 1rem;
     right: 1rem;
   }

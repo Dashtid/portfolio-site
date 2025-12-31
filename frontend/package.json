@@ -16,6 +16,10 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
+    "test:e2e:visual": "playwright test visual.spec.ts --project=chromium",
+    "test:e2e:visual:update": "playwright test visual.spec.ts --project=chromium --update-snapshots",
+    "lighthouse": "lhci autorun --config=../.github/lighthouse/lighthouserc.json",
+    "lighthouse:collect": "lhci collect --config=../.github/lighthouse/lighthouserc.json",
     "coverage": "vitest run --coverage",
     "analyze": "vite build --config vite.config.production.js && start dist/stats.html",
     "type-check": "vue-tsc --noEmit",
@@ -27,10 +31,13 @@
   },
   "dependencies": {
     "@sentry/vue": "^8.42.0",
+    "@types/three": "^0.182.0",
     "@vueuse/core": "^14.1.0",
     "axios": "^1.13.2",
     "dompurify": "~3.3.0",
+    "gsap": "^3.14.2",
     "pinia": "^3.0.4",
+    "three": "^0.182.0",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3",
     "zod": "^4.1.13"
@@ -39,6 +46,7 @@
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.14.0",
     "@pinia/testing": "^1.0.3",
     "@playwright/test": "^1.49.0",
     "@types/dompurify": "^3.0.5",

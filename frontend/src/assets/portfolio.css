@@ -186,18 +186,18 @@
   color: var(--bg-primary);
 }
 
-/* Focus States - Accessibility */
+/* Focus States - Accessibility (WCAG 2.2 SC 2.4.13) */
 .btn:focus-visible,
 .btn-primary:focus-visible,
 .btn-outline-primary:focus-visible {
   outline: 3px solid var(--primary-400, #60a5fa);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .project-link:focus-visible,
 .contact-link:focus-visible {
   outline: 3px solid var(--primary-400, #60a5fa);
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-radius: 4px;
 }
 
@@ -205,8 +205,31 @@
 .experience-card:focus-within,
 .education-card:focus-within,
 .project-card:focus-within {
-  outline: 2px solid var(--primary-400, #60a5fa);
-  outline-offset: 2px;
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 3px;
+}
+
+/* High contrast mode support (WCAG 2.2) */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid CanvasText;
+    outline-offset: 3px;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-outline-primary,
+  .social-link,
+  .project-link,
+  .contact-link {
+    forced-color-adjust: none;
+  }
+
+  .experience-card,
+  .education-card,
+  .project-card {
+    border: 2px solid CanvasText;
+  }
 }
 
 /* Dark Mode - Links */

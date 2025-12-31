@@ -7,6 +7,7 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/e2e',
   outputDir: '.test-results',
+  snapshotDir: './tests/e2e/__snapshots__',
   fullyParallel: false, // Disable to prevent auth state conflicts between tests
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -16,6 +17,13 @@ export default defineConfig({
     ['list'],
     ...(process.env.CI ? [['github' as const]] : [])
   ],
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01, // Allow 1% pixel difference for anti-aliasing
+      threshold: 0.2,
+      animations: 'disabled'
+    }
+  },
   use: {
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:4173',
     trace: 'on-first-retry',

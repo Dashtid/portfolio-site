@@ -68,8 +68,8 @@ const toggleTheme = handleClick
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   background: transparent;
   border: 2px solid var(--color-border, #e2e8f0);
@@ -86,8 +86,8 @@ const toggleTheme = handleClick
 }
 
 .theme-toggle:focus-visible {
-  outline: 2px solid var(--color-primary, #2563eb);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-primary, #2563eb);
+  outline-offset: 3px;
 }
 
 .theme-toggle:active {
@@ -144,16 +144,16 @@ const toggleTheme = handleClick
   outline-color: var(--primary-400, #60a5fa);
 }
 
-/* Responsive sizing */
+/* Responsive sizing - maintain 44px minimum for WCAG 2.5.8 */
 @media (max-width: 768px) {
   .theme-toggle {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 
   .theme-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 }
 
