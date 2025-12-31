@@ -96,7 +96,7 @@ async def seed_companies(session: AsyncSession):
             "name": "Finnish Defence Forces",
             "title": "Platoon Leader, 2nd Lieutenant",
             "description": "Marine commando platoon leader with day-to-day command of 150 soldiers and field operation command of 30 soldiers.",
-            "location": "Tammisaari, Finland",
+            "location": "Dragsvik, Finland",
             "start_date": datetime(2014, 1, 1),
             "end_date": datetime(2015, 1, 31),
             "website": None,

@@ -121,10 +121,6 @@
               </div>
               <p v-if="edu.field_of_study" class="education-field">{{ edu.field_of_study }}</p>
               <p v-if="edu.description" class="education-description">{{ edu.description }}</p>
-              <p class="education-dates">
-                {{ formatDate(edu.start_date) }} -
-                {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
-              </p>
               <a
                 v-if="edu.certificate_url"
                 :href="edu.certificate_url"
@@ -147,6 +143,10 @@
                   <line x1="10" y1="14" x2="21" y2="3" />
                 </svg>
               </a>
+              <p class="education-dates">
+                {{ formatDate(edu.start_date) }} -
+                {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
+              </p>
             </div>
           </div>
         </div>
@@ -261,10 +261,14 @@ import { getUserMessage } from '../utils/errorHandler'
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)
 
-// Computed properties for education from API - sorted by order_index field
+// Computed properties for education from API - sorted by end_date (newest first)
 const education = computed(() => {
   const items = portfolioStore.education || []
-  return [...items].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+  return [...items].sort((a, b) => {
+    const dateA = a.end_date ? new Date(a.end_date).getTime() : Date.now()
+    const dateB = b.end_date ? new Date(b.end_date).getTime() : Date.now()
+    return dateB - dateA
+  })
 })
 
 // Documents state
@@ -495,6 +499,7 @@ html {
 .certificate-link {
   display: inline-flex;
   align-items: center;
+  align-self: center;
   gap: 0.5rem;
   margin-top: 0.75rem;
   padding: 0.5rem 1rem;

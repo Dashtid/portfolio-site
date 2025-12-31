@@ -530,6 +530,16 @@ Started as part of the second-line support team, working alongside experienced e
                     session.add(scania_2012)
                     logger.info("Added Scania 2012 entry")
 
+            # Update Finnish Defence Forces location
+            stmt = (
+                update(Company)
+                .where(Company.name == "Finnish Defence Forces")
+                .values(location="Dragsvik, Finland")
+            )
+            result = await session.execute(stmt)
+            if result.rowcount > 0:  # type: ignore[attr-defined]
+                logger.info("Updated Finnish Defence Forces location to Dragsvik, Finland")
+
             await session.commit()
             logger.info("Company data migration completed")
     except OperationalError:

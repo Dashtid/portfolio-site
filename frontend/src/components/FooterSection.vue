@@ -4,12 +4,6 @@
       <div class="footer-content">
         <!-- Brand and tagline -->
         <div class="footer-brand">
-          <img
-            src="/images/D-dark.svg"
-            alt="David Dashti Logo"
-            class="footer-logo"
-            loading="lazy"
-          />
           <span class="footer-name">David Dashti</span>
         </div>
         <p class="footer-tagline">Cybersecurity Engineer & Medical Software Specialist</p>
@@ -98,17 +92,6 @@ const currentYear = computed<number>(() => new Date().getFullYear())
   gap: 0.75rem;
 }
 
-.footer-logo {
-  width: 32px;
-  height: 32px;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.footer-brand:hover .footer-logo {
-  opacity: 1;
-}
-
 .footer-name {
   font-size: 1.25rem;
   font-weight: 700;
@@ -195,10 +178,6 @@ const currentYear = computed<number>(() => new Date().getFullYear())
 
 [data-theme='dark'] .footer-divider {
   background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
-}
-
-[data-theme='dark'] .footer-logo {
-  filter: invert(1) brightness(0.9);
 }
 
 /* Mobile styles */

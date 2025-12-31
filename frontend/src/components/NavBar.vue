@@ -13,13 +13,6 @@
         href="#hero"
         @click="scrollToSection('hero')"
       >
-        <img
-          :src="logoSrc"
-          alt="David Dashti Logo"
-          height="30"
-          class="d-inline-block align-text-top me-2"
-          loading="lazy"
-        />
         David Dashti
       </a>
       <!-- Theme toggle always visible on mobile -->
@@ -60,14 +53,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import ThemeToggle from './ThemeToggle.vue'
-import { useTheme } from '../composables/useTheme'
-
-const { isDark } = useTheme()
-
-// Compute logo path based on theme
-const logoSrc = computed(() => (isDark.value ? '/images/D-white.svg' : '/images/D-dark.svg'))
 
 interface NavItem {
   name: string
@@ -233,14 +220,6 @@ onUnmounted(() => {
 
 .navbar-brand:hover {
   color: var(--primary-600, #2563eb);
-}
-
-.navbar-brand img {
-  transition: transform 0.2s ease;
-}
-
-.navbar-brand:hover img {
-  transform: scale(1.05);
 }
 
 .nav-link {

@@ -53,7 +53,7 @@ describe('NavBar', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('displays brand logo and name', () => {
+  it('displays brand name', () => {
     wrapper = mount(NavBar, {
       global: {
         plugins: [router]
@@ -63,10 +63,6 @@ describe('NavBar', () => {
     const brand = wrapper.find('.navbar-brand')
     expect(brand.exists()).toBe(true)
     expect(brand.text()).toContain('David Dashti')
-
-    const logo = brand.find('img')
-    expect(logo.exists()).toBe(true)
-    expect(logo.attributes('alt')).toBe('David Dashti Logo')
   })
 
   it('renders navigation items', () => {
