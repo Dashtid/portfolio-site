@@ -24,7 +24,7 @@
     </header>
 
     <!-- Admin Navigation -->
-    <nav class="admin-nav">
+    <nav class="admin-nav" role="navigation" aria-label="Admin navigation">
       <router-link to="/admin" class="nav-link" :class="{ active: $route.path === '/admin' }">
         Dashboard
       </router-link>
@@ -283,6 +283,11 @@ onMounted(async (): Promise<void> => {
   color: var(--color-gray-900);
 }
 
+.logout-button:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
 /* Admin Navigation */
 .admin-nav {
   background: white;
@@ -443,6 +448,11 @@ onMounted(async (): Promise<void> => {
 
 .retry-button:hover {
   background: #b91c1c;
+}
+
+.retry-button:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
 }
 
 /* Responsive Design */

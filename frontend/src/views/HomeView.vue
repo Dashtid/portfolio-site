@@ -164,8 +164,12 @@
             />
             Academic Work
           </h2>
-          <div v-if="documentsLoading" class="loading-state">Loading publications...</div>
-          <div v-else-if="documentsError" class="error-state">{{ documentsError }}</div>
+          <div v-if="documentsLoading" class="loading-state" role="status" aria-live="polite">
+            Loading publications...
+          </div>
+          <div v-else-if="documentsError" class="error-state" role="alert">
+            {{ documentsError }}
+          </div>
           <div v-else class="documents-grid">
             <DocumentCard v-for="document in documents" :key="document.id" :document="document" />
           </div>

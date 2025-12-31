@@ -3,7 +3,14 @@
     <div class="page-header">
       <h2 class="page-title">Manage Experience</h2>
       <button class="add-button" @click="showAddForm = true">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          class="icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
           <path d="M12 4v16m8-8H4" />
         </svg>
         Add Company
@@ -23,25 +30,35 @@
           <div class="company-header">
             <h3 class="company-name">{{ company.name }}</h3>
             <div class="company-actions">
-              <button class="action-btn edit-btn" @click="editCompany(company)">
+              <button
+                class="action-btn edit-btn"
+                :aria-label="`Edit ${company.name}`"
+                @click="editCompany(company)"
+              >
                 <svg
                   class="icon-sm"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
+                  aria-hidden="true"
                 >
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
-              <button class="action-btn delete-btn" @click="deleteCompany(company.id)">
+              <button
+                class="action-btn delete-btn"
+                :aria-label="`Delete ${company.name}`"
+                @click="deleteCompany(company.id)"
+              >
                 <svg
                   class="icon-sm"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
+                  aria-hidden="true"
                 >
                   <path
                     d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
@@ -65,11 +82,11 @@
     <!-- Add/Edit Form Modal -->
     <div
       v-if="showAddForm || editingCompany"
+      ref="modalRef"
       class="modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="company-modal-title"
-      tabindex="0"
       @click.self="closeForm"
       @keydown.escape="closeForm"
     >
@@ -197,14 +214,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, type WritableComputedRef } from 'vue'
+import { ref, onMounted, computed, watch, type WritableComputedRef } from 'vue'
 import apiClient from '../../api/client'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 // Toast notifications
 const toast = useToast()
+
+// Modal focus trap for accessibility
+const modalRef = ref<HTMLElement | null>(null)
+const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef)
 
 // Form data interface (extends Company with order_index)
 interface CompanyFormData {
@@ -385,6 +407,7 @@ const deleteCompany = async (id: string): Promise<void> => {
 }
 
 const closeForm = (): void => {
+  deactivateFocusTrap()
   showAddForm.value = false
   editingCompany.value = null
   formErrors.value = {}
@@ -399,6 +422,16 @@ const closeForm = (): void => {
     order_index: 0
   }
 }
+
+// Watch for modal visibility to manage focus trap
+watch(
+  () => showAddForm.value || editingCompany.value,
+  isOpen => {
+    if (isOpen) {
+      activateFocusTrap()
+    }
+  }
+)
 
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''

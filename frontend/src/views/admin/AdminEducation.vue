@@ -8,11 +8,11 @@
     <!-- Add/Edit Form Modal -->
     <div
       v-if="showForm"
+      ref="modalRef"
       class="modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="education-modal-title"
-      tabindex="0"
       @click.self="closeForm"
       @keydown.escape="closeForm"
     >
@@ -209,16 +209,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import api from '../../api/client'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 // Toast notifications
 const toast = useToast()
+
+// Modal focus trap for accessibility
+const modalRef = ref<HTMLElement | null>(null)
+const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef)
 
 // Education form interface
 interface EducationFormData {
@@ -324,6 +329,7 @@ const deleteEducation = async (id: string | undefined): Promise<void> => {
 }
 
 const closeForm = (): void => {
+  deactivateFocusTrap()
   showForm.value = false
   editingEducation.value = null
   formData.value = {
@@ -339,6 +345,13 @@ const closeForm = (): void => {
     order: 0
   }
 }
+
+// Watch for modal visibility to manage focus trap
+watch(showForm, isOpen => {
+  if (isOpen) {
+    activateFocusTrap()
+  }
+})
 
 const formatDate = (dateStr: string | null | undefined): string => {
   if (!dateStr) return ''
