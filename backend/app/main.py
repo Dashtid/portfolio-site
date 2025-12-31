@@ -408,25 +408,25 @@ async def migrate_company_data():
                 .values(
                     title="Technician, Engine Analysis",
                     description="Autonomous role managing troubleshooting processes, communicating across production chain, and creating documentation and work routines.",
-                    detailed_description="Returned to Scania for a senior technician role in the Engine Analysis department. Took ownership of troubleshooting processes, coordinated with production teams across the manufacturing chain, and developed comprehensive documentation and standardized work routines. This role built on my earlier experience at Scania and allowed me to work more independently while contributing to process improvements.",
+                    detailed_description="""Scania is a leading Swedish manufacturer of commercial vehicles, buses, and industrial engines, renowned for their commitment to sustainable transport solutions and engineering excellence in the heavy-duty vehicle industry.
+
+Returned in a more autonomous capacity that allowed me to further develop my engineering skills. Was a part of the entire troubleshooting process from case intake to resolution and reporting results to superiors. Worked across the production chain, from manufacturing line personnel to construction engineers, while gaining valuable experience in creating documentation and establishing work routines.""",
                     responsibilities=[
-                        "Led troubleshooting processes for engine analysis issues",
-                        "Communicated findings across the production chain",
-                        "Created and maintained technical documentation",
-                        "Developed standardized work routines and procedures",
-                        "Coordinated with engineering teams on complex issues",
+                        "Managed the entire troubleshooting process from case intake to resolution",
+                        "Reported results to superiors",
+                        "Worked across the production chain with manufacturing and engineering personnel",
+                        "Created documentation and established work routines",
                     ],
                     technologies=[
                         "Engine diagnostics",
                         "Technical documentation",
                         "Process optimization",
-                        "Quality assurance",
                     ],
                     end_date=date(2016, 8, 31),
                     order_index=6,
                     logo_url="/images/scania.svg",
                     video_url="https://www.youtube.com/embed/Rm6grXvyX6I",
-                    video_title="Inom Scania produktion: Tillverkningsprocess på Lastbilsfabriken",
+                    video_title="Inside Scania Production: Manufacturing Process at the Truck Factory",
                     map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
                     map_title="Scania Södertälje Location",
                 )
@@ -460,22 +460,22 @@ async def migrate_company_data():
                     end_date=date(2012, 8, 31),
                     title="Technician, Engine Analysis",
                     description="Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
-                    detailed_description="My first professional experience in the engineering field, working as a junior technician in Scania's Engine Analysis department. Collaborated closely with experienced engineers and senior technicians in second-line support, learning systematic troubleshooting methodologies and gaining hands-on experience with heavy vehicle engine systems. This summer position provided foundational skills that would later prove valuable in my engineering career.",
+                    detailed_description="""Scania is a leading Swedish manufacturer of commercial vehicles, buses, and industrial engines, renowned for their commitment to sustainable transport solutions and engineering excellence in the heavy-duty vehicle industry.
+
+Started as part of the second-line support team, working alongside experienced engineers and technicians. Acquired fundamental troubleshooting skills and gained a thorough understanding of Scania's organizational structure and production processes.""",
                     responsibilities=[
-                        "Assisted senior technicians with engine diagnostics",
-                        "Performed second-line support troubleshooting",
-                        "Documented technical findings and analysis results",
-                        "Learned systematic problem-solving approaches",
-                        "Collaborated with cross-functional engineering teams",
+                        "Worked as part of the second-line support team",
+                        "Assisted experienced engineers and technicians",
+                        "Acquired fundamental troubleshooting skills",
+                        "Gained understanding of Scania's organizational structure and production processes",
                     ],
                     technologies=[
                         "Engine diagnostics",
                         "Technical troubleshooting",
-                        "Documentation",
                         "Heavy vehicle systems",
                     ],
                     video_url="https://www.youtube.com/embed/Rm6grXvyX6I",
-                    video_title="Inom Scania produktion: Tillverkningsprocess på Lastbilsfabriken",
+                    video_title="Inside Scania Production: Manufacturing Process at the Truck Factory",
                     map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
                     map_title="Scania Södertälje Location",
                 )
@@ -502,18 +502,18 @@ async def migrate_company_data():
                         name="Scania Group",
                         title="Technician, Engine Analysis",
                         description="Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
-                        detailed_description="My first professional experience in the engineering field, working as a junior technician in Scania's Engine Analysis department. Collaborated closely with experienced engineers and senior technicians in second-line support, learning systematic troubleshooting methodologies and gaining hands-on experience with heavy vehicle engine systems. This summer position provided foundational skills that would later prove valuable in my engineering career.",
+                        detailed_description="""Scania is a leading Swedish manufacturer of commercial vehicles, buses, and industrial engines, renowned for their commitment to sustainable transport solutions and engineering excellence in the heavy-duty vehicle industry.
+
+Started as part of the second-line support team, working alongside experienced engineers and technicians. Acquired fundamental troubleshooting skills and gained a thorough understanding of Scania's organizational structure and production processes.""",
                         responsibilities=[
-                            "Assisted senior technicians with engine diagnostics",
-                            "Performed second-line support troubleshooting",
-                            "Documented technical findings and analysis results",
-                            "Learned systematic problem-solving approaches",
-                            "Collaborated with cross-functional engineering teams",
+                            "Worked as part of the second-line support team",
+                            "Assisted experienced engineers and technicians",
+                            "Acquired fundamental troubleshooting skills",
+                            "Gained understanding of Scania's organizational structure and production processes",
                         ],
                         technologies=[
                             "Engine diagnostics",
                             "Technical troubleshooting",
-                            "Documentation",
                             "Heavy vehicle systems",
                         ],
                         location="Södertälje, Sweden",
@@ -523,7 +523,7 @@ async def migrate_company_data():
                         logo_url="/images/scania.svg",
                         order_index=8,
                         video_url="https://www.youtube.com/embed/Rm6grXvyX6I",
-                        video_title="Inom Scania produktion: Tillverkningsprocess på Lastbilsfabriken",
+                        video_title="Inside Scania Production: Manufacturing Process at the Truck Factory",
                         map_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
                         map_title="Scania Södertälje Location",
                     )
