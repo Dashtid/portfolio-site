@@ -656,9 +656,9 @@ onUnmounted(() => {
 }
 
 [data-theme='dark'] .error-message {
-  color: var(--color-error, #f87171);
-  background: rgba(248, 113, 113, 0.15);
-  border-color: rgba(248, 113, 113, 0.25);
+  color: var(--color-error, #fca5a5);
+  background: rgba(252, 165, 165, 0.15);
+  border-color: rgba(252, 165, 165, 0.25);
 }
 
 [data-theme='dark'] .empty-state {

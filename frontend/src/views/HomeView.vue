@@ -203,6 +203,8 @@
                 src="/images/profile.png"
                 alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
                 class="profile-photo"
+                width="280"
+                height="326"
                 loading="lazy"
               />
             </div>
