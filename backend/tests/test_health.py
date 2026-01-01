@@ -264,3 +264,92 @@ class TestHealthDatabaseFailure:
         finally:
             # Restore original dependency
             del app.dependency_overrides[get_db]
+
+
+class TestMemoryMonitoring:
+    """Tests for memory monitoring function in health endpoints."""
+
+    def test_get_memory_usage_returns_dict(self):
+        """Test that _get_memory_usage returns a dict with expected keys."""
+        from app.api.v1.endpoints.health import _get_memory_usage
+
+        result = _get_memory_usage()
+        assert isinstance(result, dict)
+        assert "source" in result
+        # Should have either rss_mb or error
+        assert "rss_mb" in result or "error" in result
+
+    def test_get_memory_usage_positive_values(self):
+        """Test that memory usage returns positive values when successful."""
+        from app.api.v1.endpoints.health import _get_memory_usage
+
+        result = _get_memory_usage()
+        if "rss_mb" in result:
+            assert result["rss_mb"] > 0
+
+    def test_detailed_health_includes_memory(self, client: TestClient):
+        """Test that detailed health check includes memory info."""
+        response = client.get("/api/v1/health/detailed")
+        assert response.status_code == 200
+        data = response.json()
+        assert "system" in data
+        assert "memory" in data["system"]
+        memory = data["system"]["memory"]
+        assert "source" in memory
+
+    def test_detailed_health_includes_pid(self, client: TestClient):
+        """Test that detailed health check includes process ID."""
+        import os
+
+        response = client.get("/api/v1/health/detailed")
+        assert response.status_code == 200
+        data = response.json()
+        assert "system" in data
+        assert "pid" in data["system"]
+        # PID should match current process
+        assert data["system"]["pid"] == os.getpid()
+
+
+class TestUptimeFormatting:
+    """Tests for uptime formatting function."""
+
+    def test_format_uptime_seconds_only(self):
+        """Test uptime formatting with seconds only."""
+        from app.api.v1.endpoints.health import _format_uptime
+
+        result = _format_uptime(45)
+        assert "45s" in result
+
+    def test_format_uptime_minutes_and_seconds(self):
+        """Test uptime formatting with minutes and seconds."""
+        from app.api.v1.endpoints.health import _format_uptime
+
+        result = _format_uptime(125)  # 2 minutes 5 seconds
+        assert "2m" in result
+        assert "5s" in result
+
+    def test_format_uptime_hours_minutes_seconds(self):
+        """Test uptime formatting with hours."""
+        from app.api.v1.endpoints.health import _format_uptime
+
+        result = _format_uptime(3665)  # 1 hour, 1 minute, 5 seconds
+        assert "1h" in result
+        assert "1m" in result
+        assert "5s" in result
+
+    def test_format_uptime_days(self):
+        """Test uptime formatting with days."""
+        from app.api.v1.endpoints.health import _format_uptime
+
+        result = _format_uptime(90061)  # 1 day, 1 hour, 1 minute, 1 second
+        assert "1d" in result
+        assert "1h" in result
+        assert "1m" in result
+        assert "1s" in result
+
+    def test_format_uptime_zero(self):
+        """Test uptime formatting with zero seconds."""
+        from app.api.v1.endpoints.health import _format_uptime
+
+        result = _format_uptime(0)
+        assert "0s" in result

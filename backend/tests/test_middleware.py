@@ -1107,3 +1107,280 @@ class TestTrackErrorFunction:
                     mock_logger.error.assert_called_once()
                     call_args = mock_logger.error.call_args[0][0]
                     assert type(error).__name__ in call_args
+
+
+class TestRateLimitCookieToken:
+    """Tests for rate limit with cookie token authentication."""
+
+    def test_get_user_or_ip_with_cookie_token(self):
+        """Test get_user_or_ip with access_token cookie."""
+        from app.middleware.rate_limit import get_user_or_ip
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.state = MagicMock()
+        mock_request.state.user = None
+        mock_request.headers = {}  # No Authorization header
+        mock_request.cookies = {"access_token": "cookie-token-value-123"}
+        mock_request.client = MagicMock()
+        mock_request.client.host = "10.0.0.1"
+
+        key = get_user_or_ip(mock_request)
+        assert key.startswith("token:")
+        # Should be consistent hash
+        assert len(key) == len("token:") + 32
+
+    def test_cookie_token_consistency(self):
+        """Test that same cookie token produces same key."""
+        from app.middleware.rate_limit import get_user_or_ip
+
+        cookie_token = "my-secure-cookie-token"
+
+        mock_request1 = MagicMock(spec=Request)
+        mock_request1.state = MagicMock()
+        mock_request1.state.user = None
+        mock_request1.headers = {}
+        mock_request1.cookies = {"access_token": cookie_token}
+
+        mock_request2 = MagicMock(spec=Request)
+        mock_request2.state = MagicMock()
+        mock_request2.state.user = None
+        mock_request2.headers = {}
+        mock_request2.cookies = {"access_token": cookie_token}
+
+        key1 = get_user_or_ip(mock_request1)
+        key2 = get_user_or_ip(mock_request2)
+
+        assert key1 == key2
+        assert key1.startswith("token:")
+
+    def test_bearer_token_takes_precedence_over_cookie(self):
+        """Test that Authorization header takes precedence over cookie."""
+        from app.middleware.rate_limit import get_user_or_ip
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.state = MagicMock()
+        mock_request.state.user = None
+        mock_request.headers = {"Authorization": "Bearer header-token"}
+        mock_request.cookies = {"access_token": "cookie-token"}
+
+        key = get_user_or_ip(mock_request)
+        # Should use the header token, not cookie
+        assert key.startswith("token:")
+
+
+class TestRateLimitExceededHandlerEdgeCases:
+    """Tests for edge cases in rate_limit_exceeded_handler."""
+
+    def test_handler_with_none_detail(self):
+        """Test handler when exception detail is None."""
+        from app.middleware import rate_limit_exceeded_handler
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/test"
+        mock_request.method = "GET"
+        mock_request.headers = {}
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
+
+        exc = MagicMock()
+        exc.detail = None
+
+        response = asyncio.run(rate_limit_exceeded_handler(mock_request, exc))
+
+        assert response.status_code == 429
+        body = json.loads(response.body)
+        assert "retry_after" in body
+        assert body["retry_after"] == "60"  # Default fallback
+
+    def test_handler_with_empty_detail(self):
+        """Test handler when exception detail is empty string."""
+        from app.middleware import rate_limit_exceeded_handler
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/test"
+        mock_request.method = "GET"
+        mock_request.headers = {}
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
+
+        exc = MagicMock()
+        exc.detail = ""
+
+        response = asyncio.run(rate_limit_exceeded_handler(mock_request, exc))
+
+        assert response.status_code == 429
+        body = json.loads(response.body)
+        assert body["retry_after"] == "60"
+
+    def test_handler_with_malformed_detail(self):
+        """Test handler when detail doesn't contain 'rate limit exceeded'."""
+        from app.middleware import rate_limit_exceeded_handler
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/test"
+        mock_request.method = "GET"
+        mock_request.headers = {}
+        mock_request.client = MagicMock()
+        mock_request.client.host = "127.0.0.1"
+
+        exc = MagicMock()
+        exc.detail = "some other error message"
+
+        response = asyncio.run(rate_limit_exceeded_handler(mock_request, exc))
+
+        assert response.status_code == 429
+        body = json.loads(response.body)
+        # Should fall back to "60"
+        assert body["retry_after"] == "60"
+
+
+class TestPerformanceMiddlewareDispatchExceptions:
+    """Tests for PerformanceMiddleware exception handling in dispatch."""
+
+    def test_dispatch_handles_http_exception(self):
+        """Test that dispatch handles HTTPException and records metrics."""
+        from fastapi import HTTPException
+
+        from app.middleware.performance import PerformanceMiddleware, metrics
+
+        app = MagicMock()
+        middleware = PerformanceMiddleware(app=app)
+
+        # Reset metrics first
+        metrics.reset()
+
+        mock_request = MagicMock()
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/notfound"
+
+        async def raise_404(request):
+            raise HTTPException(status_code=404, detail="Not found")
+
+        with pytest.raises(HTTPException) as exc_info:
+            asyncio.run(middleware.dispatch(mock_request, raise_404))
+
+        assert exc_info.value.status_code == 404
+        # Should have recorded the request with 404 status
+        assert metrics.status_codes.get(404, 0) >= 1
+
+    def test_dispatch_handles_unexpected_exception(self):
+        """Test that dispatch handles unexpected exceptions and records as 500."""
+        from app.middleware.performance import PerformanceMiddleware, metrics
+
+        app = MagicMock()
+        middleware = PerformanceMiddleware(app=app)
+
+        # Reset metrics first
+        metrics.reset()
+
+        mock_request = MagicMock()
+        mock_request.method = "POST"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/crash"
+
+        async def raise_runtime_error(request):
+            raise RuntimeError("Unexpected database error")
+
+        with patch("app.middleware.performance.logger") as mock_logger:
+            with pytest.raises(RuntimeError):
+                asyncio.run(middleware.dispatch(mock_request, raise_runtime_error))
+
+            mock_logger.exception.assert_called_once()
+
+        # Should have recorded the request with 500 status
+        assert metrics.status_codes.get(500, 0) >= 1
+
+    def test_dispatch_logs_slow_requests(self):
+        """Test that dispatch logs slow requests (>1000ms)."""
+        from app.middleware.performance import PerformanceMiddleware
+
+        app = MagicMock()
+        middleware = PerformanceMiddleware(app=app)
+
+        mock_request = MagicMock()
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/slow"
+        mock_request.state = MagicMock()
+        mock_request.state.request_id = "slow-request-123"
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.headers = {}
+
+        async def slow_response(request):
+            return mock_response
+
+        # Patch time.time to simulate slow request
+        with (
+            patch("app.middleware.performance.time") as mock_time,
+            patch("app.middleware.performance.logger") as mock_logger,
+        ):
+            # First call returns start time, second call returns 2 seconds later
+            mock_time.time.side_effect = [0, 2.0]
+
+            result = asyncio.run(middleware.dispatch(mock_request, slow_response))
+
+            assert result == mock_response
+            # Should log warning for slow request
+            mock_logger.warning.assert_called_once()
+            call_args = mock_logger.warning.call_args
+            assert "Slow request" in call_args[0][0]
+
+
+class TestLoggingMiddlewareExceptionHandling:
+    """Tests for LoggingMiddleware exception handling."""
+
+    def test_dispatch_handles_exception_and_logs(self):
+        """Test that dispatch logs exceptions and re-raises them."""
+        from app.middleware.logging import LoggingMiddleware
+
+        app = MagicMock()
+        middleware = LoggingMiddleware(app=app)
+
+        mock_request = MagicMock()
+        mock_request.method = "POST"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/error"
+
+        async def raise_value_error(request):
+            raise ValueError("Test error in request")
+
+        with patch("app.middleware.logging.logger") as mock_logger:
+            with pytest.raises(ValueError) as exc_info:
+                asyncio.run(middleware.dispatch(mock_request, raise_value_error))
+
+            assert "Test error in request" in str(exc_info.value)
+            # Should log the error
+            mock_logger.error.assert_called_once()
+            call_kwargs = mock_logger.error.call_args[1]
+            assert call_kwargs.get("exc_info") is True
+
+    def test_dispatch_logs_request_id_on_exception(self):
+        """Test that dispatch includes request_id in exception logs."""
+        from app.middleware.logging import LoggingMiddleware
+
+        app = MagicMock()
+        middleware = LoggingMiddleware(app=app)
+
+        mock_request = MagicMock()
+        mock_request.method = "GET"
+        mock_request.url = MagicMock()
+        mock_request.url.path = "/api/v1/test"
+
+        async def raise_key_error(request):
+            raise KeyError("missing_key")
+
+        with patch("app.middleware.logging.logger") as mock_logger:
+            with pytest.raises(KeyError):
+                asyncio.run(middleware.dispatch(mock_request, raise_key_error))
+
+            mock_logger.error.assert_called_once()
+            extra = mock_logger.error.call_args[1].get("extra", {})
+            assert "request_id" in extra
+            assert "error_type" in extra
+            assert extra["error_type"] == "KeyError"
