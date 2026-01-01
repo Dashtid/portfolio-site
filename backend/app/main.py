@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, PlainTextResponse
 
 from app.api.v1 import analytics, auth, companies, education, github, projects, skills
 from app.api.v1.endpoints import documents, errors, health, metrics
@@ -70,16 +70,34 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-# Security Headers Middleware
+# Security Headers Middleware (OWASP 2025 compliant)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        # Security headers for production
+
+        # Core security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+        # Cross-origin isolation headers (OWASP 2025)
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+
+        # Enhanced Permissions-Policy (OWASP 2025)
+        permissions = [
+            "geolocation=()",
+            "microphone=()",
+            "camera=()",
+            "payment=()",
+            "usb=()",
+            "magnetometer=()",
+            "gyroscope=()",
+            "accelerometer=()",
+        ]
+        response.headers["Permissions-Policy"] = ", ".join(permissions)
 
         # Set CSP based on environment: strict for production, relaxed for development
         if settings.ENVIRONMENT == "production":
@@ -89,12 +107,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net",
+                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net https://*.sentry.io",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
                 "frame-ancestors 'none'",
+                "upgrade-insecure-requests",
             ]
         else:
             # Development CSP - allows Vue.js hot-reload and devtools
@@ -104,7 +123,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net ws://localhost:* http://localhost:*",
+                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net https://*.sentry.io ws://localhost:* http://localhost:*",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
@@ -113,9 +132,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             ]
         response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
 
-        # Strict-Transport-Security (HSTS) - only for HTTPS in production
+        # Strict-Transport-Security (HSTS) with preload - only for HTTPS in production
         if settings.ENVIRONMENT == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains; preload"
+            )
         return response
 
 
@@ -820,6 +841,29 @@ async def test_endpoint():
             "description": "Your portfolio backend is ready!",
         },
     }
+
+
+# Security.txt endpoint (RFC 9116)
+SECURITY_TXT_CONTENT = """# Security Policy for dashti.se API
+# RFC 9116 compliant security.txt
+
+Contact: mailto:security@dashti.se
+Contact: https://www.linkedin.com/in/david-dashti/
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en, sv
+Canonical: https://dashti-portfolio-backend.fly.dev/.well-known/security.txt
+
+# Policy
+# This is the API backend for dashti.se portfolio.
+# If you discover a security vulnerability, please report it responsibly.
+"""
+
+
+@app.get("/.well-known/security.txt", include_in_schema=False)
+@app.get("/security.txt", include_in_schema=False)
+async def security_txt():
+    """Serve security.txt for responsible disclosure (RFC 9116)"""
+    return PlainTextResponse(SECURITY_TXT_CONTENT, media_type="text/plain")
 
 
 if __name__ == "__main__":

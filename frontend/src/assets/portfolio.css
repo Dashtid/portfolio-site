@@ -271,15 +271,77 @@ body {
   padding: 0;
 }
 
-/* Stockholm Background - Exact Match from Original */
+/* Stockholm Background - Responsive with AVIF/WebP Fallback */
 .stockholm-background {
+  /* Fallback for older browsers */
   background:
     linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
-    url('/images/stockholm.webp') no-repeat center center;
+    url('/images/optimized/stockholm-desktop.jpg') no-repeat center center;
+  /* Modern browsers with image-set support */
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+    image-set(
+        url('/images/optimized/stockholm-desktop.avif') type('image/avif'),
+        url('/images/optimized/stockholm-desktop.webp') type('image/webp'),
+        url('/images/optimized/stockholm-desktop.jpg') type('image/jpeg')
+      )
+      no-repeat center center;
   background-size: cover;
   background-attachment: fixed;
   position: relative;
   min-height: 100vh;
+}
+
+/* Responsive hero images for better performance */
+@media (max-width: 480px) {
+  .stockholm-background {
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+      url('/images/optimized/stockholm-mobile.jpg') no-repeat center center;
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+      image-set(
+          url('/images/optimized/stockholm-mobile.avif') type('image/avif'),
+          url('/images/optimized/stockholm-mobile.webp') type('image/webp'),
+          url('/images/optimized/stockholm-mobile.jpg') type('image/jpeg')
+        )
+        no-repeat center center;
+    background-size: cover;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .stockholm-background {
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+      url('/images/optimized/stockholm-tablet.jpg') no-repeat center center;
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+      image-set(
+          url('/images/optimized/stockholm-tablet.avif') type('image/avif'),
+          url('/images/optimized/stockholm-tablet.webp') type('image/webp'),
+          url('/images/optimized/stockholm-tablet.jpg') type('image/jpeg')
+        )
+        no-repeat center center;
+    background-size: cover;
+  }
+}
+
+@media (min-width: 1921px) {
+  .stockholm-background {
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+      url('/images/optimized/stockholm-large.jpg') no-repeat center center;
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%),
+      image-set(
+          url('/images/optimized/stockholm-large.avif') type('image/avif'),
+          url('/images/optimized/stockholm-large.webp') type('image/webp'),
+          url('/images/optimized/stockholm-large.jpg') type('image/jpeg')
+        )
+        no-repeat center center;
+    background-size: cover;
+  }
 }
 
 .stockholm-background::before {

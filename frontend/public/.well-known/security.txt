@@ -1,0 +1,16 @@
+# Security Policy for dashti.se
+# RFC 9116 compliant security.txt
+
+Contact: mailto:security@dashti.se
+Contact: https://www.linkedin.com/in/david-dashti/
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en, sv
+Canonical: https://dashti.se/.well-known/security.txt
+
+# Policy
+# This is a personal portfolio website. If you discover a security
+# vulnerability, please report it responsibly using the contact above.
+# I appreciate your efforts to improve security.
+
+# Acknowledgments
+# Thank you to all security researchers who help keep this site secure.

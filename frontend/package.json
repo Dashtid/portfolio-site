@@ -27,7 +27,8 @@
     "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "format": "prettier --write \"src/**/*.{js,ts,vue,json,css,scss,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,vue,json,css,scss,md}\"",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "images:avif": "node scripts/convert-to-avif.mjs"
   },
   "dependencies": {
     "@sentry/vue": "^8.42.0",
@@ -40,6 +41,7 @@
     "three": "^0.182.0",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3",
+    "web-vitals": "^5.1.0",
     "zod": "^4.1.13"
   },
   "overrides": {
@@ -65,6 +67,7 @@
     "jsdom": "^26.1.0",
     "prettier": "^3.7.3",
     "rollup-plugin-visualizer": "^6.0.5",
+    "sharp": "^0.34.5",
     "terser": "^5.44.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.4",

@@ -175,18 +175,65 @@ Workflows are in `.github/workflows/`:
 
 ## Monitoring
 
-### Health Checks
+### Health Check Endpoints
 
-- Backend: `GET /api/v1/health` (every 30s)
-- Frontend: Vercel edge health checks
+| Endpoint                    | Purpose                              | Frequency |
+| --------------------------- | ------------------------------------ | --------- |
+| `/api/v1/health`            | Basic health (no DB check)           | 30s       |
+| `/api/v1/health/ready`      | Readiness with DB connectivity       | 60s       |
+| `/api/v1/health/live`       | Liveness (minimal check)             | 30s       |
+| `/api/v1/health/detailed`   | Full system info (memory, DB, uptime)| 5min      |
 
-### Error Tracking
+### External Uptime Monitoring
+
+#### UptimeRobot (Free Tier)
+
+1. Create account at [uptimerobot.com](https://uptimerobot.com)
+2. Add HTTP(s) Monitor:
+   - URL: `https://dashti-portfolio-backend.fly.dev/api/v1/health`
+   - Monitoring Interval: 5 minutes
+   - Keyword: `healthy` (Type: exists)
+3. Configure alerts (email, Slack, etc.)
+
+#### Better Stack (Free Tier)
+
+1. Create account at [betterstack.com](https://betterstack.com)
+2. Add Heartbeat Monitor:
+   - URL: `https://dashti-portfolio-backend.fly.dev/api/v1/health`
+   - Check frequency: 3 minutes
+3. Add Incident Management for automatic alerts
+
+#### Fly.io Built-in Checks
+
+Already configured in `fly.toml`:
+
+```toml
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  path = "/api/v1/health"
+```
+
+### Error Tracking (Sentry)
 
 Sentry is configured for both frontend and backend:
 
-- Captures exceptions automatically
-- Performance monitoring enabled
-- PII disabled
+- **Error Capture**: Automatic exception tracking
+- **Performance Monitoring**: Transaction tracing (10% sample rate)
+- **Session Replay**: Error session recordings (100% on errors)
+- **Web Vitals**: LCP, CLS, INP, FCP, TTFB reported to Sentry
+
+Environment variables:
+
+```bash
+# Backend
+SENTRY_DSN=https://xxx@sentry.io/xxx
+SENTRY_TRACES_SAMPLE_RATE=0.1
+SENTRY_PROFILES_SAMPLE_RATE=0.1
+
+# Frontend
+VITE_SENTRY_DSN=https://xxx@sentry.io/xxx
+```
 
 ### Logs
 
@@ -196,7 +243,20 @@ fly logs -a dashti-portfolio-backend
 
 # Real-time
 fly logs -a dashti-portfolio-backend --follow
+
+# Filter by level
+fly logs -a dashti-portfolio-backend | grep ERROR
 ```
+
+### Performance Metrics
+
+Access internal metrics:
+
+```bash
+curl https://dashti-portfolio-backend.fly.dev/api/v1/metrics
+```
+
+Returns: request counts, response times, error rates per endpoint.
 
 ---
 

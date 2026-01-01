@@ -15,15 +15,21 @@
       aria-hidden="true"
     />
 
-    <!-- Main image with blur-to-clear transition -->
-    <img
-      v-show="isIntersecting && !error"
-      :src="currentSrc"
-      :alt="alt"
-      :class="[imageClass, { 'image--loaded': loaded, 'image--blur': !loaded && isIntersecting }]"
-      @load="onImageLoad"
-      @error="onImageError"
-    />
+    <!-- Main image with modern format support via picture element -->
+    <picture v-show="isIntersecting && !error">
+      <!-- AVIF source (best compression, modern browsers) -->
+      <source v-if="avifSrc" :srcset="avifSrc" type="image/avif" />
+      <!-- WebP source (good compression, wide support) -->
+      <source v-if="webpSrc" :srcset="webpSrc" type="image/webp" />
+      <!-- Fallback image (JPEG/PNG) -->
+      <img
+        :src="currentSrc"
+        :alt="alt"
+        :class="[imageClass, { 'image--loaded': loaded, 'image--blur': !loaded && isIntersecting }]"
+        @load="onImageLoad"
+        @error="onImageError"
+      />
+    </picture>
 
     <!-- Error state -->
     <div v-if="error" class="image-error" role="alert">
@@ -52,6 +58,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   src: string
+  avifSrc?: string | null // AVIF source for modern browsers
+  webpSrc?: string | null // WebP source for fallback
   placeholder?: string | null
   blurPlaceholder?: string | null
   alt?: string
@@ -61,6 +69,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  avifSrc: null,
+  webpSrc: null,
   placeholder: null,
   blurPlaceholder: null,
   alt: '',
@@ -82,6 +92,10 @@ const placeholderSrc = computed(() => props.blurPlaceholder || props.placeholder
 const showBlurPlaceholder = computed(
   () => isIntersecting.value && !loaded.value && placeholderSrc.value
 )
+
+// Modern format sources - only return when intersecting
+const avifSrc = computed(() => (isIntersecting.value ? props.avifSrc : null))
+const webpSrc = computed(() => (isIntersecting.value ? props.webpSrc : null))
 
 const loadImage = (): void => {
   if (!isIntersecting.value) return

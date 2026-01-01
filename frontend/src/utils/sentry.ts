@@ -1,8 +1,11 @@
 /**
- * Lazy-loaded Sentry initialization
+ * Lazy-loaded Sentry initialization with Web Vitals reporting
  *
  * This module provides lazy loading for Sentry to reduce initial bundle size
  * by ~100KB. Sentry is only loaded when a DSN is configured.
+ *
+ * Web Vitals (LCP, CLS, INP, FCP, TTFB) are automatically reported to Sentry
+ * for performance monitoring.
  */
 
 import type { App } from 'vue'
@@ -10,6 +13,50 @@ import type { Router } from 'vue-router'
 
 let sentryInitialized = false
 let SentryModule: typeof import('@sentry/vue') | null = null
+
+/**
+ * Initialize Web Vitals reporting to Sentry
+ * Reports Core Web Vitals: LCP, CLS, INP (replaces FID), FCP, TTFB
+ */
+async function initWebVitals(): Promise<void> {
+  if (!SentryModule) return
+
+  try {
+    const { onCLS, onINP, onLCP, onFCP, onTTFB } = await import('web-vitals')
+
+    const reportVital = (metric: { name: string; value: number; rating: string }): void => {
+      if (!SentryModule) return
+
+      // Report as Sentry measurement
+      SentryModule.setMeasurement(metric.name, metric.value, 'millisecond')
+
+      // Also set as context for debugging
+      SentryModule.setContext('web_vitals', {
+        [metric.name]: {
+          value: metric.value,
+          rating: metric.rating
+        }
+      })
+
+      if (import.meta.env.DEV) {
+        console.log(`[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)} (${metric.rating})`)
+      }
+    }
+
+    // Core Web Vitals
+    onLCP(reportVital) // Largest Contentful Paint
+    onCLS(reportVital) // Cumulative Layout Shift
+    onINP(reportVital) // Interaction to Next Paint (replaces FID)
+
+    // Additional metrics
+    onFCP(reportVital) // First Contentful Paint
+    onTTFB(reportVital) // Time to First Byte
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to initialize Web Vitals:', error)
+    }
+  }
+}
 
 /**
  * Initialize Sentry lazily
@@ -46,6 +93,9 @@ export async function initSentry(app: App, router: Router): Promise<void> {
     })
 
     sentryInitialized = true
+
+    // Initialize Web Vitals reporting after Sentry is ready
+    await initWebVitals()
   } catch (error) {
     // Fail silently - Sentry is optional
     if (import.meta.env.DEV) {

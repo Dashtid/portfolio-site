@@ -8,6 +8,7 @@ Designed for compatibility with:
 - Kubernetes liveness/readiness probes
 """
 
+import os
 import sys
 import time
 from datetime import UTC, datetime
@@ -21,6 +22,40 @@ from app.config import settings
 from app.database import get_db
 
 router = APIRouter()
+
+
+def _get_memory_usage() -> dict:
+    """Get current process memory usage in MB"""
+    try:
+        import resource  # noqa: PLC0415
+
+        # Unix-based systems (Linux, macOS)
+        rusage = resource.getrusage(resource.RUSAGE_SELF)  # type: ignore[attr-defined]
+        # maxrss is in kilobytes on Linux, bytes on macOS
+        mem_mb = rusage.ru_maxrss / 1024
+        if sys.platform == "darwin":
+            mem_mb = rusage.ru_maxrss / (1024 * 1024)
+        return {
+            "rss_mb": round(mem_mb, 2),
+            "source": "resource",
+        }
+    except ImportError:
+        pass
+
+    # Windows fallback using psutil if available
+    try:
+        import psutil  # noqa: PLC0415
+
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        return {
+            "rss_mb": round(mem_info.rss / (1024 * 1024), 2),
+            "vms_mb": round(mem_info.vms / (1024 * 1024), 2),
+            "source": "psutil",
+        }
+    except ImportError:
+        return {"error": "Memory monitoring unavailable", "source": "none"}
+
 
 # Type alias for dependency injection (FastAPI 2025 best practice)
 DbSession = Annotated[AsyncSession, Depends(get_db)]
@@ -199,6 +234,10 @@ async def detailed_health_check(db: DbSession, response: Response):
             "python_version": sys.version.split()[0],
             "uptime_seconds": uptime_seconds,
             "uptime_human": _format_uptime(uptime_seconds),
+        },
+        "system": {
+            "memory": _get_memory_usage(),
+            "pid": os.getpid(),
         },
         "checks": checks,
         "response_time_ms": total_latency_ms,

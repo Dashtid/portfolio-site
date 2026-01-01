@@ -1,6 +1,11 @@
 // Service Worker Configuration
-const CACHE_VERSION = '3.0.0'
-const CACHE_NAME = `dashti-portfolio-migration-v${CACHE_VERSION}`
+const CACHE_VERSION = '4.1.0'
+const CACHE_NAME = `dashti-portfolio-v${CACHE_VERSION}`
+const API_CACHE_NAME = `dashti-api-v${CACHE_VERSION}`
+
+// API cache settings
+const API_CACHE_MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
+const API_NETWORK_TIMEOUT = 5000 // 5 seconds
 
 // Debug mode - set to false for production to reduce console noise
 // Can be enabled via: navigator.serviceWorker.controller.postMessage({type: 'DEBUG_ON'})
@@ -17,9 +22,14 @@ const STATIC_CACHE_URLS = [
   '/index.html',
   '/offline.html',
   '/manifest.webmanifest',
-  // Vue app assets (will be cached dynamically after build)
-  '/images/stockholm.webp',
-  '/images/stockholm.jpg',
+  // Hero images - responsive with AVIF/WebP/JPEG fallback
+  '/images/optimized/stockholm-mobile.avif',
+  '/images/optimized/stockholm-mobile.webp',
+  '/images/optimized/stockholm-tablet.avif',
+  '/images/optimized/stockholm-tablet.webp',
+  '/images/optimized/stockholm-desktop.avif',
+  '/images/optimized/stockholm-desktop.webp',
+  // Logo/branding
   '/images/D.svg',
   '/images/D-white.svg',
   // SVG icons
@@ -59,11 +69,12 @@ self.addEventListener('install', event => {
 // Activate event - cleanup old caches
 self.addEventListener('activate', event => {
   log('Activating...', CACHE_NAME)
+  const validCaches = [CACHE_NAME, API_CACHE_NAME]
   event.waitUntil(
     caches
       .keys()
       .then(cacheNames => {
-        const oldCaches = cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
+        const oldCaches = cacheNames.filter(cacheName => !validCaches.includes(cacheName))
         if (oldCaches.length > 0) {
           log('Deleting old caches:', oldCaches)
         }
@@ -181,6 +192,89 @@ function isAPIRequest(request) {
   return url.pathname.startsWith('/api/') || url.port === '8001'
 }
 
+// Cacheable API endpoints (portfolio data that rarely changes)
+const CACHEABLE_API_PATTERNS = [
+  /\/api\/v1\/companies/,
+  /\/api\/v1\/education/,
+  /\/api\/v1\/projects/,
+  /\/api\/v1\/skills/,
+  /\/api\/v1\/github\/repos/
+]
+
+// Check if API request should be cached
+function isCacheableAPI(url) {
+  return CACHEABLE_API_PATTERNS.some(pattern => pattern.test(url))
+}
+
+// Handle API requests with network-first strategy and cache fallback
+async function handleAPIRequest(request) {
+  const url = request.url
+
+  // Only cache GET requests for specific endpoints
+  if (request.method !== 'GET' || !isCacheableAPI(url)) {
+    log('API request (no cache):', url)
+    return fetch(request)
+  }
+
+  log('API request (cacheable):', url)
+
+  try {
+    // Try network first with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), API_NETWORK_TIMEOUT)
+
+    const networkResponse = await fetch(request, { signal: controller.signal })
+    clearTimeout(timeoutId)
+
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const responseToCache = networkResponse.clone()
+      const cache = await caches.open(API_CACHE_NAME)
+
+      // Add timestamp header for cache expiration
+      const headers = new Headers(responseToCache.headers)
+      headers.set('sw-cache-time', Date.now().toString())
+
+      const cachedResponse = new Response(await responseToCache.blob(), {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers
+      })
+
+      cache.put(request, cachedResponse)
+      log('Cached API response:', url)
+    }
+
+    return networkResponse
+  } catch (error) {
+    log('Network failed, checking cache:', url, error.message)
+
+    // Fallback to cache
+    const cache = await caches.open(API_CACHE_NAME)
+    const cachedResponse = await cache.match(request)
+
+    if (cachedResponse) {
+      // Check cache age
+      const cacheTime = cachedResponse.headers.get('sw-cache-time')
+      if (cacheTime) {
+        const age = Date.now() - parseInt(cacheTime, 10)
+        if (age < API_CACHE_MAX_AGE) {
+          log('Serving cached API response (age:', Math.round(age / 1000 / 60), 'min):', url)
+          return cachedResponse
+        }
+        log('Cache expired, deleting:', url)
+        await cache.delete(request)
+      }
+    }
+
+    // No valid cache, return error response
+    return new Response(JSON.stringify({ error: 'Offline', message: 'No cached data available' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+}
+
 // Fetch event - network-first for HTML, cache-first for assets
 self.addEventListener('fetch', event => {
   // Only handle GET requests
@@ -193,10 +287,9 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // NEVER cache API requests - always go to network
+  // Network-first with cache fallback for API requests
   if (isAPIRequest(event.request)) {
-    log('API request (no cache):', event.request.url)
-    event.respondWith(fetch(event.request))
+    event.respondWith(handleAPIRequest(event.request))
     return
   }
 
