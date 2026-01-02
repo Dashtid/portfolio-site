@@ -363,27 +363,35 @@ onMounted(async () => {
   await nextTick()
 
   // Apply GSAP scroll animations to cards with staggered effect
+  // Using 0.5s duration and 0.12s stagger for snappier feel
   useGsapBatchAnimation('.experience-card', {
     animation: 'slideUp',
-    duration: 0.6,
-    stagger: 0.15
+    duration: 0.5,
+    stagger: 0.12
   })
 
   useGsapBatchAnimation('.education-card', {
     animation: 'slideUp',
-    duration: 0.6,
-    stagger: 0.15
+    duration: 0.5,
+    stagger: 0.12
   })
 
   useGsapBatchAnimation('.project-card', {
     animation: 'slideUp',
-    duration: 0.6,
-    stagger: 0.15
+    duration: 0.5,
+    stagger: 0.12
+  })
+
+  // Document cards animation (publications section)
+  useGsapBatchAnimation('.document-card', {
+    animation: 'slideUp',
+    duration: 0.5,
+    stagger: 0.12
   })
 
   useGsapBatchAnimation('.section-title', {
     animation: 'fadeIn',
-    duration: 0.8
+    duration: 0.6
   })
 })
 </script>

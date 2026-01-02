@@ -227,6 +227,50 @@ button:focus-visible {
   }
 }
 
+/* Skeleton Shimmer Utility */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-200) 25%,
+    var(--color-gray-100) 50%,
+    var(--color-gray-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md, 0.375rem);
+}
+
+[data-theme='dark'] .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-700) 25%,
+    var(--color-gray-600) 50%,
+    var(--color-gray-700) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Respect reduced motion preference for shimmer */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background: var(--color-gray-200);
+  }
+
+  [data-theme='dark'] .skeleton-shimmer {
+    background: var(--color-gray-700);
+  }
+}
+
 /* Dark Mode */
 [data-theme='dark'] body {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
