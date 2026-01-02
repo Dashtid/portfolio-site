@@ -156,9 +156,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter, isNavigationFailure, NavigationFailureType } from 'vue-router'
 import axios from 'axios'
+import { gsap } from 'gsap'
 import VideoEmbed from '../components/VideoEmbed.vue'
 import MapEmbed from '../components/MapEmbed.vue'
 import BackToTop from '../components/BackToTop.vue'
@@ -177,6 +178,106 @@ const error = ref<string | null>(null)
 
 // AbortController for request cancellation (prevents race conditions)
 let abortController: AbortController | null = null
+
+// GSAP animation context for cleanup
+let gsapContext: gsap.Context | null = null
+
+// Run entrance animations after content loads
+const runEntranceAnimations = (): void => {
+  // Check for reduced motion preference
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (prefersReducedMotion) return
+
+  // Clean up previous animations
+  if (gsapContext) {
+    gsapContext.revert()
+  }
+
+  gsapContext = gsap.context(() => {
+    // Breadcrumb fade in
+    gsap.from('.breadcrumb', {
+      opacity: 0,
+      y: -10,
+      duration: 0.4,
+      ease: 'power2.out'
+    })
+
+    // Company header fade up
+    gsap.from('.company-header', {
+      opacity: 0,
+      y: 30,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.1
+    })
+
+    // Media section (video/map) fade up
+    gsap.from('.row.g-4', {
+      opacity: 0,
+      y: 30,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.2
+    })
+
+    // Description content fade up
+    gsap.from('.detailed-description', {
+      opacity: 0,
+      y: 25,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.3
+    })
+
+    // Technologies section fade up
+    gsap.from('.technologies-section', {
+      opacity: 0,
+      y: 25,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.35
+    })
+
+    // Technology badges stagger
+    gsap.from('.technologies-list .badge', {
+      opacity: 0,
+      y: 15,
+      scale: 0.9,
+      duration: 0.3,
+      stagger: 0.05,
+      ease: 'power2.out',
+      delay: 0.4
+    })
+
+    // Responsibilities section fade up
+    gsap.from('.responsibilities-section', {
+      opacity: 0,
+      y: 25,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.4
+    })
+
+    // Responsibilities list items stagger
+    gsap.from('.responsibilities-list li', {
+      opacity: 0,
+      x: -20,
+      duration: 0.4,
+      stagger: 0.08,
+      ease: 'power2.out',
+      delay: 0.5
+    })
+
+    // Navigation buttons fade in
+    gsap.from('.navigation-buttons', {
+      opacity: 0,
+      y: 20,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.6
+    })
+  })
+}
 
 // Format date helper
 const formatDate = (dateString: string | null | undefined): string => {
@@ -282,6 +383,12 @@ const fetchCompanyDetails = async (companyId: string): Promise<void> => {
     error.value = 'Failed to load company details. Please try again later.'
   } finally {
     loading.value = false
+    // Run entrance animations after DOM updates
+    if (!error.value && company.value) {
+      nextTick(() => {
+        runEntranceAnimations()
+      })
+    }
   }
 }
 
@@ -322,10 +429,13 @@ watch(
   { immediate: true }
 )
 
-// Cleanup: cancel any pending requests when component unmounts
+// Cleanup: cancel any pending requests and animations when component unmounts
 onUnmounted(() => {
   if (abortController) {
     abortController.abort()
+  }
+  if (gsapContext) {
+    gsapContext.revert()
   }
 })
 </script>
@@ -458,6 +568,22 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+/* Enhanced button hover effects */
+.btn-outline-primary,
+.btn-outline-secondary {
+  transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.btn-outline-secondary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.2);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .company-name {
@@ -560,5 +686,18 @@ onUnmounted(() => {
 [data-theme='dark'] .btn-outline-secondary:hover {
   background-color: var(--border-secondary);
   color: var(--text-primary);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .btn-outline-primary,
+  .btn-outline-secondary {
+    transition: none;
+  }
+
+  .btn-outline-primary:hover,
+  .btn-outline-secondary:hover {
+    transform: none;
+  }
 }
 </style>

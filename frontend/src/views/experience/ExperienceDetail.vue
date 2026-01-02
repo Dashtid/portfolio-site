@@ -188,9 +188,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import axios, { type AxiosError } from 'axios'
+import { gsap } from 'gsap'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { config } from '../../config'
@@ -198,6 +199,71 @@ import DOMPurify from 'dompurify'
 
 // AbortController for cancelling pending requests on route change
 let fetchAbortController: AbortController | null = null
+
+// GSAP animation context for cleanup
+let gsapContext: gsap.Context | null = null
+
+// Run entrance animations after content loads
+const runEntranceAnimations = (): void => {
+  // Check for reduced motion preference
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (prefersReducedMotion) return
+
+  // Clean up previous animations
+  if (gsapContext) {
+    gsapContext.revert()
+  }
+
+  gsapContext = gsap.context(() => {
+    // Media section fade up
+    gsap.from('.media-section', {
+      opacity: 0,
+      y: 30,
+      duration: 0.5,
+      ease: 'power2.out'
+    })
+
+    // Company info section fade up
+    gsap.from('.mb-5:not(.media-section)', {
+      opacity: 0,
+      y: 25,
+      duration: 0.5,
+      stagger: 0.1,
+      ease: 'power2.out',
+      delay: 0.15
+    })
+
+    // Responsibilities list items stagger
+    gsap.from('.list-group-item', {
+      opacity: 0,
+      x: -20,
+      duration: 0.4,
+      stagger: 0.08,
+      ease: 'power2.out',
+      delay: 0.4
+    })
+
+    // Technology badges stagger
+    gsap.from('.badge', {
+      opacity: 0,
+      y: 15,
+      scale: 0.9,
+      duration: 0.3,
+      stagger: 0.05,
+      ease: 'power2.out',
+      delay: 0.5
+    })
+
+    // Back navigation fade in
+    gsap.from('.border-top', {
+      opacity: 0,
+      y: 20,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.6
+    })
+  })
+}
 
 const route = useRoute()
 
@@ -276,6 +342,12 @@ const fetchCompany = async (id: string): Promise<void> => {
     }
   } finally {
     loading.value = false
+    // Run entrance animations after DOM updates
+    if (!error.value && company.value) {
+      nextTick(() => {
+        runEntranceAnimations()
+      })
+    }
   }
 }
 
@@ -299,11 +371,14 @@ onMounted(async (): Promise<void> => {
   }
 })
 
-// Cleanup: cancel pending requests on unmount
+// Cleanup: cancel pending requests and animations on unmount
 onUnmounted(() => {
   if (fetchAbortController) {
     fetchAbortController.abort()
     fetchAbortController = null
+  }
+  if (gsapContext) {
+    gsapContext.revert()
   }
 })
 </script>
@@ -500,5 +575,34 @@ main :deep(p) {
 
 [data-theme='dark'] .container p.mt-3 {
   color: var(--text-tertiary);
+}
+
+/* Enhanced button hover effects */
+.btn-outline-primary,
+.btn-outline-secondary {
+  transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.btn-outline-secondary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.2);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .btn-outline-primary,
+  .btn-outline-secondary {
+    transition: none;
+  }
+
+  .btn-outline-primary:hover,
+  .btn-outline-secondary:hover {
+    transform: none;
+  }
 }
 </style>
