@@ -397,6 +397,12 @@ body {
   box-shadow: var(--shadow-xl);
   max-width: 950px;
   animation: fadeInUp 0.8s ease-out;
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hero-content:hover {
+  transform: perspective(1000px) rotateX(1deg) rotateY(-1deg) translateZ(8px);
 }
 
 .custom-hero-title {
@@ -530,8 +536,9 @@ section {
   border-radius: var(--radius-lg);
   padding: var(--space-8);
   box-shadow: var(--shadow-md);
+  transform-style: preserve-3d;
   transition:
-    transform 0.3s var(--ease-smooth, ease),
+    transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 0.3s var(--ease-smooth, ease),
     border-color 0.3s var(--ease-smooth, ease);
 }
@@ -542,7 +549,8 @@ section {
 }
 
 .experience-card:hover {
-  transform: translateY(-2px);
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-2px) translateZ(4px)
+    scale(1.01);
   box-shadow: var(--shadow-lg);
   border-color: var(--color-primary-alpha-25, rgba(59, 130, 246, 0.25));
 }
@@ -599,14 +607,16 @@ section {
   border-radius: var(--radius-lg);
   padding: var(--space-8);
   box-shadow: var(--shadow-md);
+  transform-style: preserve-3d;
   transition:
-    transform 0.3s var(--ease-smooth, ease),
+    transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 0.3s var(--ease-smooth, ease),
     border-color 0.3s var(--ease-smooth, ease);
 }
 
 .education-card:hover {
-  transform: translateY(-2px);
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-2px) translateZ(4px)
+    scale(1.01);
   box-shadow: var(--shadow-lg);
   border-color: var(--color-primary-alpha-25, rgba(59, 130, 246, 0.25));
 }
@@ -903,4 +913,23 @@ section {
   border-radius: 0.5rem;
   max-width: 100%;
   height: auto;
+}
+
+/* Reduced Motion - Disable 3D transforms for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .hero-content,
+  .experience-card,
+  .education-card,
+  .project-card,
+  .github-stats-card {
+    transition: none;
+  }
+
+  .hero-content:hover,
+  .experience-card:hover,
+  .education-card:hover,
+  .project-card:hover,
+  .github-stats-card:hover {
+    transform: none;
+  }
 }

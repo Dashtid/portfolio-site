@@ -111,14 +111,16 @@ const formattedDate = computed(() => {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 16px;
   padding: 1.75rem;
-  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .card-glass:hover {
-  transform: translateY(-6px);
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px) translateZ(4px)
+    scale(1.01);
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(96, 165, 250, 0.5);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
