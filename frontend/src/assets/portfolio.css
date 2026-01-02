@@ -190,14 +190,14 @@
 .btn:focus-visible,
 .btn-primary:focus-visible,
 .btn-outline-primary:focus-visible {
-  outline: 3px solid var(--primary-400, #60a5fa);
-  outline-offset: 3px;
+  outline: 2px solid var(--primary-500, #3b82f6);
+  outline-offset: 2px;
 }
 
 .project-link:focus-visible,
 .contact-link:focus-visible {
-  outline: 3px solid var(--primary-400, #60a5fa);
-  outline-offset: 3px;
+  outline: 2px solid var(--primary-500, #3b82f6);
+  outline-offset: 2px;
   border-radius: 4px;
 }
 
@@ -205,8 +205,8 @@
 .experience-card:focus-within,
 .education-card:focus-within,
 .project-card:focus-within {
-  outline: 3px solid var(--primary-400, #60a5fa);
-  outline-offset: 3px;
+  outline: 2px solid var(--primary-500, #3b82f6);
+  outline-offset: 2px;
 }
 
 /* High contrast mode support (WCAG 2.2) */
@@ -253,7 +253,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px;
+  scroll-padding-top: 72px;
 }
 
 body {
@@ -388,11 +388,13 @@ body {
 }
 
 .custom-hero-title {
+  font-family: var(--font-family-display, inherit);
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
   color: var(--text-primary);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-8);
 }
 
 .custom-hero-lead {
@@ -415,8 +417,10 @@ section {
 }
 
 .section-title {
+  font-family: var(--font-family-display, inherit);
   font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
   color: var(--text-primary);
   margin-bottom: var(--space-8);
 }
@@ -441,16 +445,18 @@ section {
 
 /* Portfolio Section Base Styling */
 .portfolio-section {
-  padding: 5rem 0;
+  padding: 6rem 0;
 }
 
 .portfolio-section .section-title {
+  font-family: var(--font-family-display, inherit);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 3rem;
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
+  margin-bottom: 3.5rem;
   position: relative;
 }
 
@@ -492,7 +498,7 @@ section {
 .experience-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .experience-card {
@@ -501,9 +507,12 @@ section {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  padding: var(--space-8);
   box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
+  transition:
+    transform 0.3s var(--ease-smooth, ease),
+    box-shadow 0.3s var(--ease-smooth, ease),
+    border-color 0.3s var(--ease-smooth, ease);
 }
 
 .experience-card .btn {
@@ -512,8 +521,9 @@ section {
 }
 
 .experience-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-alpha-25, rgba(59, 130, 246, 0.25));
 }
 
 .company-header {
@@ -557,7 +567,7 @@ section {
 .education-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .education-card {
@@ -566,14 +576,18 @@ section {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  padding: var(--space-8);
   box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
+  transition:
+    transform 0.3s var(--ease-smooth, ease),
+    box-shadow 0.3s var(--ease-smooth, ease),
+    border-color 0.3s var(--ease-smooth, ease);
 }
 
 .education-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-alpha-25, rgba(59, 130, 246, 0.25));
 }
 
 .education-institution {
@@ -613,7 +627,7 @@ section {
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .project-card {
@@ -622,12 +636,16 @@ section {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
+  transition:
+    transform 0.3s var(--ease-smooth, ease),
+    box-shadow 0.3s var(--ease-smooth, ease),
+    border-color 0.3s var(--ease-smooth, ease);
 }
 
 .project-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-alpha-25, rgba(59, 130, 246, 0.25));
 }
 
 .project-content {

@@ -32,9 +32,9 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="David Dashti" />
-    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)" />
-    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="msapplication-TileColor" content="#3b82f6" />
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/images/D-dark.svg" />
@@ -42,10 +42,16 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
 
     <!-- Preconnect for faster external resource loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preconnect" href="https://dashti-portfolio-backend.fly.dev" crossorigin />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
     <link rel="dns-prefetch" href="//dashti-portfolio-backend.fly.dev" />
+
+    <!-- Inter Font for headings (display=swap for performance) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Preload LCP hero image with responsive sources -->
     <link rel="preload" as="image" href="/images/optimized/stockholm-desktop.avif" type="image/avif" fetchpriority="high" media="(min-width: 769px)" />
