@@ -2,21 +2,49 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+  merge_group:
+    branches: [main, master]
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   PYTHON_VERSION: '3.13'
   NODE_VERSION: '24'
 
 jobs:
+  # Detect which paths changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - 'package*.json'
+            backend:
+              - 'backend/**'
+              - 'requirements*.txt'
+
   # Frontend Quality Checks
   frontend-quality:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'merge_group'
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ./frontend
@@ -63,6 +91,9 @@ jobs:
   # Backend Quality Checks
   backend-quality:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'merge_group'
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ./backend
@@ -103,10 +134,12 @@ jobs:
           name: backend-coverage
           fail_ci_if_error: false
 
-  # E2E Testing with Playwright (runs in Docker container for consistent visual testing)
+  # E2E Testing with Playwright (runs on PRs only)
   e2e-tests:
     runs-on: ubuntu-latest
-    needs: [frontend-quality, backend-quality]
+    needs: [changes, frontend-quality, backend-quality]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true'
+    timeout-minutes: 15
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
       options: --ipc=host
@@ -148,6 +181,7 @@ jobs:
   # Security Scanning
   security-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       security-events: write
       contents: read
@@ -182,6 +216,7 @@ jobs:
   # Dependency Review - blocks PRs with vulnerable dependencies
   dependency-review:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
@@ -193,10 +228,12 @@ jobs:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
 
-  # Lighthouse Performance Audit - runs on PRs and main branch pushes
+  # Lighthouse Performance Audit
   lighthouse:
     runs-on: ubuntu-latest
-    needs: [frontend-quality]
+    needs: [changes, frontend-quality]
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'merge_group'
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -228,8 +265,14 @@ jobs:
   # Deployment (placeholder - configure based on hosting provider)
   deploy:
     runs-on: ubuntu-latest
-    needs: [frontend-quality, backend-quality, e2e-tests, security-scan]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: [frontend-quality, backend-quality, security-scan]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    timeout-minutes: 10
     environment:
       name: production
       url: https://dashti.se
