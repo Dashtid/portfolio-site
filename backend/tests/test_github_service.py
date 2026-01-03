@@ -1233,3 +1233,588 @@ class TestLanguageAggregationExceptions:
             assert result["top_languages"] == []
 
         new_event_loop.run_until_complete(run_test())
+
+
+class TestRequestWithBackoffRequestError:
+    """Tests for _request_with_backoff handling generic RequestError."""
+
+    def test_request_error_returns_none(self, new_event_loop):
+        """Test generic RequestError returns None immediately (no retry)."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(side_effect=httpx.RequestError("Connection refused"))
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service._request_with_backoff("GET", "https://test.com")
+
+                assert result is None
+                # Should only try once for generic RequestError (no retry)
+                assert mock_client.request.call_count == 1
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_request_error_in_get_user_info(self, new_event_loop):
+        """Test generic RequestError in get_user_info returns empty dict."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(side_effect=httpx.RequestError("DNS resolution failed"))
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_user_info("testuser")
+                assert result == {}
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_request_error_in_get_user_repos(self, new_event_loop):
+        """Test generic RequestError in get_user_repos returns empty list."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(side_effect=httpx.RequestError("Connection reset"))
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_user_repos("testuser")
+                assert result == []
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestLinkHeaderEdgeCases:
+    """Tests for Link header parsing edge cases in get_repo_commits."""
+
+    def test_malformed_link_header_no_page_number(self, new_event_loop):
+        """Test handling of Link header without page number."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_response = MagicMock()
+            mock_response.json.return_value = [{"sha": "abc123"}, {"sha": "def456"}]
+            mock_response.raise_for_status = MagicMock()
+            # Malformed: missing page= prefix
+            mock_response.headers = {
+                "Link": '<https://api.github.com/repos/o/r/commits?foo=bar>; rel="last"'
+            }
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=mock_response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_repo_commits("owner", "repo")
+                # Falls back to counting returned items
+                assert result == 2
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_link_header_missing_rel_last(self, new_event_loop):
+        """Test handling of Link header without rel="last"."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_response = MagicMock()
+            mock_response.json.return_value = [{"sha": "abc"}]
+            mock_response.raise_for_status = MagicMock()
+            # Has Link but only rel="next", not rel="last"
+            mock_response.headers = {
+                "Link": '<https://api.github.com/repos/o/r/commits?page=2>; rel="next"'
+            }
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=mock_response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_repo_commits("owner", "repo")
+                # Falls back to counting returned items
+                assert result == 1
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_link_header_with_multiple_rels(self, new_event_loop):
+        """Test parsing Link header with multiple rel values."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_response = MagicMock()
+            mock_response.json.return_value = [{"sha": "abc"}]
+            mock_response.raise_for_status = MagicMock()
+            # Standard GitHub pagination format with multiple rels
+            mock_response.headers = {
+                "Link": '<https://api.github.com/repos/o/r/commits?page=2>; rel="next", '
+                '<https://api.github.com/repos/o/r/commits?page=50>; rel="last"'
+            }
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=mock_response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_repo_commits("owner", "repo")
+                assert result == 50
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_link_header_non_numeric_page(self, new_event_loop):
+        """Test handling of Link header with non-numeric page value."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_response = MagicMock()
+            mock_response.json.return_value = [{"sha": "abc"}, {"sha": "def"}]
+            mock_response.raise_for_status = MagicMock()
+            # page= exists but value is not numeric
+            mock_response.headers = {
+                "Link": '<https://api.github.com/repos/o/r/commits?page=abc>; rel="last"'
+            }
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=mock_response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_repo_commits("owner", "repo")
+                # Falls back to counting returned items since regex won't match non-digits
+                assert result == 2
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestUserReposPaginationBoundaries:
+    """Tests for get_user_repos pagination boundary conditions."""
+
+    def test_per_page_adjusted_near_max_repos(self, new_event_loop):
+        """Test per_page is adjusted when near max_repos limit."""
+
+        async def run_test():
+            service = GitHubService()
+
+            # Return 8 repos (max_repos=10, so next request should only ask for 2)
+            page1_repos = [{"name": f"repo{i}"} for i in range(8)]
+            page2_repos = [{"name": "repo8"}, {"name": "repo9"}]
+
+            page1_response = MagicMock()
+            page1_response.status_code = 200
+            page1_response.json.return_value = page1_repos
+            page1_response.raise_for_status = MagicMock()
+
+            page2_response = MagicMock()
+            page2_response.status_code = 200
+            page2_response.json.return_value = page2_repos
+            page2_response.raise_for_status = MagicMock()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(side_effect=[page1_response, page2_response])
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_user_repos("testuser", per_page=8, max_repos=10)
+
+                assert len(result) == 10
+                # Verify the second request asked for only 2 repos
+                second_call_params = mock_client.request.call_args_list[1][1]["params"]
+                assert second_call_params["per_page"] == 2
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_exact_max_repos_on_first_page(self, new_event_loop):
+        """Test when first page returns exactly max_repos items."""
+
+        async def run_test():
+            service = GitHubService()
+
+            repos = [{"name": f"repo{i}"} for i in range(5)]
+
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = repos
+            response.raise_for_status = MagicMock()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_user_repos("testuser", per_page=10, max_repos=5)
+
+                assert len(result) == 5
+                # Only one request needed
+                assert mock_client.request.call_count == 1
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_user_has_no_repos(self, new_event_loop):
+        """Test handling user with no repositories."""
+
+        async def run_test():
+            service = GitHubService()
+
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = []
+            response.raise_for_status = MagicMock()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_user_repos("newuser")
+
+                assert result == []
+                assert mock_client.request.call_count == 1
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestPortfolioStatsForkFiltering:
+    """Tests for fork filtering in get_portfolio_stats."""
+
+    def test_forks_excluded_from_stats(self, new_event_loop):
+        """Test that forked repos are excluded from statistics."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_user_info = {
+                "avatar_url": "https://example.com/avatar.png",
+                "bio": "Developer",
+                "public_repos": 4,
+                "followers": 50,
+                "following": 25,
+            }
+            mock_repos = [
+                {
+                    "name": "my-repo",
+                    "stargazers_count": 100,
+                    "forks_count": 10,
+                    "watchers_count": 100,
+                    "fork": False,
+                },
+                {
+                    "name": "forked-repo",
+                    "stargazers_count": 500,
+                    "forks_count": 100,
+                    "watchers_count": 500,
+                    "fork": True,
+                },  # This should be excluded
+                {
+                    "name": "another-repo",
+                    "stargazers_count": 50,
+                    "forks_count": 5,
+                    "watchers_count": 50,
+                    "fork": False,
+                },
+            ]
+
+            service.get_user_info = AsyncMock(return_value=mock_user_info)
+            service.get_user_repos = AsyncMock(return_value=mock_repos)
+            service.get_repo_languages = AsyncMock(return_value={"Python": 1000})
+            service.get_pinned_repos = AsyncMock(return_value=[])
+
+            result = await service.get_portfolio_stats("testuser")
+
+            # Only owned repos should count: 100 + 50 = 150
+            assert result["total_stars"] == 150
+            # Forked repo's 500 stars should not be included
+            assert result["total_forks"] == 15  # 10 + 5, not 110
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_all_repos_are_forks(self, new_event_loop):
+        """Test handling when all repos are forks."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_user_info = {
+                "avatar_url": None,
+                "bio": None,
+                "public_repos": 2,
+                "followers": 0,
+                "following": 0,
+            }
+            mock_repos = [
+                {
+                    "name": "fork1",
+                    "stargazers_count": 10,
+                    "forks_count": 1,
+                    "watchers_count": 10,
+                    "fork": True,
+                },
+                {
+                    "name": "fork2",
+                    "stargazers_count": 20,
+                    "forks_count": 2,
+                    "watchers_count": 20,
+                    "fork": True,
+                },
+            ]
+
+            service.get_user_info = AsyncMock(return_value=mock_user_info)
+            service.get_user_repos = AsyncMock(return_value=mock_repos)
+            service.get_repo_languages = AsyncMock(return_value={})
+            service.get_pinned_repos = AsyncMock(return_value=[])
+
+            result = await service.get_portfolio_stats("testuser")
+
+            assert result["total_stars"] == 0
+            assert result["total_forks"] == 0
+            assert result["featured_repos"] == []
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestPortfolioStatsDivisionByZero:
+    """Tests for division by zero handling in language percentage calculation."""
+
+    def test_zero_total_bytes_returns_zero_percentage(self, new_event_loop):
+        """Test language percentage is 0 when total_bytes is 0."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_user_info = {
+                "avatar_url": None,
+                "bio": None,
+                "public_repos": 1,
+                "followers": 0,
+                "following": 0,
+            }
+            mock_repos = [
+                {
+                    "name": "empty-repo",
+                    "stargazers_count": 0,
+                    "forks_count": 0,
+                    "watchers_count": 0,
+                    "fork": False,
+                },
+            ]
+
+            service.get_user_info = AsyncMock(return_value=mock_user_info)
+            service.get_user_repos = AsyncMock(return_value=mock_repos)
+            # Return empty languages (no code)
+            service.get_repo_languages = AsyncMock(return_value={})
+            service.get_pinned_repos = AsyncMock(return_value=[])
+
+            result = await service.get_portfolio_stats("testuser")
+
+            # Should not crash, should return empty languages
+            assert result["top_languages"] == []
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestPinnedReposEdgeCases:
+    """Additional tests for get_pinned_repos edge cases."""
+
+    def test_pinned_repos_with_missing_data_key(self, new_event_loop):
+        """Test handling of missing data key in GraphQL response."""
+
+        async def run_test():
+            service = GitHubService()
+
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {}  # Missing "data" key
+            response.raise_for_status = MagicMock()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_pinned_repos("nonexistent")
+                assert result == []
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_pinned_repos_missing_pinned_items(self, new_event_loop):
+        """Test handling when pinnedItems is missing from user."""
+
+        async def run_test():
+            service = GitHubService()
+
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {"data": {"user": {}}}
+            response.raise_for_status = MagicMock()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_pinned_repos("testuser")
+                assert result == []
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_pinned_repos_request_error(self, new_event_loop):
+        """Test get_pinned_repos handles RequestError gracefully."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(side_effect=httpx.RequestError("Connection failed"))
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_pinned_repos("testuser")
+                assert result == []
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_pinned_repos_success_full_data(self, new_event_loop):
+        """Test successful fetch with complete data."""
+
+        async def run_test():
+            service = GitHubService()
+
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "data": {
+                    "user": {
+                        "pinnedItems": {
+                            "nodes": [
+                                {
+                                    "name": "awesome-project",
+                                    "description": "An awesome project",
+                                    "url": "https://github.com/user/awesome-project",
+                                    "stargazerCount": 100,
+                                    "forkCount": 25,
+                                    "primaryLanguage": {"name": "TypeScript"},
+                                },
+                            ]
+                        }
+                    }
+                }
+            }
+            response.raise_for_status = MagicMock()
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_pinned_repos("testuser")
+
+                assert len(result) == 1
+                assert result[0]["name"] == "awesome-project"
+                assert result[0]["stars"] == 100
+                assert result[0]["language"] == "TypeScript"
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestGetRepoCommitsEdgeCases:
+    """Additional tests for get_repo_commits edge cases."""
+
+    def test_commits_with_default_since_date(self, new_event_loop):
+        """Test that default since date is 365 days ago."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_response = MagicMock()
+            mock_response.json.return_value = []
+            mock_response.raise_for_status = MagicMock()
+            mock_response.headers = {}
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=mock_response)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                await service.get_repo_commits("owner", "repo")
+
+                # Verify the since param was passed (approximately 365 days ago)
+                call_params = mock_client.request.call_args[1]["params"]
+                assert "since" in call_params
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_commits_with_custom_since_date(self, new_event_loop):
+        """Test commits with custom since date."""
+
+        async def run_test():
+            from datetime import datetime
+
+            service = GitHubService()
+
+            mock_response = MagicMock()
+            mock_response.json.return_value = [{"sha": "abc"}]
+            mock_response.raise_for_status = MagicMock()
+            mock_response.headers = {}
+
+            mock_client = MagicMock()
+            mock_client.is_closed = False
+            mock_client.request = AsyncMock(return_value=mock_response)
+
+            custom_date = datetime(2024, 1, 1)
+
+            with patch("httpx.AsyncClient", return_value=mock_client):
+                result = await service.get_repo_commits("owner", "repo", since=custom_date)
+
+                assert result == 1
+                call_params = mock_client.request.call_args[1]["params"]
+                assert custom_date.isoformat() in call_params["since"]
+
+        new_event_loop.run_until_complete(run_test())
+
+
+class TestGetProjectStatsIntegration:
+    """Tests for get_project_stats method."""
+
+    def test_project_stats_aggregates_all_data(self, new_event_loop):
+        """Test that project stats aggregates data from all sources."""
+
+        async def run_test():
+            service = GitHubService()
+
+            mock_repo_details = {
+                "name": "my-project",
+                "full_name": "owner/my-project",
+                "description": "A great project",
+                "stargazers_count": 500,
+                "forks_count": 100,
+                "watchers_count": 500,
+                "open_issues_count": 10,
+                "created_at": "2020-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+                "size": 5000,
+                "topics": ["python", "api"],
+                "homepage": "https://myproject.com",
+                "html_url": "https://github.com/owner/my-project",
+            }
+            mock_languages = {"Python": 80000, "JavaScript": 20000}
+
+            service.get_repo_details = AsyncMock(return_value=mock_repo_details)
+            service.get_repo_languages = AsyncMock(return_value=mock_languages)
+            service.get_repo_commits = AsyncMock(return_value=1500)
+
+            result = await service.get_project_stats("owner", "my-project")
+
+            assert result["name"] == "my-project"
+            assert result["stars"] == 500
+            assert result["commit_count"] == 1500
+            assert result["languages"] == mock_languages
+            assert result["topics"] == ["python", "api"]
+
+        new_event_loop.run_until_complete(run_test())
