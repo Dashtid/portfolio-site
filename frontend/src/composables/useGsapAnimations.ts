@@ -87,7 +87,7 @@ export function useGsapScrollAnimation(
   } = options
 
   const isAnimated = ref(false)
-  let scrollTrigger: ScrollTrigger | null = null
+  let scrollTrigger: ScrollTriggerType | null = null
   let tween: gsap.core.Tween | null = null
 
   // Check for reduced motion preference
@@ -242,7 +242,7 @@ export function useGsapParallax(
   options: { speed?: number; direction?: 'vertical' | 'horizontal' } = {}
 ) {
   const { speed = 0.5, direction = 'vertical' } = options
-  let scrollTrigger: ScrollTrigger | null = null
+  let scrollTrigger: ScrollTriggerType | null = null
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
