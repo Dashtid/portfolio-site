@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,7 +29,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v3.0.2
         id: filter
         with:
           filters: |
@@ -78,6 +79,13 @@ jobs:
           name: frontend-coverage
           fail_ci_if_error: false
 
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          working-directory: ./frontend
+          vite-config-path: ./vite.config.ts
+
       - name: Build frontend
         run: npm run build
 
@@ -123,7 +131,7 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Run tests
-        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term || echo "No tests found"
+        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --junitxml=pytest-report.xml || echo "No tests found"
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -133,6 +141,13 @@ jobs:
           flags: backend
           name: backend-coverage
           fail_ci_if_error: false
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-xml-coverage-path: ./backend/coverage.xml
+          junitxml-path: ./backend/pytest-report.xml
 
   # E2E Testing with Playwright (runs on PRs only)
   e2e-tests:
@@ -168,7 +183,7 @@ jobs:
         with:
           name: playwright-report
           path: frontend/.playwright-report/
-          retention-days: 7
+          retention-days: 3
 
       - name: Upload Playwright videos
         uses: actions/upload-artifact@v4
@@ -176,7 +191,7 @@ jobs:
         with:
           name: playwright-videos
           path: frontend/.test-results/
-          retention-days: 7
+          retention-days: 3
 
   # Security Scanning
   security-scan:
