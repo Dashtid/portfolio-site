@@ -70,15 +70,6 @@ jobs:
       - name: Run unit tests
         run: npm test -- --run --coverage
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          files: ./frontend/.coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
-          fail_ci_if_error: false
-
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
         uses: davelosert/vitest-coverage-report-action@v2
@@ -132,15 +123,6 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --junitxml=pytest-report.xml || echo "No tests found"
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          files: ./backend/coverage.xml
-          flags: backend
-          name: backend-coverage
-          fail_ci_if_error: false
 
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
