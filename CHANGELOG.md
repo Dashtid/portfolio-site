@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- seed_data.py: Column name mismatches (proficiency → proficiency_level, years_experience → years_of_experience, order → order_index)
+
+### Added
+
+- 14 tests for seed_data.py (companies, projects, skills, education, clear data)
+- 22 tests for github_service.py (RequestError handling, Link header parsing, pagination, GraphQL edge cases)
+
+### Tested
+
+- Backend: 662 tests passing (80.63% coverage, up from ~47%)
+- github_service.py: 99.43% coverage (up from 17%)
+- seed_data.py: 76.81% coverage (up from 0%)
+
 ## [1.1.0] - 2025-12-25
 
 Technical debt reduction and infrastructure improvements.

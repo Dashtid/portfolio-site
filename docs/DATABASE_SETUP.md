@@ -209,6 +209,6 @@ flyctl secrets set DATABASE_URL="sqlite+aiosqlite:////data/portfolio.db" -a dash
 
 Once database is working:
 
-1. Fix Vercel frontend deployment (see docs/VERCEL_FIX.md)
+1. Deploy frontend to Vercel (see [DEPLOYMENT.md](DEPLOYMENT.md))
 2. Test end-to-end connectivity
 3. Configure custom domain (dashti.se)

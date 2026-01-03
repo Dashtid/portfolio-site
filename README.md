@@ -3,6 +3,7 @@
 Personal portfolio built with Vue 3 + FastAPI.
 
 [![CI/CD](https://github.com/daviddashti/portfolio-site/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/daviddashti/portfolio-site/actions)
+[![Coverage](https://img.shields.io/badge/coverage-80%25-brightgreen)](backend/)
 
 **Live**: [dashti.se](https://dashti.se) | **API**: [dashti-portfolio-backend.fly.dev](https://dashti-portfolio-backend.fly.dev/api/v1/)
 
@@ -46,6 +47,9 @@ pre-commit run --all-files      # All quality checks
 ## Docs
 
 - [CHANGELOG.md](CHANGELOG.md) - Version history
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design
+- [docs/API.md](docs/API.md) - API reference
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - Development guide
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Production deployment
 - [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md) - Database configuration
 
