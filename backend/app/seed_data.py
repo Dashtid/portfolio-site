@@ -402,6 +402,18 @@ async def seed_education(session: AsyncSession):
             "is_certification": True,
             "order_index": 5,
         },
+        {
+            "institution": "CompTIA",
+            "degree": "Security+",
+            "field_of_study": "Cybersecurity",
+            "start_date": datetime(2026, 1, 1),
+            "end_date": datetime(2026, 1, 31),
+            "location": "Online",
+            "description": "Industry-standard certification covering network security, threats, vulnerabilities, and risk management.",
+            "is_certification": True,
+            "certificate_url": "https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url",
+            "order_index": 6,
+        },
     ]
 
     for edu_data in education_items:

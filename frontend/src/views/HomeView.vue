@@ -145,8 +145,13 @@
                 </svg>
               </a>
               <p class="education-dates">
-                {{ formatDate(edu.start_date) }} -
-                {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
+                <template v-if="edu.is_certification && edu.end_date">
+                  {{ formatDate(edu.end_date) }}
+                </template>
+                <template v-else>
+                  {{ formatDate(edu.start_date) }} -
+                  {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
+                </template>
               </p>
             </div>
           </div>
