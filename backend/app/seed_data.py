@@ -404,9 +404,9 @@ async def seed_education(session: AsyncSession):
         },
         {
             "institution": "CompTIA",
-            "degree": "Security+",
+            "degree": "Security+ Certification",
             "field_of_study": "Cybersecurity",
-            "start_date": datetime(2026, 1, 1),
+            "start_date": datetime(2024, 1, 1),
             "end_date": datetime(2026, 1, 31),
             "location": "Online",
             "description": "Industry-standard certification covering network security, threats, vulnerabilities, and risk management.",
