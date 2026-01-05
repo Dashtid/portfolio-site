@@ -45,16 +45,16 @@
     "vue": "^3.5.25",
     "vue-router": "^4.6.3",
     "web-vitals": "^5.1.0",
-    "zod": "^4.1.13"
+    "zod": "^4.3.5"
   },
   "overrides": {
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0"
   },
   "devDependencies": {
-    "@lhci/cli": "^0.14.0",
+    "@lhci/cli": "^0.15.1",
     "@pinia/testing": "^1.0.3",
     "@playwright/test": "^1.49.0",
-    "@types/dompurify": "^3.0.5",
+    "@types/dompurify": "^3.2.0",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
