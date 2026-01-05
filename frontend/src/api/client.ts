@@ -53,7 +53,9 @@ const apiClient: AxiosInstance = axios.create({
   timeout: 30000, // 30 second timeout to prevent hanging requests
   withCredentials: true, // Include HTTP-only cookies in requests
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache'
   }
 })
 
