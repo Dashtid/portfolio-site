@@ -1,5 +1,5 @@
 // Service Worker Configuration
-const CACHE_VERSION = '4.2.0'
+const CACHE_VERSION = '4.3.0'
 const CACHE_NAME = `dashti-portfolio-v${CACHE_VERSION}`
 const API_CACHE_NAME = `dashti-api-v${CACHE_VERSION}`
 
