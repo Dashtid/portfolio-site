@@ -45,18 +45,18 @@
     "vue": "^3.5.25",
     "vue-router": "^4.6.3",
     "web-vitals": "^5.1.0",
-    "zod": "^4.1.13"
+    "zod": "^4.3.5"
   },
   "overrides": {
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0"
   },
   "devDependencies": {
-    "@lhci/cli": "^0.14.0",
+    "@lhci/cli": "^0.15.1",
     "@pinia/testing": "^1.0.3",
     "@playwright/test": "^1.49.0",
-    "@types/dompurify": "^3.0.5",
+    "@types/dompurify": "^3.2.0",
     "@types/node": "^24.10.1",
-    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.48.0",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/coverage-v8": "^4.0.14",
@@ -66,17 +66,17 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-vue": "^10.6.2",
-    "happy-dom": "^20.0.11",
+    "happy-dom": "^20.1.0",
     "jsdom": "^26.1.0",
     "prettier": "^3.7.3",
     "rollup-plugin-visualizer": "^6.0.5",
     "sharp": "^0.34.5",
     "terser": "^5.44.1",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4",
+    "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.14",
-    "vue-tsc": "^3.1.5",
+    "vue-tsc": "^3.2.2",
     "workbox-window": "^7.4.0"
   }
 }
