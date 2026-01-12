@@ -6,18 +6,18 @@ requires-python = ">=3.11"
 dependencies = [
     # Core
     "fastapi>=0.115.0,<1.0.0",
-    "uvicorn[standard]==0.32.1",
+    "uvicorn[standard]==0.40.0",
     "gunicorn==23.0.0",
-    "python-multipart==0.0.20",
+    "python-multipart==0.0.21",
     # Database
-    "sqlalchemy==2.0.44",
+    "sqlalchemy==2.0.45",
     "asyncpg==0.31.0",
-    "alembic==1.17.2",
-    "greenlet==3.2.4",
+    "alembic==1.18.0",
+    "greenlet==3.3.0",
     # Authentication
     "PyJWT==2.10.1",
     "passlib[bcrypt]==1.7.4",
-    "authlib==1.6.5",
+    "authlib==1.6.6",
     "httpx==0.28.1",
     # Validation & Serialization
     "pydantic==2.12.5",
@@ -28,21 +28,21 @@ dependencies = [
     "python-json-logger==4.0.0",
     "slowapi==0.1.9",
     # Monitoring
-    "sentry-sdk[fastapi]==2.19.2",
+    "sentry-sdk[fastapi]==2.49.0",
     # Security fixes (transitive deps - CVE patches)
-    "starlette==0.50.0",
+    "starlette==0.51.0",
     "urllib3>=2.6.0",
     "filelock>=3.20.1",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==9.0.1",
+    "pytest==9.0.2",
     "pytest-asyncio==1.3.0",
     "pytest-cov==7.0.0",
-    "aiosqlite==0.21.0",
-    "ruff==0.14.7",
-    "mypy==1.19.0",
+    "aiosqlite==0.22.1",
+    "ruff==0.14.11",
+    "mypy==1.19.1",
 ]
 
 [build-system]
