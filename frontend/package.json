@@ -34,7 +34,7 @@
     "images:avif": "node scripts/convert-to-avif.mjs"
   },
   "dependencies": {
-    "@sentry/vue": "^8.42.0",
+    "@sentry/vue": "^10.32.1",
     "@types/three": "^0.182.0",
     "@vueuse/core": "^14.1.0",
     "axios": "^1.13.2",
