@@ -519,6 +519,16 @@ section {
   background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
+/* Dark mode override for bg-dark sections */
+[data-theme='dark'] .bg-dark {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .bg-dark .section-title {
+  color: #f8fafc !important;
+}
+
 /* Experience Cards - Bootstrap Grid Layout */
 .experience-list {
   display: grid;

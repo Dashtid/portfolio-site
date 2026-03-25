@@ -406,6 +406,7 @@ onUnmounted(() => {
 .media-item h2 {
   font-size: 1.25rem;
   margin-bottom: 1rem;
+  min-height: 3.75rem;
 }
 
 @media (max-width: 768px) {
