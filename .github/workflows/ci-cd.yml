@@ -187,14 +187,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Trivy CLI
+        # Avoids aquasecurity/trivy-action which had a supply chain compromise in March 2026
+        # (75 of 76 version tags force-pushed to serve malicious payloads)
+        # Direct binary download from GitHub Releases is unaffected.
+        env:
+          TRIVY_VERSION: '0.62.0'
+        run: |
+          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -o trivy.tar.gz
+          tar -xzf trivy.tar.gz trivy
+          sudo mv trivy /usr/local/bin/trivy
+          rm trivy.tar.gz
+
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+        run: |
+          trivy fs --severity CRITICAL,HIGH --format sarif --output trivy-results.sarif .
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
