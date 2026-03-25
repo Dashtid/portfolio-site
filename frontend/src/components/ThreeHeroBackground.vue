@@ -4,10 +4,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import * as THREE from 'three'
+import type * as THREE from 'three'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
+let _THREE!: typeof import('three')
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
@@ -48,14 +49,14 @@ const initScene = () => {
 
   try {
     // Scene setup
-    scene = new THREE.Scene()
+    scene = new _THREE.Scene()
 
     // Camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    camera = new _THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
     camera.position.z = 30
 
     // Renderer with alpha for transparency
-    renderer = new THREE.WebGLRenderer({
+    renderer = new _THREE.WebGLRenderer({
       canvas: canvasRef.value,
       alpha: true,
       antialias: true,
@@ -72,7 +73,7 @@ const initScene = () => {
 }
 
 const createParticles = () => {
-  const particlesGeometry = new THREE.BufferGeometry()
+  const particlesGeometry = new _THREE.BufferGeometry()
 
   const posArray = new Float32Array(PARTICLE_COUNT * 3)
   const colorArray = new Float32Array(PARTICLE_COUNT * 3)
@@ -100,22 +101,22 @@ const createParticles = () => {
     sizeArray[i] = PARTICLE_SIZE * (0.5 + Math.random() * 0.5)
   }
 
-  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3))
-  particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3))
-  particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1))
+  particlesGeometry.setAttribute('position', new _THREE.BufferAttribute(posArray, 3))
+  particlesGeometry.setAttribute('color', new _THREE.BufferAttribute(colorArray, 3))
+  particlesGeometry.setAttribute('size', new _THREE.BufferAttribute(sizeArray, 1))
 
   // Custom shader material for better particle rendering
-  const particlesMaterial = new THREE.PointsMaterial({
+  const particlesMaterial = new _THREE.PointsMaterial({
     size: PARTICLE_SIZE,
     vertexColors: true,
     transparent: true,
     opacity: 0.6,
-    blending: THREE.AdditiveBlending,
+    blending: _THREE.AdditiveBlending,
     sizeAttenuation: true,
     depthWrite: false
   })
 
-  particles = new THREE.Points(particlesGeometry, particlesMaterial)
+  particles = new _THREE.Points(particlesGeometry, particlesMaterial)
   scene.add(particles)
 }
 
@@ -170,7 +171,8 @@ const handleReducedMotionChange = (event: MediaQueryListEvent) => {
   isReducedMotion = event.matches
 }
 
-onMounted(() => {
+onMounted(async () => {
+  _THREE = await import('three')
   initScene()
   animate()
 
