@@ -259,16 +259,25 @@ Delete the other two. Add all three patterns to `.gitignore` if not already ther
 
 ---
 
-### DEBT-011: `ExperienceDetail.vue` — unclear if active or abandoned
-**File:** `frontend/src/views/experience/ExperienceDetail.vue`
-**Priority:** Medium — unknown
+### DEBT-011: Two experience detail views with overlapping purpose — decide canonical route
+**Files:** `frontend/src/views/ExperienceDetail.vue` (`/experience/:id`),
+`frontend/src/views/CompanyDetailView.vue` (`/company/:id`)
+**Priority:** Low — both work, but two routes for the same content is confusing
 
-A second experience detail view exists alongside `CompanyDetailView.vue`. Whether it is routed,
-used, or a superseded earlier version is unknown without reading the router. If it is unused, it
-should be deleted. If it serves a different purpose, it should be documented.
+Both routes are active and intentional with distinct UX:
+- `/company/:id` → `CompanyDetailView.vue`: standard detail page linked from the main portfolio
+- `/experience/:id` → `ExperienceDetail.vue`: "browse mode" — has a secondary navbar listing all
+  companies for quick lateral navigation
 
-**Fix:** Read `frontend/src/router/index.ts`, determine whether this view is reachable, and either
-route it correctly or delete it.
+The issue is neither route is clearly canonical. All links from the home page use `/company/:id`.
+`/experience/:id` appears to be an earlier iteration that gained a browse-mode navbar but was never
+removed when `CompanyDetailView` was built. Two maintained views means bug fixes must be applied
+twice (BUG-001 was applied to both, but future bugs may be missed).
+
+**Fix:** Decide which UX pattern to keep. Options:
+1. Add the browse-mode navbar to `CompanyDetailView.vue`, delete `ExperienceDetail.vue`
+2. Redirect `/company/:id` to `/experience/:id` and retire `CompanyDetailView.vue`
+3. Keep both intentionally but add clear internal documentation explaining the split
 
 ---
 
@@ -287,11 +296,334 @@ worker is actually active in production. Remove or consolidate the duplicate.
 
 ---
 
+---
+
+## DEBT — CI/CD
+
+### CI-001: `security-scan` used compromised `aquasecurity/trivy-action@0.29.0` — FIXED
+**File:** `.github/workflows/ci-cd.yml`
+**Status:** Fixed in PR #49 (merged 2026-03-25)
+
+The Trivy GitHub Action had 75 of 76 version tags force-pushed in March 2026 to serve malicious
+payloads that exfiltrate CI/CD secrets. Replaced with a direct binary download from GitHub Releases
+pinned to v0.62.0.
+
+---
+
+### CI-002: `npm run lint --if-present` uses an invalid npm flag
+**File:** `.github/workflows/ci-cd.yml:68`
+**Priority:** Low — currently masked by `|| echo` fallback, but semantically wrong
+
+`npm run --if-present` is a valid flag for `npm run` but `npm run lint --if-present` passes
+`--if-present` as an argument to the script rather than to npm. The intent is to skip silently if
+the script doesn't exist. The correct form is `npm run --if-present lint`.
+
+Since the repo does have a `lint` script, the bug is currently hidden. It will matter if the
+script is ever removed.
+
+**Fix:** Change line 68 to `npm run --if-present lint || true`
+
+---
+
+### CI-003: Python dependency cache only covers `requirements.txt`, misses dev requirements
+**File:** `.github/workflows/ci-cd.yml:109`
+**Priority:** Low
+
+`cache-dependency-path: backend/requirements.txt` means the pip cache is invalidated only when
+`requirements.txt` changes. If `requirements-dev.txt` (if it exists) changes independently, the
+cache is stale. Should use a glob pattern.
+
+**Fix:** Change to `cache-dependency-path: backend/requirements*.txt`
+
+---
+
+### CI-004: `MishaKav/pytest-coverage-comment@main` uses floating `@main` ref
+**File:** `.github/workflows/ci-cd.yml:129`
+**Priority:** Medium — supply chain risk
+
+Pinning to `@main` means any future push to that repo's main branch is automatically trusted and
+executed in CI. The trivy-action compromise used exactly this vector. Should pin to a specific
+commit SHA or tagged release.
+
+**Fix:** Pin to latest tagged release, e.g. `MishaKav/pytest-coverage-comment@v1.3.2`
+
+---
+
+### CI-005: `dependency-review` job requires GitHub Dependency Graph (not enabled)
+**File:** `.github/workflows/ci-cd.yml:213-226`
+**Priority:** Medium — job always fails, adds noise, blocks PRs
+
+`actions/dependency-review-action@v4` requires the repository to have Dependency graph enabled
+in GitHub Settings → Security & Analysis. The feature is not enabled, so this job fails on every
+PR with "Dependency review is not supported on this repository."
+
+**Fix:** Either enable Dependency graph in repo settings (recommended — it's free and adds
+vulnerability scanning to the dependency tab), or remove the job if not wanted.
+
+---
+
+### CI-006: `vitest-coverage-report-action` fails because coverage files are never generated
+**File:** `.github/workflows/ci-cd.yml:73-78`
+**Priority:** Medium — `frontend-quality` job always fails on PRs
+
+The coverage report action expects `frontend/coverage/coverage-summary.json` and
+`coverage-final.json`. These are only generated if Vitest is configured with a coverage provider.
+Check `vite.config.ts` — if `test.coverage` is not configured, `npm test -- --run --coverage`
+will run tests without coverage output and the action will fail with "file not found."
+
+**Fix:** Verify `vite.config.ts` has:
+```ts
+test: {
+  coverage: {
+    provider: 'v8',
+    reporter: ['json-summary', 'json', 'html']
+  }
+}
+```
+If coverage is not desired, remove the `--coverage` flag and the action step.
+
+---
+
+## DEBT — Performance
+
+### PERF-001: Three.js imported statically — loads unconditionally in main bundle (~172KB gzipped)
+**File:** `frontend/src/components/ThreeHeroBackground.vue:7`
+**Priority:** Medium — biggest single avoidable cost on initial page load
+
+Line 7: `import * as THREE from 'three'` is a static top-level import. This bundles all of
+Three.js into the main chunk, which is parsed and executed on every page load even if WebGL is
+unavailable or the hero section never renders.
+
+The component itself is well-written: it checks for WebGL availability, handles visibility changes,
+cleans up properly, and respects `prefers-reduced-motion`. The only problem is the static import.
+
+**Fix:** Convert to a dynamic import inside `onMounted`:
+```ts
+onMounted(async () => {
+  const THREE = await import('three')
+  initScene(THREE)
+  // ...
+})
+```
+This moves Three.js into a separate async chunk that only loads when the hero section mounts.
+Saves ~172KB from the initial parse cost. No visual change.
+
+---
+
+### PERF-002: GitHubStats component fetches data unconditionally on mount
+**File:** `frontend/src/components/GitHubStats.vue`
+**Priority:** Low
+
+The component fetches GitHub API data as soon as it mounts, regardless of whether it is visible
+in the viewport. On slow connections, this consumes bandwidth before the user has scrolled to the
+section. Should use an `IntersectionObserver` to defer the fetch until the component is near the
+viewport.
+
+**Fix:** Wrap the initial fetch in an `IntersectionObserver` callback. The composable pattern
+already used elsewhere in the codebase (AbortController) can be extended for this.
+
+---
+
+### PERF-003: No `font-display: swap` configured for web fonts
+**File:** `frontend/src/styles/variables.css`
+**Priority:** Low — risk of FOIT (Flash of Invisible Text) on slow connections
+
+Font families are declared but if any web fonts are loaded (via Google Fonts CDN or `@font-face`),
+there is no `font-display: swap` directive. Without it, browsers may show invisible text while the
+font loads (FOIT). `swap` shows a fallback font immediately and swaps when ready (FOUT, which is
+preferable).
+
+**Fix:** Add `font-display: swap` to any `@font-face` declarations. If fonts are loaded via
+Google Fonts CDN link, add `&display=swap` to the URL. Audit `index.html` for any font links.
+
+---
+
+## DEBT — Accessibility
+
+### A11Y-001: Focus not moved to main content on route change (WCAG 2.2 SPA requirement)
+**File:** `frontend/src/router/index.ts`
+**Priority:** Medium — #1 most commonly missed accessibility requirement in Vue SPAs
+
+The router's `afterEach` hook updates `document.title` (line 147, correct) and tracks analytics,
+but does not move keyboard focus after navigation. For sighted users this is invisible — but
+screen reader users navigate an SPA by listening for page load announcements. Without focus
+management, they have no indication that the page changed and no efficient way to reach new
+content.
+
+WCAG 2.2 Success Criterion 2.4.3 requires that focus order is logical after navigation.
+
+**Fix:** In `router.afterEach`, after the title update, focus the main `<h1>` or `<main>` element:
+```ts
+router.afterEach(() => {
+  document.title = ...
+  nextTick(() => {
+    const main = document.querySelector('main, h1, [tabindex="-1"]')
+    if (main instanceof HTMLElement) main.focus()
+  })
+})
+```
+The target element should have `tabindex="-1"` to be focusable without appearing in tab order.
+
+---
+
+### A11Y-002: WCAG 2.2 § 2.4.11 Focus Appearance — focus ring may not meet new requirements
+**Files:** `frontend/src/assets/portfolio.css`, `frontend/src/style.css`
+**Priority:** Low — WCAG 2.2 AA (new requirement, browsers vary in enforcement)
+
+WCAG 2.2 introduced Success Criterion 2.4.11 (Focus Appearance) requiring focus indicators to:
+- Have at least 3:1 contrast ratio between focused and unfocused states
+- Enclose the component with a minimum area (perimeter × 2px)
+
+The project has `focus-visible` styles (good) but they may not meet the new area/contrast
+thresholds on all backgrounds, especially over the gradient hero and dark sections.
+
+**Fix:** Audit focus ring styles against WCAG 2.2 § 2.4.11. Run axe-core or Deque's accessibility
+checker on both light and dark mode with keyboard navigation. Common fix: increase focus outline
+to `outline: 3px solid var(--link-color); outline-offset: 2px`.
+
+---
+
+### A11Y-003: ProjectCard icon-only links missing descriptive `aria-label`
+**File:** `frontend/src/components/ProjectCard.vue`
+**Priority:** Low
+
+Links to GitHub and live demo use icon SVGs with `aria-hidden="true"` (correct), but the link
+text "View Code" / "Live Demo" may not convey the project name to screen readers. A user tabbing
+through multiple project cards will hear "View Code, View Code, View Code" with no context.
+
+**Fix:** Add `aria-label` to each link:
+```html
+<a :aria-label="`View code for ${project.name} on GitHub`" ...>
+```
+
+---
+
+## DEBT — Backend
+
+### BE-001: `Project.technologies` JSON column has no schema validation
+**File:** `backend/app/models/project.py`
+**Priority:** Medium — malformed API response crashes frontend rendering
+
+The `technologies` column is `Column(JSON)`, which accepts any JSON value. If a bad record is
+inserted with `technologies: "javascript"` (string instead of array), the frontend's
+`v-for="tech in project.technologies"` will iterate over individual characters and render "j",
+"a", "v", "a", "s" as separate badge elements.
+
+**Fix:** Add a Pydantic validator on the schema layer to ensure `technologies` is always a list.
+Alternatively, add a SQLAlchemy column default: `Column(JSON, nullable=False, default=list)`.
+
+---
+
+### BE-002: N+1 query risk on company endpoints
+**File:** `backend/app/api/v1/companies.py`
+**Priority:** Low — portfolio traffic is low, but worth fixing for correctness
+
+If `Company` has a `projects` relationship and `company.to_dict()` accesses it, the list endpoint
+triggers one query per company to load projects. With 10 companies this is 11 queries instead of 1.
+
+**Fix:** Use SQLAlchemy `selectinload` or `joinedload` on the list query:
+```python
+select(Company).options(selectinload(Company.projects)).order_by(Company.order_index)
+```
+
+---
+
+### BE-003: CSP `frame-src` allows `https://www.google.com` (overly broad)
+**File:** `backend/app/main.py`
+**Priority:** Low — allows any Google-served content in iframes, not just Maps
+
+The Content-Security-Policy `frame-src` directive includes `https://www.google.com` which allows
+any Google-hosted page to be embedded, not just Maps embeds. Should be restricted to the Maps
+embed path.
+
+**Fix:** Replace `https://www.google.com` with `https://www.google.com/maps` in the CSP header.
+
+---
+
+### BE-004: Dev/CI tools bundled in production `requirements.txt`
+**File:** `backend/requirements.txt`
+**Priority:** Low — increases production image size and attack surface
+
+Tools only needed in CI or locally (`bandit`, `mypy`, `pip-audit`, `pre-commit`, `ruff`) are in
+the same requirements file as production dependencies. This means production deployments install
+linters and security auditors unnecessarily.
+
+**Fix:** Split into `requirements.txt` (runtime only) and `requirements-dev.txt` (CI + local).
+Update CI to `pip install -r requirements.txt -r requirements-dev.txt` and Dockerfile to only
+install `requirements.txt`.
+
+---
+
+## DEBT — CSS (Additional)
+
+### CSS-001: Z-index values hardcoded as `9999` instead of using defined tokens
+**Files:** `frontend/src/App.vue:43`, `frontend/src/components/LoadingSpinner.vue:57`
+**Priority:** Low
+
+`variables.css` defines `--z-index-*` tokens but at least two components hardcode `z-index: 9999`:
+- `.skip-link` in `App.vue`
+- `.loading-container.full-screen` in `LoadingSpinner.vue`
+
+**Fix:** Use the defined tokens, e.g. `z-index: var(--z-index-tooltip)` or add a
+`--z-index-overlay: 9999` token and reference it.
+
+---
+
+### CSS-002: Hardcoded hex colors in `portfolio.css` that should use CSS variables
+**File:** `frontend/src/assets/portfolio.css`
+**Priority:** Low — these won't break but undermine the token system
+
+Lines 424 and 432 use hardcoded `#3b82f6` and `#60a5fa` in gradients instead of
+`var(--primary-500)` and `var(--primary-400)`. If the primary brand color is ever updated in
+`variables.css`, these won't follow.
+
+**Fix:** Replace hardcoded primary hex values with `var(--primary-500)` / `var(--primary-400)`.
+
+---
+
+## EVAL — Architecture Evaluations
+
+### EVAL-001: Evaluate SSG (Static Site Generation) for performance
+**Priority:** Medium — significant TTFB improvement possible
+
+For a portfolio site, the content is largely static (loaded from the API at admin time, then
+unchanged for days). Switching to static site generation would pre-render pages at build time,
+dropping TTFB from ~280ms to ~12ms.
+
+Options:
+- **Vite SSG** (`vite-ssg` plugin): minimal change, keeps current Vue/Vite setup, generates static
+  HTML for each route at build time
+- **Nuxt 3 with `nuxt generate`**: full migration, more ecosystem support, more complex
+
+Tradeoffs to evaluate:
+- Admin panel still needs to be a dynamic SPA (auth-gated routes)
+- API data that changes (admin edits) would require a rebuild to reflect — acceptable for a
+  portfolio, but needs a trigger (GitHub Actions on content change, webhook, etc.)
+- Vercel already does edge caching of the SPA, so real-world gains may be smaller than theoretical
+
+**Action:** Spike `vite-ssg` on a branch to assess migration effort before committing.
+
+---
+
+### EVAL-002: GitHub username in `GitHubStats.vue` — move to `config.ts`
+**File:** `frontend/src/components/GitHubStats.vue`
+**Priority:** Low — cosmetic, no functional impact
+
+The GitHub username `'Dashtid'` is hardcoded in the component. The project already has a
+`frontend/src/config.ts` file with site-level constants. Moving this there is a 5-minute cleanup
+that separates configuration from component logic.
+
+**Fix:** Add `githubUsername: 'Dashtid'` to `config.ts` and import it in `GitHubStats.vue`.
+
+---
+
 ## Notes
 
 **What is in good shape:**
 - Security: DOMPurify sanitization, YouTube/Maps domain allowlisting, HTTPS-only embeds, no creds in localStorage
+- Router: `document.title` updated on every route change (line 147 of `router/index.ts`), analytics tracking
 - Accessibility: skip-to-main, ARIA labels, focus-visible outlines, high-contrast mode, reduced-motion support
-- Performance: Three.js lazy loaded, AVIF/WebP responsive images, service worker caching, GSAP context cleanup
+- Performance: AVIF/WebP responsive images, service worker caching, GSAP context cleanup, visibility-aware Three.js pause
 - TypeScript: strong types, Zod validation, no implicit any in components reviewed
 - Request lifecycle: AbortController for cancellation, race condition protection in CompanyDetailView
+- Three.js: WebGL availability check, proper geometry/material/renderer disposal in `onBeforeUnmount`
