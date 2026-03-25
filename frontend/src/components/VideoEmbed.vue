@@ -109,7 +109,8 @@ const safeUrl = computed<string | null>(() => {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: var(--bs-body-color);
+  color: var(--text-primary);
+  min-height: 4.5rem;
 }
 
 .ratio {
@@ -140,7 +141,7 @@ const safeUrl = computed<string | null>(() => {
   padding: 2rem;
   background: var(--bg-secondary, #f8fafc);
   border-radius: 8px;
-  border: 1px dashed var(--border-color, #e2e8f0);
+  border: 1px dashed var(--border-primary);
   min-height: 200px;
   text-align: center;
 }
@@ -158,7 +159,7 @@ const safeUrl = computed<string | null>(() => {
 
 /* Dark mode fallback */
 [data-theme='dark'] .video-fallback {
-  background: var(--bg-secondary, #1e293b);
-  border-color: var(--border-color, #334155);
+  background: var(--bg-secondary);
+  border-color: var(--border-primary);
 }
 </style>
