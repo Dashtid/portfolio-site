@@ -69,7 +69,7 @@
     "happy-dom": "^20.8.4",
     "jsdom": "^26.1.0",
     "prettier": "^3.8.1",
-    "rollup-plugin-visualizer": "^6.0.5",
+    "rollup-plugin-visualizer": "^7.0.1",
     "sharp": "^0.34.5",
     "terser": "^5.46.0",
     "typescript": "^5.9.3",
