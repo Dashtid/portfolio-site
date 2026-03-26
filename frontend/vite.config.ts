@@ -222,5 +222,13 @@ export default defineConfig({
   // Optimize dependencies
   optimizeDeps: {
     include: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'axios']
+  },
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'json'],
+      reportsDirectory: './coverage',
+      reportOnFailure: true
+    }
   }
 })
