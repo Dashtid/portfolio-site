@@ -40,7 +40,7 @@ onMounted((): void => {
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 9999;
+  z-index: var(--z-index-skip-link);
   padding: 0.75rem 1.5rem;
   background: var(--primary-600, #2563eb);
   color: white;

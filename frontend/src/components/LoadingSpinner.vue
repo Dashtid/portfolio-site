@@ -54,7 +54,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   right: 0;
   bottom: 0;
   background: var(--bg-primary);
-  z-index: 9999;
+  z-index: var(--z-index-overlay);
   min-height: 100vh;
 }
 
