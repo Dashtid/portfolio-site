@@ -63,40 +63,20 @@
       <div v-if="company.video_url || company.map_url" class="media-section">
         <!-- YouTube Video -->
         <div v-if="company.video_url" class="media-item">
-          <h2>{{ company.video_title || `${company.name} Video` }}</h2>
-          <div class="ratio ratio-16x9">
-            <iframe
-              :src="company.video_url"
-              :title="company.video_title || `${company.name} Video`"
-              allow="
-                accelerometer;
-                autoplay;
-                clipboard-write;
-                encrypted-media;
-                gyroscope;
-                picture-in-picture;
-                web-share;
-              "
-              referrerpolicy="strict-origin-when-cross-origin"
-              allowfullscreen
-              loading="lazy"
-            ></iframe>
-          </div>
+          <VideoEmbed
+            :url="company.video_url"
+            :heading="company.video_title || `${company.name} Video`"
+            :title="company.video_title || `${company.name} Video`"
+          />
         </div>
 
         <!-- Google Maps -->
         <div v-if="company.map_url" class="media-item">
-          <h2>{{ company.map_title || `${company.name} Location` }}</h2>
-          <div class="ratio ratio-16x9">
-            <iframe
-              :src="company.map_url"
-              :title="company.map_title || `${company.name} Location Map`"
-              allowfullscreen
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              class="border-0"
-            ></iframe>
-          </div>
+          <MapEmbed
+            :url="company.map_url"
+            :heading="company.map_title || `${company.name} Location`"
+            :title="company.map_title || `${company.name} Location Map`"
+          />
         </div>
       </div>
 
@@ -196,6 +176,8 @@ import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { config } from '../../config'
 import DOMPurify from 'dompurify'
+import VideoEmbed from '@/components/VideoEmbed.vue'
+import MapEmbed from '@/components/MapEmbed.vue'
 
 // AbortController for cancelling pending requests on route change
 let fetchAbortController: AbortController | null = null
@@ -403,12 +385,6 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.media-item h2 {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-  min-height: 3.75rem;
-}
-
 @media (max-width: 768px) {
   .media-section {
     flex-direction: column;
@@ -434,9 +410,9 @@ onUnmounted(() => {
 }
 
 .nav-link.active {
-  background-color: #2563eb !important;
+  background-color: var(--primary-600) !important;
   color: white !important;
-  border-color: #2563eb !important;
+  border-color: var(--primary-600) !important;
 }
 
 .nav-link:hover:not(.active) {
