@@ -1,5 +1,5 @@
 <template>
-  <div class="github-stats">
+  <div ref="sectionRef" class="github-stats">
     <div v-if="loading" class="loading-spinner">
       <div class="spinner"></div>
       <p>Loading GitHub stats...</p>
@@ -98,7 +98,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
+import { useIntersectionObserver } from '@vueuse/core'
 import axios from 'axios'
 import { apiLogger } from '../utils/logger'
 
@@ -220,10 +221,19 @@ const fetchGitHubStats = async (): Promise<void> => {
   }
 }
 
-onMounted(() => {
-  isMounted = true
-  fetchGitHubStats()
-})
+const sectionRef = ref<HTMLElement | null>(null)
+
+const { stop } = useIntersectionObserver(
+  sectionRef,
+  ([entry]) => {
+    if (entry.isIntersecting) {
+      isMounted = true
+      fetchGitHubStats()
+      stop()
+    }
+  },
+  { rootMargin: '200px' }
+)
 
 onUnmounted(() => {
   isMounted = false
