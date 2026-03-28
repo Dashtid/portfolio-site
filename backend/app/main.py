@@ -274,7 +274,7 @@ async def run_migrations():
 
 
 async def cleanup_duplicate_scania_entries():
-    """Remove duplicate Scania Group entries, keeping only order_index 6 and 8."""
+    """Remove duplicate Scania Group entries, keeping one entry per year bucket (2016, 2012)."""
 
     from sqlalchemy import delete, select  # noqa: PLC0415
     from sqlalchemy.exc import OperationalError  # noqa: PLC0415
@@ -291,32 +291,38 @@ async def cleanup_duplicate_scania_entries():
             )
             scania_entries = result.scalars().all()
 
-            if len(scania_entries) <= 2:
-                return  # No duplicates
+            if not scania_entries:
+                return
 
-            logger.warning("Found %d Scania entries, cleaning up duplicates", len(scania_entries))
+            # Group by year bucket — keep exactly one entry per year (2016, 2012).
+            # The old guard (len <= 2) was wrong: two entries can both be 2012, which
+            # is still a duplicate and will break scalar_one_or_none() downstream.
+            year_2016 = [e for e in scania_entries if e.start_date and e.start_date.year == 2016]
+            year_2012 = [e for e in scania_entries if e.start_date and e.start_date.year == 2012]
 
-            # Primary: keep entries by their actual dates (most reliable)
-            ids_to_keep = set()
+            ids_to_keep: set[str] = set()
+            if year_2016:
+                # Prefer the entry with order_index 6; fall back to the first one.
+                canonical = next((e for e in year_2016 if e.order_index == 6), year_2016[0])
+                ids_to_keep.add(canonical.id)
+            if year_2012:
+                # Prefer the entry with order_index 8; fall back to the first one.
+                canonical = next((e for e in year_2012 if e.order_index == 8), year_2012[0])
+                ids_to_keep.add(canonical.id)
+
+            # Fallback for entries with no start_date: keep by order_index
             for entry in scania_entries:
-                if entry.start_date:
-                    if entry.start_date.year == 2016 and entry.start_date.month == 6:
-                        ids_to_keep.add(entry.id)
-                        logger.info("Keeping 2016 Scania entry by date: id=%s", entry.id)
-                    elif entry.start_date.year == 2012 and entry.start_date.month == 6:
-                        ids_to_keep.add(entry.id)
-                        logger.info("Keeping 2012 Scania entry by date: id=%s", entry.id)
-                if len(ids_to_keep) == 2:
-                    break
-
-            # Fallback: use order_index if date matching didn't work
-            if len(ids_to_keep) != 2:
-                ids_to_keep = {e.id for e in scania_entries if e.order_index in (6, 8)}
+                if not entry.start_date and entry.order_index in (6, 8):
+                    ids_to_keep.add(entry.id)
 
             ids_to_delete = [e.id for e in scania_entries if e.id not in ids_to_keep]
             if ids_to_delete:
+                logger.warning(
+                    "Found %d Scania entries, removing %d duplicate(s)",
+                    len(scania_entries),
+                    len(ids_to_delete),
+                )
                 await session.execute(delete(Company).where(Company.id.in_(ids_to_delete)))
-                logger.info("Deleted %d duplicate Scania entries", len(ids_to_delete))
                 await session.commit()
     except OperationalError:
         # Table doesn't exist yet (e.g., during testing before fixture setup)
@@ -512,12 +518,12 @@ Started as part of the second-line support team, working alongside experienced e
                     Company.name == "Scania Group",
                 )
             )
-            if result.scalar_one_or_none() is None:
+            if result.scalars().first() is None:
                 # Check if old name exists
                 result = await session.execute(
                     select(Company).where(Company.name == "Scania Group (Early Career)")
                 )
-                if result.scalar_one_or_none() is None:
+                if result.scalars().first() is None:
                     scania_2012 = Company(
                         id=str(uuid.uuid4()),
                         name="Scania Group",
