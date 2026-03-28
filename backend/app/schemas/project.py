@@ -52,7 +52,20 @@ class ProjectBase(BaseModel):
 
 
 class ProjectCreate(ProjectBase):
-    pass
+    @field_validator("technologies", mode="before")
+    @classmethod
+    def validate_technologies_input(cls, v):
+        """Reject non-list input and validate each item on the create path."""
+        if v is None:
+            return []
+        if not isinstance(v, list):
+            raise ValueError("technologies must be a list")
+        for item in v:
+            if not isinstance(item, str):
+                raise ValueError("each technology must be a string")
+            if len(item) > 100:
+                raise ValueError("technology name exceeds 100 characters")
+        return v
 
 
 class ProjectUpdate(BaseModel):
@@ -79,6 +92,21 @@ class ProjectUpdate(BaseModel):
     def validate_urls(cls, v: str | None) -> str | None:
         """Validate all URL fields are safe."""
         return validate_safe_url(v, "URL")
+
+    @field_validator("technologies", mode="before")
+    @classmethod
+    def validate_technologies_input(cls, v):
+        """Reject non-list input and validate each item on the update path."""
+        if v is None:
+            return None  # None means "do not update this field"
+        if not isinstance(v, list):
+            raise ValueError("technologies must be a list")
+        for item in v:
+            if not isinstance(item, str):
+                raise ValueError("each technology must be a string")
+            if len(item) > 100:
+                raise ValueError("technology name exceeds 100 characters")
+        return v
 
 
 class ProjectResponse(ProjectBase):

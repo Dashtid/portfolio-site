@@ -398,3 +398,56 @@ class TestProjectEdgeCases:
         )
         assert update_response.status_code == 200
         assert update_response.json()["live_url"] is None
+
+    def test_technologies_string_input_rejected(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Bare string must be rejected on create — would cause frontend v-for to iterate chars."""
+        response = client.post(
+            "/api/v1/projects/",
+            json={"name": "Bad Project", "technologies": "Python,FastAPI"},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 422
+
+    def test_technologies_non_string_items_rejected(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """List items that are not strings must be rejected on create."""
+        response = client.post(
+            "/api/v1/projects/",
+            json={"name": "Bad Project", "technologies": [123, None]},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 422
+
+    def test_technologies_null_becomes_empty_list(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """null technologies on create should coerce to an empty list, not store null."""
+        response = client.post(
+            "/api/v1/projects/",
+            json={"name": "Null Tech Project", "technologies": None},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 201
+        assert response.json()["technologies"] == []
+
+    def test_technologies_update_string_rejected(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Bare string must be rejected on update too."""
+        create_response = client.post(
+            "/api/v1/projects/",
+            json={"name": "Update Test Project", "technologies": ["Python"]},
+            headers=admin_user_in_db["headers"],
+        )
+        assert create_response.status_code == 201
+        project_id = create_response.json()["id"]
+
+        update_response = client.put(
+            f"/api/v1/projects/{project_id}",
+            json={"technologies": "Python,FastAPI"},
+            headers=admin_user_in_db["headers"],
+        )
+        assert update_response.status_code == 422

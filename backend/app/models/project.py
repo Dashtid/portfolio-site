@@ -17,7 +17,9 @@ class Project(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text)
     detailed_description = Column(Text, nullable=True)
-    technologies = Column(JSON)  # List of technologies used
+    technologies = Column(
+        JSON, nullable=False, default=list, server_default="[]"
+    )  # List of technologies used
     github_url = Column(String(500))
     live_url = Column(String(500))
     image_url = Column(String(500))
