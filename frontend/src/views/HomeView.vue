@@ -4,7 +4,7 @@
     <NavBar />
 
     <!-- Main content area for accessibility -->
-    <main id="main-content" role="main">
+    <main id="main-content" role="main" tabindex="-1">
       <!-- Hero Section with Stockholm Background -->
       <div class="stockholm-background">
         <ThreeHeroBackground />

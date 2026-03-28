@@ -52,7 +52,7 @@
     </nav>
 
     <!-- Admin Content -->
-    <main class="admin-content">
+    <main id="main-content" class="admin-content" tabindex="-1">
       <router-view v-if="$route.path !== '/admin'" />
 
       <!-- Dashboard Overview -->

@@ -5,6 +5,7 @@ import {
   type NavigationGuardNext,
   type RouteLocationNormalized
 } from 'vue-router'
+import { nextTick } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import analytics from '../services/analytics'
 
@@ -148,6 +149,15 @@ router.afterEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) =
 
   // Track the page view
   analytics.trackPageView(to.path, to.name as string | undefined)
+
+  // Move focus to main content after route change so screen readers announce the new page.
+  // nextTick defers until Vue has finished mounting the incoming component — required because
+  // <Transition> in App.vue inserts the new component asynchronously relative to afterEach.
+  // tabindex="-1" on each <main id="main-content"> makes it focusable without entering tab order.
+  nextTick(() => {
+    const target = document.getElementById('main-content') as HTMLElement | null
+    target?.focus({ preventScroll: false })
+  })
 })
 
 export default router

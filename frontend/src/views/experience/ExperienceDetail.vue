@@ -58,7 +58,7 @@
     </div>
 
     <!-- Company Details -->
-    <main v-else-if="company" class="container py-5">
+    <main v-else-if="company" id="main-content" class="container py-5" tabindex="-1">
       <!-- Media Section: Video and Map (side-by-side on desktop) -->
       <div v-if="company.video_url || company.map_url" class="media-section">
         <!-- YouTube Video -->
