@@ -1,6 +1,21 @@
 /* Import design system variables */
 @import './styles/variables.css';
 
+/*
+  Inter fallback font — metrically matched to Inter so the font-swap
+  causes no visible layout shift (zero CLS). size-adjust/ascent-override
+  make the system font render at the same dimensions as Inter before it
+  loads. Supported: Chromium 92+, Firefox 89+, Safari 17+.
+*/
+@font-face {
+  font-family: 'Inter-fallback';
+  src: local('BlinkMacSystemFont'), local('Segoe UI'), local('-apple-system');
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 /* Global Reset */
 * {
   margin: 0;
