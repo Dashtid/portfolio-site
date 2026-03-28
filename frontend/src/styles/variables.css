@@ -181,9 +181,9 @@
   --bg-tertiary: var(--primary-100);
 
   /* Text Colors */
-  --text-primary: var(--slate-800);
+  --text-primary: var(--color-gray-800);
   --text-secondary: #475569;
-  --text-tertiary: var(--slate-600);
+  --text-tertiary: var(--color-gray-600);
   --text-muted: #64748b;
   --text-color: #0f172a;
   --text-inverse: #ffffff;
@@ -219,17 +219,11 @@
   --color-primary-light: #60a5fa;
   --color-primary-lighter: #93c5fd;
 
-  /* Slate Aliases - Dark Mode (inverted for proper contrast) */
-  --slate-50: #0f172a;
-  --slate-100: #1e293b;
-  --slate-200: #334155;
-  --slate-300: #475569;
-  --slate-400: #64748b;
-  --slate-500: #94a3b8;
-  --slate-600: #cbd5e1;
-  --slate-700: #e2e8f0;
-  --slate-800: #f1f5f9;
-  --slate-900: #f8fafc;
+  /* Slate aliases are NOT redefined here: --slate-N keeps its light-mode value.
+   * Components use semantic tokens (--text-primary, --text-secondary,
+   * --color-border, etc.) which are explicitly defined below for dark-mode
+   * contrast. Raw --slate-N is now only safe for always-dark or always-light
+   * hardcoded contexts (e.g. DocumentCard glass cards). */
 
   /* Glassmorphism - Dark Mode */
   --glass-bg: rgba(0, 0, 0, 0.2);

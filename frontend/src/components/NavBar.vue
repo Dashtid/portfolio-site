@@ -211,7 +211,7 @@ onUnmounted(() => {
   font-weight: 600;
   font-size: 1.25rem;
   letter-spacing: var(--letter-spacing-tight, -0.025em);
-  color: var(--slate-800, #1e293b);
+  color: var(--text-primary);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -231,7 +231,7 @@ onUnmounted(() => {
 }
 
 .nav-link {
-  color: var(--slate-600, #475569) !important;
+  color: var(--text-secondary) !important;
   font-weight: 500;
   font-size: 0.95rem;
   padding: 0.5rem 1rem !important;

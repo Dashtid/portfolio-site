@@ -357,12 +357,16 @@ section {
 
 /* Dark Background Section - Publications */
 .bg-dark {
-  background: linear-gradient(135deg, var(--slate-800) 0%, var(--slate-900) 100%) !important;
-  color: var(--slate-50) !important;
+  background: linear-gradient(
+    135deg,
+    var(--color-gray-800) 0%,
+    var(--color-gray-900) 100%
+  ) !important;
+  color: var(--color-gray-50) !important;
 }
 
 .bg-dark .section-title {
-  color: var(--slate-50) !important;
+  color: var(--color-gray-50) !important;
 }
 
 .bg-dark .section-icon {
@@ -404,12 +408,16 @@ section {
 
 /* Light mode override for bg-dark sections */
 [data-theme='light'] .bg-dark {
-  background: linear-gradient(135deg, var(--slate-100) 0%, var(--slate-200) 100%) !important;
-  color: var(--slate-800) !important;
+  background: linear-gradient(
+    135deg,
+    var(--color-gray-100) 0%,
+    var(--color-gray-200) 100%
+  ) !important;
+  color: var(--color-gray-800) !important;
 }
 
 [data-theme='light'] .bg-dark .section-title {
-  color: var(--slate-800) !important;
+  color: var(--color-gray-800) !important;
 }
 
 [data-theme='light'] .bg-dark .section-icon {

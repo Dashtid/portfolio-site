@@ -253,13 +253,13 @@ onUnmounted(() => {
 .loading-spinner {
   text-align: center;
   padding: 2rem;
-  color: var(--slate-500, #64748b);
+  color: var(--text-muted);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--slate-200, #e2e8f0);
+  border: 3px solid var(--color-border);
   border-top: 3px solid var(--primary-600, #2563eb);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -287,10 +287,10 @@ onUnmounted(() => {
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;
-  color: var(--slate-500, #64748b);
+  color: var(--text-muted);
   background: rgba(100, 116, 139, 0.05);
   border-radius: 12px;
-  border: 1px dashed var(--slate-300, #cbd5e1);
+  border: 1px dashed var(--color-border);
 }
 
 .retry-button {
@@ -327,7 +327,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--slate-200, #e2e8f0);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 1.5rem;
   text-align: center;
@@ -381,14 +381,14 @@ onUnmounted(() => {
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--slate-800, #1e293b);
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 0.8rem;
-  color: var(--slate-500, #64748b);
+  color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -400,14 +400,14 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
   border-radius: 16px;
-  border: 1px solid var(--slate-200, #e2e8f0);
+  border: 1px solid var(--color-border);
 }
 
 .languages-section h3 {
   margin: 0 0 1.25rem 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--slate-800, #1e293b);
+  color: var(--text-primary);
 }
 
 .language-bar {
@@ -427,17 +427,17 @@ onUnmounted(() => {
 
 .language-name {
   font-weight: 600;
-  color: var(--slate-700, #334155);
+  color: var(--text-secondary);
 }
 
 .language-percentage {
-  color: var(--slate-500, #64748b);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .progress-bar {
   height: 8px;
-  background: var(--slate-200, #e2e8f0);
+  background: var(--color-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -457,7 +457,7 @@ onUnmounted(() => {
   margin: 0 0 1.25rem 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--slate-800, #1e293b);
+  color: var(--text-primary);
 }
 
 .repos-grid {

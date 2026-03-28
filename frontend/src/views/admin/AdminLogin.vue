@@ -141,12 +141,12 @@ const loginWithGitHub = (): void => {
 
 /* GitHub button stays dark in dark mode to match GitHub branding */
 [data-theme='dark'] .github-login-button {
-  background: var(--slate-700);
+  background: var(--color-gray-700); /* #334155 */
   color: var(--text-primary);
 }
 
 [data-theme='dark'] .github-login-button:hover {
-  background: var(--slate-600);
+  background: var(--color-gray-600); /* #475569 */
 }
 
 [data-theme='dark'] .login-note {

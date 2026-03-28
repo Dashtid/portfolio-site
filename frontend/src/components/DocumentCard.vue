@@ -141,7 +141,7 @@ const formattedDate = computed(() => {
 .document-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #f8fafc; /* slate-50 - always light for dark bg */
+  color: var(--color-gray-50); /* always light for dark bg */
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
 }
@@ -158,7 +158,7 @@ const formattedDate = computed(() => {
 }
 
 .document-description {
-  color: #cbd5e1; /* slate-300 - readable on dark */
+  color: var(--color-gray-300); /* readable on dark bg */
   line-height: 1.7;
   margin-bottom: 1.25rem;
   flex: 1;
@@ -175,14 +175,14 @@ const formattedDate = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #94a3b8; /* slate-400 */
+  color: var(--color-gray-400);
   font-size: 0.875rem;
 }
 
 .icon {
   stroke-width: 2;
   opacity: 0.8;
-  color: #94a3b8; /* slate-400 */
+  color: var(--color-gray-400);
 }
 
 .card-actions {
@@ -246,7 +246,7 @@ const formattedDate = computed(() => {
 }
 
 [data-theme='light'] .document-title {
-  color: #1e293b; /* slate-800 */
+  color: var(--color-gray-800);
 }
 
 [data-theme='light'] .document-type {
@@ -255,12 +255,12 @@ const formattedDate = computed(() => {
 }
 
 [data-theme='light'] .document-description {
-  color: #475569; /* slate-600 */
+  color: var(--color-gray-600);
 }
 
 [data-theme='light'] .meta-item,
 [data-theme='light'] .icon {
-  color: #64748b; /* slate-500 */
+  color: var(--color-gray-500);
 }
 
 [data-theme='light'] .card-actions {

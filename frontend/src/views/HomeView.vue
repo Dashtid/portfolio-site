@@ -469,7 +469,7 @@ html {
 /* Dark mode loading states (inside bg-dark section) */
 .bg-dark .loading-state,
 .bg-dark .error-state {
-  color: var(--slate-300, #cbd5e1);
+  color: #cbd5e1; /* always-light text on dark bg section */
 }
 
 [data-theme='dark'] .loading-state,

@@ -136,7 +136,7 @@ const techStack = computed<string[]>(() => {
 .project-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--slate-800, #1e293b);
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
   line-height: 1.3;
@@ -156,7 +156,7 @@ const techStack = computed<string[]>(() => {
 }
 
 .project-description {
-  color: var(--slate-600, #475569);
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 1rem;
   flex: 1;
@@ -171,13 +171,13 @@ const techStack = computed<string[]>(() => {
 }
 
 .tech-tag {
-  background: var(--slate-100, #f1f5f9);
-  color: var(--slate-700, #334155);
+  background: var(--color-gray-100);
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  border: 1px solid var(--slate-200, #e2e8f0);
+  border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
 
@@ -199,7 +199,7 @@ const techStack = computed<string[]>(() => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: var(--slate-600, #475569);
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 600;
@@ -211,12 +211,12 @@ const techStack = computed<string[]>(() => {
 }
 
 .github-link {
-  background: var(--slate-800, #1e293b);
+  background: var(--color-gray-800);
   color: white;
 }
 
 .github-link:hover {
-  background: var(--slate-900, #0f172a);
+  background: var(--color-gray-900);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
 }

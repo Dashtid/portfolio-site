@@ -142,7 +142,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   background: linear-gradient(
     90deg,
     var(--bg-tertiary) 25%,
-    var(--slate-200) 50%,
+    var(--color-border) 50%,
     var(--bg-tertiary) 75%
   );
   background-size: 200% 100%;
@@ -164,7 +164,7 @@ const sizeClass = computed<string>(() => `spinner-${props.size}`)
   background: linear-gradient(
     90deg,
     var(--bg-tertiary) 25%,
-    var(--slate-700) 50%,
+    var(--text-muted) 50%,
     var(--bg-tertiary) 75%
   );
   background-size: 200% 100%;
