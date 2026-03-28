@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_current_admin_user
 from app.database import get_db
@@ -30,7 +31,9 @@ AdminUser = Annotated[User, Depends(get_current_admin_user)]
 async def get_companies(request: Request, db: DbSession):
     """Get all companies"""
     _ = request  # Required for rate limiting
-    result = await db.execute(select(Company).order_by(Company.order_index))
+    result = await db.execute(
+        select(Company).options(selectinload(Company.projects)).order_by(Company.order_index)
+    )
     return result.scalars().all()
 
 
@@ -39,7 +42,9 @@ async def get_companies(request: Request, db: DbSession):
 async def get_company(request: Request, company_id: str, db: DbSession):
     """Get a specific company by ID"""
     _ = request  # Required for rate limiting
-    result = await db.execute(select(Company).where(Company.id == company_id))
+    result = await db.execute(
+        select(Company).options(selectinload(Company.projects)).where(Company.id == company_id)
+    )
     company = result.scalar_one_or_none()
 
     if not company:
