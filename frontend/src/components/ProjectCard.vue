@@ -20,6 +20,7 @@
         target="_blank"
         rel="noopener noreferrer"
         class="project-link github-link"
+        :aria-label="`View Code for ${project.name} on GitHub (opens in new tab)`"
       >
         <svg class="link-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           <path
@@ -35,6 +36,7 @@
         target="_blank"
         rel="noopener noreferrer"
         class="project-link live-link"
+        :aria-label="`Live Demo for ${project.name} (opens in new tab)`"
       >
         <svg
           class="link-icon"
