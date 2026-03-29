@@ -106,7 +106,7 @@
   color: var(--bg-primary);
 }
 
-/* Focus States - Accessibility (WCAG 2.2 SC 2.4.13) */
+/* Focus States - Accessibility (WCAG 2.2 SC 2.4.11 / 2.4.13) */
 .btn:focus-visible,
 .btn-primary:focus-visible,
 .btn-outline-primary:focus-visible {

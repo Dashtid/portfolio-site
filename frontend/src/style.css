@@ -113,7 +113,12 @@ a:focus-visible {
   outline: 2px solid var(--color-primary, #3b82f6);
   outline-offset: 2px;
   border-radius: 2px;
-  transition: outline-offset 0.15s var(--ease-smooth, ease);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:focus-visible {
+    transition: outline-offset 0.15s var(--ease-smooth, ease);
+  }
 }
 
 /* Buttons */
@@ -140,7 +145,7 @@ button:hover {
 }
 
 button:focus {
-  outline: 2px solid rgba(var(--color-primary-rgb), 0.4);
+  outline: 2px solid var(--color-primary, #3b82f6);
   outline-offset: 2px;
 }
 
