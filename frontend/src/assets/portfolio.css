@@ -769,13 +769,6 @@ section {
   }
 }
 
-/* Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 15px;
-}
-
 /* Section Icon Styling */
 .section-icon {
   width: 32px;

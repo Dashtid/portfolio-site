@@ -187,7 +187,9 @@ button:focus-visible {
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.4);
 }
 
-/* Container */
+/* Container — intentionally overrides Bootstrap's responsive .container with a
+   fixed 1200px max-width. Loads after Bootstrap CDN so specificity is equal
+   and cascade order wins. Single source of truth; do not redefine elsewhere. */
 .container {
   max-width: 1200px;
   margin: 0 auto;
