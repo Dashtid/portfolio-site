@@ -153,7 +153,7 @@ addopts = [
     "--tb=short",
     "--cov=app",
     "--cov-report=term-missing",
-    "--cov-report=html",
+    "--cov-report=html:htmlcov",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:passlib",
