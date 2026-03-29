@@ -151,6 +151,9 @@
   --z-index-overlay: 1080; /* full-screen loading overlays */
   --z-index-skip-link: 1090; /* accessibility skip link — must sit above all overlays */
 
+  /* Layout */
+  --navbar-height: 72px;
+
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);

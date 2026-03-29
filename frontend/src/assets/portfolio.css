@@ -166,31 +166,6 @@
   background: var(--card-bg);
 }
 
-/* Global Styles */
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 72px;
-}
-
-body {
-  font-family:
-    'Segoe UI',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Roboto',
-    sans-serif;
-  font-size: var(--font-size-base);
-  line-height: 1.5;
-  color: var(--text-primary);
-  background-color: var(--bg-primary);
-  margin: 0;
-  padding: 0;
-}
-
 /* Stockholm Background - Responsive with AVIF/WebP Fallback */
 .stockholm-background {
   /* Fallback for older browsers */
