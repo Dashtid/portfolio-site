@@ -3,7 +3,17 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue({
+      template: {
+        // @vitejs/plugin-vue v6 defaults includeAbsolute:true when no dev server is
+        // running (Vitest context). This transforms /images/foo.svg into an ES import,
+        // which Vite resolves to file:///images/foo.svg — an invalid file URL on Windows
+        // (no drive letter). Public-directory assets are string literals; don't import them.
+        transformAssetUrls: { includeAbsolute: false }
+      }
+    })
+  ],
   define: {
     'import.meta.env.VITE_ERROR_TRACKING_ENABLED': JSON.stringify('true'),
     'import.meta.env.VITE_METRICS_ENABLED': JSON.stringify('true'),
