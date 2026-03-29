@@ -66,7 +66,7 @@
 
                 <!-- Learn More Button (show if company has detailed content) -->
                 <router-link
-                  :to="{ name: 'company-detail', params: { id: getDetailLinkId(company) } }"
+                  :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
                   class="btn btn-outline-primary btn-sm mt-3"
                 >
                   Learn More

@@ -13,7 +13,6 @@ import analytics from '../services/analytics'
 import HomeView from '../views/HomeView.vue'
 
 // Detail views - lazy loaded for better performance
-const CompanyDetailView = () => import('../views/CompanyDetailView.vue')
 const ExperienceDetail = () => import('../views/experience/ExperienceDetail.vue')
 
 // Admin views - lazy loaded (less frequently accessed)
@@ -34,15 +33,9 @@ const routes: RouteRecordRaw[] = [
     meta: { title: DEFAULT_TITLE }
   },
   {
-    path: '/company/:id',
-    name: 'company-detail',
-    component: CompanyDetailView,
-    props: true,
-    meta: { title: 'Experience | David Dashti' }
-  },
-  {
     path: '/experience/:id',
     name: 'experience-detail',
+    alias: '/company/:id',
     component: ExperienceDetail,
     props: true,
     meta: { title: 'Experience | David Dashti' }
