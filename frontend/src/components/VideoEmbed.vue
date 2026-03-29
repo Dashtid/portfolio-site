@@ -31,7 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { toRef } from 'vue'
+import { useEmbedValidator } from '@/composables/useEmbedValidator'
 
 /**
  * VideoEmbed Component
@@ -51,7 +52,6 @@ const props = withDefaults(defineProps<Props>(), {
   heading: null
 })
 
-// Allowed YouTube embed domains
 const ALLOWED_VIDEO_HOSTS = [
   'www.youtube.com',
   'youtube.com',
@@ -59,45 +59,7 @@ const ALLOWED_VIDEO_HOSTS = [
   'youtube-nocookie.com'
 ]
 
-// Validate URL is a safe YouTube embed URL
-const safeUrl = computed<string | null>(() => {
-  if (!props.url) return null
-
-  try {
-    const parsed = new URL(props.url)
-
-    // Only allow https protocol
-    if (parsed.protocol !== 'https:') {
-      if (import.meta.env.DEV) {
-        console.warn(`[VideoEmbed] Blocked non-https URL: ${props.url}`)
-      }
-      return null
-    }
-
-    // Only allow YouTube embed domains
-    if (!ALLOWED_VIDEO_HOSTS.includes(parsed.hostname)) {
-      if (import.meta.env.DEV) {
-        console.warn(`[VideoEmbed] Blocked non-YouTube URL: ${props.url}`)
-      }
-      return null
-    }
-
-    // Must be embed path
-    if (!parsed.pathname.startsWith('/embed/')) {
-      if (import.meta.env.DEV) {
-        console.warn(`[VideoEmbed] Blocked non-embed URL: ${props.url}`)
-      }
-      return null
-    }
-
-    return props.url
-  } catch {
-    if (import.meta.env.DEV) {
-      console.warn(`[VideoEmbed] Invalid URL: ${props.url}`)
-    }
-    return null
-  }
-})
+const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/embed/', 'VideoEmbed')
 </script>
 
 <style scoped>

@@ -22,7 +22,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { toRef } from 'vue'
+import { useEmbedValidator } from '@/composables/useEmbedValidator'
 
 /**
  * MapEmbed Component
@@ -42,48 +43,9 @@ const props = withDefaults(defineProps<Props>(), {
   heading: null
 })
 
-// Allowed Google Maps embed domains
 const ALLOWED_MAP_HOSTS = ['www.google.com', 'google.com', 'maps.google.com']
 
-// Validate URL is a safe Google Maps embed URL
-const safeUrl = computed<string | null>(() => {
-  if (!props.url) return null
-
-  try {
-    const parsed = new URL(props.url)
-
-    // Only allow https protocol
-    if (parsed.protocol !== 'https:') {
-      if (import.meta.env.DEV) {
-        console.warn(`[MapEmbed] Blocked non-https URL: ${props.url}`)
-      }
-      return null
-    }
-
-    // Only allow Google Maps domains
-    if (!ALLOWED_MAP_HOSTS.includes(parsed.hostname)) {
-      if (import.meta.env.DEV) {
-        console.warn(`[MapEmbed] Blocked non-Google Maps URL: ${props.url}`)
-      }
-      return null
-    }
-
-    // Must be maps embed path
-    if (!parsed.pathname.startsWith('/maps/embed')) {
-      if (import.meta.env.DEV) {
-        console.warn(`[MapEmbed] Blocked non-embed URL: ${props.url}`)
-      }
-      return null
-    }
-
-    return props.url
-  } catch {
-    if (import.meta.env.DEV) {
-      console.warn(`[MapEmbed] Invalid URL: ${props.url}`)
-    }
-    return null
-  }
-})
+const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps/embed', 'MapEmbed')
 </script>
 
 <style scoped>
