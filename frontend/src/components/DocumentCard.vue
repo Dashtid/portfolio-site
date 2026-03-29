@@ -150,7 +150,7 @@ const formattedDate = computed(() => {
   display: inline-block;
   padding: 0.375rem 0.875rem;
   background: rgba(96, 165, 250, 0.2);
-  color: #93c5fd; /* primary-300 */
+  color: var(--primary-300);
   border-radius: 20px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -194,7 +194,7 @@ const formattedDate = computed(() => {
 }
 
 .document-link {
-  color: #93c5fd; /* primary-300 */
+  color: var(--primary-300);
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -207,7 +207,7 @@ const formattedDate = computed(() => {
 }
 
 .document-link:hover {
-  color: #bfdbfe; /* primary-200 */
+  color: var(--primary-200);
   background: rgba(96, 165, 250, 0.25);
   transform: translateX(4px);
 }
@@ -251,7 +251,7 @@ const formattedDate = computed(() => {
 
 [data-theme='light'] .document-type {
   background: rgba(37, 99, 235, 0.1);
-  color: #2563eb; /* primary-600 */
+  color: var(--primary-600);
 }
 
 [data-theme='light'] .document-description {
@@ -268,12 +268,12 @@ const formattedDate = computed(() => {
 }
 
 [data-theme='light'] .document-link {
-  color: #2563eb; /* primary-600 */
+  color: var(--primary-600);
   background: rgba(37, 99, 235, 0.1);
 }
 
 [data-theme='light'] .document-link:hover {
-  color: #1d4ed8; /* primary-700 */
+  color: var(--primary-700);
   background: rgba(37, 99, 235, 0.15);
 }
 

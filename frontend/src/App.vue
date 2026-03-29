@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ToastContainer.vue'
+import ErrorBoundary from './components/ErrorBoundary.vue'
 
 // Store
 const authStore = useAuthStore()
@@ -18,11 +19,13 @@ onMounted((): void => {
 
 <template>
   <a href="#main-content" class="skip-link">Skip to main content</a>
-  <router-view v-slot="{ Component, route }">
-    <Transition name="page-fade" mode="out-in">
-      <component :is="Component" :key="route.path" />
-    </Transition>
-  </router-view>
+  <ErrorBoundary>
+    <router-view v-slot="{ Component, route }">
+      <Transition name="page-fade" mode="out-in">
+        <component :is="Component" :key="route.path" />
+      </Transition>
+    </router-view>
+  </ErrorBoundary>
   <ToastContainer />
 </template>
 
