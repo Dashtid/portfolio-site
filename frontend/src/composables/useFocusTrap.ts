@@ -47,6 +47,7 @@ export function useFocusTrap(containerRef: Ref<HTMLElement | null>) {
   }
 
   function activate(): void {
+    if (typeof window === 'undefined') return
     // Store currently focused element to restore later
     previousActiveElement.value = document.activeElement as HTMLElement
 
@@ -73,8 +74,9 @@ export function useFocusTrap(containerRef: Ref<HTMLElement | null>) {
     }
   }
 
-  // Clean up on unmount
+  // Clean up on unmount (guard for SSG: document not available during Node pre-render)
   onUnmounted(() => {
+    if (typeof window === 'undefined') return
     document.removeEventListener('keydown', handleKeyDown)
   })
 

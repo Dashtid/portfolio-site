@@ -6,7 +6,6 @@ import axios, {
 } from 'axios'
 import { config } from '@/config'
 import { storage, STORAGE_KEYS } from '@/utils/storage'
-import router from '@/router'
 
 /**
  * Axios API Client with Authentication
@@ -156,8 +155,8 @@ apiClient.interceptors.response.use(
           onTokenRefreshFailed(
             refreshError instanceof Error ? refreshError : new Error('Token refresh failed')
           )
-          // Use Vue Router instead of hard redirect to preserve app state
-          router.push('/admin/login')
+          // Hard redirect to login — full page navigation is appropriate after auth failure
+          window.location.href = '/admin/login'
           return Promise.reject(refreshError)
         }
       }

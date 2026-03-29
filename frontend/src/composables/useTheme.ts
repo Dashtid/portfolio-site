@@ -35,6 +35,9 @@ export function useTheme(): UseThemeReturn {
   const stopWatcher = watch(isDark, (dark: boolean) => {
     themeLogger.log('Theme changed to:', dark ? 'dark' : 'light')
 
+    // Guard for SSG: window not available during Node pre-render
+    if (typeof window === 'undefined') return
+
     // Dispatch custom event for components that need to react to theme changes
     window.dispatchEvent(
       new CustomEvent('theme-changed', {

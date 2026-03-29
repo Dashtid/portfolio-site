@@ -90,11 +90,11 @@ export function useGsapScrollAnimation(
   let scrollTrigger: ScrollTriggerType | null = null
   let tween: gsap.core.Tween | null = null
 
-  // Check for reduced motion preference
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
   onMounted(async () => {
     if (!target.value) return
+
+    // Check reduced motion inside onMounted — window not available during SSG pre-render
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // If user prefers reduced motion, show element immediately
     if (prefersReducedMotion) {
@@ -150,12 +150,12 @@ export function useGsapBatchAnimation(selector: string, options: GsapBatchOption
 
   const isComplete = ref(false)
 
-  // Check for reduced motion preference
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
   onMounted(async () => {
     const elements = document.querySelectorAll(selector)
     if (!elements.length) return
+
+    // Check reduced motion inside onMounted — window not available during SSG pre-render
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // If user prefers reduced motion, show elements immediately
     if (prefersReducedMotion) {
@@ -199,10 +199,12 @@ export function useGsapBatchAnimation(selector: string, options: GsapBatchOption
  * Page transition animations for Vue Router
  */
 export function usePageTransition() {
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  // Evaluate window.matchMedia lazily inside each callback — window not available during SSG
+  const prefersReducedMotion = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   const enter = (el: Element, done: () => void) => {
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion()) {
       done()
       return
     }
@@ -217,7 +219,7 @@ export function usePageTransition() {
   }
 
   const leave = (el: Element, done: () => void) => {
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion()) {
       done()
       return
     }
@@ -244,9 +246,9 @@ export function useGsapParallax(
   const { speed = 0.5, direction = 'vertical' } = options
   let scrollTrigger: ScrollTriggerType | null = null
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
   onMounted(async () => {
+    // Check reduced motion inside onMounted — window not available during SSG pre-render
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (!target.value || prefersReducedMotion) return
 
     // Lazy load ScrollTrigger
@@ -282,10 +284,11 @@ export function useTextReveal(
   const { duration = 0.5, stagger = 0.02, delay = 0 } = options
   const isComplete = ref(false)
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
   onMounted(async () => {
     if (!target.value) return
+
+    // Check reduced motion inside onMounted — window not available during SSG pre-render
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     if (prefersReducedMotion) {
       isComplete.value = true

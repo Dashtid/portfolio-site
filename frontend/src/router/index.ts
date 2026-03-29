@@ -1,13 +1,4 @@
-import {
-  createRouter,
-  createWebHistory,
-  type RouteRecordRaw,
-  type NavigationGuardNext,
-  type RouteLocationNormalized
-} from 'vue-router'
-import { nextTick } from 'vue'
-import { useAuthStore } from '../stores/auth'
-import analytics from '../services/analytics'
+import { type RouteRecordRaw, type RouterScrollBehavior } from 'vue-router'
 
 // Core views - loaded immediately
 import HomeView from '../views/HomeView.vue'
@@ -22,10 +13,9 @@ const AdminCompanies = () => import('../views/admin/AdminCompanies.vue')
 const AdminEducation = () => import('../views/admin/AdminEducation.vue')
 const AdminProjects = () => import('../views/admin/AdminProjects.vue')
 
-// Default page title
-const DEFAULT_TITLE = 'David Dashti | Cybersecurity in Healthcare'
+export const DEFAULT_TITLE = 'David Dashti | Cybersecurity in Healthcare'
 
-const routes: RouteRecordRaw[] = [
+export const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
@@ -74,83 +64,8 @@ const routes: RouteRecordRaw[] = [
   }
 ]
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-  scrollBehavior(to, _from, savedPosition) {
-    // If user navigated back/forward, restore saved position
-    if (savedPosition) {
-      return savedPosition
-    }
-
-    // If navigating to a hash anchor, scroll to it with navbar offset
-    if (to.hash) {
-      return {
-        el: to.hash,
-        behavior: 'smooth',
-        top: 80 // navbar offset
-      }
-    }
-
-    // Default: scroll to top smoothly
-    return { top: 0, behavior: 'smooth' }
-  }
-})
-
-// Navigation guards
-router.beforeEach(
-  async (
-    to: RouteLocationNormalized,
-    _from: RouteLocationNormalized,
-    next: NavigationGuardNext
-  ) => {
-    const authStore = useAuthStore()
-
-    // Initialize auth state from localStorage if not already done
-    // This ensures tokens are loaded before checking authentication
-    if (!authStore.isInitialized) {
-      await authStore.initializeAuth()
-    }
-
-    // Check if route requires authentication
-    if (to.matched.some(record => record.meta.requiresAuth)) {
-      if (!authStore.isAuthenticated) {
-        // Redirect to login if not authenticated
-        // Note: Intentionally not passing redirect param to avoid open redirect vulnerabilities
-        next({ name: 'admin-login' })
-      } else {
-        next()
-      }
-    } else if (to.matched.some(record => record.meta.requiresGuest)) {
-      if (authStore.isAuthenticated) {
-        // Redirect to dashboard if already authenticated
-        next({ name: 'admin-dashboard' })
-      } else {
-        next()
-      }
-    } else {
-      next()
-    }
-  }
-)
-
-// Update document title and track page views after navigation
-router.afterEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) => {
-  // Update document title from route meta
-  const title = to.meta.title as string | undefined
-  document.title = title || DEFAULT_TITLE
-
-  // Track the page view
-  analytics.trackPageView(to.path, to.name as string | undefined)
-
-  // Move focus to main content after route change so screen readers announce the new page.
-  // nextTick defers until Vue has finished mounting the incoming component — required because
-  // <Transition> in App.vue inserts the new component asynchronously relative to afterEach.
-  // tabindex="-1" on each <main id="main-content"> makes it focusable without entering tab order.
-  nextTick(() => {
-    const target = document.getElementById('main-content') as HTMLElement | null
-    target?.focus({ preventScroll: false })
-  })
-})
-
-export default router
+export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
+  if (savedPosition) return savedPosition
+  if (to.hash) return { el: to.hash, behavior: 'smooth' as ScrollBehavior, top: 80 }
+  return { top: 0, behavior: 'smooth' as ScrollBehavior }
+}

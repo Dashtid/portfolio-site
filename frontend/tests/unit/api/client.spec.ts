@@ -9,15 +9,6 @@ import type { InternalAxiosRequestConfig, AxiosError } from 'axios'
 // Mock axios
 vi.mock('axios')
 
-// Mock router to prevent Pinia errors from navigation guards
-vi.mock('@/router', () => ({
-  default: {
-    push: vi.fn()
-  }
-}))
-
-import router from '@/router'
-
 describe('API client', () => {
   let apiClient: any
   let mockLocalStorage: { [key: string]: string }
@@ -209,8 +200,8 @@ describe('API client', () => {
       expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken')
       expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken')
 
-      // Verify redirect via router
-      expect(router.push).toHaveBeenCalledWith('/admin/login')
+      // Verify redirect via window.location.href
+      expect(window.location.href).toBe('/admin/login')
     })
 
     it('does not retry request twice', async () => {
@@ -362,8 +353,8 @@ describe('API client', () => {
       // The request that triggered refresh should reject
       await expect(errorInterceptor(error)).rejects.toThrow('Refresh failed')
 
-      // Verify redirect happened via router
-      expect(router.push).toHaveBeenCalledWith('/admin/login')
+      // Verify redirect via window.location.href
+      expect(window.location.href).toBe('/admin/login')
 
       // Verify tokens were cleared
       expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken')
