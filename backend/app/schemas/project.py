@@ -29,7 +29,7 @@ class ProjectBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     description: str | None = Field(None, max_length=1000)
     detailed_description: str | None = Field(None, max_length=10000)
-    technologies: list[str] | None = Field(default=[], max_length=MAX_TECHNOLOGIES)
+    technologies: list[str] = Field(default_factory=list, max_length=MAX_TECHNOLOGIES)
     github_url: str | None = None
     live_url: str | None = None
     image_url: str | None = None
