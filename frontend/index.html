@@ -51,6 +51,16 @@
     <link rel="dns-prefetch" href="//dashti-portfolio-backend.fly.dev" />
 
     <!-- Inter Font for headings (display=swap for performance) -->
+    <!-- Preload the woff2 to cut 2 sequential round-trips (CSS fetch → woff2 fetch) to 1.
+         v20 latin subset: weights 500/600/700 share one file (Inter is variable-weight).
+         Verify this URL matches the Google Fonts CSS response if font version bumps. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2"
+      crossorigin
+    />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Preload LCP hero image with responsive sources -->
@@ -148,39 +158,5 @@
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <!-- Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('[SW] Service Worker registered successfully:', registration.scope);
-
-              // Check for updates every hour
-              setInterval(() => {
-                registration.update();
-              }, 60 * 60 * 1000);
-
-              // Listen for updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                console.log('[SW] New Service Worker found, installing...');
-
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('[SW] New Service Worker installed, content updated');
-                    // Optionally, show a notification to the user
-                  }
-                });
-              });
-            })
-            .catch(error => {
-              console.error('[SW] Service Worker registration failed:', error);
-            });
-        });
-      } else {
-        console.warn('[SW] Service Workers are not supported in this browser');
-      }
-    </script>
   </body>
 </html>
