@@ -102,6 +102,7 @@ import { ref, computed, onUnmounted } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import axios from 'axios'
 import { apiLogger } from '../utils/logger'
+import { config } from '@/config'
 
 interface Language {
   name: string
@@ -130,11 +131,8 @@ interface Props {
   username?: string
 }
 
-// Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
 const props = withDefaults(defineProps<Props>(), {
-  username: 'Dashtid'
+  username: config.github.username
 })
 
 const stats = ref<GitHubStatsData | null>(null)
@@ -199,7 +197,7 @@ const fetchGitHubStats = async (): Promise<void> => {
     error.value = false
 
     const response = await axios.get<GitHubStatsData>(
-      `${API_URL}/api/v1/github/stats/${props.username}`,
+      `${config.apiUrl}/api/v1/github/stats/${props.username}`,
       { signal: abortController.signal }
     )
     stats.value = response.data

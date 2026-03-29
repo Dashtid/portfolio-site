@@ -34,6 +34,13 @@ export const config = {
   },
 
   /**
+   * Site identity constants
+   */
+  github: {
+    username: 'Dashtid'
+  },
+
+  /**
    * Re-export storage keys for convenience (single source of truth)
    */
   storageKeys: STORAGE_KEYS
