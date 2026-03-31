@@ -11,13 +11,13 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ID | Category | Severity | Summary |
 |----|----------|----------|---------|
 | ~~CI-007~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`build:ssg` never runs in any workflow or Vercel config~~ — **RESOLVED** |
-| CI-008 | CI/CD | CRITICAL | `deploy-backend.yml` test job missing `requirements-dev.txt` — pytest not installed |
+| ~~CI-008~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`deploy-backend.yml` test job missing `requirements-dev.txt`~~ — **RESOLVED** |
 | CI-009 | CI/CD | HIGH | `actions/setup-node@v6`, `setup-python@v6`, `download-artifact@v7` don't exist yet |
 | BE-005 | Security | HIGH | `passlib 1.7.4` incompatible with `bcrypt 5.x` — password hashing broken |
 | BE-006 | Security | HIGH | GitHub proxy endpoints have no rate limiting |
 | BE-007 | Security | HIGH | `PageView` stores raw IP address without pseudonymization (GDPR) |
 | BE-008 | Security | HIGH | `document.file_url` has no `validate_safe_url` — XSS vector |
-| BUILD-001 | Build | HIGH | `vite.config.production.js` references missing deps — `build:prod` crashes |
+| ~~BUILD-001~~ | ~~Build~~ | ~~HIGH~~ | ~~`vite.config.production.js` references missing deps~~ — **RESOLVED** (deleted) |
 | A11Y-004 | Accessibility | HIGH | `/admin/skills` route link leads to blank page (route missing) |
 | ERR-001 | Error handling | HIGH | Portfolio API errors silently swallowed in HomeView |
 | SEO-001 | SEO | HIGH | Sitemap hardcoded, stale dates, may not match dynamic slugs |
@@ -93,6 +93,7 @@ requires the backend API to be reachable at build time for `includedRoutes()` to
 ### CI-008: `deploy-backend.yml` test job missing `requirements-dev.txt`
 **Files:** `.github/workflows/deploy-backend.yml:28-34`
 **Priority:** CRITICAL
+**Status:** RESOLVED (2026-03-31)
 
 Line 29 installs only `requirements.txt`:
 ```yaml
@@ -326,6 +327,7 @@ download link.
 ### BUILD-001: `vite.config.production.js` references missing dependencies
 **Files:** `frontend/vite.config.production.js:4,117`
 **Priority:** HIGH
+**Status:** RESOLVED (2026-03-31) — file deleted, dead scripts removed from package.json
 
 Line 4: `import viteCompression from 'vite-plugin-compression'` — not in `package.json`.
 Line 117: `manualChunks` references `@headlessui/vue` — not in `package.json`.
