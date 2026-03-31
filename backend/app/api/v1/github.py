@@ -6,7 +6,7 @@ import logging
 from typing import Annotated, TypedDict
 
 import httpx
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, Request
 
 from app.config import settings
 from app.middleware.rate_limit import rate_limit_public
@@ -53,7 +53,7 @@ GitHubRepoName = Annotated[
 
 @router.get("/stats/{username}")
 @rate_limit_public
-async def get_github_stats(username: GitHubUsername):
+async def get_github_stats(request: Request, username: GitHubUsername):
     """
     Get GitHub statistics for a user.
 
@@ -72,7 +72,7 @@ async def get_github_stats(username: GitHubUsername):
 
 @router.get("/project/{owner}/{repo}")
 @rate_limit_public
-async def get_project_stats(owner: GitHubUsername, repo: GitHubRepoName):
+async def get_project_stats(request: Request, owner: GitHubUsername, repo: GitHubRepoName):
     """
     Get detailed statistics for a specific GitHub project.
 
@@ -92,6 +92,7 @@ async def get_project_stats(owner: GitHubUsername, repo: GitHubRepoName):
 @router.get("/repos/{username}")
 @rate_limit_public
 async def get_user_repos(
+    request: Request,
     username: GitHubUsername,
     limit: int | None = Query(10, le=50, description="Maximum number of repos to return"),
 ):
@@ -115,7 +116,7 @@ async def get_user_repos(
 
 @router.get("/languages/{owner}/{repo}")
 @rate_limit_public
-async def get_repo_languages(owner: GitHubUsername, repo: GitHubRepoName):
+async def get_repo_languages(request: Request, owner: GitHubUsername, repo: GitHubRepoName):
     """
     Get language statistics for a specific repository.
 

@@ -13,13 +13,13 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-007~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`build:ssg` never runs in any workflow or Vercel config~~ — **RESOLVED** |
 | ~~CI-008~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`deploy-backend.yml` test job missing `requirements-dev.txt`~~ — **RESOLVED** |
 | ~~CI-009~~ | ~~CI/CD~~ | ~~HIGH~~ | ~~Action version tags don't exist~~ — **RESOLVED** |
-| BE-005 | Security | HIGH | `passlib 1.7.4` incompatible with `bcrypt 5.x` — password hashing broken |
+| ~~BE-005~~ | ~~Security~~ | ~~HIGH~~ | ~~passlib/bcrypt incompatibility~~ — **RESOLVED** (replaced passlib with direct bcrypt) |
 | ~~BE-006~~ | ~~Security~~ | ~~HIGH~~ | ~~GitHub proxy endpoints no rate limiting~~ — **RESOLVED** |
 | ~~BE-007~~ | ~~Security~~ | ~~HIGH~~ | ~~Raw IP storage (GDPR)~~ — **RESOLVED** (pseudonymized) |
 | ~~BE-008~~ | ~~Security~~ | ~~HIGH~~ | ~~`document.file_url` missing XSS validation~~ — **RESOLVED** |
 | ~~BUILD-001~~ | ~~Build~~ | ~~HIGH~~ | ~~`vite.config.production.js` references missing deps~~ — **RESOLVED** (deleted) |
 | ~~A11Y-004~~ | ~~Accessibility~~ | ~~HIGH~~ | ~~`/admin/skills` dead link~~ — **RESOLVED** |
-| ERR-001 | Error handling | HIGH | Portfolio API errors silently swallowed in HomeView |
+| ~~ERR-001~~ | ~~Error handling~~ | ~~HIGH~~ | ~~HomeView silently swallows API errors~~ — **RESOLVED** |
 | SEO-001 | SEO | HIGH | Sitemap hardcoded, stale dates, may not match dynamic slugs |
 | ~~DEAD-001~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`imageOptimization.ts`~~ — **RESOLVED** (deleted) |
 | ~~DEAD-002~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`LazyImage.vue`~~ — **RESOLVED** (deleted) |
@@ -50,7 +50,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | BE-015 | Backend | LOW-MED | `gunicorn_conf.py` worker count uses host CPU, not container limit |
 | CI-017 | CI/CD | LOW-MED | Vercel CLI installed as `@latest` (unpinned) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
-| DEAD-005 | Dead code | LOW | Skills API services in `services.ts` unused |
+| ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | DEAD-006 | Dead code | LOW | Zod validation utilities (`validateApiResponse` etc.) never called |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
 | BUILD-003 | Build | LOW | `workbox-window` devDependency never imported |

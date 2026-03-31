@@ -22,6 +22,13 @@
         </section>
       </div>
 
+      <!-- API Error Banner -->
+      <div v-if="portfolioStore.error" class="container" role="alert">
+        <div class="error-state">
+          Unable to load portfolio data. Showing static fallback content.
+        </div>
+      </div>
+
       <!-- Experience Section -->
       <section id="experience" class="portfolio-section">
         <div class="container">

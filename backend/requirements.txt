@@ -16,7 +16,7 @@ asyncpg==0.31.0
 authlib==1.6.9
     # via portfolio-backend
 bcrypt==5.0.0
-    # via passlib
+    # via portfolio-backend
 certifi==2025.11.12
     # via
     #   httpcore
@@ -75,8 +75,6 @@ packaging==25.0
     # via
     #   gunicorn
     #   limits
-passlib==1.7.4
-    # via portfolio-backend
 pycparser==2.23 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
 pydantic==2.12.5

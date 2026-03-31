@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as services from '@/api/services'
-import type { Company, Education, Project, Skill, Document, LoginRequest } from '@/types'
+import type { Company, Education, Project, Document, LoginRequest } from '@/types'
 
 // Mock the API client
 vi.mock('@/api/client', () => ({
@@ -223,64 +223,7 @@ describe('API services', () => {
     })
   })
 
-  describe('Skill APIs', () => {
-    const mockSkill: Skill = {
-      id: '1',
-      name: 'TypeScript',
-      category: 'Programming',
-      proficiency_level: 90,
-      years_of_experience: 5
-    }
-
-    it('gets all skills', async () => {
-      const mockSkills: Skill[] = [mockSkill]
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockSkills })
-
-      const result = await services.getSkills()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/skills')
-      expect(result).toEqual(mockSkills)
-    })
-
-    it('gets skill by ID', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockSkill })
-
-      const result = await services.getSkillById('1')
-
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/skills/1')
-      expect(result).toEqual(mockSkill)
-    })
-
-    it('creates skill', async () => {
-      const newSkill = { ...mockSkill }
-      delete (newSkill as any).id
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockSkill })
-
-      const result = await services.createSkill(newSkill)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/skills', newSkill)
-      expect(result).toEqual(mockSkill)
-    })
-
-    it('updates skill', async () => {
-      const updates = { proficiency_level: 95 }
-      const updated = { ...mockSkill, ...updates }
-      vi.mocked(apiClient.put).mockResolvedValue({ data: updated })
-
-      const result = await services.updateSkill('1', updates)
-
-      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/skills/1', updates)
-      expect(result).toEqual(updated)
-    })
-
-    it('deletes skill', async () => {
-      vi.mocked(apiClient.delete).mockResolvedValue({ data: undefined })
-
-      await services.deleteSkill('1')
-
-      expect(apiClient.delete).toHaveBeenCalledWith('/api/v1/skills/1')
-    })
-  })
+  // Skill APIs removed — skills are fetched directly via portfolioStore
 
   describe('Document APIs', () => {
     const mockDocument: Document = {
@@ -365,7 +308,6 @@ describe('API services', () => {
       expect(typeof services.getCompanies).toBe('function')
       expect(typeof services.getEducation).toBe('function')
       expect(typeof services.getProjects).toBe('function')
-      expect(typeof services.getSkills).toBe('function')
       expect(typeof services.getDocuments).toBe('function')
       expect(typeof services.login).toBe('function')
       expect(typeof services.logout).toBe('function')

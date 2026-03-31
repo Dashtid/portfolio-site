@@ -5,14 +5,11 @@ Security utilities for JWT tokens and password hashing
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import bcrypt
 import jwt
 from jwt.exceptions import PyJWTError
-from passlib.context import CryptContext
 
 from app.config import settings
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def _get_secret_key() -> str:
@@ -49,14 +46,12 @@ def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = N
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password"""
-    result: bool = pwd_context.verify(plain_password, hashed_password)
-    return result
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password"""
-    result: str = pwd_context.hash(password)
-    return result
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def decode_token(token: str) -> dict[str, Any] | None:

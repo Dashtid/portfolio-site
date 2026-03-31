@@ -5,7 +5,6 @@ import type {
   Company,
   Education,
   Project,
-  Skill,
   Document,
   LoginRequest,
   LoginResponse,
@@ -26,7 +25,7 @@ import type {
 const companyService = createCrudService<Company>('/api/v1/companies')
 const educationService = createCrudService<Education>('/api/v1/education')
 const projectService = createCrudService<Project>('/api/v1/projects')
-const skillService = createCrudService<Skill>('/api/v1/skills')
+
 const documentService = createReadOnlyService<Document>('/api/v1/documents')
 
 // ============================================================================
@@ -67,15 +66,6 @@ export const getProjectById = projectService.getById
 export const createProject = projectService.create
 export const updateProject = projectService.update
 export const deleteProject = projectService.delete
-
-/**
- * Skills APIs
- */
-export const getSkills = skillService.getAll
-export const getSkillById = skillService.getById
-export const createSkill = skillService.create
-export const updateSkill = skillService.update
-export const deleteSkill = skillService.delete
 
 /**
  * Document APIs
