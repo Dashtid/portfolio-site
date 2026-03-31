@@ -48,7 +48,7 @@ jobs:
       - name: Build
         run: |
           cd frontend
-          npm run build
+          npm run build:ssg
 
   deploy:
     name: Deploy to Vercel
