@@ -14,8 +14,8 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-008~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`deploy-backend.yml` test job missing `requirements-dev.txt`~~ — **RESOLVED** |
 | ~~CI-009~~ | ~~CI/CD~~ | ~~HIGH~~ | ~~Action version tags don't exist~~ — **RESOLVED** |
 | BE-005 | Security | HIGH | `passlib 1.7.4` incompatible with `bcrypt 5.x` — password hashing broken |
-| BE-006 | Security | HIGH | GitHub proxy endpoints have no rate limiting |
-| BE-007 | Security | HIGH | `PageView` stores raw IP address without pseudonymization (GDPR) |
+| ~~BE-006~~ | ~~Security~~ | ~~HIGH~~ | ~~GitHub proxy endpoints no rate limiting~~ — **RESOLVED** |
+| ~~BE-007~~ | ~~Security~~ | ~~HIGH~~ | ~~Raw IP storage (GDPR)~~ — **RESOLVED** (pseudonymized) |
 | ~~BE-008~~ | ~~Security~~ | ~~HIGH~~ | ~~`document.file_url` missing XSS validation~~ — **RESOLVED** |
 | ~~BUILD-001~~ | ~~Build~~ | ~~HIGH~~ | ~~`vite.config.production.js` references missing deps~~ — **RESOLVED** (deleted) |
 | ~~A11Y-004~~ | ~~Accessibility~~ | ~~HIGH~~ | ~~`/admin/skills` dead link~~ — **RESOLVED** |
@@ -24,9 +24,9 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~DEAD-001~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`imageOptimization.ts`~~ — **RESOLVED** (deleted) |
 | ~~DEAD-002~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`LazyImage.vue`~~ — **RESOLVED** (deleted) |
 | ~~DEAD-003~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`useScrollAnimations.ts`~~ — **RESOLVED** (deleted) |
-| DEAD-004 | Dead code | MEDIUM | `errorHandler.ts` — most exports dead; only `getUserMessage` imported |
+| ~~DEAD-004~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`errorHandler.ts` dead exports~~ — **RESOLVED** (stripped to `getUserMessage` only) |
 | CI-010 | CI/CD | MEDIUM | No SHA-pinned actions — all 17+ references use mutable tags |
-| CI-011 | CI/CD | MEDIUM | Vercel token passed as CLI arg (visible in process list) |
+| ~~CI-011~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Vercel token as CLI arg~~ — **RESOLVED** (moved to env var) |
 | CI-012 | CI/CD | MEDIUM | Node 22 (deploy) vs Node 24 (CI) version mismatch |
 | CI-013 | CI/CD | MEDIUM | E2E tests skipped on direct push to `main` |
 | CI-014 | CI/CD | MEDIUM | Trivy binary download has no checksum verification |

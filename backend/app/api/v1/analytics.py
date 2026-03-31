@@ -72,7 +72,7 @@ async def track_pageview(
         page_path=page_view.page_path,
         referrer=page_view.referrer,
         user_agent=request.headers.get("User-Agent"),
-        ip_address=client_ip,
+        ip_address=hashlib.sha256(client_ip.encode()).hexdigest()[:16],
         session_id=session_id,
     )
     db.add(db_pageview)
