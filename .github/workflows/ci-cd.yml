@@ -77,8 +77,8 @@ jobs:
           working-directory: ./frontend
           vite-config-path: ./vite.config.ts
 
-      - name: Build frontend
-        run: npm run build
+      - name: Build frontend (SSG)
+        run: npm run build:ssg
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -148,8 +148,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build frontend for E2E tests
-        run: npm run build
+      - name: Build frontend for E2E tests (SSG)
+        run: npm run build:ssg
 
       - name: Run Playwright E2E tests
         run: npx playwright test --project=chromium --grep-invert "Bundle Size|defer non-critical"
@@ -251,9 +251,9 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Build frontend
+      - name: Build frontend (SSG)
         working-directory: ./frontend
-        run: npm run build
+        run: npm run build:ssg
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v12

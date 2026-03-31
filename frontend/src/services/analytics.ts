@@ -44,6 +44,7 @@ class AnalyticsService {
    * Get or create a session ID for the current visitor
    */
   private getOrCreateSessionId(): string {
+    if (typeof sessionStorage === 'undefined') return ''
     let sessionId = sessionStorage.getItem('analytics_session_id')
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
