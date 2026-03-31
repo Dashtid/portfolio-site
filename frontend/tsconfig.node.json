@@ -8,5 +8,5 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["vite.config.js"]
+  "include": ["vite.config.ts", "vitest.config.ts"]
 }

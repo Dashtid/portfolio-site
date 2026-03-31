@@ -52,11 +52,6 @@ vi.mock('@/components/DocumentCard.vue', () => ({
   }
 }))
 
-// Mock composables
-vi.mock('@/composables/useScrollAnimations', () => ({
-  useBatchAnimation: vi.fn()
-}))
-
 // Mock API services
 vi.mock('@/api/services', () => ({
   getDocuments: vi.fn().mockResolvedValue([])

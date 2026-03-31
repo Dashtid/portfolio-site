@@ -36,13 +36,6 @@
         Experience
       </router-link>
       <router-link
-        to="/admin/skills"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/skills' }"
-      >
-        Skills
-      </router-link>
-      <router-link
         to="/admin/projects"
         class="nav-link"
         :class="{ active: $route.path === '/admin/projects' }"
@@ -123,18 +116,6 @@
                 <path d="M12 4v16m8-8H4" />
               </svg>
               <span>New Project</span>
-            </router-link>
-            <router-link to="/admin/skills" class="action-button">
-              <svg
-                class="action-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Update Skills</span>
             </router-link>
             <a href="/" target="_blank" class="action-button">
               <svg

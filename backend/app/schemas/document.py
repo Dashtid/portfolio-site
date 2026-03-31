@@ -4,9 +4,23 @@ Document Schemas
 Pydantic schemas for document API validation and serialization.
 """
 
+import re
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# Pattern for safe URLs: http(s)://, relative paths, or None
+# Blocks javascript:, data:, vbscript: and other XSS vectors
+SAFE_URL_PATTERN = re.compile(r"^(https?://|/[^/]|$)")
+
+
+def validate_safe_url(v: str | None, field_name: str) -> str | None:
+    """Validate URL is safe (HTTP(S) or relative path, no XSS vectors)."""
+    if v is None or v == "":
+        return v
+    if not SAFE_URL_PATTERN.match(v):
+        raise ValueError(f"{field_name} must be an HTTP(S) URL or relative path starting with /")
+    return v
 
 
 class DocumentBase(BaseModel):
@@ -20,6 +34,22 @@ class DocumentBase(BaseModel):
     file_url: str = Field(..., description="Public download URL")
     published_date: str | None = Field(None, description="Publication date (ISO format)")
     order_index: int = Field(0, description="Display order (lower = first)")
+
+    @field_validator("file_url")
+    @classmethod
+    def validate_file_url(cls, v: str) -> str:
+        result = validate_safe_url(v, "file_url")
+        if result is None:
+            raise ValueError("file_url is required")
+        return result
+
+    @field_validator("file_path")
+    @classmethod
+    def validate_file_path(cls, v: str) -> str:
+        result = validate_safe_url(v, "file_path")
+        if result is None:
+            raise ValueError("file_path is required")
+        return result
 
 
 class DocumentCreate(DocumentBase):

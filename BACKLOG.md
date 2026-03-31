@@ -12,18 +12,18 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 |----|----------|----------|---------|
 | ~~CI-007~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`build:ssg` never runs in any workflow or Vercel config~~ — **RESOLVED** |
 | ~~CI-008~~ | ~~CI/CD~~ | ~~CRITICAL~~ | ~~`deploy-backend.yml` test job missing `requirements-dev.txt`~~ — **RESOLVED** |
-| CI-009 | CI/CD | HIGH | `actions/setup-node@v6`, `setup-python@v6`, `download-artifact@v7` don't exist yet |
+| ~~CI-009~~ | ~~CI/CD~~ | ~~HIGH~~ | ~~Action version tags don't exist~~ — **RESOLVED** |
 | BE-005 | Security | HIGH | `passlib 1.7.4` incompatible with `bcrypt 5.x` — password hashing broken |
 | BE-006 | Security | HIGH | GitHub proxy endpoints have no rate limiting |
 | BE-007 | Security | HIGH | `PageView` stores raw IP address without pseudonymization (GDPR) |
-| BE-008 | Security | HIGH | `document.file_url` has no `validate_safe_url` — XSS vector |
+| ~~BE-008~~ | ~~Security~~ | ~~HIGH~~ | ~~`document.file_url` missing XSS validation~~ — **RESOLVED** |
 | ~~BUILD-001~~ | ~~Build~~ | ~~HIGH~~ | ~~`vite.config.production.js` references missing deps~~ — **RESOLVED** (deleted) |
-| A11Y-004 | Accessibility | HIGH | `/admin/skills` route link leads to blank page (route missing) |
+| ~~A11Y-004~~ | ~~Accessibility~~ | ~~HIGH~~ | ~~`/admin/skills` dead link~~ — **RESOLVED** |
 | ERR-001 | Error handling | HIGH | Portfolio API errors silently swallowed in HomeView |
 | SEO-001 | SEO | HIGH | Sitemap hardcoded, stale dates, may not match dynamic slugs |
-| DEAD-001 | Dead code | MEDIUM | `imageOptimization.ts` — 396 lines, never imported |
-| DEAD-002 | Dead code | MEDIUM | `LazyImage.vue` — 196 lines, never used in any view |
-| DEAD-003 | Dead code | MEDIUM | `useScrollAnimations.ts` — 354 lines, superseded by GSAP version |
+| ~~DEAD-001~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`imageOptimization.ts`~~ — **RESOLVED** (deleted) |
+| ~~DEAD-002~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`LazyImage.vue`~~ — **RESOLVED** (deleted) |
+| ~~DEAD-003~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`useScrollAnimations.ts`~~ — **RESOLVED** (deleted) |
 | DEAD-004 | Dead code | MEDIUM | `errorHandler.ts` — most exports dead; only `getUserMessage` imported |
 | CI-010 | CI/CD | MEDIUM | No SHA-pinned actions — all 17+ references use mutable tags |
 | CI-011 | CI/CD | MEDIUM | Vercel token passed as CLI arg (visible in process list) |
@@ -44,7 +44,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | A11Y-006 | Accessibility | MEDIUM | `<main>` landmark absent during loading/error in ExperienceDetail |
 | A11Y-007 | Accessibility | MEDIUM | Language progress bars missing `role="progressbar"` and ARIA |
 | CSS-002 | CSS | MEDIUM | Stockholm-background overlay gradients still use hardcoded rgba |
-| BUILD-002 | Build | MEDIUM | `tsconfig.node.json` includes `vite.config.js` but file is `.ts` |
+| ~~BUILD-002~~ | ~~Build~~ | ~~MEDIUM~~ | ~~`tsconfig.node.json` wrong include~~ — **RESOLVED** |
 | SEO-002 | SEO | MEDIUM | Structured data `dateModified` hardcoded to `2025-01-01` |
 | SEO-003 | SEO | MEDIUM | Experience detail pages have no SSR `<title>` or canonical tag |
 | BE-015 | Backend | LOW-MED | `gunicorn_conf.py` worker count uses host CPU, not container limit |
@@ -52,7 +52,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
 | DEAD-005 | Dead code | LOW | Skills API services in `services.ts` unused |
 | DEAD-006 | Dead code | LOW | Zod validation utilities (`validateApiResponse` etc.) never called |
-| DEAD-007 | Dead code | LOW | `src/assets/vue.svg` and `public/vite.svg` — Vite scaffold leftovers |
+| ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
 | BUILD-003 | Build | LOW | `workbox-window` devDependency never imported |
 | PKG-001 | Package | LOW | `@types/three` in production `dependencies` instead of `devDependencies` |
 | A11Y-008 | Accessibility | LOW | Section icon alt text redundant with heading text (should be `alt=""`) |

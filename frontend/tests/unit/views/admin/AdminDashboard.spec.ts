@@ -24,7 +24,6 @@ const createTestRouter = (): Router => {
       { path: '/admin', component: { template: '<div>Dashboard</div>' } },
       { path: '/admin/login', component: { template: '<div>Login</div>' } },
       { path: '/admin/companies', component: { template: '<div>Companies</div>' } },
-      { path: '/admin/skills', component: { template: '<div>Skills</div>' } },
       { path: '/admin/projects', component: { template: '<div>Projects</div>' } }
     ]
   })
@@ -174,12 +173,11 @@ describe('AdminDashboard', () => {
       const wrapper = await createWrapper()
 
       const navLinks = wrapper.findAll('.nav-link')
-      expect(navLinks.length).toBe(4)
+      expect(navLinks.length).toBe(3)
 
       const linkTexts = navLinks.map(link => link.text())
       expect(linkTexts).toContain('Dashboard')
       expect(linkTexts).toContain('Experience')
-      expect(linkTexts).toContain('Skills')
       expect(linkTexts).toContain('Projects')
     })
 
@@ -191,7 +189,6 @@ describe('AdminDashboard', () => {
 
       expect(hrefs).toContain('/admin')
       expect(hrefs).toContain('/admin/companies')
-      expect(hrefs).toContain('/admin/skills')
       expect(hrefs).toContain('/admin/projects')
     })
   })
@@ -236,12 +233,11 @@ describe('AdminDashboard', () => {
       const wrapper = await createWrapper()
 
       const actionButtons = wrapper.findAll('.action-button')
-      expect(actionButtons.length).toBe(4)
+      expect(actionButtons.length).toBe(3)
 
       const buttonTexts = actionButtons.map(btn => btn.text())
       expect(buttonTexts).toContain('Add Experience')
       expect(buttonTexts).toContain('New Project')
-      expect(buttonTexts).toContain('Update Skills')
       expect(buttonTexts).toContain('View Site')
     })
 
