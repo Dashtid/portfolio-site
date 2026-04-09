@@ -8,14 +8,20 @@ from app.config import settings
 from app.core.deps import get_current_admin_user
 from app.middleware.performance import get_metrics, reset_metrics
 from app.models.user import User
+from app.schemas.metrics import (
+    MetricsDisabled,
+    MetricsHealth,
+    MetricsResetResponse,
+    PerformanceMetrics,
+)
 
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=PerformanceMetrics | MetricsDisabled)
 async def get_performance_metrics(
     current_user: User = Depends(get_current_admin_user),  # noqa: B008
-):
+) -> PerformanceMetrics | MetricsDisabled:
     """
     Get current performance metrics (admin only)
 
@@ -28,15 +34,15 @@ async def get_performance_metrics(
     Requires admin authentication to prevent information disclosure.
     """
     if not settings.METRICS_ENABLED:
-        return {"message": "Metrics collection is disabled"}
+        return MetricsDisabled(message="Metrics collection is disabled")
 
-    return get_metrics()
+    return PerformanceMetrics(**get_metrics())
 
 
-@router.post("/reset")
+@router.post("/reset", response_model=MetricsResetResponse | MetricsDisabled)
 async def reset_performance_metrics(
     current_user: User = Depends(get_current_admin_user),  # noqa: B008
-):
+) -> MetricsResetResponse | MetricsDisabled:
     """
     Reset performance metrics (admin only)
 
@@ -45,22 +51,22 @@ async def reset_performance_metrics(
     Requires admin authentication.
     """
     if not settings.METRICS_ENABLED:
-        return {"message": "Metrics collection is disabled"}
+        return MetricsDisabled(message="Metrics collection is disabled")
 
     reset_metrics()
-    return {"message": f"Metrics reset successfully by {current_user.username}"}
+    return MetricsResetResponse(message=f"Metrics reset successfully by {current_user.username}")
 
 
-@router.get("/health")
-async def metrics_health():
+@router.get("/health", response_model=MetricsHealth)
+async def metrics_health() -> MetricsHealth:
     """
     Health check for metrics endpoint
 
     Returns basic system health information
     """
-    return {
-        "status": "healthy",
-        "metrics_enabled": settings.METRICS_ENABLED,
-        "error_tracking_enabled": settings.ERROR_TRACKING_ENABLED,
-        "analytics_enabled": settings.ANALYTICS_ENABLED,
-    }
+    return MetricsHealth(
+        status="healthy",
+        metrics_enabled=settings.METRICS_ENABLED,
+        error_tracking_enabled=settings.ERROR_TRACKING_ENABLED,
+        analytics_enabled=settings.ANALYTICS_ENABLED,
+    )

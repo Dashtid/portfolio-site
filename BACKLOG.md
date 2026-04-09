@@ -28,9 +28,9 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | CI-010 | CI/CD | MEDIUM | No SHA-pinned actions — all 17+ references use mutable tags |
 | ~~CI-011~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Vercel token as CLI arg~~ — **RESOLVED** (moved to env var) |
 | ~~CI-012~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Node 22 vs 24 mismatch~~ — **RESOLVED** |
-| CI-013 | CI/CD | MEDIUM | E2E tests skipped on direct push to `main` |
-| CI-014 | CI/CD | MEDIUM | Trivy binary download has no checksum verification |
-| CI-015 | CI/CD | MEDIUM | Deploy gate fires when quality jobs are skipped |
+| ~~CI-013~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~E2E skipped on push to main~~ — **RESOLVED** |
+| ~~CI-014~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Trivy no checksum verification~~ — **RESOLVED** |
+| ~~CI-015~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Deploy gate fires on skipped~~ — **RESOLVED** |
 | CI-016 | CI/CD | MEDIUM | Dockerfile runs as root; `tests/` copied into prod image |
 | BE-009 | Backend | MEDIUM | All list endpoints unbounded — no pagination |
 | ~~BE-010~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView missing indexes~~ — **RESOLVED** |
@@ -39,16 +39,16 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | BE-013 | Backend | MEDIUM | `Contact` model defined but no endpoint, no tests |
 | BE-014 | Backend | MEDIUM | No Alembic migrations despite it being a dependency — raw SQL on startup |
 | TYPE-001 | Code quality | MEDIUM | `AnalyticsService` has two conflicting `isEnabled` sources of truth |
-| ERR-002 | Error handling | MEDIUM | Duplicate global error handler setup (dead + active) |
-| A11Y-005 | Accessibility | MEDIUM | `ExperienceDetail` navbar toggler missing aria attributes |
-| A11Y-006 | Accessibility | MEDIUM | `<main>` landmark absent during loading/error in ExperienceDetail |
-| A11Y-007 | Accessibility | MEDIUM | Language progress bars missing `role="progressbar"` and ARIA |
+| ~~ERR-002~~ | ~~Error handling~~ | ~~MEDIUM~~ | ~~Duplicate error handler setup~~ — **RESOLVED** (by DEAD-004) |
+| ~~A11Y-005~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~ExperienceDetail navbar toggler aria~~ — **RESOLVED** |
+| ~~A11Y-006~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~`<main>` landmark during loading~~ — **RESOLVED** |
+| ~~A11Y-007~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~Progress bar ARIA~~ — **RESOLVED** |
 | CSS-002 | CSS | MEDIUM | Stockholm-background overlay gradients still use hardcoded rgba |
 | ~~BUILD-002~~ | ~~Build~~ | ~~MEDIUM~~ | ~~`tsconfig.node.json` wrong include~~ — **RESOLVED** |
-| SEO-002 | SEO | MEDIUM | Structured data `dateModified` hardcoded to `2025-01-01` |
+| ~~SEO-002~~ | ~~SEO~~ | ~~MEDIUM~~ | ~~dateModified hardcoded~~ — **RESOLVED** (updated to 2026-04-09) |
 | SEO-003 | SEO | MEDIUM | Experience detail pages have no SSR `<title>` or canonical tag |
-| BE-015 | Backend | LOW-MED | `gunicorn_conf.py` worker count uses host CPU, not container limit |
-| CI-017 | CI/CD | LOW-MED | Vercel CLI installed as `@latest` (unpinned) |
+| ~~BE-015~~ | ~~Backend~~ | ~~LOW-MED~~ | ~~gunicorn worker count~~ — **RESOLVED** (WORKERS documented in .env.example) |
+| ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | DEAD-006 | Dead code | LOW | Zod validation utilities (`validateApiResponse` etc.) never called |
@@ -57,8 +57,8 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~PKG-001~~ | ~~Package~~ | ~~LOW~~ | ~~@types/three in prod deps~~ — **RESOLVED** (moved to devDeps) |
 | ~~A11Y-008~~ | ~~Accessibility~~ | ~~LOW~~ | ~~Section icon redundant alt~~ — **RESOLVED** (alt="") |
 | ~~SEO-004~~ | ~~SEO~~ | ~~LOW~~ | ~~Missing og:image:alt~~ — **RESOLVED** |
-| BE-016 | Backend | LOW | `GET /analytics/stats/visitors` has no `response_model` |
-| BE-017 | Backend | LOW | `GET /api/v1/metrics/` uses `response_model=dict` — no OpenAPI schema |
+| ~~BE-016~~ | ~~Backend~~ | ~~LOW~~ | ~~visitors endpoint no response_model~~ — **RESOLVED** |
+| ~~BE-017~~ | ~~Backend~~ | ~~LOW~~ | ~~metrics response_model=dict~~ — **RESOLVED** |
 | ~~BE-018~~ | ~~Backend~~ | ~~LOW~~ | ~~Documents endpoints no rate limiting~~ — **RESOLVED** |
 | ~~BE-019~~ | ~~Backend~~ | ~~LOW~~ | ~~PageView nullable constraints~~ — **RESOLVED** |
 | CI-020 | CI/CD | LOW | SSG build pre-renders only `/` — add backend service for full route coverage |

@@ -68,7 +68,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+        run: npm install -g vercel@44.4.0
 
       - name: Deploy to Vercel
         run: vercel deploy --prod

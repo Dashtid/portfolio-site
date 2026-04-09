@@ -87,7 +87,14 @@
               <span class="language-name">{{ lang.name }}</span>
               <span class="language-percentage">{{ lang.percentage }}%</span>
             </div>
-            <div class="progress-bar">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              :aria-label="`${lang.name} language usage`"
+              :aria-valuenow="lang.percentage"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
               <div class="progress-fill" :style="`width: ${lang.percentage}%`"></div>
             </div>
           </div>

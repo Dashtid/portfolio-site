@@ -26,7 +26,9 @@ from app.schemas.analytics import (
     DailyView,
     PageViewCreate,
     PageViewResponse,
+    TopCountry,
     TopPage,
+    VisitorStats,
 )
 from app.utils.logger import get_logger
 
@@ -151,12 +153,12 @@ async def get_analytics_summary(
     )
 
 
-@router.get("/stats/visitors")
+@router.get("/stats/visitors", response_model=VisitorStats)
 async def get_visitor_stats(
     db: DbSession,
     current_user: AdminUser,
     days: int = Query(default=7, ge=1, le=365, description="Number of days to include in stats"),
-):
+) -> VisitorStats:
     """
     Get visitor statistics (admin only).
     Returns session counts, geographic data, and visitor trends.
@@ -179,14 +181,16 @@ async def get_visitor_stats(
         .order_by(func.count(PageView.id).desc())
         .limit(10)
     )
-    top_countries = [{"country": row.country, "count": row.count} for row in countries_result.all()]
+    top_countries = [
+        TopCountry(country=row.country, count=row.count) for row in countries_result.all()
+    ]
 
-    return {
-        "total_sessions": total_sessions,
-        "new_visitors": total_sessions,  # Simplified - would need first-visit tracking
-        "returning_visitors": 0,
-        "avg_session_duration": None,
-        "bounce_rate": None,
-        "top_countries": top_countries,
-        "period_days": days,
-    }
+    return VisitorStats(
+        total_sessions=total_sessions,
+        new_visitors=total_sessions,  # Simplified — would need first-visit tracking
+        returning_visitors=0,
+        avg_session_duration=None,
+        bounce_rate=None,
+        top_countries=top_countries,
+        period_days=days,
+    )

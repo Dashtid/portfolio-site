@@ -10,6 +10,9 @@
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -39,129 +42,132 @@
       </div>
     </nav>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="container py-5 text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-3">Loading experience details...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="container py-5">
-      <div class="alert alert-danger" role="alert">
-        <h4 class="alert-heading">Error Loading Experience</h4>
-        <p>{{ error }}</p>
-        <hr />
-        <router-link to="/" class="btn btn-primary">Return to Home</router-link>
-      </div>
-    </div>
-
-    <!-- Company Details -->
-    <main v-else-if="company" id="main-content" class="container py-5" tabindex="-1">
-      <!-- Media Section: Video and Map (side-by-side on desktop) -->
-      <div v-if="company.video_url || company.map_url" class="media-section">
-        <!-- YouTube Video -->
-        <div v-if="company.video_url" class="media-item">
-          <VideoEmbed
-            :url="company.video_url"
-            :heading="company.video_title || `${company.name} Video`"
-            :title="company.video_title || `${company.name} Video`"
-          />
+    <!-- Main landmark — always present so router focus() and skip link land correctly -->
+    <main id="main-content" tabindex="-1">
+      <!-- Loading State -->
+      <div v-if="loading" class="container py-5 text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
+        <p class="mt-3">Loading experience details...</p>
+      </div>
 
-        <!-- Google Maps -->
-        <div v-if="company.map_url" class="media-item">
-          <MapEmbed
-            :url="company.map_url"
-            :heading="company.map_title || `${company.name} Location`"
-            :title="company.map_title || `${company.name} Location Map`"
-          />
+      <!-- Error State -->
+      <div v-else-if="error" class="container py-5">
+        <div class="alert alert-danger" role="alert">
+          <h4 class="alert-heading">Error Loading Experience</h4>
+          <p>{{ error }}</p>
+          <hr />
+          <router-link to="/" class="btn btn-primary">Return to Home</router-link>
         </div>
       </div>
 
-      <!-- Company Information -->
-      <div class="mb-5">
-        <div class="d-flex align-items-center mb-3">
-          <img
-            v-if="company.logo_url && !logoError"
-            :src="company.logo_url"
-            :alt="`${company.name} logo`"
-            class="me-3"
-            style="width: 64px; height: 64px; object-fit: contain"
-            @error="logoError = true"
-          />
-          <div>
-            <h1 class="mb-1">{{ company.title }}</h1>
-            <h3 class="text-muted mb-0">{{ company.name }}</h3>
+      <!-- Company Details -->
+      <div v-else-if="company" class="container py-5">
+        <!-- Media Section: Video and Map (side-by-side on desktop) -->
+        <div v-if="company.video_url || company.map_url" class="media-section">
+          <!-- YouTube Video -->
+          <div v-if="company.video_url" class="media-item">
+            <VideoEmbed
+              :url="company.video_url"
+              :heading="company.video_title || `${company.name} Video`"
+              :title="company.video_title || `${company.name} Video`"
+            />
+          </div>
+
+          <!-- Google Maps -->
+          <div v-if="company.map_url" class="media-item">
+            <MapEmbed
+              :url="company.map_url"
+              :heading="company.map_title || `${company.name} Location`"
+              :title="company.map_title || `${company.name} Location Map`"
+            />
           </div>
         </div>
 
-        <p class="text-muted">
-          <i class="bi bi-geo-alt"></i> {{ company.location }}
-          <span v-if="company.start_date" class="ms-3">
-            <i class="bi bi-calendar"></i>
-            {{ formatDate(company.start_date) }} -
-            {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
-          </span>
-        </p>
+        <!-- Company Information -->
+        <div class="mb-5">
+          <div class="d-flex align-items-center mb-3">
+            <img
+              v-if="company.logo_url && !logoError"
+              :src="company.logo_url"
+              :alt="`${company.name} logo`"
+              class="me-3"
+              style="width: 64px; height: 64px; object-fit: contain"
+              @error="logoError = true"
+            />
+            <div>
+              <h1 class="mb-1">{{ company.title }}</h1>
+              <h3 class="text-muted mb-0">{{ company.name }}</h3>
+            </div>
+          </div>
 
-        <div class="mb-4">
-          <a
-            v-if="company.website"
-            :href="company.website"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-outline-primary me-2"
-          >
-            <i class="bi bi-globe"></i> Visit Website
-          </a>
+          <p class="text-muted">
+            <i class="bi bi-geo-alt"></i> {{ company.location }}
+            <span v-if="company.start_date" class="ms-3">
+              <i class="bi bi-calendar"></i>
+              {{ formatDate(company.start_date) }} -
+              {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
+            </span>
+          </p>
+
+          <div class="mb-4">
+            <a
+              v-if="company.website"
+              :href="company.website"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-outline-primary me-2"
+            >
+              <i class="bi bi-globe"></i> Visit Website
+            </a>
+          </div>
         </div>
-      </div>
 
-      <!-- Description -->
-      <div class="mb-5">
-        <h3>About {{ company.name }}</h3>
-        <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
-        <div v-html="formatDescription(company.description)"></div>
-      </div>
-
-      <!-- Detailed Description -->
-      <div v-if="company.detailed_description" class="mb-5">
-        <h3>Role & Responsibilities</h3>
-        <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
-        <div v-html="formatDescription(company.detailed_description)"></div>
-      </div>
-
-      <!-- Responsibilities List -->
-      <div v-if="company.responsibilities && company.responsibilities.length > 0" class="mb-5">
-        <h3>Key Responsibilities</h3>
-        <ul class="list-group list-group-flush">
-          <li
-            v-for="(responsibility, index) in company.responsibilities"
-            :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
-            class="list-group-item"
-          >
-            {{ responsibility }}
-          </li>
-        </ul>
-      </div>
-
-      <!-- Technologies -->
-      <div v-if="company.technologies && company.technologies.length > 0" class="mb-5">
-        <h3>Technologies & Tools</h3>
-        <div class="d-flex flex-wrap gap-2">
-          <span v-for="tech in company.technologies" :key="tech" class="badge bg-primary">
-            {{ tech }}
-          </span>
+        <!-- Description -->
+        <div class="mb-5">
+          <h3>About {{ company.name }}</h3>
+          <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
+          <div v-html="formatDescription(company.description)"></div>
         </div>
-      </div>
 
-      <!-- Back Navigation -->
-      <div class="mt-5 pt-4 border-top">
-        <router-link to="/" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left"></i> Back to Portfolio
-        </router-link>
+        <!-- Detailed Description -->
+        <div v-if="company.detailed_description" class="mb-5">
+          <h3>Role & Responsibilities</h3>
+          <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
+          <div v-html="formatDescription(company.detailed_description)"></div>
+        </div>
+
+        <!-- Responsibilities List -->
+        <div v-if="company.responsibilities && company.responsibilities.length > 0" class="mb-5">
+          <h3>Key Responsibilities</h3>
+          <ul class="list-group list-group-flush">
+            <li
+              v-for="(responsibility, index) in company.responsibilities"
+              :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
+              class="list-group-item"
+            >
+              {{ responsibility }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Technologies -->
+        <div v-if="company.technologies && company.technologies.length > 0" class="mb-5">
+          <h3>Technologies & Tools</h3>
+          <div class="d-flex flex-wrap gap-2">
+            <span v-for="tech in company.technologies" :key="tech" class="badge bg-primary">
+              {{ tech }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Back Navigation -->
+        <div class="mt-5 pt-4 border-top">
+          <router-link to="/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Portfolio
+          </router-link>
+        </div>
       </div>
     </main>
   </div>

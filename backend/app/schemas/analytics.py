@@ -64,3 +64,22 @@ class VisitorInfo(BaseModel):
     page_views: int
 
     model_config = {"from_attributes": True}
+
+
+class TopCountry(BaseModel):
+    """Schema for per-country visitor counts."""
+
+    country: str
+    count: int
+
+
+class VisitorStats(BaseModel):
+    """Schema for the visitor stats endpoint response."""
+
+    total_sessions: int
+    new_visitors: int
+    returning_visitors: int
+    avg_session_duration: int | None
+    bounce_rate: float | None
+    top_countries: list[TopCountry]
+    period_days: int
