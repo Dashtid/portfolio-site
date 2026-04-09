@@ -31,7 +31,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-013~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~E2E skipped on push to main~~ — **RESOLVED** |
 | ~~CI-014~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Trivy no checksum verification~~ — **RESOLVED** |
 | ~~CI-015~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Deploy gate fires on skipped~~ — **RESOLVED** |
-| CI-016 | CI/CD | MEDIUM | Dockerfile runs as root; `tests/` copied into prod image |
+| ~~CI-016~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Dockerfile root + tests in image~~ — **RESOLVED** |
 | BE-009 | Backend | MEDIUM | All list endpoints unbounded — no pagination |
 | ~~BE-010~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView missing indexes~~ — **RESOLVED** |
 | BE-011 | Backend | MEDIUM | ~600 lines of migration/seed logic runs on every app startup |

@@ -9,7 +9,10 @@ venv/
 ENV/
 env/
 
-# Testing
+# Testing — exclude test code and dev deps from production image
+tests/
+requirements-dev.txt
+scripts/
 .pytest_cache/
 .coverage
 htmlcov/

@@ -1,40 +1,46 @@
 # Multi-stage build for FastAPI backend
 # Stage 1: Builder - install dependencies
-FROM python:3.13-slim as builder
+FROM python:3.13-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies needed for compiling Python wheels
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements and install Python dependencies into a shared prefix
+# (/install). Using a shared location instead of --user keeps the runtime
+# stage free of per-user assumptions and lets a non-root user read the libs.
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Stage 2: Runtime - minimal production image
 FROM python:3.13-slim
 
+# Create non-root user (CI-016). All runtime files are owned by appuser.
+RUN groupadd --system --gid 1001 appgroup \
+    && useradd --system --uid 1001 --gid appgroup --home /app --shell /sbin/nologin appuser
+
 WORKDIR /app
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Copy Python dependencies from the builder stage into the system prefix
+COPY --from=builder /install /usr/local
 
 # Copy application code
-COPY . .
+COPY --chown=appuser:appgroup . .
 
-# Ensure scripts are executable
-RUN chmod +x /app/scripts/*.py 2>/dev/null || true
+# Runtime env
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Set Python path
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONUNBUFFERED=1
+# Drop privileges
+USER appuser
 
 # Expose port
 EXPOSE 8000
 
-# Health check using curl (more reliable than Python requests)
+# Health check using stdlib urllib (no extra deps)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
 
