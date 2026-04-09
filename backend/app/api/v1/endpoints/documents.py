@@ -6,11 +6,12 @@ Endpoints for managing academic documents, theses, and papers.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.middleware.rate_limit import rate_limit_public
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
 from app.utils.logger import get_logger
@@ -23,7 +24,8 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 
 @router.get("/", response_model=list[DocumentResponse])
-async def get_documents(db: DbSession):
+@rate_limit_public
+async def get_documents(request: Request, db: DbSession):
     """
     Get all documents.
 
@@ -44,7 +46,8 @@ async def get_documents(db: DbSession):
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
-async def get_document(document_id: str, db: DbSession):
+@rate_limit_public
+async def get_document(request: Request, document_id: str, db: DbSession):
     """
     Get a specific document by ID.
 

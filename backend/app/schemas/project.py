@@ -2,27 +2,15 @@
 Project Pydantic schemas
 """
 
-import re
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-# Pattern for safe URLs: http(s)://, relative paths, or None
-# Blocks javascript:, data:, vbscript: and other XSS vectors
-SAFE_URL_PATTERN = re.compile(r"^(https?://|/[^/]|$)")
+from app.schemas._validators import validate_safe_url
 
 # Maximum items in list fields to prevent DoS
 MAX_TECHNOLOGIES = 50
 MAX_RESPONSIBILITIES = 50
-
-
-def validate_safe_url(v: str | None, field_name: str) -> str | None:
-    """Validate URL is safe (HTTP(S) or relative path, no XSS vectors)."""
-    if v is None or v == "":
-        return v
-    if not SAFE_URL_PATTERN.match(v):
-        raise ValueError(f"{field_name} must be an HTTP(S) URL or relative path starting with /")
-    return v
 
 
 class ProjectBase(BaseModel):

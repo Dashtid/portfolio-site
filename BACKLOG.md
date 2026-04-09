@@ -27,15 +27,15 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~DEAD-004~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`errorHandler.ts` dead exports~~ — **RESOLVED** (stripped to `getUserMessage` only) |
 | CI-010 | CI/CD | MEDIUM | No SHA-pinned actions — all 17+ references use mutable tags |
 | ~~CI-011~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Vercel token as CLI arg~~ — **RESOLVED** (moved to env var) |
-| CI-012 | CI/CD | MEDIUM | Node 22 (deploy) vs Node 24 (CI) version mismatch |
+| ~~CI-012~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Node 22 vs 24 mismatch~~ — **RESOLVED** |
 | CI-013 | CI/CD | MEDIUM | E2E tests skipped on direct push to `main` |
 | CI-014 | CI/CD | MEDIUM | Trivy binary download has no checksum verification |
 | CI-015 | CI/CD | MEDIUM | Deploy gate fires when quality jobs are skipped |
 | CI-016 | CI/CD | MEDIUM | Dockerfile runs as root; `tests/` copied into prod image |
 | BE-009 | Backend | MEDIUM | All list endpoints unbounded — no pagination |
-| BE-010 | Backend | MEDIUM | `PageView` model missing indexes on `created_at`, `session_id` |
+| ~~BE-010~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView missing indexes~~ — **RESOLVED** |
 | BE-011 | Backend | MEDIUM | ~600 lines of migration/seed logic runs on every app startup |
-| BE-012 | Backend | MEDIUM | `validate_safe_url` duplicated across 3 schema modules |
+| ~~BE-012~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~validate_safe_url duplicated~~ — **RESOLVED** (extracted to `_validators.py`) |
 | BE-013 | Backend | MEDIUM | `Contact` model defined but no endpoint, no tests |
 | BE-014 | Backend | MEDIUM | No Alembic migrations despite it being a dependency — raw SQL on startup |
 | TYPE-001 | Code quality | MEDIUM | `AnalyticsService` has two conflicting `isEnabled` sources of truth |
@@ -53,14 +53,14 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | DEAD-006 | Dead code | LOW | Zod validation utilities (`validateApiResponse` etc.) never called |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
-| BUILD-003 | Build | LOW | `workbox-window` devDependency never imported |
-| PKG-001 | Package | LOW | `@types/three` in production `dependencies` instead of `devDependencies` |
-| A11Y-008 | Accessibility | LOW | Section icon alt text redundant with heading text (should be `alt=""`) |
-| SEO-004 | SEO | LOW | Missing `og:image:alt` meta tag |
+| ~~BUILD-003~~ | ~~Build~~ | ~~LOW~~ | ~~workbox-window unused devDep~~ — **RESOLVED** (removed) |
+| ~~PKG-001~~ | ~~Package~~ | ~~LOW~~ | ~~@types/three in prod deps~~ — **RESOLVED** (moved to devDeps) |
+| ~~A11Y-008~~ | ~~Accessibility~~ | ~~LOW~~ | ~~Section icon redundant alt~~ — **RESOLVED** (alt="") |
+| ~~SEO-004~~ | ~~SEO~~ | ~~LOW~~ | ~~Missing og:image:alt~~ — **RESOLVED** |
 | BE-016 | Backend | LOW | `GET /analytics/stats/visitors` has no `response_model` |
 | BE-017 | Backend | LOW | `GET /api/v1/metrics/` uses `response_model=dict` — no OpenAPI schema |
-| BE-018 | Backend | LOW | Documents endpoints have no rate limiting |
-| BE-019 | Backend | LOW | `PageView.page_path` and `session_id` lack `nullable=False` constraint |
+| ~~BE-018~~ | ~~Backend~~ | ~~LOW~~ | ~~Documents endpoints no rate limiting~~ — **RESOLVED** |
+| ~~BE-019~~ | ~~Backend~~ | ~~LOW~~ | ~~PageView nullable constraints~~ — **RESOLVED** |
 | CI-020 | CI/CD | LOW | SSG build pre-renders only `/` — add backend service for full route coverage |
 
 ---

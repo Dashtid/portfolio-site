@@ -3,7 +3,32 @@ Tests for documents API endpoints
 """
 
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
+
+
+def _make_mock_request() -> Request:
+    """Build a minimal Request instance for direct endpoint calls.
+
+    The rate-limit decorator unwraps `request` from function args, so tests
+    that invoke endpoint functions directly need a real Request object. The
+    scope must include `path` (slowapi reads it) and `app` (so the state lookup
+    can resolve even though we skip the actual rate-limit check path).
+    """
+    from unittest.mock import MagicMock
+
+    mock_app = MagicMock()
+    mock_app.state.limiter = None  # Forces slowapi to skip the check
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/api/v1/documents/",
+        "headers": [],
+        "client": ("127.0.0.1", 12345),
+        "query_string": b"",
+        "app": mock_app,
+    }
+    return Request(scope)
 
 
 def test_get_documents_list(client: TestClient):
@@ -158,11 +183,13 @@ class TestDocumentsExceptionHandling:
         mock_db = AsyncMock()
         mock_db.execute.side_effect = Exception("Database connection error")
 
+        mock_request = _make_mock_request()
+
         # Test that HTTPException is raised with 500 status
         import asyncio
 
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(get_documents(mock_db))
+            asyncio.run(get_documents(mock_request, mock_db))
 
         assert exc_info.value.status_code == 500
         assert "Failed to fetch documents" in exc_info.value.detail
@@ -179,11 +206,13 @@ class TestDocumentsExceptionHandling:
         mock_db = AsyncMock()
         mock_db.execute.side_effect = Exception("Database connection error")
 
+        mock_request = _make_mock_request()
+
         # Test that HTTPException is raised with 500 status
         import asyncio
 
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(get_document("test-id", mock_db))
+            asyncio.run(get_document(mock_request, "test-id", mock_db))
 
         assert exc_info.value.status_code == 500
         assert "Failed to fetch document" in exc_info.value.detail
@@ -202,10 +231,12 @@ class TestDocumentsExceptionHandling:
         mock_result.scalar_one_or_none.return_value = None
         mock_db.execute.return_value = mock_result
 
+        mock_request = _make_mock_request()
+
         import asyncio
 
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(get_document("nonexistent-id", mock_db))
+            asyncio.run(get_document(mock_request, "nonexistent-id", mock_db))
 
         assert exc_info.value.status_code == 404
         assert "not found" in exc_info.value.detail.lower()
@@ -226,9 +257,11 @@ class TestDocumentsExceptionHandling:
         mock_result.scalar_one_or_none.return_value = mock_document
         mock_db.execute.return_value = mock_result
 
+        mock_request = _make_mock_request()
+
         import asyncio
 
-        result = asyncio.run(get_document("valid-id", mock_db))
+        result = asyncio.run(get_document(mock_request, "valid-id", mock_db))
         assert result == mock_document
 
     def test_get_documents_success_path(self):
@@ -246,8 +279,10 @@ class TestDocumentsExceptionHandling:
         mock_result.scalars.return_value.all.return_value = mock_docs
         mock_db.execute.return_value = mock_result
 
+        mock_request = _make_mock_request()
+
         import asyncio
 
-        result = asyncio.run(get_documents(mock_db))
+        result = asyncio.run(get_documents(mock_request, mock_db))
         assert result == mock_docs
         assert len(result) == 2

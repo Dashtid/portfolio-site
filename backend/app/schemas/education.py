@@ -1,19 +1,8 @@
-import re
 from datetime import date
 
 from pydantic import BaseModel, Field, field_validator
 
-# Pattern for safe URLs: http(s)://, relative paths, or empty
-SAFE_URL_PATTERN = re.compile(r"^(https?://|/[^/]|$)")
-
-
-def validate_safe_url(v: str | None) -> str | None:
-    """Validate URL is safe (HTTP(S) or relative path, no XSS vectors)."""
-    if v is None or v == "":
-        return v
-    if not SAFE_URL_PATTERN.match(v):
-        raise ValueError("URL must be an HTTP(S) URL or relative path starting with /")
-    return v
+from app.schemas._validators import validate_safe_url
 
 
 class EducationBase(BaseModel):
@@ -34,7 +23,7 @@ class EducationBase(BaseModel):
     @classmethod
     def validate_urls(cls, v: str | None) -> str | None:
         """Validate all URL fields are safe."""
-        return validate_safe_url(v)
+        return validate_safe_url(v, "URL")
 
 
 class EducationCreate(EducationBase):
@@ -59,7 +48,7 @@ class EducationUpdate(BaseModel):
     @classmethod
     def validate_urls(cls, v: str | None) -> str | None:
         """Validate all URL fields are safe."""
-        return validate_safe_url(v)
+        return validate_safe_url(v, "URL")
 
 
 class Education(EducationBase):

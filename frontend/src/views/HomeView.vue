@@ -33,12 +33,7 @@
       <section id="experience" class="portfolio-section">
         <div class="container">
           <h2 class="section-title">
-            <img
-              src="/images/experience.svg"
-              alt="Experience Icon"
-              class="section-icon"
-              loading="lazy"
-            />
+            <img src="/images/experience.svg" alt="" class="section-icon" loading="lazy" />
             Experience
           </h2>
           <div class="experience-list">
@@ -102,12 +97,7 @@
       <section id="education" class="portfolio-section bg-light">
         <div class="container">
           <h2 class="section-title">
-            <img
-              src="/images/education.svg"
-              alt="Education Icon"
-              class="section-icon"
-              loading="lazy"
-            />
+            <img src="/images/education.svg" alt="" class="section-icon" loading="lazy" />
             Education
           </h2>
           <div class="education-grid">
@@ -169,12 +159,7 @@
       <section id="publications" class="portfolio-section bg-dark">
         <div class="container">
           <h2 class="section-title">
-            <img
-              src="/images/document.svg"
-              alt="Publications Icon"
-              class="section-icon"
-              loading="lazy"
-            />
+            <img src="/images/document.svg" alt="" class="section-icon" loading="lazy" />
             Academic Work
           </h2>
           <div v-if="documentsLoading" class="loading-state" role="status" aria-live="polite">
@@ -193,7 +178,7 @@
       <section id="projects" class="portfolio-section bg-light">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/github.svg" alt="GitHub Icon" class="section-icon" loading="lazy" />
+            <img src="/images/github.svg" alt="" class="section-icon" loading="lazy" />
             GitHub
           </h2>
 
@@ -206,7 +191,7 @@
       <section id="about" class="portfolio-section">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/about.svg" alt="About Icon" class="section-icon" loading="lazy" />
+            <img src="/images/about.svg" alt="" class="section-icon" loading="lazy" />
             About Me
           </h2>
           <div class="about-layout">
