@@ -20,19 +20,19 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BUILD-001~~ | ~~Build~~ | ~~HIGH~~ | ~~`vite.config.production.js` references missing deps~~ — **RESOLVED** (deleted) |
 | ~~A11Y-004~~ | ~~Accessibility~~ | ~~HIGH~~ | ~~`/admin/skills` dead link~~ — **RESOLVED** |
 | ~~ERR-001~~ | ~~Error handling~~ | ~~HIGH~~ | ~~HomeView silently swallows API errors~~ — **RESOLVED** |
-| SEO-001 | SEO | HIGH | Sitemap hardcoded, stale dates, may not match dynamic slugs |
+| ~~SEO-001~~ | ~~SEO~~ | ~~HIGH~~ | ~~Sitemap stale/wrong slugs~~ — **RESOLVED** (removed invalid UUID slugs, updated dates) |
 | ~~DEAD-001~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`imageOptimization.ts`~~ — **RESOLVED** (deleted) |
 | ~~DEAD-002~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`LazyImage.vue`~~ — **RESOLVED** (deleted) |
 | ~~DEAD-003~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`useScrollAnimations.ts`~~ — **RESOLVED** (deleted) |
 | ~~DEAD-004~~ | ~~Dead code~~ | ~~MEDIUM~~ | ~~`errorHandler.ts` dead exports~~ — **RESOLVED** (stripped to `getUserMessage` only) |
-| CI-010 | CI/CD | MEDIUM | No SHA-pinned actions — all 17+ references use mutable tags |
+| ~~CI-010~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~No SHA-pinned actions~~ — **RESOLVED** (all 17+ refs pinned) |
 | ~~CI-011~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Vercel token as CLI arg~~ — **RESOLVED** (moved to env var) |
 | ~~CI-012~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Node 22 vs 24 mismatch~~ — **RESOLVED** |
 | ~~CI-013~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~E2E skipped on push to main~~ — **RESOLVED** |
 | ~~CI-014~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Trivy no checksum verification~~ — **RESOLVED** |
 | ~~CI-015~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Deploy gate fires on skipped~~ — **RESOLVED** |
 | ~~CI-016~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Dockerfile root + tests in image~~ — **RESOLVED** |
-| BE-009 | Backend | MEDIUM | All list endpoints unbounded — no pagination |
+| ~~BE-009~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~List endpoints unbounded~~ — **WON'T FIX** (portfolio data < 20 items; analytics bounded by `days` param + LIMIT) |
 | ~~BE-010~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView missing indexes~~ — **RESOLVED** |
 | BE-011 | Backend | MEDIUM | ~600 lines of migration/seed logic runs on every app startup |
 | ~~BE-012~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~validate_safe_url duplicated~~ — **RESOLVED** (extracted to `_validators.py`) |

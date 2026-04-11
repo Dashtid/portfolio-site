@@ -7,88 +7,45 @@
     <!-- Homepage -->
     <url>
         <loc>https://dashti.se/</loc>
-        <lastmod>2025-10-19</lastmod>
+        <lastmod>2026-04-11</lastmod>
         <changefreq>monthly</changefreq>
         <priority>1.0</priority>
     </url>
 
-    <!-- Main sections -->
+    <!-- Main sections (hash anchors on the homepage) -->
     <url>
         <loc>https://dashti.se/#experience</loc>
-        <lastmod>2025-10-19</lastmod>
+        <lastmod>2026-04-11</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
 
     <url>
         <loc>https://dashti.se/#education</loc>
-        <lastmod>2025-10-19</lastmod>
+        <lastmod>2026-04-11</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
         <loc>https://dashti.se/#projects</loc>
-        <lastmod>2025-10-19</lastmod>
+        <lastmod>2026-04-11</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
         <loc>https://dashti.se/#about</loc>
-        <lastmod>2025-10-19</lastmod>
+        <lastmod>2026-04-11</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
 
-    <url>
-        <loc>https://dashti.se/#contact</loc>
-        <lastmod>2025-10-19</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.7</priority>
-    </url>
+    <!--
+      Experience detail pages (/experience/:id) use database UUIDs as IDs
+      and cannot be hardcoded here. Google discovers them from homepage links.
+      When CI-020 (backend service in CI) is implemented, vite-ssg will
+      pre-render these pages and a dynamic sitemap can be generated at build time.
+    -->
 
-    <!-- Experience Detail Pages -->
-    <!-- Note: Update company IDs after database population -->
-    <url>
-        <loc>https://dashti.se/experience/hermes</loc>
-        <lastmod>2025-10-22</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.9</priority>
-    </url>
-
-    <url>
-        <loc>https://dashti.se/experience/scania</loc>
-        <lastmod>2025-10-22</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://dashti.se/experience/karolinska</loc>
-        <lastmod>2025-10-22</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://dashti.se/experience/philips</loc>
-        <lastmod>2025-10-22</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://dashti.se/experience/fdf</loc>
-        <lastmod>2025-10-22</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://dashti.se/experience/sos</loc>
-        <lastmod>2025-10-22</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.8</priority>
-    </url>
 </urlset>
