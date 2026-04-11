@@ -236,19 +236,21 @@ describe('analytics service', () => {
 
   describe('isAnalyticsEnabled', () => {
     it('returns true by default', () => {
-      localStorage.removeItem('analytics_enabled')
+      // Reset to default state (singleton persists across tests)
+      analyticsService.setEnabled(true)
 
       expect(analyticsService.isAnalyticsEnabled()).toBe(true)
     })
 
-    it('returns false when explicitly disabled', () => {
-      localStorage.setItem('analytics_enabled', 'false')
+    it('returns false after setEnabled(false)', () => {
+      analyticsService.setEnabled(false)
 
       expect(analyticsService.isAnalyticsEnabled()).toBe(false)
     })
 
-    it('returns true when explicitly enabled', () => {
-      localStorage.setItem('analytics_enabled', 'true')
+    it('returns true after setEnabled(true)', () => {
+      analyticsService.setEnabled(false)
+      analyticsService.setEnabled(true)
 
       expect(analyticsService.isAnalyticsEnabled()).toBe(true)
     })

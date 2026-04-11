@@ -37,7 +37,10 @@ class AnalyticsService {
   constructor() {
     // Initialize session ID in storage for potential future use
     this.getOrCreateSessionId()
-    this.isEnabled = true // Can be controlled by user preference
+    // Single source of truth: read from localStorage, default to true
+    const stored =
+      typeof localStorage !== 'undefined' ? localStorage.getItem('analytics_enabled') : null
+    this.isEnabled = stored !== 'false'
   }
 
   /**
@@ -133,8 +136,7 @@ class AnalyticsService {
    * Check if analytics is enabled
    */
   isAnalyticsEnabled(): boolean {
-    const stored = localStorage.getItem('analytics_enabled')
-    return stored !== 'false' // Default to true if not set
+    return this.isEnabled
   }
 
   /**

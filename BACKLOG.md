@@ -36,14 +36,14 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-010~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView missing indexes~~ — **RESOLVED** |
 | BE-011 | Backend | MEDIUM | ~600 lines of migration/seed logic runs on every app startup |
 | ~~BE-012~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~validate_safe_url duplicated~~ — **RESOLVED** (extracted to `_validators.py`) |
-| BE-013 | Backend | MEDIUM | `Contact` model defined but no endpoint, no tests |
+| ~~BE-013~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~Contact model unused~~ — **RESOLVED** (deleted) |
 | BE-014 | Backend | MEDIUM | No Alembic migrations despite it being a dependency — raw SQL on startup |
-| TYPE-001 | Code quality | MEDIUM | `AnalyticsService` has two conflicting `isEnabled` sources of truth |
+| ~~TYPE-001~~ | ~~Code quality~~ | ~~MEDIUM~~ | ~~AnalyticsService dual isEnabled~~ — **RESOLVED** |
 | ~~ERR-002~~ | ~~Error handling~~ | ~~MEDIUM~~ | ~~Duplicate error handler setup~~ — **RESOLVED** (by DEAD-004) |
 | ~~A11Y-005~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~ExperienceDetail navbar toggler aria~~ — **RESOLVED** |
 | ~~A11Y-006~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~`<main>` landmark during loading~~ — **RESOLVED** |
 | ~~A11Y-007~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~Progress bar ARIA~~ — **RESOLVED** |
-| CSS-002 | CSS | MEDIUM | Stockholm-background overlay gradients still use hardcoded rgba |
+| ~~CSS-002~~ | ~~CSS~~ | ~~MEDIUM~~ | ~~Hardcoded rgba in gradients~~ — **RESOLVED** (CSS vars) |
 | ~~BUILD-002~~ | ~~Build~~ | ~~MEDIUM~~ | ~~`tsconfig.node.json` wrong include~~ — **RESOLVED** |
 | ~~SEO-002~~ | ~~SEO~~ | ~~MEDIUM~~ | ~~dateModified hardcoded~~ — **RESOLVED** (updated to 2026-04-09) |
 | SEO-003 | SEO | MEDIUM | Experience detail pages have no SSR `<title>` or canonical tag |
@@ -51,7 +51,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
-| DEAD-006 | Dead code | LOW | Zod validation utilities (`validateApiResponse` etc.) never called |
+| ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
 | ~~BUILD-003~~ | ~~Build~~ | ~~LOW~~ | ~~workbox-window unused devDep~~ — **RESOLVED** (removed) |
 | ~~PKG-001~~ | ~~Package~~ | ~~LOW~~ | ~~@types/three in prod deps~~ — **RESOLVED** (moved to devDeps) |

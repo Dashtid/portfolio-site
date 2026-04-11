@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
   CompanySchema,
   CompanyArraySchema,
@@ -9,11 +9,7 @@ import {
   UserSchema,
   LoginResponseSchema,
   HealthResponseSchema,
-  ErrorResponseSchema,
-  validateApiResponse,
-  safeValidateApiResponse,
-  createValidator,
-  ApiValidationError
+  ErrorResponseSchema
 } from '@/schemas/api.schemas'
 
 describe('API Schemas', () => {
@@ -347,98 +343,5 @@ describe('API Schemas', () => {
   })
 })
 
-describe('Validation Utilities', () => {
-  describe('validateApiResponse', () => {
-    const validCompany = {
-      id: '1',
-      name: 'Test',
-      title: 'Engineer',
-      description: 'Desc',
-      start_date: '2020-01-01'
-    }
-
-    it('should return validated data for valid input', () => {
-      const result = validateApiResponse(CompanySchema, validCompany)
-      expect(result).toEqual(validCompany)
-    })
-
-    it('should throw ApiValidationError for invalid input', () => {
-      const invalid = { id: 1 }
-
-      expect(() => validateApiResponse(CompanySchema, invalid)).toThrow(ApiValidationError)
-    })
-
-    it('should not throw in non-strict mode', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const invalid = { id: 1 }
-
-      const result = validateApiResponse(CompanySchema, invalid, { strict: false })
-      expect(result).toEqual(invalid)
-      expect(consoleSpy).toHaveBeenCalled()
-
-      consoleSpy.mockRestore()
-    })
-  })
-
-  describe('safeValidateApiResponse', () => {
-    const validSkill = {
-      id: '1',
-      name: 'Python',
-      category: 'Languages',
-      proficiency_level: 90
-    }
-
-    it('should return success result for valid data', () => {
-      const result = safeValidateApiResponse(SkillSchema, validSkill)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data).toEqual(validSkill)
-      }
-    })
-
-    it('should return error result for invalid data', () => {
-      const invalid = { id: 1 }
-      const result = safeValidateApiResponse(SkillSchema, invalid)
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.errors).toBeDefined()
-      }
-    })
-  })
-
-  describe('createValidator', () => {
-    it('should create a reusable validator function', () => {
-      const validateEducation = createValidator(EducationSchema)
-
-      const validData = {
-        id: '1',
-        institution: 'Uni',
-        degree: 'BSc',
-        field_of_study: 'CS',
-        start_date: '2020-01-01'
-      }
-
-      const result = validateEducation(validData)
-      expect(result).toEqual(validData)
-    })
-
-    it('should throw for invalid data', () => {
-      const validateProject = createValidator(ProjectSchema)
-
-      expect(() => validateProject({})).toThrow(ApiValidationError)
-    })
-  })
-
-  describe('ApiValidationError', () => {
-    it('should have correct name and errors property', () => {
-      const parseResult = CompanySchema.safeParse({})
-      if (!parseResult.success) {
-        const error = new ApiValidationError('Test error', parseResult.error)
-
-        expect(error.name).toBe('ApiValidationError')
-        expect(error.message).toBe('Test error')
-        expect(error.errors).toBe(parseResult.error)
-      }
-    })
-  })
-})
+// Validation utilities (validateApiResponse, safeValidateApiResponse, createValidator)
+// were removed in DEAD-006 — they were never called at runtime.

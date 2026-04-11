@@ -14,7 +14,6 @@
  */
 
 import { z } from 'zod'
-import { apiLogger } from '@/utils/logger'
 
 // ============================================================================
 // Company/Experience Schemas
@@ -193,115 +192,6 @@ export const ErrorResponseSchema = z.object({
     )
   )
 })
-
-// ============================================================================
-// Validation Utilities
-// ============================================================================
-
-/**
- * ValidationError class for schema validation failures
- */
-export class ApiValidationError extends Error {
-  public errors: z.ZodError
-
-  constructor(message: string, errors: z.ZodError) {
-    super(message)
-    this.name = 'ApiValidationError'
-    this.errors = errors
-  }
-}
-
-/**
- * Validate API response data against a schema
- *
- * @param schema - Zod schema to validate against
- * @param data - Data to validate
- * @param options - Validation options
- * @returns Validated and typed data
- * @throws ApiValidationError if validation fails
- *
- * @example
- * ```ts
- * const companies = validateApiResponse(CompanyArraySchema, response.data)
- * ```
- */
-export function validateApiResponse<T extends z.ZodTypeAny>(
-  schema: T,
-  data: unknown,
-  options: { strict?: boolean } = {}
-): z.infer<T> {
-  const { strict = true } = options
-
-  const result = schema.safeParse(data)
-
-  if (!result.success) {
-    if (strict) {
-      apiLogger.error('Schema validation failed:', {
-        issues: result.error.issues,
-        data
-      })
-      throw new ApiValidationError(
-        `API response validation failed: ${result.error.message}`,
-        result.error
-      )
-    }
-
-    // In non-strict mode, log warning and return data as-is
-    apiLogger.warn('Schema validation failed (non-strict mode):', {
-      issues: result.error.issues
-    })
-    return data as z.infer<T>
-  }
-
-  return result.data
-}
-
-/**
- * Safe validation that returns a result object instead of throwing
- *
- * @param schema - Zod schema to validate against
- * @param data - Data to validate
- * @returns Result object with success flag and data or errors
- *
- * @example
- * ```ts
- * const result = safeValidateApiResponse(CompanySchema, data)
- * if (result.success) {
- *   console.log(result.data)
- * } else {
- *   console.error(result.errors)
- * }
- * ```
- */
-export function safeValidateApiResponse<T extends z.ZodTypeAny>(
-  schema: T,
-  data: unknown
-): { success: true; data: z.infer<T> } | { success: false; errors: z.ZodError } {
-  const result = schema.safeParse(data)
-
-  if (result.success) {
-    return { success: true, data: result.data }
-  }
-
-  return { success: false, errors: result.error }
-}
-
-/**
- * Create a validated API client wrapper
- *
- * @param schema - Zod schema for response validation
- * @returns Function that validates the response
- *
- * @example
- * ```ts
- * const validateCompanies = createValidator(CompanyArraySchema)
- * const response = await apiClient.get('/api/v1/companies')
- * const companies = validateCompanies(response.data)
- * ```
- */
-export function createValidator<T extends z.ZodTypeAny>(schema: T) {
-  return (data: unknown): z.infer<T> => validateApiResponse(schema, data)
-}
 
 // ============================================================================
 // Type Exports (inferred from schemas)
