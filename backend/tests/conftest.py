@@ -20,7 +20,6 @@ from app.middleware import limiter
 # Import all models to ensure they're registered with Base.metadata
 from app.models.analytics import PageView  # noqa: F401
 from app.models.company import Company  # noqa: F401
-from app.models.contact import Contact  # noqa: F401
 from app.models.document import Document  # noqa: F401
 from app.models.education import Education  # noqa: F401
 from app.models.oauth_state import OAuthState  # noqa: F401

@@ -34,7 +34,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-016~~ | ~~CI/CD~~ | ~~MEDIUM~~ | ~~Dockerfile root + tests in image~~ — **RESOLVED** |
 | ~~BE-009~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~List endpoints unbounded~~ — **WON'T FIX** (portfolio data < 20 items; analytics bounded by `days` param + LIMIT) |
 | ~~BE-010~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView missing indexes~~ — **RESOLVED** |
-| BE-011 | Backend | MEDIUM | ~600 lines of migration/seed logic runs on every app startup |
+| ~~BE-011~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~Startup migration logic~~ — **RESOLVED** (extracted to scripts/migrate_data.py) |
 | ~~BE-012~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~validate_safe_url duplicated~~ — **RESOLVED** (extracted to `_validators.py`) |
 | ~~BE-013~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~Contact model unused~~ — **RESOLVED** (deleted) |
 | BE-014 | Backend | MEDIUM | No Alembic migrations despite it being a dependency — raw SQL on startup |
@@ -46,7 +46,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CSS-002~~ | ~~CSS~~ | ~~MEDIUM~~ | ~~Hardcoded rgba in gradients~~ — **RESOLVED** (CSS vars) |
 | ~~BUILD-002~~ | ~~Build~~ | ~~MEDIUM~~ | ~~`tsconfig.node.json` wrong include~~ — **RESOLVED** |
 | ~~SEO-002~~ | ~~SEO~~ | ~~MEDIUM~~ | ~~dateModified hardcoded~~ — **RESOLVED** (updated to 2026-04-09) |
-| SEO-003 | SEO | MEDIUM | Experience detail pages have no SSR `<title>` or canonical tag |
+| ~~SEO-003~~ | ~~SEO~~ | ~~MEDIUM~~ | ~~No SSR head tags per route~~ — **RESOLVED** (useHead from @unhead/vue) |
 | ~~BE-015~~ | ~~Backend~~ | ~~LOW-MED~~ | ~~gunicorn worker count~~ — **RESOLVED** (WORKERS documented in .env.example) |
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |

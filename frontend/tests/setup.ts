@@ -2,6 +2,7 @@
  * Vitest global setup file
  * Runs before all tests
  */
+import { vi } from 'vitest'
 
 // Mock script loading to prevent happy-dom errors
 // happy-dom throws when a script element with src is connected to document
@@ -102,6 +103,12 @@ Object.defineProperty(global, 'localStorage', {
   value: localStorageMock,
   writable: true
 })
+
+// Mock @unhead/vue — vite-ssg installs the plugin at runtime, but unit tests
+// mount components without ViteSSG. useHead() is a no-op in test context.
+vi.mock('@unhead/vue', () => ({
+  useHead: vi.fn()
+}))
 
 // Mock console methods to reduce test output noise
 const originalConsole = { ...console }

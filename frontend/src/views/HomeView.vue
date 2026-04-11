@@ -264,10 +264,23 @@ const ThreeHeroBackground = defineAsyncComponent({
   delay: 0,
   timeout: 10000
 })
+import { useHead } from '@unhead/vue'
 import { getDocuments } from '../api/services'
 import type { Document } from '@/types'
 import { logger } from '../utils/logger'
 import { getUserMessage } from '../utils/errorHandler'
+
+useHead({
+  title: 'David Dashti | Cybersecurity in Healthcare',
+  meta: [
+    {
+      name: 'description',
+      content:
+        'Biomedical Engineer and Cybersecurity Specialist specializing in regulatory compliance for medical software and AI systems.'
+    }
+  ],
+  link: [{ rel: 'canonical', href: 'https://dashti.se/' }]
+})
 
 const portfolioStore = usePortfolioStore()
 const loading = ref(false)

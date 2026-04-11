@@ -176,6 +176,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
+import { useHead } from '@unhead/vue'
 import axios, { type AxiosError } from 'axios'
 import { gsap } from 'gsap'
 import type { Company } from '@/types'
@@ -262,6 +263,27 @@ const error = ref<string | null>(null)
 const logoError = ref<boolean>(false)
 
 const companyId = computed<string>(() => route.params.id as string)
+
+// Per-route head tags — reactive so SSG renders the correct title/canonical for each page
+useHead({
+  title: computed(() =>
+    company.value
+      ? `${company.value.name} | Experience | David Dashti`
+      : 'Experience | David Dashti'
+  ),
+  meta: [
+    {
+      name: 'description',
+      content: computed(() => company.value?.description || 'Experience details')
+    }
+  ],
+  link: [
+    {
+      rel: 'canonical',
+      href: computed(() => `https://dashti.se/experience/${companyId.value}`)
+    }
+  ]
+})
 
 // Format date helper
 const formatDate = (dateString: string | null | undefined): string => {
