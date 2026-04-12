@@ -1,0 +1,39 @@
+Alembic migrations for portfolio-site backend.
+
+## Common commands
+
+All commands run from `backend/` (where alembic.ini lives):
+
+    # Create a new migration from model changes
+    python -m alembic revision --autogenerate -m "describe change"
+
+    # Apply pending migrations
+    python -m alembic upgrade head
+
+    # Roll back one revision
+    python -m alembic downgrade -1
+
+    # Show current revision
+    python -m alembic current
+
+    # Show history
+    python -m alembic history
+
+## Initial setup for existing databases
+
+The first migration (`19fd54de976f`) applies cumulative schema changes made
+via model edits before Alembic was introduced. For a fresh database,
+`Base.metadata.create_all()` in the app lifespan creates tables at the
+current spec, so you should stamp the DB as already-migrated:
+
+    python -m alembic stamp head
+
+For an existing production database whose schema predates BE-007/010/013/019,
+run the migration to bring it current:
+
+    python -m alembic upgrade head
+
+## Database URL
+
+env.py reads `DATABASE_URL` from `app.config.settings`. The `sqlalchemy.url`
+field in `alembic.ini` is intentionally blank.

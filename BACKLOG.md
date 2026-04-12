@@ -37,7 +37,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-011~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~Startup migration logic~~ — **RESOLVED** (extracted to scripts/migrate_data.py) |
 | ~~BE-012~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~validate_safe_url duplicated~~ — **RESOLVED** (extracted to `_validators.py`) |
 | ~~BE-013~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~Contact model unused~~ — **RESOLVED** (deleted) |
-| BE-014 | Backend | MEDIUM | No Alembic migrations despite it being a dependency — raw SQL on startup |
+| ~~BE-014~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~No Alembic migrations~~ — **RESOLVED** (alembic init + sync migration + run_migrations removed) |
 | ~~TYPE-001~~ | ~~Code quality~~ | ~~MEDIUM~~ | ~~AnalyticsService dual isEnabled~~ — **RESOLVED** |
 | ~~ERR-002~~ | ~~Error handling~~ | ~~MEDIUM~~ | ~~Duplicate error handler setup~~ — **RESOLVED** (by DEAD-004) |
 | ~~A11Y-005~~ | ~~Accessibility~~ | ~~MEDIUM~~ | ~~ExperienceDetail navbar toggler aria~~ — **RESOLVED** |

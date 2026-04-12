@@ -167,112 +167,6 @@ async def cleanup_oauth_states_periodically():
             logger.exception("Error during OAuth state cleanup: %s", e)
 
 
-# Database migration helper for adding columns to existing tables
-# Whitelist of allowed table names to prevent SQL injection
-_ALLOWED_MIGRATION_TABLES = frozenset({"documents", "education", "skills"})
-
-
-async def _run_sqlite_migration(session, migration: dict) -> bool:  # noqa: ANN001
-    """Run a SQLite-specific migration. Returns True if migration was applied."""
-    from sqlalchemy import text  # noqa: PLC0415
-
-    # SQLite migration configs: (table, new_column, old_column, sql)
-    # Note: table names MUST be in _ALLOWED_MIGRATION_TABLES whitelist
-    sqlite_configs = {
-        "documents": ("documents", "order_index", None, "ADD COLUMN order_index INTEGER DEFAULT 0"),
-        "education": (
-            "education",
-            "certificate_url",
-            None,
-            "ADD COLUMN certificate_url VARCHAR(500)",
-        ),
-        "proficiency_level": (
-            "skills",
-            "proficiency_level",
-            "proficiency",
-            "RENAME COLUMN proficiency TO proficiency_level",
-        ),
-        "years_of_experience": (
-            "skills",
-            "years_of_experience",
-            "years_experience",
-            "RENAME COLUMN years_experience TO years_of_experience",
-        ),
-    }
-
-    for key, (table, new_col, old_col, sql) in sqlite_configs.items():
-        if key in migration["description"]:
-            # Security: Validate table name against whitelist to prevent SQL injection
-            if table not in _ALLOWED_MIGRATION_TABLES:
-                logger.error("Invalid table name in migration: %s", table)
-                return False
-            result = await session.execute(text(f"PRAGMA table_info({table})"))
-            columns = [row[1] for row in result.fetchall()]
-            needs_migration = new_col not in columns and (old_col is None or old_col in columns)
-            if needs_migration:
-                await session.execute(text(f"ALTER TABLE {table} {sql}"))
-                await session.commit()
-                logger.info("Migration applied (SQLite): %s", migration["description"])
-                return True
-    return False
-
-
-async def run_migrations():
-    """Run simple migrations to add missing columns to existing tables."""
-    from sqlalchemy import text  # noqa: PLC0415
-
-    from app.database import AsyncSessionLocal  # noqa: PLC0415
-
-    migrations = [
-        {
-            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'documents' AND column_name = 'order_index'",
-            "migrate": "ALTER TABLE documents ADD COLUMN order_index INTEGER DEFAULT 0; CREATE INDEX IF NOT EXISTS ix_documents_order_index ON documents (order_index);",
-            "description": "Add order_index column to documents table",
-        },
-        {
-            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'education' AND column_name = 'certificate_url'",
-            "migrate": "ALTER TABLE education ADD COLUMN certificate_url VARCHAR(500);",
-            "description": "Add certificate_url column to education table",
-        },
-        {
-            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'education' AND column_name = 'order_index'",
-            "migrate": "ALTER TABLE education ADD COLUMN order_index INTEGER DEFAULT 0;",
-            "description": "Add order_index column to education table",
-        },
-        {
-            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'skills' AND column_name = 'proficiency_level'",
-            "migrate": "ALTER TABLE skills RENAME COLUMN proficiency TO proficiency_level;",
-            "description": "Rename skills.proficiency to skills.proficiency_level",
-        },
-        {
-            "check": "SELECT column_name FROM information_schema.columns WHERE table_name = 'skills' AND column_name = 'years_of_experience'",
-            "migrate": "ALTER TABLE skills RENAME COLUMN years_experience TO years_of_experience;",
-            "description": "Rename skills.years_experience to skills.years_of_experience",
-        },
-    ]
-
-    async with AsyncSessionLocal() as session:
-        for migration in migrations:
-            try:
-                result = await session.execute(text(migration["check"]))
-                if result.fetchone() is None:
-                    for stmt in migration["migrate"].strip().split(";"):
-                        if stmt.strip():
-                            await session.execute(text(stmt.strip()))
-                    await session.commit()
-                    logger.info("Migration applied: %s", migration["description"])
-            except Exception as e:
-                if "information_schema" in str(e).lower() or "no such table" in str(e).lower():
-                    try:
-                        await _run_sqlite_migration(session, migration)
-                    except Exception as sqlite_err:
-                        logger.warning(
-                            "Migration skipped: %s - %s", migration["description"], sqlite_err
-                        )
-                else:
-                    logger.warning("Migration check failed: %s - %s", migration["description"], e)
-
-
 # Data migrations (company/education/skill content corrections) have been
 # extracted to scripts/migrate_data.py. Run once with:
 #   cd backend && python -m scripts.migrate_data
@@ -310,9 +204,6 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
-
-    # Run migrations for existing tables
-    await run_migrations()
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
