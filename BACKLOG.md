@@ -61,7 +61,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-017~~ | ~~Backend~~ | ~~LOW~~ | ~~metrics response_model=dict~~ — **RESOLVED** |
 | ~~BE-018~~ | ~~Backend~~ | ~~LOW~~ | ~~Documents endpoints no rate limiting~~ — **RESOLVED** |
 | ~~BE-019~~ | ~~Backend~~ | ~~LOW~~ | ~~PageView nullable constraints~~ — **RESOLVED** |
-| CI-020 | CI/CD | LOW | SSG build pre-renders only `/` — add backend service for full route coverage |
+| ~~CI-020~~ | ~~CI/CD~~ | ~~LOW~~ | ~~SSG build pre-renders only `/`~~ — **RESOLVED** (fallback API URL points to production `dashti.se` so Vercel/CI builds enumerate real `/experience/:id` routes) |
 
 ---
 

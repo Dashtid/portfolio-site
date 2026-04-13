@@ -126,7 +126,7 @@ export const createApp = ViteSSG(
 export async function includedRoutes(paths: string[]) {
   const publicPaths = paths.filter(p => !p.startsWith('/admin'))
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://dashti.se'
 
   try {
     const res = await fetch(`${apiUrl}/api/v1/companies/`)
