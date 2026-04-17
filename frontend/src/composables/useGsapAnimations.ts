@@ -296,10 +296,13 @@ export function useTextReveal(
     }
 
     const text = target.value.textContent || ''
-    target.value.innerHTML = text
-      .split('')
-      .map(char => `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`)
-      .join('')
+    target.value.textContent = ''
+    for (const char of text) {
+      const span = document.createElement('span')
+      span.className = 'char'
+      span.textContent = char === ' ' ? '\u00A0' : char
+      target.value.appendChild(span)
+    }
 
     const chars = target.value.querySelectorAll('.char')
 
