@@ -70,7 +70,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~SEC-001~~ | ~~Security~~ | ~~HIGH~~ | ~~CSP script-src has unnecessary `https://*.sentry.io`~~ — **RESOLVED** (removed; Sentry bundled via npm, only connect-src needed) |
 | ~~CSS-003~~ | ~~CSS~~ | ~~MEDIUM~~ | ~~11x `!important` in portfolio.css~~ — **WON'T FIX** (Bootstrap defines `.bg-light`/`.bg-dark` with `!important`, so overrides must too; replaced hardcoded hex colors with CSS variables) |
 | ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
-| FE-002 | Frontend | LOW | 13 components have zero unit tests (BackToTop, DocumentCard, ErrorBoundary, FooterSection, etc.) |
+| ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
 
 ---
 
