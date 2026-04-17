@@ -6,14 +6,14 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.0
+anyio==4.13.0
     # via
     #   httpx
     #   starlette
     #   watchfiles
 asyncpg==0.31.0
     # via portfolio-backend
-authlib==1.6.9
+authlib==1.6.11
     # via portfolio-backend
 bcrypt==5.0.0
     # via portfolio-backend
@@ -24,13 +24,13 @@ certifi==2025.11.12
     #   sentry-sdk
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
-click==8.3.1
+click==8.3.2
     # via uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   uvicorn
-cryptography==46.0.3
+cryptography==46.0.7
     # via authlib
 deprecated==1.3.1
     # via limits
@@ -38,13 +38,13 @@ dnspython==2.8.0
     # via email-validator
 email-validator==2.3.0
     # via portfolio-backend
-fastapi==0.135.2
+fastapi==0.136.0
     # via
     #   portfolio-backend
     #   sentry-sdk
-filelock==3.20.1
+filelock==3.28.0
     # via portfolio-backend
-greenlet==3.3.2
+greenlet==3.4.0
     # via
     #   portfolio-backend
     #   sqlalchemy
@@ -65,9 +65,9 @@ idna==3.11
     #   anyio
     #   email-validator
     #   httpx
-limits==5.6.0
+limits==5.8.0
     # via slowapi
-mako==1.3.10
+mako==1.3.11
     # via alembic
 markupsafe==3.0.3
     # via mako
@@ -77,31 +77,31 @@ packaging==25.0
     #   limits
 pycparser==2.23 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.2
     # via
     #   fastapi
     #   portfolio-backend
     #   pydantic-settings
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pydantic-settings==2.13.1
     # via portfolio-backend
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via portfolio-backend
 python-dotenv==1.2.2
     # via
     #   portfolio-backend
     #   pydantic-settings
     #   uvicorn
-python-multipart==0.0.22
+python-multipart==0.0.26
     # via portfolio-backend
 pyyaml==6.0.3
     # via uvicorn
-sentry-sdk==2.54.0
+sentry-sdk==2.58.0
     # via portfolio-backend
 slowapi==0.1.9
     # via portfolio-backend
-sqlalchemy==2.0.48
+sqlalchemy==2.0.49
     # via
     #   alembic
     #   portfolio-backend
@@ -125,11 +125,11 @@ typing-inspection==0.4.2
     #   fastapi
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.2
+urllib3==2.6.3
     # via
     #   portfolio-backend
     #   sentry-sdk
-uvicorn==0.41.0
+uvicorn==0.44.0
     # via portfolio-backend
 uvloop==0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'
     # via uvicorn
@@ -137,5 +137,5 @@ watchfiles==1.1.1
     # via uvicorn
 websockets==15.0.1
     # via uvicorn
-wrapt==2.0.1
+wrapt==2.1.2
     # via deprecated
