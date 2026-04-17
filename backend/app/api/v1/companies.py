@@ -133,7 +133,7 @@ async def delete_company(
         await db.commit()
     except Exception as e:
         await db.rollback()
-        logger.exception(f"Failed to delete company {company_id}: {e}")
+        logger.exception("Failed to delete company %s", company_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete company"
         ) from e

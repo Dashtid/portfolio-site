@@ -111,7 +111,7 @@ async def delete_skill(
         await db.commit()
     except Exception as e:
         await db.rollback()
-        logger.exception(f"Failed to delete skill {skill_id}: {e}")
+        logger.exception("Failed to delete skill %s", skill_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete skill"
         ) from e

@@ -256,7 +256,7 @@ class GitHubService:
         )
         for result in language_results:
             if isinstance(result, BaseException):
-                logger.warning(f"Error fetching languages: {result}")
+                logger.warning("Error fetching languages: %s", result)
                 continue
             for lang, bytes_count in result.items():
                 languages[lang] = languages.get(lang, 0) + bytes_count

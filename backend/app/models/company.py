@@ -41,25 +41,3 @@ class Company(Base):
 
     # Relationships
     projects = relationship("Project", back_populates="company", cascade="all, delete-orphan")
-
-    def to_dict(self):
-        """Convert to dictionary for JSON serialization"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "title": self.title,
-            "description": self.description,
-            "detailed_description": self.detailed_description,
-            "location": self.location,
-            "start_date": self.start_date.isoformat() if self.start_date else None,
-            "end_date": self.end_date.isoformat() if self.end_date else None,
-            "logo_url": self.logo_url,
-            "website": self.website,
-            "order_index": self.order_index,
-            "video_url": self.video_url,
-            "video_title": self.video_title,
-            "map_url": self.map_url,
-            "map_title": self.map_title,
-            "responsibilities": self.responsibilities,
-            "technologies": self.technologies,
-        }

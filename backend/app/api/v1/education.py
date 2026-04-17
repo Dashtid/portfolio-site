@@ -156,7 +156,7 @@ async def delete_education(
         await db.commit()
     except Exception as e:
         await db.rollback()
-        logger.exception(f"Failed to delete education {education_id}: {e}")
+        logger.exception("Failed to delete education %s", education_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete education record",

@@ -3,25 +3,18 @@ GitHub API endpoints for fetching live statistics
 """
 
 import logging
-from typing import Annotated, TypedDict
+from typing import Annotated
 
 import httpx
 from fastapi import APIRouter, HTTPException, Path, Query, Request
 
 from app.config import settings
 from app.middleware.rate_limit import rate_limit_public
+from app.schemas.github import GitHubStats, ProjectStats, RepoLanguages, RepoLanguageStat
 from app.services.github_service import github_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-class LanguageStat(TypedDict):
-    """Type definition for language statistics."""
-
-    name: str
-    bytes: int
-    percentage: float
 
 
 # GitHub username/repo validation patterns
@@ -51,7 +44,7 @@ GitHubRepoName = Annotated[
 ]
 
 
-@router.get("/stats/{username}")
+@router.get("/stats/{username}", response_model=GitHubStats)
 @rate_limit_public
 async def get_github_stats(request: Request, username: GitHubUsername):
     """
@@ -62,15 +55,14 @@ async def get_github_stats(request: Request, username: GitHubUsername):
     try:
         stats = await github_service.get_portfolio_stats(username)
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
-        logger.exception(f"Error fetching GitHub stats for {username}: {e}")
-        # Use generic message in production to avoid leaking implementation details
+        logger.exception("Error fetching GitHub stats for %s", username)
         detail = str(e) if settings.DEBUG else "Failed to fetch GitHub statistics"
         raise HTTPException(status_code=500, detail=detail) from e
     else:
         return stats
 
 
-@router.get("/project/{owner}/{repo}")
+@router.get("/project/{owner}/{repo}", response_model=ProjectStats)
 @rate_limit_public
 async def get_project_stats(request: Request, owner: GitHubUsername, repo: GitHubRepoName):
     """
@@ -81,15 +73,14 @@ async def get_project_stats(request: Request, owner: GitHubUsername, repo: GitHu
     try:
         stats = await github_service.get_project_stats(owner, repo)
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
-        logger.exception(f"Error fetching project stats for {owner}/{repo}: {e}")
-        # Use generic message in production to avoid leaking implementation details
+        logger.exception("Error fetching project stats for %s/%s", owner, repo)
         detail = str(e) if settings.DEBUG else "Failed to fetch project statistics"
         raise HTTPException(status_code=500, detail=detail) from e
     else:
         return stats
 
 
-@router.get("/repos/{username}")
+@router.get("/repos/{username}", response_model=list[dict])
 @rate_limit_public
 async def get_user_repos(
     request: Request,
@@ -103,18 +94,16 @@ async def get_user_repos(
     """
     try:
         repos = await github_service.get_user_repos(username)
-        # Return only requested number of repos
         result = repos[:limit]
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
-        logger.exception(f"Error fetching repos for {username}: {e}")
-        # Use generic message in production to avoid leaking implementation details
+        logger.exception("Error fetching repos for %s", username)
         detail = str(e) if settings.DEBUG else "Failed to fetch repositories"
         raise HTTPException(status_code=500, detail=detail) from e
     else:
         return result
 
 
-@router.get("/languages/{owner}/{repo}")
+@router.get("/languages/{owner}/{repo}", response_model=RepoLanguages)
 @rate_limit_public
 async def get_repo_languages(request: Request, owner: GitHubUsername, repo: GitHubRepoName):
     """
@@ -126,23 +115,21 @@ async def get_repo_languages(request: Request, owner: GitHubUsername, repo: GitH
         languages = await github_service.get_repo_languages(owner, repo)
         total_bytes = sum(languages.values())
 
-        # Convert to percentages
-        language_stats: list[LanguageStat] = [
-            {
-                "name": lang,
-                "bytes": bytes_count,
-                "percentage": round(bytes_count / total_bytes * 100, 2) if total_bytes > 0 else 0,
-            }
+        language_stats: list[RepoLanguageStat] = [
+            RepoLanguageStat(
+                name=lang,
+                bytes=bytes_count,
+                percentage=round(bytes_count / total_bytes * 100, 2) if total_bytes > 0 else 0,
+            )
             for lang, bytes_count in languages.items()
         ]
 
-        result = {
-            "total_bytes": total_bytes,
-            "languages": sorted(language_stats, key=lambda x: x["bytes"], reverse=True),
-        }
+        result = RepoLanguages(
+            total_bytes=total_bytes,
+            languages=sorted(language_stats, key=lambda x: x.bytes, reverse=True),
+        )
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
-        logger.exception(f"Error fetching languages for {owner}/{repo}: {e}")
-        # Use generic message in production to avoid leaking implementation details
+        logger.exception("Error fetching languages for %s/%s", owner, repo)
         detail = str(e) if settings.DEBUG else "Failed to fetch repository languages"
         raise HTTPException(status_code=500, detail=detail) from e
     else:

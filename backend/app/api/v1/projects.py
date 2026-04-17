@@ -132,7 +132,7 @@ async def delete_project(
         await db.commit()
     except Exception as e:
         await db.rollback()
-        logger.exception(f"Failed to delete project {project_id}: {e}")
+        logger.exception("Failed to delete project %s", project_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete project"
         ) from e

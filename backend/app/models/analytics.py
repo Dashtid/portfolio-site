@@ -23,14 +23,3 @@ class PageView(Base):
 
     # Timestamps — indexed for analytics time-range queries
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-
-    def to_dict(self):
-        """Convert to dictionary for JSON serialization"""
-        return {
-            "id": self.id,
-            "page_path": self.page_path,
-            "referrer": self.referrer,
-            "country": self.country,
-            "city": self.city,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-        }

@@ -21,14 +21,3 @@ class Skill(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    def to_dict(self):
-        """Convert to dictionary for JSON serialization"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "category": self.category,
-            "proficiency_level": self.proficiency_level,
-            "years_of_experience": self.years_of_experience,
-            "order_index": self.order_index,
-        }

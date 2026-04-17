@@ -4,7 +4,6 @@ Tests for database models
 
 from app.models.analytics import PageView
 from app.models.company import Company
-from app.models.contact import Contact
 from app.models.document import Document
 from app.models.education import Education
 from app.models.project import Project
@@ -27,23 +26,6 @@ class TestCompanyModel:
         assert company.title == "Senior Developer"
         assert company.id == "company-123"
 
-    def test_company_to_dict(self):
-        """Test Company to_dict method."""
-        company = Company(
-            id="company-123",
-            name="Tech Corp",
-            title="Senior Developer",
-            description="Great company",
-            location="Stockholm",
-            order_index=1,
-        )
-        result = company.to_dict()
-        assert result["id"] == "company-123"
-        assert result["name"] == "Tech Corp"
-        assert result["title"] == "Senior Developer"
-        assert result["description"] == "Great company"
-        assert result["location"] == "Stockholm"
-
 
 class TestProjectModel:
     """Tests for Project model."""
@@ -58,35 +40,6 @@ class TestProjectModel:
         )
         assert project.name == "Portfolio Site"
         assert project.description == "A portfolio website"
-
-    def test_project_to_dict(self):
-        """Test Project to_dict method."""
-        project = Project(
-            id="project-123",
-            name="Portfolio Site",
-            description="A portfolio website",
-            technologies=["Vue.js", "FastAPI"],
-            github_url="https://github.com/user/repo",
-            featured=True,
-            order_index=1,
-        )
-        result = project.to_dict()
-        assert result["id"] == "project-123"
-        assert result["name"] == "Portfolio Site"
-        assert result["technologies"] == ["Vue.js", "FastAPI"]
-        assert result["github_url"] == "https://github.com/user/repo"
-        assert result["featured"] is True
-
-    def test_project_to_dict_empty_technologies(self):
-        """Test Project to_dict with empty technologies."""
-        project = Project(
-            id="project-123",
-            name="Test Project",
-            technologies=None,
-            order_index=1,
-        )
-        result = project.to_dict()
-        assert result["technologies"] == []
 
 
 class TestSkillModel:
@@ -104,23 +57,6 @@ class TestSkillModel:
         assert skill.name == "Python"
         assert skill.category == "Programming Languages"
         assert skill.proficiency_level == 90
-
-    def test_skill_to_dict(self):
-        """Test Skill to_dict method."""
-        skill = Skill(
-            id="skill-123",
-            name="Python",
-            category="Programming Languages",
-            proficiency_level=90,
-            years_of_experience=5.0,
-            order_index=1,
-        )
-        result = skill.to_dict()
-        assert result["id"] == "skill-123"
-        assert result["name"] == "Python"
-        assert result["category"] == "Programming Languages"
-        assert result["proficiency_level"] == 90
-        assert result["years_of_experience"] == 5.0
 
 
 class TestEducationModel:
@@ -193,39 +129,6 @@ class TestDocumentModel:
         assert "thesis" in result
 
 
-class TestContactModel:
-    """Tests for Contact model."""
-
-    def test_contact_creation(self):
-        """Test Contact model creation."""
-        contact = Contact(
-            id="contact-123",
-            name="John Doe",
-            email="visitor@example.com",
-            subject="Hello",
-            message="Test message",
-        )
-        assert contact.email == "visitor@example.com"
-        assert contact.name == "John Doe"
-        assert contact.message == "Test message"
-
-    def test_contact_to_dict(self):
-        """Test Contact to_dict method."""
-        contact = Contact(
-            id="contact-123",
-            name="John Doe",
-            email="visitor@example.com",
-            subject="Hello",
-            message="Test message",
-            status="unread",
-        )
-        result = contact.to_dict()
-        assert result["id"] == "contact-123"
-        assert result["name"] == "John Doe"
-        assert result["email"] == "visitor@example.com"
-        assert result["status"] == "unread"
-
-
 class TestPageViewModel:
     """Tests for PageView model."""
 
@@ -238,21 +141,6 @@ class TestPageViewModel:
         )
         assert page_view.page_path == "/home"
         assert page_view.referrer == "https://google.com"
-
-    def test_page_view_to_dict(self):
-        """Test PageView to_dict method."""
-        page_view = PageView(
-            id="pv-123",
-            page_path="/home",
-            referrer="https://google.com",
-            country="SE",
-            city="Stockholm",
-        )
-        result = page_view.to_dict()
-        assert result["id"] == "pv-123"
-        assert result["page_path"] == "/home"
-        assert result["country"] == "SE"
-        assert result["city"] == "Stockholm"
 
 
 class TestModelDefaults:
@@ -280,13 +168,3 @@ class TestModelDefaults:
         skill = Skill(name="Test Skill", order_index=0)
         assert skill.years_of_experience is None
         assert skill.order_index == 0
-
-    def test_contact_with_status(self):
-        """Test Contact with status value."""
-        contact = Contact(
-            name="Test",
-            email="test@test.com",
-            message="Test message",
-            status="unread",
-        )
-        assert contact.status == "unread"

@@ -40,19 +40,3 @@ class Project(Base):
 
     # Relationships
     company = relationship("Company", back_populates="projects")
-
-    def to_dict(self):
-        """Convert to dictionary for JSON serialization"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "technologies": self.technologies or [],
-            "github_url": self.github_url,
-            "live_url": self.live_url,
-            "image_url": self.image_url,
-            "company_id": self.company_id,
-            "company": self.company.name if self.company else None,
-            "featured": self.featured,
-            "order_index": self.order_index,
-        }

@@ -37,9 +37,9 @@ async def get_documents(request: Request, db: DbSession):
             select(Document).order_by(Document.order_index.asc(), Document.published_date.desc())
         )
         documents = result.scalars().all()
-        logger.info(f"Retrieved {len(documents)} documents")
+        logger.info("Retrieved %d documents", len(documents))
     except Exception as e:
-        logger.exception(f"Error fetching documents: {str(e)}")
+        logger.exception("Error fetching documents")
         raise HTTPException(status_code=500, detail="Failed to fetch documents") from e
     else:
         return documents
@@ -67,11 +67,11 @@ async def get_document(request: Request, document_id: str, db: DbSession):
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        logger.info(f"Retrieved document: {document.title}")
+        logger.info("Retrieved document: %s", document.title)
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"Error fetching document {document_id}: {str(e)}")
+        logger.exception("Error fetching document %s", document_id)
         raise HTTPException(status_code=500, detail="Failed to fetch document") from e
     else:
         return document

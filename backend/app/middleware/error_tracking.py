@@ -106,4 +106,4 @@ def track_error(error: Exception, context: dict | None = None):
     if context:
         log_context.update(context)
 
-    logger.error(f"Tracked error: {type(error).__name__}: {str(error)}", extra=log_context)
+    logger.error("Tracked error: %s: %s", type(error).__name__, error, extra=log_context)
