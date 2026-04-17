@@ -435,14 +435,20 @@ section {
   background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
-/* Dark mode override for bg-dark sections */
+/* Dark mode override for bg-dark sections
+ * !important is required: Bootstrap defines .bg-dark/.bg-light with !important,
+ * so overrides must match. Specificity alone cannot override !important. */
 [data-theme='dark'] .bg-dark {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-  color: #f8fafc !important;
+  background: linear-gradient(
+    135deg,
+    var(--color-gray-800) 0%,
+    var(--color-gray-900) 100%
+  ) !important;
+  color: var(--color-gray-50) !important;
 }
 
 [data-theme='dark'] .bg-dark .section-title {
-  color: #f8fafc !important;
+  color: var(--color-gray-50) !important;
 }
 
 /* Experience Cards - Bootstrap Grid Layout */

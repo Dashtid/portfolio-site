@@ -62,6 +62,15 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-018~~ | ~~Backend~~ | ~~LOW~~ | ~~Documents endpoints no rate limiting~~ — **RESOLVED** |
 | ~~BE-019~~ | ~~Backend~~ | ~~LOW~~ | ~~PageView nullable constraints~~ — **RESOLVED** |
 | ~~CI-020~~ | ~~CI/CD~~ | ~~LOW~~ | ~~SSG build pre-renders only `/`~~ — **RESOLVED** (fallback API URL points to production `dashti.se` so Vercel/CI builds enumerate real `/experience/:id` routes) |
+| ~~BE-020~~ | ~~Backend~~ | ~~HIGH~~ | ~~GitHub endpoints missing response_model~~ — **RESOLVED** (4 endpoints, new `schemas/github.py`) |
+| ~~BE-021~~ | ~~Backend~~ | ~~HIGH~~ | ~~Unused to_dict() methods on 4 models~~ — **RESOLVED** (Project, Company, Skill, PageView) |
+| ~~BE-022~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~f-string logging (10 call sites)~~ — **RESOLVED** (lazy % formatting) |
+| ~~BE-023~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~python-json-logger installed but unused~~ — **RESOLVED** (removed from deps) |
+| ~~FE-001~~ | ~~Frontend~~ | ~~MEDIUM~~ | ~~innerHTML in useGsapAnimations~~ — **RESOLVED** (replaced with createElement/textContent) |
+| ~~SEC-001~~ | ~~Security~~ | ~~HIGH~~ | ~~CSP script-src has unnecessary `https://*.sentry.io`~~ — **RESOLVED** (removed; Sentry bundled via npm, only connect-src needed) |
+| ~~CSS-003~~ | ~~CSS~~ | ~~MEDIUM~~ | ~~11x `!important` in portfolio.css~~ — **WON'T FIX** (Bootstrap defines `.bg-light`/`.bg-dark` with `!important`, so overrides must too; replaced hardcoded hex colors with CSS variables) |
+| ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
+| FE-002 | Frontend | LOW | 13 components have zero unit tests (BackToTop, DocumentCard, ErrorBoundary, FooterSection, etc.) |
 
 ---
 
