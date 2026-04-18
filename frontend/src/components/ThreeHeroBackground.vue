@@ -172,6 +172,13 @@ const handleReducedMotionChange = (event: MediaQueryListEvent) => {
 }
 
 onMounted(async () => {
+  // Skip Three.js entirely if reduced motion is preferred — saves ~172KB gzipped
+  // download for users who won't see the animation (canvas is also CSS-hidden).
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    isReducedMotion = true
+    return
+  }
+
   _THREE = await import('three')
   initScene()
   animate()

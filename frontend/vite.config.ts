@@ -94,14 +94,16 @@ export default defineConfig({
             }
           },
           {
-            // Cache external resources (stale-while-revalidate)
+            // Cache Google Fonts CSS + font files (stale-while-revalidate).
+            // 30-day TTL: font CSS rarely changes but can; long TTL risks
+            // stale @font-face URLs for up to a year otherwise.
             urlPattern: /^https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com)\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
           }

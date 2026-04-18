@@ -118,7 +118,12 @@ const { toasts, remove } = useToast()
   font-size: 1.25rem;
   color: var(--text-tertiary, #94a3b8);
   cursor: pointer;
-  padding: 0 0.25rem;
+  /* WCAG 2.5.8: minimum 44x44 CSS px touch target */
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
   transition: color 0.2s;
 }

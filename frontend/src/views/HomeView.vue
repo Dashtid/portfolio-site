@@ -125,6 +125,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="certificate-link"
+                :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
               >
                 View Certificate
                 <svg
@@ -196,14 +197,18 @@
           </h2>
           <div class="about-layout">
             <div class="profile-photo-container">
-              <img
-                src="/images/profile.png"
-                alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
-                class="profile-photo"
-                width="280"
-                height="326"
-                loading="lazy"
-              />
+              <picture>
+                <source srcset="/images/optimized/cropped.avif" type="image/avif" />
+                <source srcset="/images/optimized/cropped.webp" type="image/webp" />
+                <img
+                  src="/images/profile.png"
+                  alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
+                  class="profile-photo"
+                  width="280"
+                  height="326"
+                  loading="lazy"
+                />
+              </picture>
             </div>
             <div class="about-text">
               <p class="about-summary">
