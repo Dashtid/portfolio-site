@@ -14,19 +14,23 @@ def test_get_github_stats_success(mock_service, client: TestClient):
     # Mock the github_service response
     mock_service.get_portfolio_stats = AsyncMock(
         return_value={
+            "username": "testuser",
             "public_repos": 25,
             "followers": 50,
             "following": 30,
             "total_stars": 100,
-            "languages": {"Python": 50, "JavaScript": 30},
+            "total_forks": 10,
+            "total_watchers": 20,
+            "top_languages": [{"name": "Python", "percentage": 60.0}],
+            "featured_repos": [],
         }
     )
 
     response = client.get("/api/v1/github/stats/testuser")
     assert response.status_code == 200
     data = response.json()
-    assert "public_repos" in data
-    assert "followers" in data
+    assert data["username"] == "testuser"
+    assert data["public_repos"] == 25
 
 
 def test_get_github_stats_invalid_username(client: TestClient):

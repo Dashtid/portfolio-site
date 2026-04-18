@@ -156,12 +156,12 @@ class TestSeedEducation:
 
     @pytest.mark.asyncio
     async def test_seed_education_creates_correct_count(self, db_session):
-        """Test that seed_education creates exactly 5 education records."""
+        """Test that seed_education creates exactly 6 education records."""
         await seed_education(db_session)
 
         result = await db_session.execute(select(Education))
         education_items = result.scalars().all()
-        assert len(education_items) == 5
+        assert len(education_items) == 6
 
     @pytest.mark.asyncio
     async def test_seed_education_has_required_fields(self, db_session):
@@ -245,7 +245,7 @@ class TestSeedDataIntegration:
         assert len(companies) == 8
         assert len(projects) == 5
         assert len(skills) == 20
-        assert len(education) == 5
+        assert len(education) == 6
 
     @pytest.mark.asyncio
     async def test_reseed_after_clear(self, db_session):

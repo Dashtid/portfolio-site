@@ -1105,8 +1105,9 @@ class TestTrackErrorFunction:
                         track_error(e)
 
                     mock_logger.error.assert_called_once()
-                    call_args = mock_logger.error.call_args[0][0]
-                    assert type(error).__name__ in call_args
+                    # Lazy logging: format is first positional arg, values follow.
+                    positional_args = mock_logger.error.call_args[0]
+                    assert type(error).__name__ in positional_args
 
 
 class TestRateLimitCookieToken:
