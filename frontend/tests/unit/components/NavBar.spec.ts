@@ -257,11 +257,6 @@ describe('NavBar', () => {
       mockSection.getBoundingClientRect = vi.fn().mockReturnValue({ top: 600 })
       document.body.appendChild(mockSection)
 
-      // Create navbar-collapse element with 'show' class (simulating open mobile menu)
-      const mockNavbarCollapse = document.createElement('div')
-      mockNavbarCollapse.className = 'navbar-collapse show'
-      document.body.appendChild(mockNavbarCollapse)
-
       vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
 
       wrapper = mount(NavBar, {
@@ -271,16 +266,18 @@ describe('NavBar', () => {
         attachTo: document.body
       }) as VueWrapper<NavBarInstance>
 
+      // Open mobile menu by clicking toggler
+      await wrapper.find('[data-testid="mobile-menu-toggle"]').trigger('click')
+      expect(wrapper.find('.navbar-collapse').classes()).toContain('show')
+
       // Click on education link
-      const educationLink = wrapper.find('[data-testid="nav-link-education"]')
-      await educationLink.trigger('click')
+      await wrapper.find('[data-testid="nav-link-education"]').trigger('click')
 
       // The 'show' class should be removed
-      expect(mockNavbarCollapse.classList.contains('show')).toBe(false)
+      expect(wrapper.find('.navbar-collapse').classes()).not.toContain('show')
 
       // Cleanup
       document.body.removeChild(mockSection)
-      document.body.removeChild(mockNavbarCollapse)
     })
   })
 

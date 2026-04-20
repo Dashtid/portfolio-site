@@ -22,16 +22,19 @@
           class="navbar-toggler ms-2 d-lg-none"
           type="button"
           data-testid="mobile-menu-toggle"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
           aria-controls="navbarNav"
-          aria-expanded="false"
+          :aria-expanded="mobileMenuOpen"
           aria-label="Toggle navigation menu"
+          @click="mobileMenuOpen = !mobileMenuOpen"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
       </div>
-      <div id="navbarNav" class="collapse navbar-collapse order-lg-1">
+      <div
+        id="navbarNav"
+        class="collapse navbar-collapse order-lg-1"
+        :class="{ show: mobileMenuOpen }"
+      >
         <ul class="navbar-nav ms-auto">
           <li v-for="item in navItems" :key="item.href" class="nav-item">
             <a
@@ -63,6 +66,7 @@ interface NavItem {
 
 const scrolled = ref<boolean>(false)
 const activeSection = ref<string>('hero')
+const mobileMenuOpen = ref<boolean>(false)
 
 const navItems: NavItem[] = [
   { name: 'Home', href: 'hero' },
@@ -127,10 +131,7 @@ const scrollToSection = (sectionId: string): void => {
     activeSection.value = sectionId
 
     // Close mobile menu if open
-    const navbarCollapse = document.querySelector('.navbar-collapse')
-    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
-      navbarCollapse.classList.remove('show')
-    }
+    mobileMenuOpen.value = false
 
     // Set focus to target section for accessibility (screen readers)
     // Temporarily set tabindex="-1" to make non-interactive elements focusable

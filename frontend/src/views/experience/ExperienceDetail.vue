@@ -8,16 +8,15 @@
         <button
           class="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
           aria-controls="navbarNav"
-          aria-expanded="false"
+          :aria-expanded="mobileMenuOpen"
           aria-label="Toggle navigation"
+          @click="mobileMenuOpen = !mobileMenuOpen"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div id="navbarNav" class="collapse navbar-collapse">
+        <div id="navbarNav" class="collapse navbar-collapse" :class="{ show: mobileMenuOpen }">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
               <router-link to="/" class="nav-link px-3 py-2 border rounded shadow-sm">
@@ -261,6 +260,7 @@ const allCompanies = ref<Company[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
 const logoError = ref<boolean>(false)
+const mobileMenuOpen = ref<boolean>(false)
 
 const companyId = computed<string>(() => route.params.id as string)
 
