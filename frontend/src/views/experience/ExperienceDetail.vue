@@ -19,9 +19,7 @@
         <div id="navbarNav" class="collapse navbar-collapse" :class="{ show: mobileMenuOpen }">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <router-link to="/" class="nav-link px-3 py-2 border rounded shadow-sm">
-                Home
-              </router-link>
+              <router-link to="/" class="nav-link">Home</router-link>
             </li>
           </ul>
 
@@ -31,7 +29,7 @@
               v-for="comp in allCompanies"
               :key="comp.id"
               :to="`/experience/${comp.id}`"
-              class="nav-link company-chip"
+              class="nav-link"
               :class="{ active: comp.id === companyId }"
             >
               <span>{{ comp.name }}</span>
@@ -428,27 +426,6 @@ onUnmounted(() => {
   mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
 }
 
-.company-chip {
-  flex: 0 0 auto;
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.1));
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.company-chip:hover {
-  border-color: var(--primary-500, #3b82f6);
-}
-
-.company-chip.active {
-  background: var(--primary-500, #3b82f6);
-  border-color: var(--primary-500, #3b82f6);
-  color: var(--text-inverse, #fff) !important;
-}
-
 .chip-year {
   margin-left: 0.375rem;
   opacity: 0.65;
@@ -479,28 +456,63 @@ onUnmounted(() => {
   }
 }
 
+/* Match HomeView navbar: translucent + blur, plain underline-on-hover links */
 .navbar {
-  background-color: var(--bg-secondary, #f8fafc) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .navbar-brand {
-  color: var(--text-primary, #1e293b) !important;
+  font-family: var(--font-family-display, inherit);
+  color: var(--text-primary) !important;
   font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
 }
 
 .nav-link {
-  color: var(--text-primary, #1e293b) !important;
-  background-color: var(--bg-primary, #ffffff);
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+  position: relative;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary-500, #3b82f6);
+  border-radius: 1px;
+  transition:
+    width 0.25s ease,
+    left 0.25s ease;
+}
+
+.nav-link:hover {
+  color: var(--primary-500, #3b82f6) !important;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 60%;
+  left: 20%;
 }
 
 .nav-link.active {
-  background-color: var(--primary-600) !important;
-  color: white !important;
-  border-color: var(--primary-600) !important;
-}
-
-.nav-link:hover:not(.active) {
-  background-color: var(--bg-secondary, #f1f5f9);
+  color: var(--primary-500, #3b82f6) !important;
+  font-weight: 600;
 }
 
 .badge {
@@ -554,11 +566,12 @@ main :deep(p) {
 }
 
 [data-theme='dark'] .navbar {
-  background-color: #1e293b !important;
+  background: var(--navbar-bg) !important;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 [data-theme='dark'] .navbar-brand {
-  color: #f1f5f9 !important;
+  color: var(--text-primary) !important;
 }
 
 [data-theme='dark'] .navbar-toggler-icon {
@@ -566,13 +579,16 @@ main :deep(p) {
 }
 
 [data-theme='dark'] .nav-link {
-  color: #e2e8f0 !important;
-  background-color: #1e293b;
-  border-color: #475569 !important;
+  color: var(--text-secondary) !important;
 }
 
-[data-theme='dark'] .nav-link:hover:not(.active) {
-  background-color: #334155;
+[data-theme='dark'] .nav-link::after {
+  background: var(--link-color);
+}
+
+[data-theme='dark'] .nav-link:hover,
+[data-theme='dark'] .nav-link.active {
+  color: var(--link-color) !important;
 }
 
 [data-theme='dark'] h1,
