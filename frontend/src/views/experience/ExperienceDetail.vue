@@ -26,15 +26,16 @@
           </ul>
 
           <!-- Experience Navigation -->
-          <div v-if="allCompanies.length > 0" class="d-flex gap-2 flex-wrap">
+          <div v-if="allCompanies.length > 0" class="company-nav-scroll">
             <router-link
               v-for="comp in allCompanies"
               :key="comp.id"
               :to="`/experience/${comp.id}`"
-              class="nav-link px-2 py-1 border rounded shadow-sm text-center"
+              class="nav-link company-chip"
               :class="{ active: comp.id === companyId }"
             >
-              {{ comp.name }}
+              <span>{{ comp.name }}</span>
+              <span v-if="companyLabel(comp)" class="chip-year">{{ companyLabel(comp) }}</span>
             </router-link>
           </div>
         </div>
@@ -264,6 +265,14 @@ const mobileMenuOpen = ref<boolean>(false)
 
 const companyId = computed<string>(() => route.params.id as string)
 
+// Show a year suffix only when multiple entries share the same company name
+// (e.g. two Scania summer jobs). Avoids visual clutter for unique names.
+const companyLabel = (comp: Company): string => {
+  const duplicateName = allCompanies.value.filter(c => c.name === comp.name).length > 1
+  if (!duplicateName || !comp.start_date) return ''
+  return new Date(comp.start_date).getFullYear().toString()
+}
+
 // Per-route head tags — reactive so SSG renders the correct title/canonical for each page
 useHead({
   title: computed(() =>
@@ -398,6 +407,45 @@ onUnmounted(() => {
   min-height: 100vh;
   background-color: var(--bg-primary, #ffffff);
   color: var(--text-primary, #1e293b);
+}
+
+/* Horizontal scroll strip for company nav — avoids ugly wrap on many entries */
+.company-nav-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+}
+
+.company-chip {
+  flex: 0 0 auto;
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.1));
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.company-chip:hover {
+  border-color: var(--primary-500, #3b82f6);
+}
+
+.company-chip.active {
+  background: var(--primary-500, #3b82f6);
+  border-color: var(--primary-500, #3b82f6);
+  color: var(--text-inverse, #fff) !important;
+}
+
+.chip-year {
+  margin-left: 0.375rem;
+  opacity: 0.65;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Media Section - Side by side layout for video and map */
