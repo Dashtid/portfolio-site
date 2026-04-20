@@ -301,13 +301,21 @@ const formatDate = (dateString: string | null | undefined): string => {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
+// Minimal markdown: **bold** and *italic*. DOMPurify still enforces the
+// allowed-tag list below, so any other markdown/HTML is stripped. Order
+// matters: do ** before * so **foo** doesn't get mangled into <em>.
+const renderInlineMarkdown = (text: string): string => {
+  return text
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
+}
+
 // Format description with HTML and XSS protection
 const formatDescription = (desc: string | null | undefined): string => {
   if (!desc) return ''
-  // Replace newlines with paragraph breaks
   const html = desc
     .split('\n\n')
-    .map(p => `<p>${p}</p>`)
+    .map(p => `<p>${renderInlineMarkdown(p)}</p>`)
     .join('')
 
   // Sanitize HTML to prevent XSS attacks

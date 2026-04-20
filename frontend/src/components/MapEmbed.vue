@@ -58,7 +58,6 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
-  min-height: 4.5rem;
 }
 
 .ratio {
