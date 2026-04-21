@@ -56,8 +56,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ThemeToggle from './ThemeToggle.vue'
+
+const route = useRoute()
+const router = useRouter()
+
+// On the home route we track which section is in view via scroll; on other
+// routes we highlight a static section based on the URL (e.g. /experience/:id
+// → highlight 'experience'). isHomeRoute gates scroll-vs-navigate behavior.
+const isHomeRoute = computed(() => route.path === '/')
+const routeSection = computed(() => {
+  if (route.path.startsWith('/experience/') || route.path.startsWith('/company/')) {
+    return 'experience'
+  }
+  return ''
+})
 
 interface NavItem {
   name: string
@@ -107,8 +122,15 @@ const throttle = (func: () => void, limit: number): (() => void) => {
   }
 }
 
-// Smooth scroll to section
+// Navigate to a section. On the home route, smooth-scroll in place; on other
+// routes, route to /#section — the router's scrollBehavior handles the scroll.
 const scrollToSection = (sectionId: string): void => {
+  if (!isHomeRoute.value) {
+    mobileMenuOpen.value = false
+    router.push({ path: '/', hash: `#${sectionId}` })
+    return
+  }
+
   let element = sectionElementsCache.value.get(sectionId)
   if (!element) {
     // Cache miss - query DOM and store result for future use
@@ -152,7 +174,10 @@ const handleScroll = (): void => {
   // Update navbar background on scroll
   scrolled.value = window.scrollY > 50
 
-  // Update active section based on scroll position
+  // Active-section tracking only applies on the home route (sections don't
+  // exist on other pages).
+  if (!isHomeRoute.value) return
+
   const scrollPosition = window.scrollY + 100
   const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
 
@@ -184,6 +209,16 @@ onMounted(() => {
   window.addEventListener('scroll', throttledHandleScroll, { passive: true })
   handleScroll() // Initial check
 })
+
+// When navigating to a non-home route, reflect that in the active-link
+// highlight so (e.g.) 'Experience' stays highlighted on /experience/:id.
+watch(
+  routeSection,
+  section => {
+    if (section) activeSection.value = section
+  },
+  { immediate: true }
+)
 
 onUnmounted(() => {
   window.removeEventListener('scroll', throttledHandleScroll)

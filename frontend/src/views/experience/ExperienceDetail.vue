@@ -1,44 +1,6 @@
 <template>
   <div class="experience-detail">
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg sticky-top mb-4">
-      <div class="container">
-        <router-link to="/" class="navbar-brand">David Dashti</router-link>
-
-        <button
-          class="navbar-toggler"
-          type="button"
-          aria-controls="navbarNav"
-          :aria-expanded="mobileMenuOpen"
-          aria-label="Toggle navigation"
-          @click="mobileMenuOpen = !mobileMenuOpen"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div id="navbarNav" class="collapse navbar-collapse" :class="{ show: mobileMenuOpen }">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <router-link to="/" class="nav-link">Home</router-link>
-            </li>
-          </ul>
-
-          <!-- Experience Navigation -->
-          <div v-if="allCompanies.length > 0" class="company-nav-scroll">
-            <router-link
-              v-for="comp in allCompanies"
-              :key="comp.id"
-              :to="`/experience/${comp.id}`"
-              class="nav-link"
-              :class="{ active: comp.id === companyId }"
-            >
-              <span>{{ comp.name }}</span>
-              <span v-if="companyLabel(comp)" class="chip-year">{{ companyLabel(comp) }}</span>
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <NavBar />
 
     <!-- Main landmark — always present so router focus() and skip link land correctly -->
     <main id="main-content" tabindex="-1">
@@ -183,6 +145,7 @@ import { config } from '../../config'
 import DOMPurify from 'dompurify'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
+import NavBar from '@/components/NavBar.vue'
 
 // AbortController for cancelling pending requests on route change
 let fetchAbortController: AbortController | null = null
@@ -255,21 +218,11 @@ const runEntranceAnimations = (): void => {
 const route = useRoute()
 
 const company = ref<Company | null>(null)
-const allCompanies = ref<Company[]>([])
 const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
 const logoError = ref<boolean>(false)
-const mobileMenuOpen = ref<boolean>(false)
 
 const companyId = computed<string>(() => route.params.id as string)
-
-// Show a year suffix only when multiple entries share the same company name
-// (e.g. two Scania summer jobs). Avoids visual clutter for unique names.
-const companyLabel = (comp: Company): string => {
-  const duplicateName = allCompanies.value.filter(c => c.name === comp.name).length > 1
-  if (!duplicateName || !comp.start_date) return ''
-  return new Date(comp.start_date).getFullYear().toString()
-}
 
 // Per-route head tags — reactive so SSG renders the correct title/canonical for each page
 useHead({
@@ -326,18 +279,6 @@ const formatDescription = (desc: string | null | undefined): string => {
   })
 }
 
-// Fetch all companies for navigation
-const fetchAllCompanies = async (): Promise<void> => {
-  try {
-    const response = await axios.get<Company[]>(`${config.apiUrl}/api/v1/companies/`)
-    allCompanies.value = response.data.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
-  } catch (err) {
-    // Ignore cancelled requests
-    if (axios.isCancel(err)) return
-    apiLogger.error('Error fetching companies:', err)
-  }
-}
-
 // Fetch company details with request cancellation support
 const fetchCompany = async (id: string): Promise<void> => {
   // Cancel any pending request before starting a new one
@@ -388,9 +329,6 @@ watch(
 
 // Initial load
 onMounted(async (): Promise<void> => {
-  // Fetch companies for navigation (errors handled internally)
-  await fetchAllCompanies()
-  // Fetch current company details if ID is provided
   if (companyId.value) {
     await fetchCompany(companyId.value)
   }
@@ -415,24 +353,6 @@ onUnmounted(() => {
   color: var(--text-primary, #1e293b);
 }
 
-/* Horizontal scroll strip for company nav — avoids ugly wrap on many entries */
-.company-nav-scroll {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  padding-bottom: 0.25rem;
-  -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
-}
-
-.chip-year {
-  margin-left: 0.375rem;
-  opacity: 0.65;
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-}
-
 /* Media Section - Side by side layout for video and map */
 .media-section {
   display: flex;
@@ -454,65 +374,6 @@ onUnmounted(() => {
   .media-item {
     flex: 1 1 100%;
   }
-}
-
-/* Match HomeView navbar: translucent + blur, plain underline-on-hover links */
-.navbar {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.navbar-brand {
-  font-family: var(--font-family-display, inherit);
-  color: var(--text-primary) !important;
-  font-weight: 600;
-  font-size: 1.25rem;
-  letter-spacing: var(--letter-spacing-tight, -0.025em);
-}
-
-.nav-link {
-  color: var(--text-secondary) !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  font-weight: 500;
-  font-size: 0.95rem;
-  padding: 0.5rem 1rem !important;
-  border-radius: 6px;
-  position: relative;
-  white-space: nowrap;
-  transition: color 0.2s ease;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: var(--primary-500, #3b82f6);
-  border-radius: 1px;
-  transition:
-    width 0.25s ease,
-    left 0.25s ease;
-}
-
-.nav-link:hover {
-  color: var(--primary-500, #3b82f6) !important;
-}
-
-.nav-link:hover::after,
-.nav-link.active::after {
-  width: 60%;
-  left: 20%;
-}
-
-.nav-link.active {
-  color: var(--primary-500, #3b82f6) !important;
-  font-weight: 600;
 }
 
 .badge {
@@ -563,32 +424,6 @@ main :deep(p) {
 [data-theme='dark'] .experience-detail {
   background-color: var(--bg-primary, #0f172a);
   color: var(--text-primary, #f1f5f9);
-}
-
-[data-theme='dark'] .navbar {
-  background: var(--navbar-bg) !important;
-  border-bottom: 1px solid var(--border-primary);
-}
-
-[data-theme='dark'] .navbar-brand {
-  color: var(--text-primary) !important;
-}
-
-[data-theme='dark'] .navbar-toggler-icon {
-  filter: invert(1);
-}
-
-[data-theme='dark'] .nav-link {
-  color: var(--text-secondary) !important;
-}
-
-[data-theme='dark'] .nav-link::after {
-  background: var(--link-color);
-}
-
-[data-theme='dark'] .nav-link:hover,
-[data-theme='dark'] .nav-link.active {
-  color: var(--link-color) !important;
 }
 
 [data-theme='dark'] h1,
