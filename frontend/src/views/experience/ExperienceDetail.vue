@@ -353,6 +353,11 @@ onUnmounted(() => {
   color: var(--text-primary, #1e293b);
 }
 
+/* Offset fixed navbar so content doesn't slide under it at scroll top */
+.experience-detail > main {
+  padding-top: 80px;
+}
+
 /* Media Section - Side by side layout for video and map */
 .media-section {
   display: flex;
