@@ -77,7 +77,7 @@ packaging==25.0
     # via
     #   gunicorn
     #   limits
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pydantic==2.12.5
     # via
