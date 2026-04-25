@@ -41,6 +41,10 @@ async def seed_companies(session: AsyncSession):
             "end_date": None,
             "website": "https://hermesmedical.com",
             "order_index": 1,
+            "video_url": "https://www.youtube.com/embed/bdbevZrjdtU",
+            "video_title": "Hermes Medical Solutions - HERMIA Imaging Platform",
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d23019.922985510006!2d17.999845284557612!3d59.338079926240894!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f77fcd4b7b5e1%3A0xf7dcf06b9ce62c50!2sHermes%20Medical%20Solutions%20AB!5e0!3m2!1ssv!2sse!4v1749928857261!5m2!1ssv!2sse",
+            "map_title": "Hermes Medical Solutions Location - Stockholm, Sweden",
         },
         {
             "name": "Philips Healthcare",
@@ -51,6 +55,10 @@ async def seed_companies(session: AsyncSession):
             "end_date": datetime(2024, 5, 31),
             "website": "https://www.philips.com",
             "order_index": 2,
+            "video_url": "https://www.youtube.com/embed/i2wsMvBen1c",
+            "video_title": "Philips Healthcare - Innovation",
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d32535.951427291504!2d17.999412838149354!3d59.35804439018847!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f9e93436d98c5%3A0x16230b74d42df0ca!2sPhilips%20AB!5e0!3m2!1ssv!2sse!4v1749928636549!5m2!1ssv!2sse",
+            "map_title": "Philips Healthcare Location - Stockholm, Sweden",
         },
         {
             "name": "Karolinska University Hospital",
@@ -61,6 +69,10 @@ async def seed_companies(session: AsyncSession):
             "end_date": datetime(2021, 12, 31),
             "website": "https://www.karolinska.se",
             "order_index": 3,
+            "video_url": "https://www.youtube.com/embed/05k9c4zPBWo",
+            "video_title": "Karolinska University Hospital - Solna Campus",
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27373.793052339282!2d18.003493380951838!3d59.34014358751482!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f9d5fc509b8cd%3A0x6f2520b3e07808ba!2sKarolinska%20Universitetssjukhuset%20Solna!5e0!3m2!1ssv!2sse!4v1749832921700!5m2!1ssv!2sse",
+            "map_title": "Karolinska University Hospital Location - Stockholm, Sweden",
         },
         {
             "name": "SoftPro Medical Solutions",
@@ -73,7 +85,7 @@ async def seed_companies(session: AsyncSession):
             "order_index": 4,
         },
         {
-            "name": "Södersjukhuset",
+            "name": "Södersjukhuset - SÖS",
             "title": "Biomedical Engineer, Radiology Department",
             "description": "Managed IT systems at radiology department, evaluating supplier contracts, leading workgroups, and streamlining workflows.",
             "location": "Stockholm, Sweden",
@@ -81,6 +93,8 @@ async def seed_companies(session: AsyncSession):
             "end_date": datetime(2021, 6, 30),
             "website": "https://www.sodersjukhuset.se",
             "order_index": 5,
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d38737.84701537516!2d18.003017736901185!3d59.31780499604735!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f77ec1b565595%3A0x4f818c747249a764!2sS%C3%B6dersjukhuset!5e0!3m2!1ssv!2sse!4v1749832781009!5m2!1ssv!2sse",
+            "map_title": "Södersjukhuset Location - Stockholm, Sweden",
         },
         {
             "name": "Scania Group",
@@ -91,6 +105,10 @@ async def seed_companies(session: AsyncSession):
             "end_date": datetime(2016, 8, 31),
             "website": "https://www.scania.com",
             "order_index": 6,
+            "video_url": "https://www.youtube.com/embed/Rm6grXvyX6I",
+            "video_title": "Scania Group - Truck Manufacturing",
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
+            "map_title": "Scania Group Location - Södertälje, Sweden",
         },
         {
             "name": "Finnish Defence Forces",
@@ -101,9 +119,15 @@ async def seed_companies(session: AsyncSession):
             "end_date": datetime(2015, 1, 31),
             "website": None,
             "order_index": 7,
+            "video_url": "https://www.youtube.com/embed/AcLYbg2Jk9c?si=LFG4nBnqCZ3WRfSt",
+            "video_title": "Finnish Defence Forces - Nyland Brigade",
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d720002.5239741812!2d22.654854775421864!3d60.10216545447512!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x468da9e761c88d0f%3A0x8809aeeec13b380b!2sNyland%20Brigade!5e0!3m2!1ssv!2sse!4v1749150985148!5m2!1ssv!2sse",
+            "map_title": "Nyland Brigade Location - Dragsvik, Finland",
         },
         {
-            "name": "Scania Group (Early Career)",
+            # Same name as the 2016 entry above; deduped by (name, start_date)
+            # rather than name alone — see the seeding loop below.
+            "name": "Scania Group",
             "title": "Technician, Engine Analysis",
             "description": "Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
             "location": "Södertälje, Sweden",
@@ -111,19 +135,34 @@ async def seed_companies(session: AsyncSession):
             "end_date": datetime(2012, 8, 31),
             "website": "https://www.scania.com",
             "order_index": 8,
+            "video_url": "https://www.youtube.com/embed/Rm6grXvyX6I",
+            "video_title": "Scania Group - Truck Manufacturing",
+            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d130603.48820521029!2d17.67627411091932!3d59.238085496816325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f12baeb6eae75%3A0x16a5832b5a283d07!2zU0NBTklBIFPDtmRlcnTDpGxqZQ!5e0!3m2!1ssv!2sse!4v1749832105161!5m2!1ssv!2sse",
+            "map_title": "Scania Group Location - Södertälje, Sweden",
         },
     ]
 
     added_count = 0
     for company_data in companies:
-        # Check if company already exists by name
-        result = await session.execute(select(Company).where(Company.name == company_data["name"]))
+        # Dedup by (name, order_index) — order_index is unique per seed entry,
+        # so two distinct stints at the same company (e.g. Scania Group 2012
+        # vs 2016) are both seeded but neither is duplicated on re-runs.
+        result = await session.execute(
+            select(Company).where(
+                Company.name == company_data["name"],
+                Company.order_index == company_data["order_index"],
+            )
+        )
         if result.scalar_one_or_none() is None:
             company = Company(**company_data)
             session.add(company)
             added_count += 1
         else:
-            logger.debug("Company '%s' already exists, skipping", company_data["name"])
+            logger.debug(
+                "Company '%s' (order %d) already exists, skipping",
+                company_data["name"],
+                company_data["order_index"],
+            )
 
     await session.commit()
     logger.info(
