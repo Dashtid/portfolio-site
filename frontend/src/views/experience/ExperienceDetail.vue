@@ -87,14 +87,14 @@
         <!-- Description -->
         <div class="mb-5">
           <h3>About {{ company.name }}</h3>
-          <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
+          <!-- eslint-disable-next-line vue/no-v-html -- Input HTML-escaped, only emits strong/em -->
           <div v-html="formatDescription(company.description)"></div>
         </div>
 
         <!-- Detailed Description -->
         <div v-if="company.detailed_description" class="mb-5">
           <h3>Role & Responsibilities</h3>
-          <!-- eslint-disable-next-line vue/no-v-html -- Content sanitized with DOMPurify -->
+          <!-- eslint-disable-next-line vue/no-v-html -- Input HTML-escaped, only emits strong/em -->
           <div v-html="formatDescription(company.detailed_description)"></div>
         </div>
 
@@ -142,7 +142,6 @@ import { gsap } from 'gsap'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { config } from '../../config'
-import DOMPurify from 'dompurify'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
 import NavBar from '@/components/NavBar.vue'
@@ -155,7 +154,8 @@ let gsapContext: gsap.Context | null = null
 
 // Run entrance animations after content loads
 const runEntranceAnimations = (): void => {
-  // Check for reduced motion preference
+  // Skip during SSR (no window) and when user prefers reduced motion
+  if (typeof window === 'undefined') return
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   if (prefersReducedMotion) return
 
@@ -252,31 +252,36 @@ const formatDate = (dateString: string | null | undefined): string => {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-// Minimal markdown: **bold** and *italic*. DOMPurify still enforces the
-// allowed-tag list below, so any other markdown/HTML is stripped. Order
-// matters: do ** before * so **foo** doesn't get mangled into <em>.
+// Escape HTML special chars so any < > & in the source text can't reach the
+// DOM as markup. Run BEFORE markdown so the strong/em tags we emit aren't
+// themselves escaped.
+const escapeHtml = (s: string): string =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+// Minimal markdown: **bold** and *italic*. Input is pre-escaped so the only
+// HTML in the output is the strong/em tags this function emits. SSR-safe
+// (no DOM dependency, unlike DOMPurify).
+// Order matters: do ** before * so **foo** doesn't get mangled into <em>.
 const renderInlineMarkdown = (text: string): string => {
-  return text
+  return escapeHtml(text)
     .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
 }
 
-// Format description with HTML and XSS protection
+// Format description: split on blank lines into <p>, escape + render markdown
+// inside each paragraph. Output is safe to v-html since input is escaped first
+// and only the controlled strong/em tags are introduced.
 const formatDescription = (desc: string | null | undefined): string => {
   if (!desc) return ''
-  const html = desc
+  return desc
     .split('\n\n')
     .map(p => `<p>${renderInlineMarkdown(p)}</p>`)
     .join('')
-
-  // Sanitize HTML to prevent XSS attacks
-  // Configure DOMPurify to only allow safe URL protocols - block protocol-relative URLs (//evil.com)
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'strong', 'em', 'br', 'ul', 'ol', 'li', 'a'],
-    ALLOWED_ATTR: ['href', 'target', 'rel'],
-    // Only allow absolute http/https URLs and mailto:
-    ALLOWED_URI_REGEXP: /^(?:https?:\/\/[^<>"{}|\\^`\s]+|mailto:[^<>"{}|\\^`\s]+)$/i
-  })
 }
 
 // Fetch company details with request cancellation support
@@ -315,6 +320,14 @@ const fetchCompany = async (id: string): Promise<void> => {
       })
     }
   }
+}
+
+// SSG: fetch the company synchronously during server-side render so the
+// useHead computed above resolves to the per-route title/description before
+// vite-ssg captures the rendered HTML and head tags. Branch is tree-shaken
+// from the client bundle when import.meta.env.SSR is statically false.
+if (import.meta.env.SSR && companyId.value) {
+  await fetchCompany(companyId.value)
 }
 
 // Watch for route changes

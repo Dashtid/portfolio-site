@@ -22,7 +22,9 @@ onMounted((): void => {
   <ErrorBoundary>
     <router-view v-slot="{ Component, route }">
       <Transition name="page-fade" mode="out-in">
-        <component :is="Component" :key="route.path" />
+        <Suspense>
+          <component :is="Component" :key="route.path" />
+        </Suspense>
       </Transition>
     </router-view>
   </ErrorBoundary>

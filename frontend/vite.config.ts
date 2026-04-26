@@ -16,14 +16,19 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'images/*.svg', 'images/*.webp', 'images/*.png'],
       manifest: {
-        name: 'David Dashti - Portfolio',
-        short_name: 'Dashti',
-        description: 'Biomedical Engineer & Cybersecurity Specialist Portfolio',
-        theme_color: '#0d6efd',
-        background_color: '#ffffff',
+        name: 'David Dashti',
+        short_name: 'David Dashti',
+        description:
+          'Biomedical Engineer and Cybersecurity Specialist focused on securing healthcare technology and patient data',
+        theme_color: '#2563eb',
+        background_color: '#f8fafc',
         display: 'standalone',
         start_url: '/',
         scope: '/',
+        orientation: 'portrait-primary',
+        prefer_related_applications: false,
+        lang: 'en',
+        categories: ['business', 'healthcare', 'cybersecurity'],
         icons: [
           {
             src: '/images/D.svg',
@@ -34,13 +39,51 @@ export default defineConfig({
           {
             src: '/images/icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/images/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/images/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: '/images/optimized/stockholm-desktop.webp',
+            sizes: '1920x1080',
+            type: 'image/webp',
+            form_factor: 'wide',
+            label: 'Desktop view of portfolio'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Experience',
+            url: '/#experience',
+            description: 'View professional experience'
+          },
+          {
+            name: 'Education',
+            url: '/#education',
+            description: 'View educational background'
+          },
+          {
+            name: 'Projects',
+            url: '/#projects',
+            description: 'View GitHub projects'
+          },
+          {
+            name: 'Contact',
+            url: '/#contact',
+            description: 'Get in touch'
           }
         ]
       },
