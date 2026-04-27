@@ -2,10 +2,29 @@
 Tests for logger utility
 """
 
+import json
 import logging
 from unittest.mock import patch
 
 from app.utils.logger import CustomJsonFormatter, SensitiveDataFilter, get_logger, setup_logger
+
+
+def _make_record(
+    name: str = "test",
+    level: int = logging.INFO,
+    pathname: str = "",
+    lineno: int = 0,
+    msg: str = "Test message",
+) -> logging.LogRecord:
+    return logging.LogRecord(
+        name=name,
+        level=level,
+        pathname=pathname,
+        lineno=lineno,
+        msg=msg,
+        args=(),
+        exc_info=None,
+    )
 
 
 class TestCustomJsonFormatter:
@@ -14,69 +33,33 @@ class TestCustomJsonFormatter:
     def test_adds_timestamp(self):
         """Test that formatter adds timestamp to log record."""
         formatter = CustomJsonFormatter()
-        log_record = {}
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="",
-            lineno=0,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
+        record = _make_record()
+        log_record = json.loads(formatter.format(record))
 
         assert "timestamp" in log_record
-        assert "Z" in log_record["timestamp"]  # ISO format with Z suffix
+        assert log_record["timestamp"].endswith("Z")
 
     def test_adds_log_level(self):
         """Test that formatter adds log level."""
         formatter = CustomJsonFormatter()
-        log_record = {}
-        record = logging.LogRecord(
-            name="test",
-            level=logging.WARNING,
-            pathname="",
-            lineno=0,
-            msg="Test",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
+        record = _make_record(level=logging.WARNING)
+        log_record = json.loads(formatter.format(record))
 
         assert log_record["level"] == "WARNING"
 
     def test_adds_logger_name(self):
         """Test that formatter adds logger name."""
         formatter = CustomJsonFormatter()
-        log_record = {}
-        record = logging.LogRecord(
-            name="my_logger",
-            level=logging.INFO,
-            pathname="",
-            lineno=0,
-            msg="Test",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
+        record = _make_record(name="my_logger")
+        log_record = json.loads(formatter.format(record))
 
         assert log_record["logger"] == "my_logger"
 
     def test_adds_file_location(self):
         """Test that formatter adds file location."""
         formatter = CustomJsonFormatter()
-        log_record = {}
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test_file.py",
-            lineno=42,
-            msg="Test",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
+        record = _make_record(pathname="test_file.py", lineno=42)
+        log_record = json.loads(formatter.format(record))
 
         assert "file" in log_record
         assert "42" in log_record["file"]

@@ -2,37 +2,27 @@
 Centralized logging configuration with structured JSON output
 """
 
+import json
 import logging
 import sys
 from datetime import UTC, datetime
 from typing import Any
 
-from pythonjsonlogger import jsonlogger
 
+class CustomJsonFormatter(logging.Formatter):
+    """JSON log formatter (stdlib only) emitting one JSON object per record."""
 
-class CustomJsonFormatter(jsonlogger.JsonFormatter):
-    """Custom JSON formatter with additional fields"""
-
-    def add_fields(
-        self, log_record: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]
-    ) -> None:
-        super().add_fields(log_record, record, message_dict)
-
-        # Add timestamp in ISO format
-        if not log_record.get("timestamp"):
-            log_record["timestamp"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
-
-        # Add log level
-        if log_record.get("level"):
-            log_record["level"] = log_record["level"].upper()
-        else:
-            log_record["level"] = record.levelname
-
-        # Add logger name
-        log_record["logger"] = record.name
-
-        # Add file location
-        log_record["file"] = f"{record.filename}:{record.lineno}"
+    def format(self, record: logging.LogRecord) -> str:
+        log_record: dict[str, Any] = {
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "file": f"{record.filename}:{record.lineno}",
+        }
+        if record.exc_info:
+            log_record["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_record)
 
 
 class SensitiveDataFilter(logging.Filter):
@@ -110,7 +100,7 @@ def setup_logger(name: str | None = None, level: str = "INFO") -> logging.Logger
     handler.setLevel(log_level)
 
     # Create JSON formatter
-    formatter = CustomJsonFormatter("%(timestamp)s %(level)s %(logger)s %(message)s")
+    formatter = CustomJsonFormatter()
 
     handler.setFormatter(formatter)
 

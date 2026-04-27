@@ -2,6 +2,7 @@
 Tests for logger utility module
 """
 
+import json
 import logging
 
 from app.utils.logger import (
@@ -12,79 +13,57 @@ from app.utils.logger import (
 )
 
 
+def _record(
+    name: str = "test",
+    level: int = logging.INFO,
+    pathname: str = "test.py",
+    lineno: int = 1,
+    msg: str = "Test message",
+) -> logging.LogRecord:
+    return logging.LogRecord(
+        name=name,
+        level=level,
+        pathname=pathname,
+        lineno=lineno,
+        msg=msg,
+        args=(),
+        exc_info=None,
+    )
+
+
 class TestCustomJsonFormatter:
     """Tests for CustomJsonFormatter class."""
 
     def test_formatter_initialization(self):
         """Test formatter can be initialized."""
-        formatter = CustomJsonFormatter("%(timestamp)s %(level)s %(message)s")
+        formatter = CustomJsonFormatter()
         assert formatter is not None
 
     def test_add_fields_adds_timestamp(self):
         """Test that timestamp is added to log records."""
-        formatter = CustomJsonFormatter("%(message)s")
-        log_record = {}
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
-        assert "timestamp" in log_record
-        assert "Z" in log_record["timestamp"]
+        formatter = CustomJsonFormatter()
+        out = json.loads(formatter.format(_record()))
+        assert "timestamp" in out
+        assert out["timestamp"].endswith("Z")
 
     def test_add_fields_adds_level(self):
         """Test that level is added to log records."""
-        formatter = CustomJsonFormatter("%(message)s")
-        log_record = {}
-        record = logging.LogRecord(
-            name="test",
-            level=logging.WARNING,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
-        assert log_record["level"] == "WARNING"
+        formatter = CustomJsonFormatter()
+        out = json.loads(formatter.format(_record(level=logging.WARNING)))
+        assert out["level"] == "WARNING"
 
     def test_add_fields_adds_logger_name(self):
         """Test that logger name is added to log records."""
-        formatter = CustomJsonFormatter("%(message)s")
-        log_record = {}
-        record = logging.LogRecord(
-            name="my.test.logger",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
-        assert log_record["logger"] == "my.test.logger"
+        formatter = CustomJsonFormatter()
+        out = json.loads(formatter.format(_record(name="my.test.logger")))
+        assert out["logger"] == "my.test.logger"
 
     def test_add_fields_adds_file_location(self):
         """Test that file location is added to log records."""
-        formatter = CustomJsonFormatter("%(message)s")
-        log_record = {}
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=42,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
-        assert "file" in log_record
-        assert "42" in log_record["file"]
+        formatter = CustomJsonFormatter()
+        out = json.loads(formatter.format(_record(pathname="test.py", lineno=42)))
+        assert "file" in out
+        assert "42" in out["file"]
 
 
 class TestSensitiveDataFilter:
@@ -193,21 +172,26 @@ class TestGetLogger:
 class TestFormatterEdgeCases:
     """Additional tests for edge cases in formatter."""
 
-    def test_add_fields_with_existing_level(self):
-        """Test that existing level in log_record is uppercased."""
-        formatter = CustomJsonFormatter("%(message)s")
-        log_record = {"level": "info"}  # Pre-existing level
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        formatter.add_fields(log_record, record, {})
-        assert log_record["level"] == "INFO"  # Should be uppercased
+    def test_format_includes_exception_info(self):
+        """Exception info from exc_info should be serialized into the JSON."""
+        formatter = CustomJsonFormatter()
+        try:
+            raise ValueError("boom")
+        except ValueError:
+            import sys
+
+            record = logging.LogRecord(
+                name="test",
+                level=logging.ERROR,
+                pathname="test.py",
+                lineno=1,
+                msg="failed",
+                args=(),
+                exc_info=sys.exc_info(),
+            )
+        out = json.loads(formatter.format(record))
+        assert "exception" in out
+        assert "ValueError" in out["exception"]
 
 
 class TestSensitiveFilterEdgeCases:
