@@ -28,11 +28,16 @@ export const createApp = ViteSSG(
           _from: RouteLocationNormalized,
           next: NavigationGuardNext
         ) => {
+          // Only initialize auth (which calls /auth/me) on routes that
+          // actually care about auth state. Public routes (/, /experience/*)
+          // skip the call entirely — keeps unauthenticated visitors from
+          // generating a 401 on every page load.
+          const needsAuthState = to.matched.some(r => r.meta.requiresAuth || r.meta.requiresGuest)
           // Lazy-import auth store inside the guard to avoid SSG tree-shaking issues
           const { useAuthStore } = await import('./stores/auth')
           const authStore = useAuthStore()
 
-          if (!authStore.isInitialized) {
+          if (needsAuthState && !authStore.isInitialized) {
             await authStore.initializeAuth()
           }
 

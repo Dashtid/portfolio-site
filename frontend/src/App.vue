@@ -7,12 +7,12 @@ import ErrorBoundary from './components/ErrorBoundary.vue'
 // Store
 const authStore = useAuthStore()
 
-// Check auth on mount and remove loading skeleton
+// On mount, just remove the loading skeleton. Auth is initialized lazily
+// by the route guard for admin routes only — calling checkAuth here would
+// hit /auth/me on every public page load and surface a 401 in the console
+// for unauthenticated visitors (the dominant case).
 onMounted((): void => {
-  // Remove loading skeleton once Vue has mounted
   document.getElementById('app-loading')?.remove()
-
-  authStore.checkAuth()
   authStore.initializeFromCallback()
 })
 </script>
