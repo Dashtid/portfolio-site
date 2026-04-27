@@ -265,7 +265,7 @@ app.add_middleware(BodySizeLimitMiddleware)
 app.add_middleware(CompressionMiddleware, minimum_size=1000)
 
 # Cache control headers
-app.add_middleware(CacheControlMiddleware, max_age=3600)
+app.add_middleware(CacheControlMiddleware, max_age=300)
 
 # Security headers
 app.add_middleware(SecurityHeadersMiddleware)
