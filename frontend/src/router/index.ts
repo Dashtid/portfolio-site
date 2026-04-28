@@ -64,8 +64,10 @@ export const routes: RouteRecordRaw[] = [
   }
 ]
 
-// Offset matches --navbar-height in variables.css (navbar height + breathing room).
-const SCROLL_TOP_OFFSET = 100
+// Matches --navbar-height in variables.css. Section internal padding
+// supplies breathing room; this offset only covers the fixed navbar so
+// the previous section does not bleed through above the new one.
+const SCROLL_TOP_OFFSET = 72
 
 export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
   if (savedPosition) return savedPosition

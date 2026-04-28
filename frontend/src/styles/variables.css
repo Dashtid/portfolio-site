@@ -154,10 +154,11 @@
   --z-index-skip-link: 1090; /* accessibility skip link — must sit above all overlays */
 
   /* Layout */
-  /* Drives scroll-padding-top for hash anchors. Navbar itself is ~72px;
-     the extra ~28px gives section titles breathing room below the navbar
-     instead of landing flush against its bottom edge. */
-  --navbar-height: 100px;
+  /* Matches the actual rendered navbar height. Used as scroll-padding-top
+     for hash anchors so a section's top edge lands flush against the
+     navbar's bottom — no hero/prev-section bleed above. The section's
+     own internal padding provides visual breathing room before the title. */
+  --navbar-height: 72px;
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.1);
