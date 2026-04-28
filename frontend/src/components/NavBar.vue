@@ -140,7 +140,8 @@ const scrollToSection = (sectionId: string): void => {
     }
   }
   if (element) {
-    const navHeight = 70 // Account for fixed navbar
+    // Matches --navbar-height in variables.css and SCROLL_TOP_OFFSET in router.
+    const navHeight = 100
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
     const offsetPosition = elementPosition - navHeight
 

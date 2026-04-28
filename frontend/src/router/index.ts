@@ -64,8 +64,30 @@ export const routes: RouteRecordRaw[] = [
   }
 ]
 
+// Offset matches --navbar-height in variables.css (navbar height + breathing room).
+const SCROLL_TOP_OFFSET = 100
+
 export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
   if (savedPosition) return savedPosition
-  if (to.hash) return { el: to.hash, behavior: 'smooth' as ScrollBehavior, top: 80 }
+  if (to.hash) {
+    // On cross-route hash nav (e.g. /experience/:id → /#experience), the home
+    // view's section is mounted asynchronously inside <Suspense>, so the hash
+    // target may not yet exist when scrollBehavior fires. Poll briefly until
+    // the element appears, then scroll. Falls back to top of page if it never
+    // shows up (e.g. invalid hash).
+    return new Promise(resolve => {
+      const start = Date.now()
+      const tryResolve = (): void => {
+        if (typeof document !== 'undefined' && document.querySelector(to.hash)) {
+          resolve({ el: to.hash, behavior: 'smooth' as ScrollBehavior, top: SCROLL_TOP_OFFSET })
+        } else if (Date.now() - start < 800) {
+          setTimeout(tryResolve, 50)
+        } else {
+          resolve({ top: 0, behavior: 'smooth' as ScrollBehavior })
+        }
+      }
+      tryResolve()
+    })
+  }
   return { top: 0, behavior: 'smooth' as ScrollBehavior }
 }
