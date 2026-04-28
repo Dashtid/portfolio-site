@@ -140,8 +140,12 @@ const scrollToSection = (sectionId: string): void => {
     }
   }
   if (element) {
-    // Matches --navbar-height in variables.css and SCROLL_TOP_OFFSET in router.
-    const navHeight = 72
+    // Use the navbar's actual rendered height so the section's top edge
+    // lands exactly at the navbar's bottom — no bleed of the previous
+    // section above. Navbar height changes between default and scrolled
+    // states, so reading it live keeps the math correct in both.
+    const navbar = document.querySelector('.navbar-custom')
+    const navHeight = navbar?.getBoundingClientRect().height ?? 72
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
     const offsetPosition = elementPosition - navHeight
 
@@ -203,12 +207,32 @@ const handleScroll = (): void => {
 // Throttled scroll handler (100ms delay reduces CPU usage significantly)
 const throttledHandleScroll = throttle(handleScroll, 100)
 
+// Keeps the --navbar-height CSS variable in sync with the actual rendered
+// navbar height (it shrinks ~16px when scrolled). Used by scroll-padding-top
+// for hash anchors and by the router's scrollBehavior.
+let navbarResizeObserver: ResizeObserver | null = null
+
+const syncNavbarHeight = (height: number): void => {
+  document.documentElement.style.setProperty('--navbar-height', `${Math.round(height)}px`)
+}
+
 onMounted(() => {
   // Initialize element cache after DOM is ready
   initSectionCache()
   // Use throttled handler for scroll events
   window.addEventListener('scroll', throttledHandleScroll, { passive: true })
   handleScroll() // Initial check
+
+  const navbar = document.querySelector('.navbar-custom')
+  if (navbar) {
+    syncNavbarHeight(navbar.getBoundingClientRect().height)
+    if (typeof ResizeObserver !== 'undefined') {
+      navbarResizeObserver = new ResizeObserver(entries => {
+        syncNavbarHeight(entries[0].contentRect.height)
+      })
+      navbarResizeObserver.observe(navbar)
+    }
+  }
 })
 
 // When navigating to a non-home route, reflect that in the active-link
@@ -224,6 +248,8 @@ watch(
 onUnmounted(() => {
   window.removeEventListener('scroll', throttledHandleScroll)
   sectionElementsCache.value.clear()
+  navbarResizeObserver?.disconnect()
+  navbarResizeObserver = null
 })
 </script>
 

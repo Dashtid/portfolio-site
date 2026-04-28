@@ -64,10 +64,16 @@ export const routes: RouteRecordRaw[] = [
   }
 ]
 
-// Matches --navbar-height in variables.css. Section internal padding
-// supplies breathing room; this offset only covers the fixed navbar so
-// the previous section does not bleed through above the new one.
-const SCROLL_TOP_OFFSET = 72
+// Reads --navbar-height (kept in sync with the actual rendered navbar
+// height by NavBar.vue's ResizeObserver). Falls back to 72 for SSR/early
+// boots before the var is set. Section internal padding supplies any
+// breathing room above the title.
+const getScrollOffset = (): number => {
+  if (typeof window === 'undefined') return 72
+  const raw = getComputedStyle(document.documentElement).getPropertyValue('--navbar-height')
+  const parsed = parseInt(raw, 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 72
+}
 
 export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
   if (savedPosition) return savedPosition
@@ -81,7 +87,7 @@ export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) =
       const start = Date.now()
       const tryResolve = (): void => {
         if (typeof document !== 'undefined' && document.querySelector(to.hash)) {
-          resolve({ el: to.hash, behavior: 'smooth' as ScrollBehavior, top: SCROLL_TOP_OFFSET })
+          resolve({ el: to.hash, behavior: 'smooth' as ScrollBehavior, top: getScrollOffset() })
         } else if (Date.now() - start < 800) {
           setTimeout(tryResolve, 50)
         } else {
