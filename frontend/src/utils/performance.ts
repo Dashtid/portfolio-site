@@ -40,7 +40,6 @@ interface LayoutShift extends PerformanceEntry {
 
 class PerformanceMonitor {
   private enabled: boolean
-  private apiEndpoint: string
   private metrics: PerformanceMetrics
   private initialized: boolean = false
   private observers: PerformanceObserver[] = []
@@ -48,8 +47,6 @@ class PerformanceMonitor {
 
   constructor() {
     this.enabled = import.meta.env.VITE_METRICS_ENABLED === 'true'
-    this.apiEndpoint =
-      (import.meta.env.VITE_API_URL ?? '') + '/api/v1/performance' || '/api/v1/performance'
     this.metrics = {}
   }
 
@@ -277,23 +274,20 @@ class PerformanceMonitor {
   }
 
   /**
-   * Send metrics to backend
+   * Send metrics to backend via the shared apiClient. Dynamic import keeps
+   * apiClient out of the module's initial dependency graph so performance
+   * monitoring can boot before auth/store wiring completes.
    */
   private async sendMetrics(): Promise<void> {
     if (!this.enabled) return
 
     try {
-      await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          metrics: this.metrics,
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        })
+      const { default: apiClient } = await import('../api/client')
+      await apiClient.post('/api/v1/performance', {
+        metrics: this.metrics,
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
       })
     } catch (err) {
       if (import.meta.env.DEV) {

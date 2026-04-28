@@ -42,6 +42,13 @@
       >
         Projects
       </router-link>
+      <router-link
+        to="/admin/analytics"
+        class="nav-link"
+        :class="{ active: $route.path === '/admin/analytics' }"
+      >
+        Analytics
+      </router-link>
     </nav>
 
     <!-- Admin Content -->
@@ -116,6 +123,19 @@
                 <path d="M12 4v16m8-8H4" />
               </svg>
               <span>New Project</span>
+            </router-link>
+            <router-link to="/admin/analytics" class="action-button">
+              <svg
+                class="action-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 3v18h18" />
+                <path d="M7 14l4-4 4 4 5-5" />
+              </svg>
+              <span>View Analytics</span>
             </router-link>
             <a href="/" target="_blank" class="action-button">
               <svg

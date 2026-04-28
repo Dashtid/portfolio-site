@@ -22,7 +22,6 @@ interface ErrorData {
 
 class ErrorTracker {
   private enabled: boolean
-  private apiEndpoint: string
   private errorQueue: ErrorData[]
   private maxQueueSize: number
   private initialized: boolean = false
@@ -31,8 +30,6 @@ class ErrorTracker {
 
   constructor() {
     this.enabled = import.meta.env.VITE_ERROR_TRACKING_ENABLED === 'true'
-    // Use nullish coalescing to properly handle undefined VITE_API_URL
-    this.apiEndpoint = (import.meta.env.VITE_API_URL ?? '') + '/api/v1/errors'
     this.errorQueue = []
     this.maxQueueSize = 10
   }
@@ -173,17 +170,14 @@ class ErrorTracker {
   }
 
   /**
-   * Send error to backend
+   * Send error to backend via the shared apiClient. Using apiClient (vs raw
+   * fetch) means errors picked up here go through the same auth/refresh
+   * pipeline as everything else and benefit from the configured base URL.
    */
   private async sendError(errorData: ErrorData): Promise<void> {
     try {
-      await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(errorData)
-      })
+      const { default: apiClient } = await import('../api/client')
+      await apiClient.post('/api/v1/errors', errorData)
     } catch (err) {
       // Silently fail - don't want error tracking to cause more errors
       if (import.meta.env.DEV) {

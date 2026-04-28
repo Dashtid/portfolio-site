@@ -1,22 +1,33 @@
 /**
  * Tests for performance utility (TypeScript)
  *
- * Note: Environment variables are set in vitest.config.ts
+ * Note: Environment variables are set in vitest.config.ts.
+ * performance.ts dynamically imports apiClient, so we mock that module.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+const mockPost = vi.fn().mockResolvedValue({ data: {} })
+
+vi.mock('@/api/client', () => ({
+  default: {
+    post: mockPost,
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}))
+
 import { performanceMonitor } from '@/utils/performance'
 
 describe('performance utility', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
   let mockPerformanceMark: ReturnType<typeof vi.fn>
   let mockPerformanceMeasure: ReturnType<typeof vi.fn>
   let mockGetEntriesByName: ReturnType<typeof vi.fn>
   let mockGetEntriesByType: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    // Mock fetch
-    mockFetch = vi.fn().mockResolvedValue({ ok: true })
-    global.fetch = mockFetch as typeof fetch
+    mockPost.mockClear()
+    mockPost.mockResolvedValue({ data: {} })
 
     // Mock performance API
     mockPerformanceMark = vi.fn()
@@ -355,13 +366,15 @@ describe('performance utility', () => {
         loadHandler(new Event('load'))
       }
 
-      await new Promise(resolve => setTimeout(resolve, 10))
+      // sendMetrics dynamically imports apiClient and awaits a POST.
+      // Wait for both microtasks to settle.
+      await new Promise(resolve => setTimeout(resolve, 30))
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/performance'),
+      expect(mockPost).toHaveBeenCalledWith(
+        '/api/v1/performance',
         expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          metrics: expect.any(Object),
+          url: expect.any(String)
         })
       )
 
@@ -369,7 +382,7 @@ describe('performance utility', () => {
     })
 
     it('silently fails when backend request fails', async () => {
-      mockFetch.mockRejectedValue(new Error('Network error'))
+      mockPost.mockRejectedValue(new Error('Network error'))
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       const mockNavigation = {

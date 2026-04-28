@@ -1,12 +1,14 @@
 /**
- * Analytics service for tracking page views and user interactions
+ * Analytics service for tracking page views and reading admin stats.
+ *
+ * All HTTP goes through apiClient so requests pick up auth interceptors,
+ * the unified base URL, and the shared error/refresh handling. Types
+ * mirror the Pydantic schemas in backend/app/schemas/analytics.py.
  */
-import axios, { type AxiosResponse } from 'axios'
+import apiClient from '../api/client'
 import { analyticsLogger } from '../utils/logger'
 
-// Get API URL from environment variables
-const BASE_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const API_URL = `${BASE_API_URL}/api/v1/analytics`
+const ENDPOINT = '/api/v1/analytics'
 
 interface PageViewData {
   page_path: string
@@ -15,37 +17,51 @@ interface PageViewData {
   visitor_id: string
 }
 
-interface TimingData {
-  category: string
-  variable: string
-  time: number
-  label: string | null
-  timestamp: string
+export interface TopPage {
+  path: string
+  title: string | null
+  views: number
 }
 
-interface AnalyticsSummary {
-  [key: string]: unknown
+export interface DailyView {
+  date: string
+  views: number
 }
 
-interface VisitorStats {
-  [key: string]: unknown
+export interface AnalyticsSummary {
+  total_views: number
+  unique_visitors: number
+  avg_session_duration: number
+  top_pages: TopPage[]
+  daily_views: DailyView[]
+  period_days: number
+}
+
+export interface TopCountry {
+  country: string
+  count: number
+}
+
+export interface VisitorStats {
+  total_sessions: number
+  new_visitors: number
+  returning_visitors: number
+  avg_session_duration: number | null
+  bounce_rate: number | null
+  top_countries: TopCountry[]
+  period_days: number
 }
 
 class AnalyticsService {
   private isEnabled: boolean
 
   constructor() {
-    // Initialize session ID in storage for potential future use
     this.getOrCreateSessionId()
-    // Single source of truth: read from localStorage, default to true
     const stored =
       typeof localStorage !== 'undefined' ? localStorage.getItem('analytics_enabled') : null
     this.isEnabled = stored !== 'false'
   }
 
-  /**
-   * Get or create a session ID for the current visitor
-   */
   private getOrCreateSessionId(): string {
     if (typeof sessionStorage === 'undefined') return ''
     let sessionId = sessionStorage.getItem('analytics_session_id')
@@ -56,9 +72,6 @@ class AnalyticsService {
     return sessionId
   }
 
-  /**
-   * Track a page view
-   */
   async trackPageView(pagePath?: string, pageTitle?: string): Promise<void> {
     if (!this.isEnabled) return
 
@@ -69,22 +82,15 @@ class AnalyticsService {
         referrer: document.referrer || null,
         visitor_id: this.getOrCreateSessionId()
       }
-
-      await axios.post(`${API_URL}/track/pageview`, data, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      await apiClient.post(`${ENDPOINT}/track/pageview`, data)
     } catch (error) {
       analyticsLogger.error('Failed to track page view:', error)
     }
   }
 
   /**
-   * Track custom events (e.g., button clicks, form submissions)
-   *
-   * Events are tracked as synthetic page views until a dedicated event endpoint
-   * is implemented on the backend. The event data format follows GA4 conventions.
+   * Track a synthetic event as a page view until a dedicated event endpoint
+   * exists on the backend. The event path follows GA4-style conventions.
    */
   async trackEvent(
     category: string,
@@ -95,7 +101,6 @@ class AnalyticsService {
     if (!this.isEnabled) return
 
     try {
-      // Track as a synthetic page view with event path
       await this.trackPageView(
         `/event/${category}/${action}${label ? `/${label}` : ''}`,
         `Event: ${category} - ${action}`
@@ -105,51 +110,35 @@ class AnalyticsService {
     }
   }
 
-  /**
-   * Track timing (e.g., page load time)
-   */
   trackTiming(category: string, variable: string, time: number, label: string | null = null): void {
     if (!this.isEnabled) return
-
-    // Store timing data for potential batch sending
-    const timingData: TimingData = {
+    analyticsLogger.debug('Timing tracked:', {
       category,
       variable,
       time,
       label,
       timestamp: new Date().toISOString()
-    }
-
-    // Could be sent to backend or stored locally
-    analyticsLogger.debug('Timing tracked:', timingData)
+    })
   }
 
-  /**
-   * Enable or disable analytics tracking
-   */
   setEnabled(enabled: boolean): void {
     this.isEnabled = enabled
     localStorage.setItem('analytics_enabled', enabled ? 'true' : 'false')
   }
 
-  /**
-   * Check if analytics is enabled
-   */
   isAnalyticsEnabled(): boolean {
     return this.isEnabled
   }
 
   /**
-   * Get analytics summary (admin only)
+   * Get analytics summary (admin-only endpoint, requires auth cookie).
+   * Returns null on failure so consumers can show an empty state.
    */
   async getAnalyticsSummary(days: number = 30): Promise<AnalyticsSummary | null> {
     try {
-      const response: AxiosResponse<AnalyticsSummary> = await axios.get(
-        `${API_URL}/stats/summary`,
-        {
-          params: { days }
-        }
-      )
+      const response = await apiClient.get<AnalyticsSummary>(`${ENDPOINT}/stats/summary`, {
+        params: { days }
+      })
       return response.data
     } catch (error) {
       analyticsLogger.error('Failed to get analytics summary:', error)
@@ -158,11 +147,11 @@ class AnalyticsService {
   }
 
   /**
-   * Get visitor statistics (admin only)
+   * Get visitor statistics (admin-only endpoint, requires auth cookie).
    */
   async getVisitorStats(days: number = 7): Promise<VisitorStats | null> {
     try {
-      const response: AxiosResponse<VisitorStats> = await axios.get(`${API_URL}/stats/visitors`, {
+      const response = await apiClient.get<VisitorStats>(`${ENDPOINT}/stats/visitors`, {
         params: { days }
       })
       return response.data
@@ -173,5 +162,4 @@ class AnalyticsService {
   }
 }
 
-// Export singleton instance
 export default new AnalyticsService()

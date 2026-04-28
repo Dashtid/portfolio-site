@@ -173,12 +173,13 @@ describe('AdminDashboard', () => {
       const wrapper = await createWrapper()
 
       const navLinks = wrapper.findAll('.nav-link')
-      expect(navLinks.length).toBe(3)
+      expect(navLinks.length).toBe(4)
 
       const linkTexts = navLinks.map(link => link.text())
       expect(linkTexts).toContain('Dashboard')
       expect(linkTexts).toContain('Experience')
       expect(linkTexts).toContain('Projects')
+      expect(linkTexts).toContain('Analytics')
     })
 
     it('should have correct navigation hrefs', async () => {
@@ -190,6 +191,7 @@ describe('AdminDashboard', () => {
       expect(hrefs).toContain('/admin')
       expect(hrefs).toContain('/admin/companies')
       expect(hrefs).toContain('/admin/projects')
+      expect(hrefs).toContain('/admin/analytics')
     })
   })
 
@@ -233,11 +235,12 @@ describe('AdminDashboard', () => {
       const wrapper = await createWrapper()
 
       const actionButtons = wrapper.findAll('.action-button')
-      expect(actionButtons.length).toBe(3)
+      expect(actionButtons.length).toBe(4)
 
       const buttonTexts = actionButtons.map(btn => btn.text())
       expect(buttonTexts).toContain('Add Experience')
       expect(buttonTexts).toContain('New Project')
+      expect(buttonTexts).toContain('View Analytics')
       expect(buttonTexts).toContain('View Site')
     })
 

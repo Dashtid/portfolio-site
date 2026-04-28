@@ -12,6 +12,7 @@ const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminCompanies = () => import('../views/admin/AdminCompanies.vue')
 const AdminEducation = () => import('../views/admin/AdminEducation.vue')
 const AdminProjects = () => import('../views/admin/AdminProjects.vue')
+const AdminAnalytics = () => import('../views/admin/AdminAnalytics.vue')
 
 export const DEFAULT_TITLE = 'David Dashti | Cybersecurity in Healthcare'
 
@@ -59,15 +60,21 @@ export const routes: RouteRecordRaw[] = [
         name: 'admin-projects',
         component: AdminProjects,
         meta: { title: 'Manage Projects | David Dashti' }
+      },
+      {
+        path: 'analytics',
+        name: 'admin-analytics',
+        component: AdminAnalytics,
+        meta: { title: 'Analytics | David Dashti' }
       }
     ]
   }
 ]
 
-// Reads --navbar-height (kept in sync with the actual rendered navbar
-// height by NavBar.vue's ResizeObserver). Falls back to 72 for SSR/early
-// boots before the var is set. Section internal padding supplies any
-// breathing room above the title.
+// Reads --navbar-height (set by NavBar.vue from a one-time scrolled-state
+// measurement, refreshed on viewport resize). Falls back to 72 for SSR
+// and early boots before the var is written. Section internal padding
+// provides any visual breathing room above the title.
 const getScrollOffset = (): number => {
   if (typeof window === 'undefined') return 72
   const raw = getComputedStyle(document.documentElement).getPropertyValue('--navbar-height')

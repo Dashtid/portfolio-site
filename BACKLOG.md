@@ -71,6 +71,12 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CSS-003~~ | ~~CSS~~ | ~~MEDIUM~~ | ~~11x `!important` in portfolio.css~~ — **WON'T FIX** (Bootstrap defines `.bg-light`/`.bg-dark` with `!important`, so overrides must too; replaced hardcoded hex colors with CSS variables) |
 | ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
 | ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
+| FE-003 | Frontend | MEDIUM | AdminProjects CRUD not implemented — placeholder only |
+| FE-004 | Frontend | LOW | Five components/views > 500 lines (AdminCompanies, GitHubStats, AdminEducation, AdminDashboard, ExperienceDetail) |
+| FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
+| FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
+| BE-025 | Backend | MEDIUM | PageView `country`/`city` columns never populated — admin Top Countries section always empty |
+| CI-021 | CI/CD | LOW | No coverage threshold enforced — PRs can drop coverage silently |
 
 ---
 
@@ -240,6 +246,25 @@ has full container privileges.
 deploy failures.
 
 **Fix:** Pin to a specific version: `npm install -g vercel@44.4.0`.
+
+---
+
+### CI-021: No coverage threshold enforced in CI
+**Files:** `.github/workflows/ci-cd.yml`, `frontend/package.json`
+**Priority:** LOW
+
+Frontend has 597 unit tests via vitest and `@vitest/coverage-v8` is already
+installed, but no coverage threshold is enforced — PRs can drop coverage
+silently. Backend test job similarly has no min-coverage gate.
+
+**Scope:**
+- Run `vitest run --coverage` in CI (frontend) and `pytest --cov` (backend,
+  already runs but no threshold).
+- Capture a baseline once and bake into the workflow as a min threshold.
+- Fail PRs that drop overall coverage by more than ~2 percentage points.
+- Optional: stricter thresholds for `src/stores/` and `src/api/`.
+
+**Estimated effort:** 1–2 hours.
 
 ---
 
@@ -730,6 +755,92 @@ OpenGraph accessibility recommendation. `og:image` is set but `og:image:alt` is 
 `rgba(248, 250, 252, 0.15)` instead of CSS variable equivalents.
 
 **Fix:** Map to `--color-primary-rgb` / `--color-teal-rgb` alpha variants.
+
+---
+
+## Frontend Features / Tech Debt
+
+### FE-003: AdminProjects CRUD not implemented
+**Files:** `frontend/src/views/admin/AdminProjects.vue`
+**Priority:** MEDIUM
+
+The admin Projects view is a styled placeholder. Projects on the public site
+are seeded via `backend/app/seed_data.py` and edited there.
+
+**Scope:**
+- Build the same shape as `AdminCompanies.vue` (table + create/edit modal).
+- Reuse the existing `/api/v1/projects` CRUD endpoints.
+- Acceptance: admin can list, create, edit, delete, reorder, and toggle
+  `featured` on projects without touching the database directly.
+
+**Estimated effort:** ~1 focused day.
+
+---
+
+### FE-004: Split oversized admin components
+**Files:**
+- `frontend/src/views/admin/AdminCompanies.vue` (859 lines)
+- `frontend/src/components/GitHubStats.vue` (733 lines)
+- `frontend/src/views/admin/AdminEducation.vue` (570 lines)
+- `frontend/src/views/admin/AdminDashboard.vue` (562 lines)
+- `frontend/src/views/experience/ExperienceDetail.vue` (538 lines)
+
+**Priority:** LOW
+
+Not bugs — testability and readability concern. Extract sub-components
+(table rows, form sections, repo cards) so the routed file becomes a thin
+orchestrator.
+
+**Estimated effort:** ~half day per file.
+
+---
+
+### FE-005: Decide fate of `utils/analytics.ts` (Plausible/Umami)
+**Files:** `frontend/src/utils/analytics.ts`, `frontend/src/composables/useAnalytics.ts`, `frontend/src/main.ts`
+**Priority:** LOW
+
+`utils/analytics.ts` initialises a Plausible/Umami script in `main.ts` based on
+`VITE_ANALYTICS_*` env vars, and `composables/useAnalytics.ts` wraps it with named
+helpers (`trackButtonClick`, `trackThemeToggle`, etc.) — but **nothing in the
+app currently calls those helpers**. The internal `services/analytics.ts`
+(admin dashboard data source) is the path that's actually wired up.
+
+**Scope:** Pick one:
+- (a) Wire `useAnalytics` helpers into NavBar, ThemeToggle, ProjectCard click
+  events, etc. so Plausible/Umami actually receives signal.
+- (b) Delete `utils/analytics.ts`, `composables/useAnalytics.ts`, and the init
+  call in `main.ts` to stay on self-hosted analytics only.
+
+---
+
+### FE-006: Tighten remaining `any` usages
+**Files:** `frontend/src/composables/useToast.ts`, `frontend/src/api/services.ts`, `frontend/src/schemas/api.schemas.ts`, others
+**Priority:** LOW
+
+33 `any` occurrences across 11 files. Most are defensible Web API casts
+(`as PerformanceXXXTiming`, `as HTMLElement | null`); a handful in toast
+state, analytics schemas, and config objects could become real interfaces.
+
+**Estimated effort:** 1–2 hours total.
+
+---
+
+## Backend Tech Debt
+
+### BE-025: PageView `country` / `city` never populated — Top Countries always empty
+**Files:** `backend/app/api/v1/analytics.py`, `backend/app/models/analytics.py`
+**Priority:** MEDIUM
+
+`PageView.country` and `PageView.city` exist as columns but no geo-IP lookup
+runs at write time. The admin Analytics view's "Top Countries" section will
+always show the empty state.
+
+**Scope:** Either integrate a free GeoIP database (MaxMind GeoLite2 via the
+`maxminddb` Python lib) at write time, or call a geo-IP HTTP service. The IP
+hash is already stored, so privacy can be preserved by storing only the
+country code (no city).
+
+**Estimated effort:** 2–3 hours including provider choice and lookup caching.
 
 ---
 

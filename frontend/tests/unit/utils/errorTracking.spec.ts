@@ -1,20 +1,28 @@
 /**
  * Tests for errorTracking utility (TypeScript)
  *
- * Note: Environment variables are set in vitest.config.ts
+ * Note: Environment variables are set in vitest.config.ts.
+ * errorTracking.ts dynamically imports apiClient, so we mock that module.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+const mockPost = vi.fn().mockResolvedValue({ data: {} })
+
+vi.mock('@/api/client', () => ({
+  default: {
+    post: mockPost,
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}))
+
 import { errorTracker, trackError } from '@/utils/errorTracking'
 
 describe('errorTracking utility', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
-
   beforeEach(() => {
-    // Mock fetch
-    mockFetch = vi.fn().mockResolvedValue({ ok: true })
-    global.fetch = mockFetch as typeof fetch
-
-    // Clear any previous errors
+    mockPost.mockClear()
+    mockPost.mockResolvedValue({ data: {} })
     errorTracker.clearErrors()
   })
 
@@ -67,25 +75,23 @@ describe('errorTracking utility', () => {
     it('sends error to backend', async () => {
       trackError('Test error')
 
-      await new Promise(resolve => setTimeout(resolve, 10))
+      // sendError uses dynamic import of apiClient + an async POST.
+      // Wait long enough for both promise microtasks to settle.
+      await new Promise(resolve => setTimeout(resolve, 30))
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/errors'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: expect.stringContaining('Test error')
-        })
+      expect(mockPost).toHaveBeenCalledWith(
+        '/api/v1/errors',
+        expect.objectContaining({ message: expect.stringContaining('Test error') })
       )
     })
 
     it('silently fails when backend request fails', async () => {
-      mockFetch.mockRejectedValue(new Error('Network error'))
+      mockPost.mockRejectedValue(new Error('Network error'))
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       trackError('Test error')
 
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise(resolve => setTimeout(resolve, 30))
 
       // Should not throw - function completes without exception
       expect(true).toBe(true)

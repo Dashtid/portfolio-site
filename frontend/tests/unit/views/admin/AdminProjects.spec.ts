@@ -17,13 +17,13 @@ describe('AdminProjects', () => {
     it('should display the page title', () => {
       const wrapper = mount(AdminProjects)
 
-      expect(wrapper.find('h2').text()).toBe('Manage Projects')
+      expect(wrapper.find('h2').text()).toBe('Projects')
     })
 
-    it('should display coming soon message', () => {
+    it('should display the placeholder message', () => {
       const wrapper = mount(AdminProjects)
 
-      expect(wrapper.text()).toContain('Projects management coming soon')
+      expect(wrapper.text()).toContain('Projects management is not wired up yet')
     })
   })
 })

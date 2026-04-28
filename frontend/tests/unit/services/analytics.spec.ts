@@ -1,28 +1,57 @@
 /**
  * Tests for analytics service (TypeScript)
+ *
+ * The service was refactored to route all HTTP through apiClient (so it
+ * picks up auth interceptors). Tests mock the apiClient module directly.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import axios from 'axios'
-import analyticsService from '@/services/analytics'
 
-vi.mock('axios')
+// Mock apiClient before the service is imported (services/analytics.ts
+// imports apiClient at module-eval time as part of the singleton).
+vi.mock('@/api/client', () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn()
+  }
+}))
 
-// Mock the logger to avoid console output and enable test assertions
-vi.mock('@/utils/logger', () => ({
-  analyticsLogger: {
+// Logger mock must be complete: storage.ts (transitively imported via
+// apiClient) calls createLogger, and analyticsLogger is used by the service.
+// Factory must be inlined inside vi.mock — the call is hoisted above any
+// outer-scope declarations.
+vi.mock('@/utils/logger', () => {
+  const stub = () => ({
     error: vi.fn(),
     warn: vi.fn(),
     log: vi.fn(),
     debug: vi.fn(),
     info: vi.fn()
+  })
+  return {
+    analyticsLogger: stub(),
+    adminLogger: stub(),
+    authLogger: stub(),
+    apiLogger: stub(),
+    themeLogger: stub(),
+    performanceLogger: stub(),
+    errorLogger: stub(),
+    logger: stub(),
+    createLogger: () => stub()
   }
-}))
+})
+
+import apiClient from '@/api/client'
+import analyticsService from '@/services/analytics'
+
+const mockedPost = vi.mocked(apiClient.post)
+const mockedGet = vi.mocked(apiClient.get)
 
 describe('analytics service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     sessionStorage.clear()
     localStorage.clear()
+    analyticsService.setEnabled(true)
   })
 
   afterEach(() => {
@@ -30,35 +59,17 @@ describe('analytics service', () => {
   })
 
   describe('session management', () => {
-    it('generates session ID on first use', () => {
-      // Since the service is a singleton initialized at import time,
-      // we can't test the "first use" scenario after clearing storage.
-      // Instead, we test that a session ID exists when the service is available.
-      const sessionId = `session_${Date.now()}_test123`
-      sessionStorage.setItem('analytics_session_id', sessionId)
-
-      const retrieved = sessionStorage.getItem('analytics_session_id')
-      expect(retrieved).toBe(sessionId)
-      expect(retrieved).toBeTruthy()
-    })
-
     it('reuses existing session ID', () => {
       const existingSessionId = 'session_existing_123'
       sessionStorage.setItem('analytics_session_id', existingSessionId)
-
-      // Get the session ID from storage
       const sessionId = sessionStorage.getItem('analytics_session_id')
-
       expect(sessionId).toBe(existingSessionId)
     })
 
     it('session ID has correct format', () => {
-      // Set up a proper session ID
       const sessionId = `session_${Date.now()}_abcdef123`
       sessionStorage.setItem('analytics_session_id', sessionId)
-
       const retrievedId = sessionStorage.getItem('analytics_session_id')
-
       expect(retrievedId).not.toBeNull()
       expect(String(retrievedId)).toMatch(/^session_\d+_[a-z0-9]+$/)
     })
@@ -66,12 +77,12 @@ describe('analytics service', () => {
 
   describe('trackPageView', () => {
     it('sends page view to API', async () => {
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
+      mockedPost.mockResolvedValue({ data: {} } as never)
 
       await analyticsService.trackPageView('/test', 'Test Page')
 
-      expect(mockPost).toHaveBeenCalled()
-      const call = mockPost.mock.calls[0]
+      expect(mockedPost).toHaveBeenCalled()
+      const call = mockedPost.mock.calls[0]
       expect(call[0]).toContain('/api/v1/analytics/track/pageview')
       expect(call[1]).toMatchObject({
         page_path: '/test',
@@ -80,104 +91,82 @@ describe('analytics service', () => {
     })
 
     it('uses current path when not provided', async () => {
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
+      mockedPost.mockResolvedValue({ data: {} } as never)
 
       await analyticsService.trackPageView()
 
-      expect(mockPost).toHaveBeenCalledWith(
+      expect(mockedPost).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({
-          page_path: expect.any(String)
-        }),
-        expect.any(Object)
+        expect.objectContaining({ page_path: expect.any(String) })
       )
     })
 
     it('uses document title when not provided', async () => {
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
+      mockedPost.mockResolvedValue({ data: {} } as never)
       document.title = 'Test Document Title'
 
       await analyticsService.trackPageView('/test')
 
-      expect(mockPost).toHaveBeenCalledWith(
+      expect(mockedPost).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({
-          page_title: 'Test Document Title'
-        }),
-        expect.any(Object)
+        expect.objectContaining({ page_title: 'Test Document Title' })
       )
     })
 
     it('handles API errors gracefully', async () => {
-      vi.mocked(axios.post).mockRejectedValue(new Error('API Error'))
+      mockedPost.mockRejectedValue(new Error('API Error'))
       const { analyticsLogger } = await import('@/utils/logger')
 
       await expect(analyticsService.trackPageView('/test')).resolves.not.toThrow()
-
       expect(analyticsLogger.error).toHaveBeenCalled()
     })
 
     it('does not track when disabled', async () => {
-      const mockPost = vi.mocked(axios.post)
       analyticsService.setEnabled(false)
-
       await analyticsService.trackPageView('/test')
-
-      expect(mockPost).not.toHaveBeenCalled()
-
-      // Re-enable for other tests
-      analyticsService.setEnabled(true)
+      expect(mockedPost).not.toHaveBeenCalled()
     })
   })
 
   describe('trackEvent', () => {
     it('tracks events via page view with label', async () => {
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
+      mockedPost.mockResolvedValue({ data: {} } as never)
 
       await analyticsService.trackEvent('click', 'button', 'submit', 1)
 
-      expect(mockPost).toHaveBeenCalledWith(
+      expect(mockedPost).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           page_path: '/event/click/button/submit',
           page_title: 'Event: click - button'
-        }),
-        expect.any(Object)
+        })
       )
     })
 
     it('tracks events via page view without label', async () => {
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
+      mockedPost.mockResolvedValue({ data: {} } as never)
 
       await analyticsService.trackEvent('click', 'button')
 
-      expect(mockPost).toHaveBeenCalledWith(
+      expect(mockedPost).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           page_path: '/event/click/button',
           page_title: 'Event: click - button'
-        }),
-        expect.any(Object)
+        })
       )
     })
 
     it('tracks events without label and value', async () => {
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
-
+      mockedPost.mockResolvedValue({ data: {} } as never)
       await analyticsService.trackEvent('pageview', 'home')
-
-      expect(mockPost).toHaveBeenCalled()
+      expect(mockedPost).toHaveBeenCalled()
     })
 
     it('does not track when disabled', async () => {
-      const mockPost = vi.mocked(axios.post)
       analyticsService.setEnabled(false)
-
       await analyticsService.trackEvent('test', 'action')
-
-      expect(mockPost).not.toHaveBeenCalled()
-
-      analyticsService.setEnabled(true)
+      expect(mockedPost).not.toHaveBeenCalled()
     })
   })
 
@@ -201,9 +190,7 @@ describe('analytics service', () => {
 
     it('works without label', async () => {
       const { analyticsLogger } = await import('@/utils/logger')
-
       analyticsService.trackTiming('api', 'request', 500)
-
       expect(analyticsLogger.debug).toHaveBeenCalled()
     })
 
@@ -211,47 +198,21 @@ describe('analytics service', () => {
       const { analyticsLogger } = await import('@/utils/logger')
       vi.mocked(analyticsLogger.debug).mockClear()
       analyticsService.setEnabled(false)
-
       analyticsService.trackTiming('test', 'var', 100)
-
       expect(analyticsLogger.debug).not.toHaveBeenCalled()
-
-      analyticsService.setEnabled(true)
     })
   })
 
-  describe('setEnabled', () => {
-    it('enables analytics', () => {
-      analyticsService.setEnabled(true)
-
-      expect(localStorage.getItem('analytics_enabled')).toBe('true')
-    })
-
-    it('disables analytics', () => {
+  describe('setEnabled / isAnalyticsEnabled', () => {
+    it('persists disabled state to localStorage', () => {
       analyticsService.setEnabled(false)
-
       expect(localStorage.getItem('analytics_enabled')).toBe('false')
-    })
-  })
-
-  describe('isAnalyticsEnabled', () => {
-    it('returns true by default', () => {
-      // Reset to default state (singleton persists across tests)
-      analyticsService.setEnabled(true)
-
-      expect(analyticsService.isAnalyticsEnabled()).toBe(true)
-    })
-
-    it('returns false after setEnabled(false)', () => {
-      analyticsService.setEnabled(false)
-
       expect(analyticsService.isAnalyticsEnabled()).toBe(false)
     })
 
-    it('returns true after setEnabled(true)', () => {
-      analyticsService.setEnabled(false)
+    it('persists enabled state to localStorage', () => {
       analyticsService.setEnabled(true)
-
+      expect(localStorage.getItem('analytics_enabled')).toBe('true')
       expect(analyticsService.isAnalyticsEnabled()).toBe(true)
     })
   })
@@ -259,34 +220,28 @@ describe('analytics service', () => {
   describe('getAnalyticsSummary', () => {
     it('fetches analytics summary', async () => {
       const mockData = { totalViews: 1000, uniqueVisitors: 500 }
-      vi.mocked(axios.get).mockResolvedValue({ data: mockData })
+      mockedGet.mockResolvedValue({ data: mockData } as never)
 
       const result = await analyticsService.getAnalyticsSummary(30)
 
       expect(result).toEqual(mockData)
-      expect(axios.get).toHaveBeenCalledWith(
+      expect(mockedGet).toHaveBeenCalledWith(
         expect.stringContaining('/stats/summary'),
-        expect.objectContaining({
-          params: { days: 30 }
-        })
+        expect.objectContaining({ params: { days: 30 } })
       )
     })
 
     it('uses default days parameter', async () => {
-      vi.mocked(axios.get).mockResolvedValue({ data: {} })
-
+      mockedGet.mockResolvedValue({ data: {} } as never)
       await analyticsService.getAnalyticsSummary()
-
-      expect(axios.get).toHaveBeenCalledWith(
+      expect(mockedGet).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({
-          params: { days: 30 }
-        })
+        expect.objectContaining({ params: { days: 30 } })
       )
     })
 
     it('returns null on error', async () => {
-      vi.mocked(axios.get).mockRejectedValue(new Error('API Error'))
+      mockedGet.mockRejectedValue(new Error('API Error'))
       const { analyticsLogger } = await import('@/utils/logger')
 
       const result = await analyticsService.getAnalyticsSummary()
@@ -299,78 +254,34 @@ describe('analytics service', () => {
   describe('getVisitorStats', () => {
     it('fetches visitor statistics', async () => {
       const mockData = { visitors: [{ date: '2025-10-27', count: 100 }] }
-      vi.mocked(axios.get).mockResolvedValue({ data: mockData })
+      mockedGet.mockResolvedValue({ data: mockData } as never)
 
       const result = await analyticsService.getVisitorStats(7)
 
       expect(result).toEqual(mockData)
-      expect(axios.get).toHaveBeenCalledWith(
+      expect(mockedGet).toHaveBeenCalledWith(
         expect.stringContaining('/stats/visitors'),
-        expect.objectContaining({
-          params: { days: 7 }
-        })
+        expect.objectContaining({ params: { days: 7 } })
       )
     })
 
     it('uses default days parameter', async () => {
-      vi.mocked(axios.get).mockResolvedValue({ data: {} })
-
+      mockedGet.mockResolvedValue({ data: {} } as never)
       await analyticsService.getVisitorStats()
-
-      expect(axios.get).toHaveBeenCalledWith(
+      expect(mockedGet).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({
-          params: { days: 7 }
-        })
+        expect.objectContaining({ params: { days: 7 } })
       )
     })
 
     it('returns null on error', async () => {
-      vi.mocked(axios.get).mockRejectedValue(new Error('API Error'))
+      mockedGet.mockRejectedValue(new Error('API Error'))
       const { analyticsLogger } = await import('@/utils/logger')
 
       const result = await analyticsService.getVisitorStats()
 
       expect(result).toBeNull()
       expect(analyticsLogger.error).toHaveBeenCalled()
-    })
-  })
-
-  describe('TypeScript types', () => {
-    it('trackEvent accepts string parameters', async () => {
-      analyticsService.setEnabled(true)
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
-
-      await analyticsService.trackEvent('category', 'action', 'label', 1)
-
-      expect(mockPost).toHaveBeenCalled()
-    })
-
-    it('trackEvent accepts null for optional parameters', async () => {
-      analyticsService.setEnabled(true)
-      const mockPost = vi.mocked(axios.post).mockResolvedValue({ data: {} })
-
-      await analyticsService.trackEvent('category', 'action', null, null)
-
-      expect(mockPost).toHaveBeenCalled()
-    })
-
-    it('getAnalyticsSummary returns typed data', async () => {
-      const mockData = { views: 100 }
-      vi.mocked(axios.get).mockResolvedValue({ data: mockData })
-
-      const result = await analyticsService.getAnalyticsSummary()
-
-      expect(result).toEqual(mockData)
-    })
-
-    it('getVisitorStats returns typed data', async () => {
-      const mockData = { visitors: [] }
-      vi.mocked(axios.get).mockResolvedValue({ data: mockData })
-
-      const result = await analyticsService.getVisitorStats()
-
-      expect(result).toEqual(mockData)
     })
   })
 })

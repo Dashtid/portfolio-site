@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import type * as THREE from 'three'
+import { logger } from '../utils/logger'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
@@ -39,11 +40,11 @@ const initScene = () => {
     const testCanvas = document.createElement('canvas')
     const gl = testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl')
     if (!gl) {
-      console.warn('WebGL not available, skipping Three.js hero background')
+      logger.warn('WebGL not available, skipping Three.js hero background')
       return
     }
   } catch {
-    console.warn('WebGL context check failed, skipping Three.js hero background')
+    logger.warn('WebGL context check failed, skipping Three.js hero background')
     return
   }
 
@@ -68,7 +69,7 @@ const initScene = () => {
     // Create particle system
     createParticles()
   } catch (error) {
-    console.warn('Failed to initialize Three.js:', error)
+    logger.warn('Failed to initialize Three.js:', error)
   }
 }
 
