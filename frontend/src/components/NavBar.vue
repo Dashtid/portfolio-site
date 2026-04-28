@@ -140,12 +140,15 @@ const scrollToSection = (sectionId: string): void => {
     }
   }
   if (element) {
-    // Use the navbar's actual rendered height so the section's top edge
-    // lands exactly at the navbar's bottom — no bleed of the previous
-    // section above. Navbar height changes between default and scrolled
-    // states, so reading it live keeps the math correct in both.
-    const navbar = document.querySelector('.navbar-custom')
-    const navHeight = navbar?.getBoundingClientRect().height ?? 72
+    // Use the scrolled-state navbar height (cached in --navbar-height by
+    // syncNavbarHeight). At any non-hero target the navbar will be in
+    // scrolled state at scroll-end, so this matches the final layout
+    // exactly. Reading the live (currently-default) height instead would
+    // overshoot when scrolling away from the top.
+    const navHeightStr = getComputedStyle(document.documentElement).getPropertyValue(
+      '--navbar-height'
+    )
+    const navHeight = parseInt(navHeightStr, 10) || 56
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
     const offsetPosition = elementPosition - navHeight
 
@@ -207,13 +210,31 @@ const handleScroll = (): void => {
 // Throttled scroll handler (100ms delay reduces CPU usage significantly)
 const throttledHandleScroll = throttle(handleScroll, 100)
 
-// Keeps the --navbar-height CSS variable in sync with the actual rendered
-// navbar height (it shrinks ~16px when scrolled). Used by scroll-padding-top
-// for hash anchors and by the router's scrollBehavior.
-let navbarResizeObserver: ResizeObserver | null = null
+// Measures the navbar's scrolled-state height — this is what the navbar
+// will be at *any* non-hero scroll target (since scrolling > 50px puts
+// it in scrolled state). Using it as the offset everywhere avoids the
+// home→experience gap where the navbar is currently tall (default) but
+// will shrink mid-scroll, leaving a visible bleed of the previous
+// section above the target. Transitions are temporarily disabled so the
+// measurement reflects the final layout, not an in-flight intermediate.
+const measureScrolledNavHeight = (): number => {
+  const navbar = document.querySelector<HTMLElement>('.navbar-custom')
+  if (!navbar) return 56
+  const origTransition = navbar.style.transition
+  navbar.style.transition = 'none'
+  const wasScrolled = navbar.classList.contains('navbar-scrolled')
+  navbar.classList.add('navbar-scrolled')
+  void navbar.offsetHeight
+  const h = navbar.getBoundingClientRect().height
+  if (!wasScrolled) navbar.classList.remove('navbar-scrolled')
+  void navbar.offsetHeight
+  navbar.style.transition = origTransition
+  return h
+}
 
-const syncNavbarHeight = (height: number): void => {
-  document.documentElement.style.setProperty('--navbar-height', `${Math.round(height)}px`)
+const syncNavbarHeight = (): void => {
+  const h = measureScrolledNavHeight()
+  document.documentElement.style.setProperty('--navbar-height', `${Math.round(h)}px`)
 }
 
 onMounted(() => {
@@ -223,16 +244,11 @@ onMounted(() => {
   window.addEventListener('scroll', throttledHandleScroll, { passive: true })
   handleScroll() // Initial check
 
-  const navbar = document.querySelector('.navbar-custom')
-  if (navbar) {
-    syncNavbarHeight(navbar.getBoundingClientRect().height)
-    if (typeof ResizeObserver !== 'undefined') {
-      navbarResizeObserver = new ResizeObserver(entries => {
-        syncNavbarHeight(entries[0].contentRect.height)
-      })
-      navbarResizeObserver.observe(navbar)
-    }
-  }
+  syncNavbarHeight()
+  // Re-measure on viewport resize (mobile/desktop breakpoints can change
+  // navbar dimensions). Scroll-state changes don't affect the value we
+  // store — that's the point.
+  window.addEventListener('resize', syncNavbarHeight)
 })
 
 // When navigating to a non-home route, reflect that in the active-link
@@ -247,9 +263,8 @@ watch(
 
 onUnmounted(() => {
   window.removeEventListener('scroll', throttledHandleScroll)
+  window.removeEventListener('resize', syncNavbarHeight)
   sectionElementsCache.value.clear()
-  navbarResizeObserver?.disconnect()
-  navbarResizeObserver = null
 })
 </script>
 
