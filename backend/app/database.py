@@ -2,11 +2,16 @@
 Database connection and session management
 """
 
+import os
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
 
 from app.config import settings
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Determine if SQLite (which doesn't support pooling well with async)
 is_sqlite = settings.async_database_url.startswith("sqlite")
@@ -58,3 +63,22 @@ async def get_db():
             raise
         finally:
             await session.close()
+
+
+async def init_db(drop_existing: bool = False) -> None:
+    """Create all tables defined on the metadata.
+
+    Args:
+        drop_existing: If True, drop all tables first. Requires the
+            ALLOW_DB_DROP=true environment variable as a guard against
+            accidental destructive runs.
+    """
+    async with engine.begin() as conn:
+        if drop_existing:
+            if os.getenv("ALLOW_DB_DROP", "").lower() != "true":
+                logger.error("Cannot drop tables: set ALLOW_DB_DROP=true to allow it")
+                raise RuntimeError("ALLOW_DB_DROP=true required to drop existing tables")
+            logger.warning("Dropping all existing tables...")
+            await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created successfully")

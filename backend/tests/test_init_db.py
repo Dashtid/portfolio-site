@@ -1,60 +1,25 @@
 """
-Tests for init_db module
+Tests for table-create helper and seed_data module.
+
+The legacy app/init_db.py was deleted; the table-create helper now lives
+in app/database.py alongside engine/Base. Seed data is owned by
+app/seed_data.py.
 """
 
 
-class TestInitDbModule:
-    """Tests for init_db module imports and structure."""
+class TestInitDbHelper:
+    """Tests for the init_db helper exported by app/database.py."""
 
     def test_init_db_function_exists(self):
-        """Test that init_db function exists."""
-        from app.init_db import init_db
+        from app.database import init_db
 
         assert init_db is not None
         assert callable(init_db)
 
-    def test_seed_data_function_exists(self):
-        """Test that seed_data function exists."""
-        from app.init_db import seed_data
-
-        assert seed_data is not None
-        assert callable(seed_data)
-
-    def test_main_function_exists(self):
-        """Test that main function exists."""
-        from app.init_db import main
-
-        assert main is not None
-        assert callable(main)
-
-    def test_imports_company_model(self):
-        """Test that init_db imports Company model."""
-        from app.init_db import Company
-
-        assert Company is not None
-
-    def test_imports_project_model(self):
-        """Test that init_db imports Project model."""
-        from app.init_db import Project
-
-        assert Project is not None
-
-    def test_imports_skill_model(self):
-        """Test that init_db imports Skill model."""
-        from app.init_db import Skill
-
-        assert Skill is not None
-
-    def test_imports_base(self):
-        """Test that init_db imports Base."""
-        from app.init_db import Base
+    def test_database_module_exposes_engine_and_base(self):
+        from app.database import Base, engine
 
         assert Base is not None
-
-    def test_imports_engine(self):
-        """Test that init_db imports engine."""
-        from app.init_db import engine
-
         assert engine is not None
 
 
