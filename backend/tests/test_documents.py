@@ -283,6 +283,31 @@ class TestDocumentsExceptionHandling:
 
         import asyncio
 
-        result = asyncio.run(get_documents(mock_request, mock_db))
+        # Direct calls bypass FastAPI's Query() default extraction; pass
+        # explicit skip/limit values so SQLAlchemy gets ints, not Query stubs.
+        result = asyncio.run(get_documents(mock_request, mock_db, skip=0, limit=50))
         assert result == mock_docs
         assert len(result) == 2
+
+    def test_get_documents_pagination_params(self):
+        """Pagination params are forwarded to the SQL query."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from app.api.v1.endpoints.documents import get_documents
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db.execute.return_value = mock_result
+
+        mock_request = _make_mock_request()
+
+        import asyncio
+
+        asyncio.run(get_documents(mock_request, mock_db, skip=5, limit=10))
+
+        # The compiled select should reflect the offset/limit we passed.
+        executed_stmt = mock_db.execute.call_args.args[0]
+        compiled = str(executed_stmt.compile(compile_kwargs={"literal_binds": True}))
+        assert "OFFSET 5" in compiled
+        assert "LIMIT 10" in compiled
