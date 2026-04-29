@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db_helpers import db_mutation
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
@@ -15,9 +16,6 @@ from app.models.education import Education
 from app.models.user import User
 from app.schemas.education import Education as EducationSchema
 from app.schemas.education import EducationCreate, EducationUpdate
-from app.utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 router = APIRouter(prefix="/education", tags=["education"])
 
@@ -75,7 +73,7 @@ async def get_education(
     result = await db.execute(select(Education).where(Education.id == education_id))
     education = result.scalar_one_or_none()
     if not education:
-        raise HTTPException(status_code=404, detail="Education record not found")
+        raise HTTPException(status_code=404, detail="Education not found")
     return education
 
 
@@ -106,7 +104,7 @@ async def update_education(
     result = await db.execute(select(Education).where(Education.id == education_id))
     db_education = result.scalar_one_or_none()
     if not db_education:
-        raise HTTPException(status_code=404, detail="Education record not found")
+        raise HTTPException(status_code=404, detail="Education not found")
 
     # Whitelist of fields that can be updated (defense-in-depth)
     allowed_update_fields = frozenset(
@@ -147,17 +145,7 @@ async def delete_education(
     result = await db.execute(select(Education).where(Education.id == education_id))
     db_education = result.scalar_one_or_none()
     if not db_education:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Education record not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Education not found")
 
-    try:
+    async with db_mutation(db, action="delete education"):
         await db.delete(db_education)
-        await db.commit()
-    except Exception as e:
-        await db.rollback()
-        logger.exception("Failed to delete education %s", education_id)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete education record",
-        ) from e

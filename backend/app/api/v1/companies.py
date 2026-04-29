@@ -9,15 +9,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.db_helpers import db_mutation
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
 from app.models.company import Company
 from app.models.user import User
 from app.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
-from app.utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -48,7 +46,7 @@ async def get_company(request: Request, company_id: str, db: DbSession):
     company = result.scalar_one_or_none()
 
     if not company:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
 
     return company
 
@@ -81,7 +79,7 @@ async def update_company(
     company = result.scalar_one_or_none()
 
     if not company:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
 
     # Whitelist of fields that can be updated (defense-in-depth)
     allowed_update_fields = frozenset(
@@ -126,17 +124,10 @@ async def delete_company(
     company = result.scalar_one_or_none()
 
     if not company:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
 
-    try:
+    async with db_mutation(db, action="delete company"):
         await db.delete(company)
-        await db.commit()
-    except Exception as e:
-        await db.rollback()
-        logger.exception("Failed to delete company %s", company_id)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete company"
-        ) from e
 
 
 # NOTE: rebuild_complete_data_temp endpoint has been REMOVED for security reasons.

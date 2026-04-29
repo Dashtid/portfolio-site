@@ -9,15 +9,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.db_helpers import db_mutation
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
-from app.utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -48,7 +46,7 @@ async def get_project(request: Request, project_id: str, db: DbSession):
     project = result.scalar_one_or_none()
 
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     return project
 
@@ -81,7 +79,7 @@ async def update_project(
     project = result.scalar_one_or_none()
 
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     # Whitelist of fields that can be updated (defense-in-depth)
     allowed_update_fields = frozenset(
@@ -125,14 +123,7 @@ async def delete_project(
     project = result.scalar_one_or_none()
 
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
-    try:
+    async with db_mutation(db, action="delete project"):
         await db.delete(project)
-        await db.commit()
-    except Exception as e:
-        await db.rollback()
-        logger.exception("Failed to delete project %s", project_id)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete project"
-        ) from e

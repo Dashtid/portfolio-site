@@ -8,15 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db_helpers import db_mutation
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
 from app.models.skill import Skill
 from app.models.user import User
 from app.schemas.skill import SkillCreate, SkillResponse, SkillUpdate
-from app.utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
@@ -43,7 +41,7 @@ async def get_skill(request: Request, skill_id: str, db: DbSession):
     skill = result.scalar_one_or_none()
 
     if not skill:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Skill not found")
 
     return skill
 
@@ -76,7 +74,7 @@ async def update_skill(
     skill = result.scalar_one_or_none()
 
     if not skill:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Skill not found")
 
     # Whitelist of fields that can be updated (defense-in-depth)
     allowed_update_fields = frozenset(
@@ -104,14 +102,7 @@ async def delete_skill(
     skill = result.scalar_one_or_none()
 
     if not skill:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Skill not found")
 
-    try:
+    async with db_mutation(db, action="delete skill"):
         await db.delete(skill)
-        await db.commit()
-    except Exception as e:
-        await db.rollback()
-        logger.exception("Failed to delete skill %s", skill_id)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete skill"
-        ) from e
