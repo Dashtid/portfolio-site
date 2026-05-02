@@ -75,7 +75,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | FE-004 | Frontend | LOW | Five components/views > 500 lines (AdminCompanies, GitHubStats, AdminEducation, AdminDashboard, ExperienceDetail) |
 | FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
-| BE-025 | Backend | MEDIUM | PageView `country`/`city` columns never populated — admin Top Countries section always empty |
+| ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
 | BE-026 | Backend | LOW | Audit FK cascade-delete behaviour (Company→Project, OAuthState→User, Document, etc.) for `ondelete='CASCADE'` consistency |
 | CI-021 | CI/CD | LOW | No coverage threshold enforced — PRs can drop coverage silently |
 

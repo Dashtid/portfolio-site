@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_admin_user
+from app.core.geo_ip import get_country_code
 from app.core.ip_utils import get_client_ip
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
@@ -49,13 +50,10 @@ async def track_pageview(
 ):
     """
     Track a page view (public endpoint).
-    Records visitor page views for analytics.
 
-    Note: The PageView model has country/city fields for geo-IP data.
-    These are not populated by default. To enable geo-IP:
-    1. Install a geo-IP library (e.g., geoip2, ip2geotools)
-    2. Set up MaxMind GeoLite2 database or similar
-    3. Resolve client_ip to country/city before saving
+    Records visitor page views for analytics. The raw client IP is hashed
+    before persistence (GDPR pseudonymisation) and looked up against ipapi.co
+    for a country code; the lookup is best-effort and caches results for 24h.
     """
     # Get client IP securely (only trusts X-Forwarded-For from known proxies)
     client_ip = get_client_ip(request)
@@ -68,13 +66,16 @@ async def track_pageview(
         ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:16]
         session_id = f"anon_{ip_hash}"
 
-    # Create page view record
-    # Note: country/city fields are available but require geo-IP service
+    # Resolve country before persisting. Lookup is best-effort: timeouts and
+    # upstream failures return None and the row is still written.
+    country = await get_country_code(client_ip)
+
     db_pageview = PageView(
         page_path=page_view.page_path,
         referrer=page_view.referrer,
         user_agent=request.headers.get("User-Agent"),
         ip_address=hashlib.sha256(client_ip.encode()).hexdigest()[:16],
+        country=country,
         session_id=session_id,
     )
     db.add(db_pageview)
