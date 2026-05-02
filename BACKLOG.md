@@ -77,7 +77,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
 | ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
 | BE-026 | Backend | LOW | Audit FK cascade-delete behaviour (Company→Project, OAuthState→User, Document, etc.) for `ondelete='CASCADE'` consistency |
-| CI-021 | CI/CD | LOW | No coverage threshold enforced — PRs can drop coverage silently |
+| ~~CI-021~~ | ~~CI/CD~~ | ~~LOW~~ | ~~No coverage threshold enforced~~ — **RESOLVED** (2026-05-02 baseline 78%/86% baked as floors with ~2pp headroom; stricter per-glob gates for `src/api/` + `src/stores/`) |
 
 ---
 
@@ -251,21 +251,22 @@ deploy failures.
 ---
 
 ### CI-021: No coverage threshold enforced in CI
-**Files:** `.github/workflows/ci-cd.yml`, `frontend/package.json`
+**Files:** `frontend/vite.config.ts`, `backend/pyproject.toml`, `.github/workflows/ci-cd.yml`
 **Priority:** LOW
+**Status:** RESOLVED (2026-05-02)
 
-Frontend has 597 unit tests via vitest and `@vitest/coverage-v8` is already
-installed, but no coverage threshold is enforced — PRs can drop coverage
-silently. Backend test job similarly has no min-coverage gate.
+Baselines captured at 78.18% (frontend, 589 tests) and 85.86% (backend, 660
+tests). Floors baked at ~2pp below baseline:
 
-**Scope:**
-- Run `vitest run --coverage` in CI (frontend) and `pytest --cov` (backend,
-  already runs but no threshold).
-- Capture a baseline once and bake into the workflow as a min threshold.
-- Fail PRs that drop overall coverage by more than ~2 percentage points.
-- Optional: stricter thresholds for `src/stores/` and `src/api/`.
-
-**Estimated effort:** 1–2 hours.
+- **Frontend** — `vite.config.ts` `test.coverage.thresholds`: 76 stmts /
+  67 branches / 76 funcs / 77 lines globally; per-glob stricter floors for
+  `src/api/**` and `src/stores/**`.
+- **Backend** — `pyproject.toml` `[tool.pytest.ini_options].addopts` now
+  includes `--cov-fail-under=83`.
+- **CI** — removed the `|| echo "No tests found"` swallow on the backend
+  test step in `ci-cd.yml`; pytest's non-zero exit now actually fails the
+  job. The frontend job already runs `npm test -- --run --coverage`, which
+  picks up the new vitest thresholds with no workflow change.
 
 ---
 

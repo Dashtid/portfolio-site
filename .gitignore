@@ -77,6 +77,8 @@ lerna-debug.log*
 # Testing
 .coverage/
 coverage/
+coverage.json
+coverage.xml
 *.lcov
 .nyc_output/
 .test-results/

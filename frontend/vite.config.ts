@@ -273,7 +273,29 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'json'],
       reportsDirectory: './coverage',
-      reportOnFailure: true
+      reportOnFailure: true,
+      // Thresholds baked in 2026-05-02 from a 78.18/69.31/78.87/79.33 baseline,
+      // minus ~2pp headroom so PRs fail before coverage drops more than that.
+      // Stricter per-glob gates for `api/` and `stores/` — those are the
+      // user-visible data plumbing where regressions are most expensive.
+      thresholds: {
+        statements: 76,
+        branches: 67,
+        functions: 76,
+        lines: 77,
+        'src/api/**': {
+          statements: 90,
+          branches: 60,
+          functions: 85,
+          lines: 92
+        },
+        'src/stores/**': {
+          statements: 83,
+          branches: 67,
+          functions: 90,
+          lines: 84
+        }
+      }
     }
   }
 })

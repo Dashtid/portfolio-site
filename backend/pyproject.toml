@@ -152,6 +152,9 @@ addopts = [
     "--cov=app",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
+    # Threshold baked 2026-05-02 from 85.86% baseline, minus ~2pp headroom.
+    # Bump the floor as coverage rises; never let a PR silently lower it.
+    "--cov-fail-under=83",
 ]
 filterwarnings = [
     "ignore::pydantic.PydanticDeprecatedSince20",

@@ -119,7 +119,7 @@ jobs:
           ruff format --check .
 
       - name: Run tests
-        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --junitxml=pytest-report.xml || echo "No tests found"
+        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --junitxml=pytest-report.xml
 
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
