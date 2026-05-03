@@ -76,7 +76,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
 | ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
-| BE-026 | Backend | LOW | Audit FK cascade-delete behaviour (Company→Project, OAuthState→User, Document, etc.) for `ondelete='CASCADE'` consistency |
+| ~~BE-026~~ | ~~Backend~~ | ~~LOW~~ | ~~Audit FK cascade-delete behaviour~~ — **RESOLVED** (2026-05-02 audit found only one FK in the entire model layer, already correctly configured; added SQLite FK enforcement to test conftest + cascade-delete regression test) |
 | ~~CI-021~~ | ~~CI/CD~~ | ~~LOW~~ | ~~No coverage threshold enforced~~ — **RESOLVED** (2026-05-02 baseline 78%/86% baked as floors with ~2pp headroom; stricter per-glob gates for `src/api/` + `src/stores/`) |
 
 ---

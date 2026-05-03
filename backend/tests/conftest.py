@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -36,6 +37,18 @@ test_engine = create_async_engine(
     poolclass=StaticPool,
     connect_args={"check_same_thread": False},
 )
+
+
+# SQLite ignores ondelete="CASCADE" unless `PRAGMA foreign_keys = ON` is set
+# per connection. Production runs Postgres which enforces FKs by default; we
+# enable the pragma in tests so cascade-delete behaviour stays in test/prod
+# parity and so an orphaned-row insert fails loudly instead of silently.
+@event.listens_for(test_engine.sync_engine, "connect")
+def _enable_sqlite_fk(dbapi_connection, _connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON")
+    cursor.close()
+
 
 # Create test session factory
 TestSessionLocal = sessionmaker(

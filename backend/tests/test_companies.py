@@ -146,6 +146,44 @@ def test_delete_company_with_db_auth(client: TestClient, admin_user_in_db: dict[
     assert get_response.status_code == 404
 
 
+def test_delete_company_cascades_to_projects(client: TestClient, admin_user_in_db: dict[str, Any]):
+    """Deleting a company must cascade-delete its projects.
+
+    Guards the only FK in the model layer (projects.company_id). The DB-side
+    `ondelete=CASCADE` covers raw deletes; the ORM-side `cascade="all,
+    delete-orphan"` covers ORM-issued deletes — this test exercises the ORM
+    path and the conftest pragma keeps the DB-side rule honest under SQLite.
+    """
+    company_resp = client.post(
+        "/api/v1/companies/",
+        json={"name": "Parent Co", "title": "Engineer", "order_index": 1},
+        headers=admin_user_in_db["headers"],
+    )
+    assert company_resp.status_code == 201
+    company_id = company_resp.json()["id"]
+
+    project_resp = client.post(
+        "/api/v1/projects/",
+        json={
+            "name": "Child Project",
+            "description": "Belongs to parent",
+            "technologies": ["python"],
+            "company_id": company_id,
+        },
+        headers=admin_user_in_db["headers"],
+    )
+    assert project_resp.status_code == 201
+    project_id = project_resp.json()["id"]
+
+    delete_resp = client.delete(
+        f"/api/v1/companies/{company_id}", headers=admin_user_in_db["headers"]
+    )
+    assert delete_resp.status_code == 204
+
+    orphan_resp = client.get(f"/api/v1/projects/{project_id}")
+    assert orphan_resp.status_code == 404
+
+
 def test_update_company_not_found(client: TestClient, admin_user_in_db: dict[str, Any]):
     """Test updating a non-existent company returns 404."""
     update_data = {

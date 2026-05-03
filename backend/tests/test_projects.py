@@ -318,17 +318,30 @@ class TestProjectEdgeCases:
         assert response.json()["featured"] is True
 
     def test_project_with_company_id(self, client: TestClient, admin_user_in_db: dict[str, Any]):
-        """Test creating project linked to a company."""
+        """Test creating project linked to a company.
+
+        Conftest enables `PRAGMA foreign_keys = ON`, so the parent company must
+        exist before the FK can resolve — we create it inline rather than
+        hard-coding a fake UUID.
+        """
+        company_resp = client.post(
+            "/api/v1/companies/",
+            json={"name": "Parent Co", "title": "Engineer", "order_index": 1},
+            headers=admin_user_in_db["headers"],
+        )
+        assert company_resp.status_code == 201
+        company_id = company_resp.json()["id"]
+
         project_data = {
             "name": "Company Project",
-            "company_id": "00000000-0000-0000-0000-000000000001",
+            "company_id": company_id,
             "order_index": 1,
         }
         response = client.post(
             "/api/v1/projects/", json=project_data, headers=admin_user_in_db["headers"]
         )
         assert response.status_code == 201
-        assert response.json()["company_id"] == "00000000-0000-0000-0000-000000000001"
+        assert response.json()["company_id"] == company_id
 
     def test_get_project_by_invalid_uuid_format(self, client: TestClient):
         """Test getting project with valid UUID format but non-existent."""
