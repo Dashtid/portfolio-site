@@ -71,7 +71,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CSS-003~~ | ~~CSS~~ | ~~MEDIUM~~ | ~~11x `!important` in portfolio.css~~ — **WON'T FIX** (Bootstrap defines `.bg-light`/`.bg-dark` with `!important`, so overrides must too; replaced hardcoded hex colors with CSS variables) |
 | ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
 | ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
-| FE-003 | Frontend | MEDIUM | AdminProjects CRUD not implemented — placeholder only |
+| ~~FE-003~~ | ~~Frontend~~ | ~~MEDIUM~~ | ~~AdminProjects CRUD not implemented~~ — **RESOLVED** (2026-05-04 mirrors AdminCompanies pattern: list/create/edit/delete + featured toggle + company FK dropdown; 20 new tests) |
 | FE-004 | Frontend | LOW | Five components/views > 500 lines (AdminCompanies, GitHubStats, AdminEducation, AdminDashboard, ExperienceDetail) |
 | FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
@@ -763,19 +763,18 @@ OpenGraph accessibility recommendation. `og:image` is set but `og:image:alt` is 
 ## Frontend Features / Tech Debt
 
 ### FE-003: AdminProjects CRUD not implemented
-**Files:** `frontend/src/views/admin/AdminProjects.vue`
+**Files:** `frontend/src/views/admin/AdminProjects.vue`, `frontend/tests/unit/views/admin/AdminProjects.spec.ts`
 **Priority:** MEDIUM
+**Status:** RESOLVED (2026-05-04)
 
-The admin Projects view is a styled placeholder. Projects on the public site
-are seeded via `backend/app/seed_data.py` and edited there.
-
-**Scope:**
-- Build the same shape as `AdminCompanies.vue` (table + create/edit modal).
-- Reuse the existing `/api/v1/projects` CRUD endpoints.
-- Acceptance: admin can list, create, edit, delete, reorder, and toggle
-  `featured` on projects without touching the database directly.
-
-**Estimated effort:** ~1 focused day.
+Replaced the placeholder with a full CRUD view mirroring `AdminCompanies.vue`:
+list with featured-badge cards + tech pills + resolved company name; modal
+form covering all 14 editable fields grouped into Basics / Links / Media /
+Lists / Meta sections; company FK rendered as a dropdown populated from
+`/api/v1/companies` (parallel `Promise.all` on mount). Test file expanded
+from 3 placeholder tests to 20, mirroring `AdminCompanies.spec.ts`. The
+existing `projectService` factory and zod-derived `Project` type meant no
+new API or type plumbing was needed.
 
 ---
 
