@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount, VueWrapper } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory, Router } from 'vue-router'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 

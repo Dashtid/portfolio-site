@@ -72,7 +72,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
 | ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
 | ~~FE-003~~ | ~~Frontend~~ | ~~MEDIUM~~ | ~~AdminProjects CRUD not implemented~~ — **RESOLVED** (2026-05-04 mirrors AdminCompanies pattern: list/create/edit/delete + featured toggle + company FK dropdown; 20 new tests) |
-| FE-004 | Frontend | LOW | Five components/views > 500 lines (AdminCompanies, GitHubStats, AdminEducation, AdminDashboard, ExperienceDetail) |
+| FE-004 | Frontend | LOW | ~~GitHubStats~~ done (split into RepoCard + LanguageBar + utils, 733→286 lines). Remaining: AdminCompanies (859), AdminProjects (951), AdminDashboard (582), AdminEducation (570), ExperienceDetail (538) |
 | FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
 | ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
@@ -778,21 +778,36 @@ new API or type plumbing was needed.
 
 ---
 
-### FE-004: Split oversized admin components
-**Files:**
-- `frontend/src/views/admin/AdminCompanies.vue` (859 lines)
-- `frontend/src/components/GitHubStats.vue` (733 lines)
-- `frontend/src/views/admin/AdminEducation.vue` (570 lines)
-- `frontend/src/views/admin/AdminDashboard.vue` (562 lines)
-- `frontend/src/views/experience/ExperienceDetail.vue` (538 lines)
-
+### FE-004: Split oversized components
 **Priority:** LOW
 
 Not bugs — testability and readability concern. Extract sub-components
 (table rows, form sections, repo cards) so the routed file becomes a thin
 orchestrator.
 
-**Estimated effort:** ~half day per file.
+**Progress:**
+- 2026-05-04 — `GitHubStats.vue` split: extracted `RepoCard.vue`,
+  `LanguageBar.vue`, and `utils/githubLanguageColors.ts` with their own
+  unit tests. Parent went from 733 → 286 lines; existing parent tests
+  pass unchanged because the rendered DOM is identical. Also dropped
+  ~75 lines of dead CSS (`.stats-grid` / `.stat-card`) that no template
+  referenced.
+
+**Remaining files:**
+- `frontend/src/views/admin/AdminCompanies.vue` (859 lines)
+- `frontend/src/views/admin/AdminProjects.vue` (951 lines — added
+  by FE-003)
+- `frontend/src/views/admin/AdminDashboard.vue` (582 lines)
+- `frontend/src/views/admin/AdminEducation.vue` (570 lines)
+- `frontend/src/views/experience/ExperienceDetail.vue` (538 lines)
+
+The admin trio shares enough scaffolding (modal overlay + focus trap +
+edit/delete card actions + comma-separated list inputs) that one
+cross-cutting refactor would shrink all three at once. Worth its own
+ticket if pursued.
+
+**Estimated effort:** ~half day per file, or 1–1.5 days for the
+admin-trio cross-cutting refactor.
 
 ---
 
