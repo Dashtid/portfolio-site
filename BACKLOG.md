@@ -72,7 +72,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
 | ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
 | ~~FE-003~~ | ~~Frontend~~ | ~~MEDIUM~~ | ~~AdminProjects CRUD not implemented~~ — **RESOLVED** (2026-05-04 mirrors AdminCompanies pattern: list/create/edit/delete + featured toggle + company FK dropdown; 20 new tests) |
-| FE-004 | Frontend | LOW | ~~GitHubStats~~ done (split into RepoCard + LanguageBar + utils, 733→286 lines). Remaining: AdminCompanies (859), AdminProjects (951), AdminDashboard (582), AdminEducation (570), ExperienceDetail (538) |
+| FE-004 | Frontend | LOW | ~~GitHubStats~~, ~~admin trio scaffolding~~ done. Remaining: AdminDashboard (582), ExperienceDetail (538), and form-field extractions to push the admin trio under 500 lines |
 | FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
 | ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
@@ -792,22 +792,29 @@ orchestrator.
   pass unchanged because the rendered DOM is identical. Also dropped
   ~75 lines of dead CSS (`.stats-grid` / `.stat-card`) that no template
   referenced.
+- 2026-05-06 — admin trio cross-cutting refactor: extracted
+  `<AdminFormModal>` (modal overlay + focus trap + escape handler),
+  `<AdminCardActions>` (edit/delete button pair), and
+  `useCommaSeparatedList` (string[] ↔ comma-separated input adapter).
+  Triplicated modal scaffolding and triplicated comma-separated
+  computeds collapse to one source of truth. AdminCompanies 859 → 702,
+  AdminProjects 951 → 791, AdminEducation 570 → 518. Existing parent
+  test suites (68 tests across the trio) pass unchanged.
 
-**Remaining files:**
-- `frontend/src/views/admin/AdminCompanies.vue` (859 lines)
-- `frontend/src/views/admin/AdminProjects.vue` (951 lines — added
-  by FE-003)
-- `frontend/src/views/admin/AdminDashboard.vue` (582 lines)
-- `frontend/src/views/admin/AdminEducation.vue` (570 lines)
-- `frontend/src/views/experience/ExperienceDetail.vue` (538 lines)
+**Remaining files (still > 500 lines):**
+- `frontend/src/views/admin/AdminCompanies.vue` (702)
+- `frontend/src/views/admin/AdminProjects.vue` (791)
+- `frontend/src/views/admin/AdminDashboard.vue` (582)
+- `frontend/src/views/admin/AdminEducation.vue` (518)
+- `frontend/src/views/experience/ExperienceDetail.vue` (538)
 
-The admin trio shares enough scaffolding (modal overlay + focus trap +
-edit/delete card actions + comma-separated list inputs) that one
-cross-cutting refactor would shrink all three at once. Worth its own
-ticket if pursued.
+The admin trio's remaining size is mostly form-field markup. Pushing
+under 500 would require per-section sub-components
+(`<CompanyDateRange>`, `<ProjectMediaSection>`, etc.) — diminishing
+returns vs. the readability of top-to-bottom form code. AdminDashboard
+and ExperienceDetail are unrelated and would each be their own pass.
 
-**Estimated effort:** ~half day per file, or 1–1.5 days for the
-admin-trio cross-cutting refactor.
+**Estimated effort:** ~half day per remaining file.
 
 ---
 

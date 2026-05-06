@@ -5,132 +5,124 @@
       <button class="btn btn-primary" @click="showForm = true">Add New Education</button>
     </div>
 
-    <!-- Add/Edit Form Modal -->
-    <div
-      v-if="showForm"
-      ref="modalRef"
-      class="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="education-modal-title"
-      @click.self="closeForm"
-      @keydown.escape="closeForm"
+    <AdminFormModal
+      :open="showForm"
+      :title="`${editingEducation ? 'Edit' : 'Add'} Education`"
+      title-id="education-modal-title"
+      @close="closeForm"
     >
-      <div class="modal-content">
-        <h3 id="education-modal-title">{{ editingEducation ? 'Edit' : 'Add' }} Education</h3>
-        <form @submit.prevent="saveEducation">
-          <div class="form-group">
-            <label for="edu-institution">Institution *</label>
-            <input
-              id="edu-institution"
-              v-model="formData.institution"
-              type="text"
-              class="form-control"
-              required
-            />
-          </div>
+      <form @submit.prevent="saveEducation">
+        <div class="form-group">
+          <label for="edu-institution">Institution *</label>
+          <input
+            id="edu-institution"
+            v-model="formData.institution"
+            type="text"
+            class="form-control"
+            required
+          />
+        </div>
 
-          <div class="form-group">
-            <label for="edu-degree">Degree/Certification *</label>
-            <input
-              id="edu-degree"
-              v-model="formData.degree"
-              type="text"
-              class="form-control"
-              required
-            />
-          </div>
+        <div class="form-group">
+          <label for="edu-degree">Degree/Certification *</label>
+          <input
+            id="edu-degree"
+            v-model="formData.degree"
+            type="text"
+            class="form-control"
+            required
+          />
+        </div>
 
-          <div class="form-group">
-            <label for="edu-field">Field of Study</label>
-            <input
-              id="edu-field"
-              v-model="formData.field_of_study"
-              type="text"
-              class="form-control"
-            />
-          </div>
+        <div class="form-group">
+          <label for="edu-field">Field of Study</label>
+          <input
+            id="edu-field"
+            v-model="formData.field_of_study"
+            type="text"
+            class="form-control"
+          />
+        </div>
 
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="edu-start-date">Start Date</label>
-                <input
-                  id="edu-start-date"
-                  v-model="formData.start_date"
-                  type="date"
-                  class="form-control"
-                />
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="edu-end-date">End Date</label>
-                <input
-                  id="edu-end-date"
-                  v-model="formData.end_date"
-                  type="date"
-                  class="form-control"
-                />
-              </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="edu-start-date">Start Date</label>
+              <input
+                id="edu-start-date"
+                v-model="formData.start_date"
+                type="date"
+                class="form-control"
+              />
             </div>
           </div>
-
-          <div class="form-group">
-            <label for="edu-location">Location</label>
-            <input id="edu-location" v-model="formData.location" type="text" class="form-control" />
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="edu-end-date">End Date</label>
+              <input
+                id="edu-end-date"
+                v-model="formData.end_date"
+                type="date"
+                class="form-control"
+              />
+            </div>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="edu-description">Description</label>
-            <textarea
-              id="edu-description"
-              v-model="formData.description"
-              class="form-control"
-              rows="3"
-            ></textarea>
-          </div>
+        <div class="form-group">
+          <label for="edu-location">Location</label>
+          <input id="edu-location" v-model="formData.location" type="text" class="form-control" />
+        </div>
 
-          <div class="form-check mb-3">
-            <input
-              id="is_certification"
-              v-model="formData.is_certification"
-              type="checkbox"
-              class="form-check-input"
-            />
-            <label class="form-check-label" for="is_certification"> This is a certification </label>
-          </div>
+        <div class="form-group">
+          <label for="edu-description">Description</label>
+          <textarea
+            id="edu-description"
+            v-model="formData.description"
+            class="form-control"
+            rows="3"
+          ></textarea>
+        </div>
 
-          <div v-if="formData.is_certification" class="form-group">
-            <label for="edu-cert-number">Certificate Number</label>
-            <input
-              id="edu-cert-number"
-              v-model="formData.certificate_number"
-              type="text"
-              class="form-control"
-            />
-          </div>
+        <div class="form-check mb-3">
+          <input
+            id="is_certification"
+            v-model="formData.is_certification"
+            type="checkbox"
+            class="form-check-input"
+          />
+          <label class="form-check-label" for="is_certification"> This is a certification </label>
+        </div>
 
-          <div class="form-group">
-            <label for="edu-order">Display Order</label>
-            <input
-              id="edu-order"
-              v-model.number="formData.order"
-              type="number"
-              class="form-control"
-              min="0"
-            />
-          </div>
+        <div v-if="formData.is_certification" class="form-group">
+          <label for="edu-cert-number">Certificate Number</label>
+          <input
+            id="edu-cert-number"
+            v-model="formData.certificate_number"
+            type="text"
+            class="form-control"
+          />
+        </div>
 
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" @click="closeForm">Cancel</button>
-            <button type="submit" class="btn btn-primary">
-              {{ editingEducation ? 'Update' : 'Add' }} Education
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="form-group">
+          <label for="edu-order">Display Order</label>
+          <input
+            id="edu-order"
+            v-model.number="formData.order"
+            type="number"
+            class="form-control"
+            min="0"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" @click="closeForm">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            {{ editingEducation ? 'Update' : 'Add' }} Education
+          </button>
+        </div>
+      </form>
+    </AdminFormModal>
 
     <!-- Education List -->
     <div class="education-list">
@@ -209,21 +201,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import api from '../../api/client'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
-import { useFocusTrap } from '@/composables/useFocusTrap'
+import AdminFormModal from '@/components/admin/AdminFormModal.vue'
 
-// Toast notifications
 const toast = useToast()
-
-// Modal focus trap for accessibility
-const modalRef = ref<HTMLElement | null>(null)
-const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef)
 
 // Education form interface
 interface EducationFormData {
@@ -329,7 +316,6 @@ const deleteEducation = async (id: string | undefined): Promise<void> => {
 }
 
 const closeForm = (): void => {
-  deactivateFocusTrap()
   showForm.value = false
   editingEducation.value = null
   formData.value = {
@@ -345,13 +331,6 @@ const closeForm = (): void => {
     order: 0
   }
 }
-
-// Watch for modal visibility to manage focus trap
-watch(showForm, isOpen => {
-  if (isOpen) {
-    activateFocusTrap()
-  }
-})
 
 const formatDate = (dateStr: string | null | undefined): string => {
   if (!dateStr) return ''
@@ -393,29 +372,6 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
 .form-group {
@@ -492,10 +448,6 @@ onUnmounted(() => {
   color: var(--text-primary, #f8fafc);
 }
 
-[data-theme='dark'] .modal-content {
-  background: var(--bg-secondary, #1e293b);
-}
-
 [data-theme='dark'] .form-group label {
   color: var(--text-secondary, #cbd5e1);
 }
@@ -504,10 +456,6 @@ onUnmounted(() => {
   background: var(--bg-tertiary, #334155);
   border-color: var(--border-primary, #475569);
   color: var(--text-primary, #f8fafc);
-}
-
-[data-theme='dark'] .modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
 }
 
 [data-theme='dark'] .form-control:focus {

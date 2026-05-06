@@ -31,43 +31,11 @@
               <h3 class="project-name">{{ project.name }}</h3>
               <span v-if="project.featured" class="featured-badge">Featured</span>
             </div>
-            <div class="project-actions">
-              <button
-                class="action-btn edit-btn"
-                :aria-label="`Edit ${project.name}`"
-                @click="editProject(project)"
-              >
-                <svg
-                  class="icon-sm"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
-              <button
-                class="action-btn delete-btn"
-                :aria-label="`Delete ${project.name}`"
-                @click="deleteProject(project.id)"
-              >
-                <svg
-                  class="icon-sm"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-                  />
-                </svg>
-              </button>
-            </div>
+            <AdminCardActions
+              :item-name="project.name"
+              @edit="editProject(project)"
+              @delete="deleteProject(project.id)"
+            />
           </div>
 
           <p v-if="companyName(project.company_id)" class="project-company">
@@ -86,192 +54,182 @@
       </div>
     </div>
 
-    <div
-      v-if="showAddForm || editingProject"
-      ref="modalRef"
-      class="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="project-modal-title"
-      @click.self="closeForm"
-      @keydown.escape="closeForm"
+    <AdminFormModal
+      :open="showAddForm || !!editingProject"
+      :title="editingProject ? 'Edit Project' : 'Add New Project'"
+      title-id="project-modal-title"
+      max-width="720px"
+      @close="closeForm"
     >
-      <div class="modal-content">
-        <h3 id="project-modal-title" class="modal-title">
-          {{ editingProject ? 'Edit Project' : 'Add New Project' }}
-        </h3>
+      <form class="project-form" @submit.prevent="saveProject">
+        <div class="form-group">
+          <label for="name">Project Name *</label>
+          <input
+            id="name"
+            v-model="form.name"
+            type="text"
+            required
+            class="form-input"
+            :class="{ 'input-error': formErrors.name }"
+          />
+          <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
+        </div>
 
-        <form class="project-form" @submit.prevent="saveProject">
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            v-model="form.description"
+            rows="3"
+            class="form-textarea"
+            :class="{ 'input-error': formErrors.description }"
+          ></textarea>
+          <span v-if="formErrors.description" class="error-message">{{
+            formErrors.description
+          }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="detailed_description">Detailed Description</label>
+          <textarea
+            id="detailed_description"
+            v-model="form.detailed_description"
+            rows="6"
+            class="form-textarea"
+            :class="{ 'input-error': formErrors.detailed_description }"
+          ></textarea>
+          <span v-if="formErrors.detailed_description" class="error-message">{{
+            formErrors.detailed_description
+          }}</span>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="name">Project Name *</label>
-            <input
-              id="name"
-              v-model="form.name"
-              type="text"
-              required
-              class="form-input"
-              :class="{ 'input-error': formErrors.name }"
-            />
-            <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
+            <label for="github_url">GitHub URL</label>
+            <input id="github_url" v-model="form.github_url" type="url" class="form-input" />
           </div>
-
           <div class="form-group">
-            <label for="description">Description</label>
-            <textarea
-              id="description"
-              v-model="form.description"
-              rows="3"
-              class="form-textarea"
-              :class="{ 'input-error': formErrors.description }"
-            ></textarea>
-            <span v-if="formErrors.description" class="error-message">{{
-              formErrors.description
+            <label for="live_url">Live URL</label>
+            <input id="live_url" v-model="form.live_url" type="url" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="image_url">Image URL</label>
+          <input id="image_url" v-model="form.image_url" type="url" class="form-input" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="video_url">Video URL</label>
+            <input id="video_url" v-model="form.video_url" type="url" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="video_title">Video Title</label>
+            <input
+              id="video_title"
+              v-model="form.video_title"
+              type="text"
+              class="form-input"
+              :class="{ 'input-error': formErrors.video_title }"
+            />
+            <span v-if="formErrors.video_title" class="error-message">{{
+              formErrors.video_title
             }}</span>
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="form-group">
-            <label for="detailed_description">Detailed Description</label>
-            <textarea
-              id="detailed_description"
-              v-model="form.detailed_description"
-              rows="6"
-              class="form-textarea"
-              :class="{ 'input-error': formErrors.detailed_description }"
-            ></textarea>
-            <span v-if="formErrors.detailed_description" class="error-message">{{
-              formErrors.detailed_description
+            <label for="map_url">Map URL</label>
+            <input id="map_url" v-model="form.map_url" type="url" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="map_title">Map Title</label>
+            <input
+              id="map_title"
+              v-model="form.map_title"
+              type="text"
+              class="form-input"
+              :class="{ 'input-error': formErrors.map_title }"
+            />
+            <span v-if="formErrors.map_title" class="error-message">{{
+              formErrors.map_title
             }}</span>
           </div>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="github_url">GitHub URL</label>
-              <input id="github_url" v-model="form.github_url" type="url" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label for="live_url">Live URL</label>
-              <input id="live_url" v-model="form.live_url" type="url" class="form-input" />
-            </div>
-          </div>
+        <div class="form-group">
+          <label for="technologies">Technologies (comma-separated)</label>
+          <input
+            id="technologies"
+            v-model="technologiesInput"
+            type="text"
+            placeholder="Python, FastAPI, Docker"
+            class="form-input"
+          />
+        </div>
 
+        <div class="form-group">
+          <label for="responsibilities">Responsibilities (comma-separated)</label>
+          <input
+            id="responsibilities"
+            v-model="responsibilitiesInput"
+            type="text"
+            placeholder="Backend design, code review, on-call"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="image_url">Image URL</label>
-            <input id="image_url" v-model="form.image_url" type="url" class="form-input" />
+            <label for="company_id">Company</label>
+            <select id="company_id" v-model="form.company_id" class="form-input">
+              <option :value="null">— None —</option>
+              <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
           </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="video_url">Video URL</label>
-              <input id="video_url" v-model="form.video_url" type="url" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label for="video_title">Video Title</label>
-              <input
-                id="video_title"
-                v-model="form.video_title"
-                type="text"
-                class="form-input"
-                :class="{ 'input-error': formErrors.video_title }"
-              />
-              <span v-if="formErrors.video_title" class="error-message">{{
-                formErrors.video_title
-              }}</span>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="map_url">Map URL</label>
-              <input id="map_url" v-model="form.map_url" type="url" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label for="map_title">Map Title</label>
-              <input
-                id="map_title"
-                v-model="form.map_title"
-                type="text"
-                class="form-input"
-                :class="{ 'input-error': formErrors.map_title }"
-              />
-              <span v-if="formErrors.map_title" class="error-message">{{
-                formErrors.map_title
-              }}</span>
-            </div>
-          </div>
-
           <div class="form-group">
-            <label for="technologies">Technologies (comma-separated)</label>
+            <label for="order_index">Display Order</label>
             <input
-              id="technologies"
-              v-model="technologiesInput"
-              type="text"
-              placeholder="Python, FastAPI, Docker"
+              id="order_index"
+              v-model.number="form.order_index"
+              type="number"
+              min="0"
               class="form-input"
             />
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="responsibilities">Responsibilities (comma-separated)</label>
-            <input
-              id="responsibilities"
-              v-model="responsibilitiesInput"
-              type="text"
-              placeholder="Backend design, code review, on-call"
-              class="form-input"
-            />
-          </div>
+        <div class="form-group form-checkbox">
+          <label for="featured">
+            <input id="featured" v-model="form.featured" type="checkbox" />
+            <span>Featured project</span>
+          </label>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="company_id">Company</label>
-              <select id="company_id" v-model="form.company_id" class="form-input">
-                <option :value="null">— None —</option>
-                <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="order_index">Display Order</label>
-              <input
-                id="order_index"
-                v-model.number="form.order_index"
-                type="number"
-                min="0"
-                class="form-input"
-              />
-            </div>
-          </div>
-
-          <div class="form-group form-checkbox">
-            <label for="featured">
-              <input id="featured" v-model="form.featured" type="checkbox" />
-              <span>Featured project</span>
-            </label>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
-            <button type="submit" class="btn-save">
-              {{ editingProject ? 'Update' : 'Add' }} Project
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
+          <button type="submit" class="btn-save">
+            {{ editingProject ? 'Update' : 'Add' }} Project
+          </button>
+        </div>
+      </form>
+    </AdminFormModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, type WritableComputedRef } from 'vue'
+import { ref, onMounted } from 'vue'
 import apiClient from '../../api/client'
 import type { Company, Project } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
-import { useFocusTrap } from '@/composables/useFocusTrap'
+import { useCommaSeparatedList } from '@/composables/useCommaSeparatedList'
+import AdminFormModal from '@/components/admin/AdminFormModal.vue'
+import AdminCardActions from '@/components/admin/AdminCardActions.vue'
 
 const toast = useToast()
-
-const modalRef = ref<HTMLElement | null>(null)
-const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef)
 
 interface ProjectFormData {
   name: string
@@ -346,29 +304,8 @@ const validateForm = (): boolean => {
   return Object.keys(formErrors.value).length === 0
 }
 
-const technologiesInput: WritableComputedRef<string> = computed({
-  get(): string {
-    return Array.isArray(form.value.technologies) ? form.value.technologies.join(', ') : ''
-  },
-  set(value: string): void {
-    form.value.technologies = value
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t)
-  }
-})
-
-const responsibilitiesInput: WritableComputedRef<string> = computed({
-  get(): string {
-    return Array.isArray(form.value.responsibilities) ? form.value.responsibilities.join(', ') : ''
-  },
-  set(value: string): void {
-    form.value.responsibilities = value
-      .split(',')
-      .map(r => r.trim())
-      .filter(r => r)
-  }
-})
+const technologiesInput = useCommaSeparatedList(form, 'technologies')
+const responsibilitiesInput = useCommaSeparatedList(form, 'responsibilities')
 
 const companyName = (companyId: string | null | undefined): string => {
   if (!companyId) return ''
@@ -497,21 +434,11 @@ const deleteProject = async (id: string): Promise<void> => {
 }
 
 const closeForm = (): void => {
-  deactivateFocusTrap()
   showAddForm.value = false
   editingProject.value = null
   formErrors.value = {}
   form.value = emptyForm()
 }
-
-watch(
-  () => showAddForm.value || editingProject.value,
-  isOpen => {
-    if (isOpen) {
-      activateFocusTrap()
-    }
-  }
-)
 
 onMounted((): void => {
   fetchAll()
@@ -630,33 +557,6 @@ onMounted((): void => {
   color: white;
 }
 
-.project-actions {
-  display: flex;
-  gap: var(--spacing-2);
-  flex-shrink: 0;
-}
-
-.action-btn {
-  padding: var(--spacing-1);
-  background: transparent;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-base) ease;
-}
-
-.edit-btn:hover {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
-}
-
-.delete-btn:hover {
-  background: var(--color-red-600, #dc2626);
-  border-color: var(--color-red-600, #dc2626);
-  color: white;
-}
-
 .project-company {
   font-weight: var(--font-weight-medium);
   color: var(--color-primary);
@@ -682,37 +582,6 @@ onMounted((): void => {
   border-radius: 999px;
   background: var(--color-gray-200);
   color: var(--color-gray-700);
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-4);
-}
-
-.modal-content {
-  background: white;
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-6);
-  max-width: 720px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
-  margin: 0 0 var(--spacing-4);
 }
 
 .project-form {
@@ -826,10 +695,6 @@ onMounted((): void => {
   .form-row {
     grid-template-columns: 1fr;
   }
-
-  .modal-content {
-    padding: var(--spacing-4);
-  }
 }
 
 [data-theme='dark'] .page-title {
@@ -872,19 +737,6 @@ onMounted((): void => {
   color: var(--text-secondary, #cbd5e1);
 }
 
-[data-theme='dark'] .action-btn {
-  border-color: var(--border-primary, #475569);
-  color: var(--text-secondary, #cbd5e1);
-}
-
-[data-theme='dark'] .modal-content {
-  background: var(--bg-secondary, #1e293b);
-}
-
-[data-theme='dark'] .modal-title {
-  color: var(--text-primary, #f8fafc);
-}
-
 [data-theme='dark'] .form-group label {
   color: var(--text-secondary, #cbd5e1);
 }
@@ -894,10 +746,6 @@ onMounted((): void => {
   background: var(--bg-tertiary, #334155);
   border-color: var(--border-primary, #475569);
   color: var(--text-primary, #f8fafc);
-}
-
-[data-theme='dark'] .modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
 }
 
 [data-theme='dark'] .form-input:focus,
@@ -916,15 +764,6 @@ onMounted((): void => {
 
 [data-theme='dark'] .error-message {
   color: #f87171;
-}
-
-.action-btn:focus-visible {
-  outline: 2px solid var(--color-primary, #2563eb);
-  outline-offset: 2px;
-}
-
-[data-theme='dark'] .action-btn:focus-visible {
-  outline-color: var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .form-actions {

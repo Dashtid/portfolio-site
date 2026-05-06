@@ -29,43 +29,11 @@
         <div v-for="company in companies" :key="company.id" class="company-card">
           <div class="company-header">
             <h3 class="company-name">{{ company.name }}</h3>
-            <div class="company-actions">
-              <button
-                class="action-btn edit-btn"
-                :aria-label="`Edit ${company.name}`"
-                @click="editCompany(company)"
-              >
-                <svg
-                  class="icon-sm"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
-              <button
-                class="action-btn delete-btn"
-                :aria-label="`Delete ${company.name}`"
-                @click="deleteCompany(company.id)"
-              >
-                <svg
-                  class="icon-sm"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-                  />
-                </svg>
-              </button>
-            </div>
+            <AdminCardActions
+              :item-name="company.name"
+              @edit="editCompany(company)"
+              @delete="deleteCompany(company.id)"
+            />
           </div>
 
           <p class="company-title">{{ company.title }}</p>
@@ -79,154 +47,138 @@
       </div>
     </div>
 
-    <!-- Add/Edit Form Modal -->
-    <div
-      v-if="showAddForm || editingCompany"
-      ref="modalRef"
-      class="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="company-modal-title"
-      @click.self="closeForm"
-      @keydown.escape="closeForm"
+    <AdminFormModal
+      :open="showAddForm || !!editingCompany"
+      :title="editingCompany ? 'Edit Company' : 'Add New Company'"
+      title-id="company-modal-title"
+      @close="closeForm"
     >
-      <div class="modal-content">
-        <h3 id="company-modal-title" class="modal-title">
-          {{ editingCompany ? 'Edit Company' : 'Add New Company' }}
-        </h3>
+      <form class="company-form" @submit.prevent="saveCompany">
+        <div class="form-group">
+          <label for="name">Company Name *</label>
+          <input
+            id="name"
+            v-model="form.name"
+            type="text"
+            required
+            class="form-input"
+            :class="{ 'input-error': formErrors.name }"
+          />
+          <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
+        </div>
 
-        <form class="company-form" @submit.prevent="saveCompany">
+        <div class="form-group">
+          <label for="title">Job Title *</label>
+          <input
+            id="title"
+            v-model="form.title"
+            type="text"
+            required
+            class="form-input"
+            :class="{ 'input-error': formErrors.title }"
+          />
+          <span v-if="formErrors.title" class="error-message">{{ formErrors.title }}</span>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="name">Company Name *</label>
+            <label for="start_date">Start Date *</label>
             <input
-              id="name"
-              v-model="form.name"
-              type="text"
+              id="start_date"
+              v-model="form.start_date"
+              type="date"
               required
               class="form-input"
-              :class="{ 'input-error': formErrors.name }"
+              :class="{ 'input-error': formErrors.start_date }"
             />
-            <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
-          </div>
-
-          <div class="form-group">
-            <label for="title">Job Title *</label>
-            <input
-              id="title"
-              v-model="form.title"
-              type="text"
-              required
-              class="form-input"
-              :class="{ 'input-error': formErrors.title }"
-            />
-            <span v-if="formErrors.title" class="error-message">{{ formErrors.title }}</span>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="start_date">Start Date *</label>
-              <input
-                id="start_date"
-                v-model="form.start_date"
-                type="date"
-                required
-                class="form-input"
-                :class="{ 'input-error': formErrors.start_date }"
-              />
-              <span v-if="formErrors.start_date" class="error-message">{{
-                formErrors.start_date
-              }}</span>
-            </div>
-
-            <div class="form-group">
-              <label for="end_date">End Date</label>
-              <input
-                id="end_date"
-                v-model="form.end_date"
-                type="date"
-                class="form-input"
-                :class="{ 'input-error': formErrors.end_date }"
-              />
-              <span v-if="formErrors.end_date" class="error-message">{{
-                formErrors.end_date
-              }}</span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="location">Location</label>
-            <input
-              id="location"
-              v-model="form.location"
-              type="text"
-              class="form-input"
-              :class="{ 'input-error': formErrors.location }"
-            />
-            <span v-if="formErrors.location" class="error-message">{{ formErrors.location }}</span>
-          </div>
-
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea
-              id="description"
-              v-model="form.description"
-              rows="4"
-              class="form-textarea"
-              :class="{ 'input-error': formErrors.description }"
-            ></textarea>
-            <span v-if="formErrors.description" class="error-message">{{
-              formErrors.description
+            <span v-if="formErrors.start_date" class="error-message">{{
+              formErrors.start_date
             }}</span>
           </div>
 
           <div class="form-group">
-            <label for="technologies">Technologies (comma-separated)</label>
+            <label for="end_date">End Date</label>
             <input
-              id="technologies"
-              v-model="technologiesInput"
-              type="text"
-              placeholder="Python, FastAPI, Docker"
+              id="end_date"
+              v-model="form.end_date"
+              type="date"
               class="form-input"
+              :class="{ 'input-error': formErrors.end_date }"
             />
+            <span v-if="formErrors.end_date" class="error-message">{{ formErrors.end_date }}</span>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="order_index">Display Order</label>
-            <input
-              id="order_index"
-              v-model.number="form.order_index"
-              type="number"
-              min="0"
-              class="form-input"
-            />
-          </div>
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input
+            id="location"
+            v-model="form.location"
+            type="text"
+            class="form-input"
+            :class="{ 'input-error': formErrors.location }"
+          />
+          <span v-if="formErrors.location" class="error-message">{{ formErrors.location }}</span>
+        </div>
 
-          <div class="form-actions">
-            <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
-            <button type="submit" class="btn-save">
-              {{ editingCompany ? 'Update' : 'Add' }} Company
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            v-model="form.description"
+            rows="4"
+            class="form-textarea"
+            :class="{ 'input-error': formErrors.description }"
+          ></textarea>
+          <span v-if="formErrors.description" class="error-message">{{
+            formErrors.description
+          }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="technologies">Technologies (comma-separated)</label>
+          <input
+            id="technologies"
+            v-model="technologiesInput"
+            type="text"
+            placeholder="Python, FastAPI, Docker"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="order_index">Display Order</label>
+          <input
+            id="order_index"
+            v-model.number="form.order_index"
+            type="number"
+            min="0"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
+          <button type="submit" class="btn-save">
+            {{ editingCompany ? 'Update' : 'Add' }} Company
+          </button>
+        </div>
+      </form>
+    </AdminFormModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, type WritableComputedRef } from 'vue'
+import { ref, onMounted } from 'vue'
 import apiClient from '../../api/client'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
-import { useFocusTrap } from '@/composables/useFocusTrap'
+import { useCommaSeparatedList } from '@/composables/useCommaSeparatedList'
+import AdminFormModal from '@/components/admin/AdminFormModal.vue'
+import AdminCardActions from '@/components/admin/AdminCardActions.vue'
 
-// Toast notifications
 const toast = useToast()
-
-// Modal focus trap for accessibility
-const modalRef = ref<HTMLElement | null>(null)
-const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef)
 
 // Form data interface (extends Company with order_index)
 interface CompanyFormData {
@@ -304,18 +256,7 @@ const validateForm = (): boolean => {
   return Object.keys(formErrors.value).length === 0
 }
 
-// Computed
-const technologiesInput: WritableComputedRef<string> = computed({
-  get(): string {
-    return Array.isArray(form.value.technologies) ? form.value.technologies.join(', ') : ''
-  },
-  set(value: string): void {
-    form.value.technologies = value
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t)
-  }
-})
+const technologiesInput = useCommaSeparatedList(form, 'technologies')
 
 // Methods
 const fetchCompanies = async (): Promise<void> => {
@@ -407,7 +348,6 @@ const deleteCompany = async (id: string): Promise<void> => {
 }
 
 const closeForm = (): void => {
-  deactivateFocusTrap()
   showAddForm.value = false
   editingCompany.value = null
   formErrors.value = {}
@@ -422,16 +362,6 @@ const closeForm = (): void => {
     order_index: 0
   }
 }
-
-// Watch for modal visibility to manage focus trap
-watch(
-  () => showAddForm.value || editingCompany.value,
-  isOpen => {
-    if (isOpen) {
-      activateFocusTrap()
-    }
-  }
-)
 
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
@@ -544,32 +474,6 @@ onMounted((): void => {
   margin: 0;
 }
 
-.company-actions {
-  display: flex;
-  gap: var(--spacing-2);
-}
-
-.action-btn {
-  padding: var(--spacing-1);
-  background: transparent;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-base) ease;
-}
-
-.edit-btn:hover {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
-}
-
-.delete-btn:hover {
-  background: var(--color-red-600, #dc2626);
-  border-color: var(--color-red-600, #dc2626);
-  color: white;
-}
-
 .company-title {
   font-weight: var(--font-weight-medium);
   color: var(--color-primary);
@@ -592,38 +496,6 @@ onMounted((): void => {
   color: var(--color-gray-700);
   line-height: var(--line-height-relaxed);
   margin: 0;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-4);
-}
-
-.modal-content {
-  background: white;
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-6);
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
-  margin: 0 0 var(--spacing-4);
 }
 
 /* Form */
@@ -732,10 +604,6 @@ onMounted((): void => {
   .form-row {
     grid-template-columns: 1fr;
   }
-
-  .modal-content {
-    padding: var(--spacing-4);
-  }
 }
 
 /* Dark Mode */
@@ -779,19 +647,6 @@ onMounted((): void => {
   color: var(--text-secondary, #cbd5e1);
 }
 
-[data-theme='dark'] .action-btn {
-  border-color: var(--border-primary, #475569);
-  color: var(--text-secondary, #cbd5e1);
-}
-
-[data-theme='dark'] .modal-content {
-  background: var(--bg-secondary, #1e293b);
-}
-
-[data-theme='dark'] .modal-title {
-  color: var(--text-primary, #f8fafc);
-}
-
 [data-theme='dark'] .form-group label {
   color: var(--text-secondary, #cbd5e1);
 }
@@ -801,10 +656,6 @@ onMounted((): void => {
   background: var(--bg-tertiary, #334155);
   border-color: var(--border-primary, #475569);
   color: var(--text-primary, #f8fafc);
-}
-
-[data-theme='dark'] .modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
 }
 
 [data-theme='dark'] .form-input:focus,
@@ -823,16 +674,6 @@ onMounted((): void => {
 
 [data-theme='dark'] .error-message {
   color: #f87171;
-}
-
-/* Focus visible states for action buttons */
-.action-btn:focus-visible {
-  outline: 2px solid var(--color-primary, #2563eb);
-  outline-offset: 2px;
-}
-
-[data-theme='dark'] .action-btn:focus-visible {
-  outline-color: var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .form-actions {
