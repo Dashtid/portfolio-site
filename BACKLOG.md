@@ -72,9 +72,9 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-024~~ | ~~Backend~~ | ~~LOW~~ | ~~Bare `except Exception` in health/database~~ — **WON'T FIX** (health checks and session cleanup correctly catch any exception type) |
 | ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
 | ~~FE-003~~ | ~~Frontend~~ | ~~MEDIUM~~ | ~~AdminProjects CRUD not implemented~~ — **RESOLVED** (2026-05-04 mirrors AdminCompanies pattern: list/create/edit/delete + featured toggle + company FK dropdown; 20 new tests) |
-| FE-004 | Frontend | LOW | ~~GitHubStats~~, ~~admin trio scaffolding~~ done. Remaining: AdminDashboard (582), ExperienceDetail (538), and form-field extractions to push the admin trio under 500 lines |
+| FE-004 | Frontend | LOW | ~~GitHubStats~~, ~~admin trio scaffolding~~, ~~AdminDashboard~~ done. Remaining: ExperienceDetail (538), and form-field extractions for the admin trio if you want them under 500 — both diminishing returns |
 | ~~FE-005~~ | ~~Frontend~~ | ~~LOW~~ | ~~Plausible/Umami helpers never called~~ — **RESOLVED** (2026-05-07 deleted `utils/analytics.ts`, `composables/useAnalytics.ts`, their tests, the `VITE_ANALYTICS_*` env vars, and tightened CSP — `plausible.io`/`umami.is` no longer allowed) |
-| FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
+| ~~FE-006~~ | ~~Frontend~~ | ~~LOW~~ | ~~Tighten remaining `any` usages~~ — **RESOLVED** (2026-05-08 audit found zero `any` types in `src/`; the 56 in `tests/` are legitimate mock scaffolding. Earlier refactors had quietly cleaned up the source-side `any`s.) |
 | ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
 | ~~BE-026~~ | ~~Backend~~ | ~~LOW~~ | ~~Audit FK cascade-delete behaviour~~ — **RESOLVED** (2026-05-02 audit found only one FK in the entire model layer, already correctly configured; added SQLite FK enforcement to test conftest + cascade-delete regression test) |
 | ~~CI-021~~ | ~~CI/CD~~ | ~~LOW~~ | ~~No coverage threshold enforced~~ — **RESOLVED** (2026-05-02 baseline 78%/86% baked as floors with ~2pp headroom; stricter per-glob gates for `src/api/` + `src/stores/`) |
@@ -800,19 +800,23 @@ orchestrator.
   computeds collapse to one source of truth. AdminCompanies 859 → 702,
   AdminProjects 951 → 791, AdminEducation 570 → 518. Existing parent
   test suites (68 tests across the trio) pass unchanged.
+- 2026-05-08 — `AdminDashboard.vue` split: extracted
+  `<DashboardOverview>` (stats grid + quick actions + error/retry
+  alert). Parent dropped 582 → 302 — under the 500 threshold. Existing
+  AdminDashboard tests pass unchanged because the child re-emits the
+  same `.stat-*` / `.action-*` classes via slotted-equivalent rendering.
 
 **Remaining files (still > 500 lines):**
 - `frontend/src/views/admin/AdminCompanies.vue` (702)
 - `frontend/src/views/admin/AdminProjects.vue` (791)
-- `frontend/src/views/admin/AdminDashboard.vue` (582)
 - `frontend/src/views/admin/AdminEducation.vue` (518)
 - `frontend/src/views/experience/ExperienceDetail.vue` (538)
 
 The admin trio's remaining size is mostly form-field markup. Pushing
 under 500 would require per-section sub-components
 (`<CompanyDateRange>`, `<ProjectMediaSection>`, etc.) — diminishing
-returns vs. the readability of top-to-bottom form code. AdminDashboard
-and ExperienceDetail are unrelated and would each be their own pass.
+returns vs. the readability of top-to-bottom form code. ExperienceDetail
+is unrelated and would be its own pass.
 
 **Estimated effort:** ~half day per remaining file.
 
@@ -832,14 +836,15 @@ CSP to drop `https://analytics.umami.is` and `https://plausible.io` from
 ---
 
 ### FE-006: Tighten remaining `any` usages
-**Files:** `frontend/src/composables/useToast.ts`, `frontend/src/api/services.ts`, `frontend/src/schemas/api.schemas.ts`, others
-**Priority:** LOW
+**Status:** RESOLVED (2026-05-08, audit) — no code change required.
 
-33 `any` occurrences across 11 files. Most are defensible Web API casts
-(`as PerformanceXXXTiming`, `as HTMLElement | null`); a handful in toast
-state, analytics schemas, and config objects could become real interfaces.
-
-**Estimated effort:** 1–2 hours total.
+The "33 occurrences" estimate was stale. A re-grep across `src/` found
+zero TypeScript `any` types — earlier refactors (DEAD-* cleanups,
+Plausible/Umami deletion, admin trio + GitHubStats extractions, the
+`projectService` factory) had quietly stripped them. The 56 `any`
+usages remaining in `tests/` are legitimate mock scaffolding
+(`as any` on partial axios responses, header shims, etc.) that aren't
+worth the cost of typing fully.
 
 ---
 
