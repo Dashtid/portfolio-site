@@ -73,7 +73,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~FE-002~~ | ~~Frontend~~ | ~~LOW~~ | ~~13 components have zero unit tests~~ — **RESOLVED** (10 new test files, 77 new tests; suite grew 520→597) |
 | ~~FE-003~~ | ~~Frontend~~ | ~~MEDIUM~~ | ~~AdminProjects CRUD not implemented~~ — **RESOLVED** (2026-05-04 mirrors AdminCompanies pattern: list/create/edit/delete + featured toggle + company FK dropdown; 20 new tests) |
 | FE-004 | Frontend | LOW | ~~GitHubStats~~, ~~admin trio scaffolding~~ done. Remaining: AdminDashboard (582), ExperienceDetail (538), and form-field extractions to push the admin trio under 500 lines |
-| FE-005 | Frontend | LOW | `utils/analytics.ts` (Plausible/Umami) initialised but `useAnalytics` helpers never called by any view |
+| ~~FE-005~~ | ~~Frontend~~ | ~~LOW~~ | ~~Plausible/Umami helpers never called~~ — **RESOLVED** (2026-05-07 deleted `utils/analytics.ts`, `composables/useAnalytics.ts`, their tests, the `VITE_ANALYTICS_*` env vars, and tightened CSP — `plausible.io`/`umami.is` no longer allowed) |
 | FE-006 | Frontend | LOW | 33 `any` usages — tighten the handful that aren't Web API casts |
 | ~~BE-025~~ | ~~Backend~~ | ~~MEDIUM~~ | ~~PageView `country` never populated~~ — **RESOLVED** (ipapi.co lookup with 24h in-process cache, graceful failure) |
 | ~~BE-026~~ | ~~Backend~~ | ~~LOW~~ | ~~Audit FK cascade-delete behaviour~~ — **RESOLVED** (2026-05-02 audit found only one FK in the entire model layer, already correctly configured; added SQLite FK enforcement to test conftest + cascade-delete regression test) |
@@ -819,20 +819,15 @@ and ExperienceDetail are unrelated and would each be their own pass.
 ---
 
 ### FE-005: Decide fate of `utils/analytics.ts` (Plausible/Umami)
-**Files:** `frontend/src/utils/analytics.ts`, `frontend/src/composables/useAnalytics.ts`, `frontend/src/main.ts`
-**Priority:** LOW
+**Status:** RESOLVED (2026-05-07) — chose path (b), delete.
 
-`utils/analytics.ts` initialises a Plausible/Umami script in `main.ts` based on
-`VITE_ANALYTICS_*` env vars, and `composables/useAnalytics.ts` wraps it with named
-helpers (`trackButtonClick`, `trackThemeToggle`, etc.) — but **nothing in the
-app currently calls those helpers**. The internal `services/analytics.ts`
-(admin dashboard data source) is the path that's actually wired up.
-
-**Scope:** Pick one:
-- (a) Wire `useAnalytics` helpers into NavBar, ThemeToggle, ProjectCard click
-  events, etc. so Plausible/Umami actually receives signal.
-- (b) Delete `utils/analytics.ts`, `composables/useAnalytics.ts`, and the init
-  call in `main.ts` to stay on self-hosted analytics only.
+`utils/analytics.ts` initialised Plausible/Umami via `init()` in `main.ts`,
+but no code ever called the `track*` helpers — the only wired-up analytics
+path was `services/analytics.ts` (self-hosted, admin-dashboard data source).
+Removed the dead module + its composable wrapper + their tests + the four
+`VITE_ANALYTICS_*` env vars in `.env.example`. Also tightened `vercel.json`
+CSP to drop `https://analytics.umami.is` and `https://plausible.io` from
+`script-src` and `connect-src` since they're no longer needed.
 
 ---
 

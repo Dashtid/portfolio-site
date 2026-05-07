@@ -8,7 +8,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import './style.css'
 import './assets/portfolio.css'
 import App from './App.vue'
-import { analytics as umamiAnalytics } from './utils/analytics'
 import analyticsService from './services/analytics'
 import { errorTracker } from './utils/errorTracking'
 import { performanceMonitor } from './utils/performance'
@@ -81,9 +80,6 @@ export const createApp = ViteSSG(
           console.warn('[Sentry] Lazy init failed:', error)
         }
       })
-
-      // Initialize analytics (privacy-compliant)
-      umamiAnalytics.init()
 
       // Initialize error tracking (custom implementation, works alongside Sentry)
       errorTracker.init()
