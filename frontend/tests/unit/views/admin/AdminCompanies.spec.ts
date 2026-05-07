@@ -212,6 +212,30 @@ describe('AdminCompanies', () => {
       expect(wrapper.find('.modal-overlay').exists()).toBe(false)
     })
 
+    it('should close modal when pressing Escape', async () => {
+      // Guards the parent <-> AdminFormModal contract: escape on the overlay
+      // emits @close, parent's closeForm runs, overlay tears down.
+      const wrapper = createWrapper()
+      await flushPromises()
+      await wrapper.find('.add-button').trigger('click')
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true)
+
+      await wrapper.find('.modal-overlay').trigger('keydown.escape')
+
+      expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+    })
+
+    it('does NOT close modal when clicking inside the form', async () => {
+      // @click.self on the overlay must ignore clicks on descendants.
+      const wrapper = createWrapper()
+      await flushPromises()
+      await wrapper.find('.add-button').trigger('click')
+
+      await wrapper.find('.company-form').trigger('click')
+
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true)
+    })
+
     it('should submit new company data', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({ data: { id: '3' } })
 

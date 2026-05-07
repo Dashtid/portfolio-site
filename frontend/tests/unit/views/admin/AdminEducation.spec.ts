@@ -287,6 +287,17 @@ describe('AdminEducation', () => {
       expect(wrapper.find('.modal-overlay').exists()).toBe(false)
     })
 
+    it('should close modal when pressing Escape', async () => {
+      const wrapper = await createWrapper()
+      await flushPromises()
+      await wrapper.find('.btn-primary').trigger('click')
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true)
+
+      await wrapper.find('.modal-overlay').trigger('keydown.escape')
+
+      expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+    })
+
     it('should submit new education data', async () => {
       vi.mocked(api.post).mockResolvedValue({ data: { id: '4' } })
 

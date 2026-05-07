@@ -177,6 +177,27 @@ describe('AdminProjects', () => {
       expect(wrapper.find('.modal-overlay').exists()).toBe(false)
     })
 
+    it('closes the modal on Escape', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      await wrapper.find('.add-button').trigger('click')
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true)
+
+      await wrapper.find('.modal-overlay').trigger('keydown.escape')
+
+      expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+    })
+
+    it('does NOT close when clicking inside the form', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      await wrapper.find('.add-button').trigger('click')
+
+      await wrapper.find('.project-form').trigger('click')
+
+      expect(wrapper.find('.modal-overlay').exists()).toBe(true)
+    })
+
     it('populates the company dropdown from the companies fetch', async () => {
       const wrapper = createWrapper()
       await flushPromises()
