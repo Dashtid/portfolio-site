@@ -145,6 +145,7 @@ import { config } from '../../config'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
 import NavBar from '@/components/NavBar.vue'
+import { formatDescription } from '@/utils/markdown'
 
 // AbortController for cancelling pending requests on route change
 let fetchAbortController: AbortController | null = null
@@ -250,38 +251,6 @@ const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
-
-// Escape HTML special chars so any < > & in the source text can't reach the
-// DOM as markup. Run BEFORE markdown so the strong/em tags we emit aren't
-// themselves escaped.
-const escapeHtml = (s: string): string =>
-  s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-
-// Minimal markdown: **bold** and *italic*. Input is pre-escaped so the only
-// HTML in the output is the strong/em tags this function emits. SSR-safe
-// (no DOM dependency, unlike DOMPurify).
-// Order matters: do ** before * so **foo** doesn't get mangled into <em>.
-const renderInlineMarkdown = (text: string): string => {
-  return escapeHtml(text)
-    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
-}
-
-// Format description: split on blank lines into <p>, escape + render markdown
-// inside each paragraph. Output is safe to v-html since input is escaped first
-// and only the controlled strong/em tags are introduced.
-const formatDescription = (desc: string | null | undefined): string => {
-  if (!desc) return ''
-  return desc
-    .split('\n\n')
-    .map(p => `<p>${renderInlineMarkdown(p)}</p>`)
-    .join('')
 }
 
 // Fetch company details with request cancellation support
