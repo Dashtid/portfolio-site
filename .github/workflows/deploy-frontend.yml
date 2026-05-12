@@ -71,7 +71,11 @@ jobs:
         run: npm install -g vercel@44.4.0
 
       - name: Deploy to Vercel
-        run: vercel deploy --prod
+        # The Vercel CLI does not authenticate from the VERCEL_TOKEN env var on
+        # its own ("No existing credentials found ... pass --token") — the token
+        # has to be passed explicitly. VERCEL_ORG_ID/PROJECT_ID are still read
+        # from the environment to select the project without a linked .vercel dir.
+        run: vercel deploy --prod --yes --token "$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
