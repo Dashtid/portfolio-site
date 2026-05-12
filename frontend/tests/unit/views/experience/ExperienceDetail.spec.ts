@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { createTestingPinia } from '@pinia/testing'
 import axios from 'axios'
+import apiClient from '@/api/client'
 import { useHead } from '@unhead/vue'
 import { defineComponent, h, Suspense, type ComputedRef } from 'vue'
 import ExperienceDetail from '@/views/experience/ExperienceDetail.vue'
 import type { Company } from '@/types'
 
+// The store (stores/experienceDetail.ts) fetches via the configured apiClient,
+// so that's what we control. We still mock raw `axios` for `axios.isCancel`,
+// which the component uses to recognise aborted requests.
+vi.mock('@/api/client', () => ({ default: { get: vi.fn() } }))
 vi.mock('axios')
 vi.mock('gsap', () => ({
   gsap: {
@@ -42,15 +48,16 @@ vi.mock('@/components/MapEmbed.vue', () => ({
   }
 }))
 
+const mockedApiClient = vi.mocked(apiClient, true)
 const mockedAxios = vi.mocked(axios, true)
 const mockedUseHead = vi.mocked(useHead)
 
-type AxiosCallArgs = [string, { signal?: AbortSignal } | undefined]
+type ApiCallArgs = [string, { signal?: AbortSignal } | undefined]
 
 const getCallSignal = (callIndex: number): AbortSignal => {
-  const call = mockedAxios.get.mock.calls[callIndex] as unknown as AxiosCallArgs
+  const call = mockedApiClient.get.mock.calls[callIndex] as unknown as ApiCallArgs
   const config = call[1]
-  if (!config?.signal) throw new Error('expected axios.get to receive a signal')
+  if (!config?.signal) throw new Error('expected apiClient.get to receive a signal')
   return config.signal
 }
 
@@ -84,7 +91,7 @@ const SuspenseHost = defineComponent({
   }
 })
 
-const createWrapper = async (id = 'co-1') => {
+const createWrapper = async (id = 'co-1', piniaInitialState: Record<string, unknown> = {}) => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -98,7 +105,14 @@ const createWrapper = async (id = 'co-1') => {
 
   const wrapper = mount(SuspenseHost, {
     global: {
-      plugins: [router]
+      plugins: [
+        router,
+        createTestingPinia({
+          createSpy: vi.fn,
+          stubActions: false,
+          initialState: piniaInitialState
+        })
+      ]
     }
   })
 
@@ -114,7 +128,7 @@ describe('ExperienceDetail', () => {
 
   describe('Render branches', () => {
     it('shows loading spinner before fetch resolves', async () => {
-      mockedAxios.get.mockReturnValue(new Promise(() => {}) as never)
+      mockedApiClient.get.mockReturnValue(new Promise(() => {}) as never)
       const { wrapper } = await createWrapper('co-1')
 
       expect(wrapper.find('.spinner-border').exists()).toBe(true)
@@ -122,7 +136,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders company details on successful fetch', async () => {
-      mockedAxios.get.mockResolvedValue({ data: baseCompany })
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
       const { wrapper } = await createWrapper()
 
       expect(wrapper.text()).toContain('Senior Engineer')
@@ -133,7 +147,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders 404-specific error when API returns 404', async () => {
-      mockedAxios.get.mockRejectedValue({ response: { status: 404 } })
+      mockedApiClient.get.mockRejectedValue({ response: { status: 404 } })
       const { wrapper } = await createWrapper()
 
       expect(wrapper.find('.alert-danger').exists()).toBe(true)
@@ -141,14 +155,14 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders generic error message on non-404 failure', async () => {
-      mockedAxios.get.mockRejectedValue({ response: { status: 500 } })
+      mockedApiClient.get.mockRejectedValue({ response: { status: 500 } })
       const { wrapper } = await createWrapper()
 
       expect(wrapper.text()).toContain('Failed to load company details')
     })
 
     it('does not surface error when axios.isCancel returns true', async () => {
-      mockedAxios.get.mockRejectedValue(new Error('cancelled'))
+      mockedApiClient.get.mockRejectedValue(new Error('cancelled'))
       mockedAxios.isCancel.mockReturnValue(true)
 
       const { wrapper } = await createWrapper()
@@ -157,7 +171,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders technologies as badges', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, technologies: ['Rust', 'WASM'] }
       })
       const { wrapper } = await createWrapper()
@@ -169,7 +183,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders responsibilities as a list', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, responsibilities: ['Wrote code', 'Reviewed PRs'] }
       })
       const { wrapper } = await createWrapper()
@@ -183,25 +197,36 @@ describe('ExperienceDetail', () => {
 
   describe('Lifecycle / fetch', () => {
     it('fetches the company on mount with the route id', async () => {
-      mockedAxios.get.mockResolvedValue({ data: baseCompany })
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
       await createWrapper('co-42')
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1)
-      const url = mockedAxios.get.mock.calls[0][0] as string
+      expect(mockedApiClient.get).toHaveBeenCalledTimes(1)
+      const url = mockedApiClient.get.mock.calls[0][0] as string
       expect(url).toContain('/api/v1/companies/co-42')
       expect(getCallSignal(0)).toBeInstanceOf(AbortSignal)
     })
 
+    it('skips the network fetch on mount when the company is hydrated in the store', async () => {
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
+      const { wrapper } = await createWrapper('co-1', {
+        experienceDetail: { byId: { 'co-1': baseCompany } }
+      })
+
+      expect(mockedApiClient.get).not.toHaveBeenCalled()
+      expect(wrapper.find('.spinner-border').exists()).toBe(false)
+      expect(wrapper.text()).toContain('Acme Corp')
+    })
+
     it('refetches with a fresh AbortController on route param change and aborts the prior request', async () => {
-      mockedAxios.get.mockResolvedValue({ data: baseCompany })
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
       const { router } = await createWrapper('co-1')
       const firstSignal = getCallSignal(0)
 
       await router.push('/experience/co-2')
       await flushPromises()
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(2)
-      const secondUrl = mockedAxios.get.mock.calls[1][0] as string
+      expect(mockedApiClient.get).toHaveBeenCalledTimes(2)
+      const secondUrl = mockedApiClient.get.mock.calls[1][0] as string
       expect(secondUrl).toContain('/api/v1/companies/co-2')
 
       expect(firstSignal.aborted).toBe(true)
@@ -211,7 +236,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('aborts the in-flight request on unmount', async () => {
-      mockedAxios.get.mockReturnValue(new Promise(() => {}) as never)
+      mockedApiClient.get.mockReturnValue(new Promise(() => {}) as never)
       const { wrapper } = await createWrapper()
       const signal = getCallSignal(0)
 
@@ -223,7 +248,7 @@ describe('ExperienceDetail', () => {
 
   describe('useHead', () => {
     it('passes reactive title/description/canonical that resolve once company loads', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, name: 'Initech', description: 'Made widgets.' }
       })
       await createWrapper('co-99')
@@ -245,7 +270,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('falls back to a generic title before the company resolves', async () => {
-      mockedAxios.get.mockReturnValue(new Promise(() => {}) as never)
+      mockedApiClient.get.mockReturnValue(new Promise(() => {}) as never)
       await createWrapper('co-1')
 
       const headArg = mockedUseHead.mock.calls[0][0] as {
@@ -261,7 +286,7 @@ describe('ExperienceDetail', () => {
 
   describe('Description rendering', () => {
     it('splits paragraphs on blank lines into separate <p> tags', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, description: 'First para.\n\nSecond para.\n\nThird.' }
       })
       const { wrapper } = await createWrapper()
@@ -273,7 +298,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders **bold** as <strong>', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, description: 'I am **strong**.' }
       })
       const { wrapper } = await createWrapper()
@@ -282,7 +307,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders *italic* as <em>', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, description: 'Not *that* one.' }
       })
       const { wrapper } = await createWrapper()
@@ -291,7 +316,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('does not mangle **bold** into <em>bold</em> (regex ordering)', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, description: '**title**' }
       })
       const { wrapper } = await createWrapper()
@@ -302,7 +327,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('escapes raw HTML so script tags cannot reach the DOM as markup', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: {
           ...baseCompany,
           description: '<script>alert(1)</script> & "quotes"'
@@ -326,7 +351,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('renders detailed_description in a separate Role & Responsibilities block', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, detailed_description: 'Led the **secure** rollout.' }
       })
       const { wrapper } = await createWrapper()
@@ -336,7 +361,7 @@ describe('ExperienceDetail', () => {
     })
 
     it('treats null/undefined detailed_description as absent (no Role section)', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, detailed_description: null }
       })
       const { wrapper } = await createWrapper()
@@ -347,7 +372,7 @@ describe('ExperienceDetail', () => {
 
   describe('Logo error fallback', () => {
     it('hides the logo image after the @error handler fires', async () => {
-      mockedAxios.get.mockResolvedValue({
+      mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, logo_url: 'https://example.com/logo.png' }
       })
       const { wrapper } = await createWrapper()

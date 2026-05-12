@@ -141,7 +141,7 @@ import axios, { type AxiosError } from 'axios'
 import { gsap } from 'gsap'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
-import { config } from '../../config'
+import { useExperienceDetailStore } from '../../stores/experienceDetail'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
 import NavBar from '@/components/NavBar.vue'
@@ -217,13 +217,21 @@ const runEntranceAnimations = (): void => {
 }
 
 const route = useRoute()
-
-const company = ref<Company | null>(null)
-const loading = ref<boolean>(true)
-const error = ref<string | null>(null)
-const logoError = ref<boolean>(false)
+const experienceStore = useExperienceDetailStore()
 
 const companyId = computed<string>(() => route.params.id as string)
+
+// Reads from the store, which is populated during SSG and hydrated on the
+// client — so the SSG-rendered company is available on first paint without a
+// client-side refetch.
+const company = computed<Company | null>(() => experienceStore.byId[companyId.value] ?? null)
+
+// Start in the loading state only when the company isn't already available
+// (i.e. wasn't hydrated from the SSG payload). This keeps the client's first
+// render identical to the server's — no hydration mismatch, no spinner flash.
+const loading = ref<boolean>(!company.value)
+const error = ref<string | null>(null)
+const logoError = ref<boolean>(false)
 
 // Per-route head tags — reactive so SSG renders the correct title/canonical for each page
 useHead({
@@ -253,23 +261,30 @@ const formatDate = (dateString: string | null | undefined): string => {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-// Fetch company details with request cancellation support
-const fetchCompany = async (id: string): Promise<void> => {
+// Load a company into the store, then settle local UI state. Short-circuits
+// the network when the store already has it — which is the common case on the
+// client after hydration, since the SSG render already fetched it.
+const loadCompany = async (id: string): Promise<void> => {
   // Cancel any pending request before starting a new one
   if (fetchAbortController) {
     fetchAbortController.abort()
   }
   fetchAbortController = new AbortController()
 
-  loading.value = true
   error.value = null
   logoError.value = false // Reset logo error state for new company
 
-  try {
-    const response = await axios.get<Company>(`${config.apiUrl}/api/v1/companies/${id}`, {
-      signal: fetchAbortController.signal
+  if (experienceStore.byId[id]) {
+    loading.value = false
+    nextTick(() => {
+      runEntranceAnimations()
     })
-    company.value = response.data
+    return
+  }
+
+  loading.value = true
+  try {
+    await experienceStore.fetchCompany(id, fetchAbortController.signal)
   } catch (err) {
     // Ignore cancelled requests
     if (axios.isCancel(err)) return
@@ -283,7 +298,7 @@ const fetchCompany = async (id: string): Promise<void> => {
   } finally {
     loading.value = false
     // Run entrance animations after DOM updates
-    if (!error.value && company.value) {
+    if (!error.value && experienceStore.byId[id]) {
       nextTick(() => {
         runEntranceAnimations()
       })
@@ -293,10 +308,11 @@ const fetchCompany = async (id: string): Promise<void> => {
 
 // SSG: fetch the company synchronously during server-side render so the
 // useHead computed above resolves to the per-route title/description before
-// vite-ssg captures the rendered HTML and head tags. Branch is tree-shaken
-// from the client bundle when import.meta.env.SSR is statically false.
+// vite-ssg captures the rendered HTML and head tags. The store state is then
+// serialized into the page (see main.ts) and hydrated on the client. Branch is
+// tree-shaken from the client bundle when import.meta.env.SSR is statically false.
 if (import.meta.env.SSR && companyId.value) {
-  await fetchCompany(companyId.value)
+  await loadCompany(companyId.value)
 }
 
 // Watch for route changes
@@ -304,7 +320,7 @@ watch(
   () => route.params.id,
   newId => {
     if (newId) {
-      fetchCompany(newId as string)
+      loadCompany(newId as string)
     }
   }
 )
@@ -312,7 +328,7 @@ watch(
 // Initial load
 onMounted(async (): Promise<void> => {
   if (companyId.value) {
-    await fetchCompany(companyId.value)
+    await loadCompany(companyId.value)
   }
 })
 

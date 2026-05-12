@@ -16,9 +16,20 @@ import { initSentry, captureException, isSentryInitialized } from './utils/sentr
 export const createApp = ViteSSG(
   App,
   { routes, base: import.meta.env.BASE_URL, scrollBehavior },
-  ({ app, router, isClient }) => {
+  ({ app, router, isClient, initialState }) => {
     const pinia = createPinia()
     app.use(pinia)
+
+    // Transfer Pinia state across the SSR→client boundary. During SSG the
+    // rendered store state is written to initialState (vite-ssg serializes it
+    // into the page HTML); on the client it's read back so components see
+    // SSG-fetched data immediately instead of re-fetching. See
+    // stores/experienceDetail.ts for the concrete use.
+    if (isClient) {
+      pinia.state.value = (initialState.pinia as typeof pinia.state.value) ?? {}
+    } else {
+      initialState.pinia = pinia.state.value
+    }
 
     if (isClient) {
       // Navigation guards — client-only (localStorage / window not available during SSG)

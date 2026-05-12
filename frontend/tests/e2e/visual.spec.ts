@@ -171,16 +171,12 @@ test.describe('Visual Regression Tests', () => {
     // nothing. Resolve real IDs once at suite startup so the screenshots cover
     // the actual detail layout.
     //
-    // We also need to mock the runtime company fetch: SSG bakes data into the
-    // HTML, but onMounted re-fetches from `https://dashti.se` after hydration
-    // — and that XHR is cross-origin from the localhost:4173 preview server,
-    // so the prod CORS policy rejects it and the page collapses to the error
-    // state. Mocking via page.route() lets the client refetch succeed and
-    // matches what users see in production (same-origin, no CORS).
+    // No API mock needed: the SSG render bakes the company into the page and
+    // serializes it into the Pinia hydration payload, so the client renders it
+    // straight away without re-fetching. If hydration ever breaks, these
+    // screenshots regress to the error page — which is the correct signal.
     let scaniaId = ''
     let hermesId = ''
-    type Company = { id: string; name: string; [key: string]: unknown }
-    const companiesById = new Map<string, Company>()
 
     test.beforeAll(async () => {
       const apiUrl = process.env.VITE_API_URL || 'https://dashti.se'
@@ -189,9 +185,7 @@ test.describe('Visual Regression Tests', () => {
       if (!res.ok()) {
         throw new Error(`Failed to fetch companies from ${apiUrl}: ${res.status()}`)
       }
-      const companies: Company[] = await res.json()
-      for (const c of companies) companiesById.set(c.id, c)
-
+      const companies: Array<{ id: string; name: string }> = await res.json()
       const scania = companies.find(c => /scania/i.test(c.name))
       const hermes = companies.find(c => /hermes/i.test(c.name))
       if (!scania) {
@@ -212,25 +206,8 @@ test.describe('Visual Regression Tests', () => {
     // Skip GSAP entrance animations — ExperienceDetail.vue checks
     // prefers-reduced-motion and bypasses the timeline entirely. Without
     // this the screenshots race the 0.5s–1.1s animation tail and flake.
-    //
-    // Also intercept the `/api/v1/companies/<id>` runtime fetch and serve
-    // from the cached list (see beforeAll comment for why).
     test.beforeEach(async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
-      await page.route('**/api/v1/companies/*', async route => {
-        const url = new URL(route.request().url())
-        const id = url.pathname.split('/').pop() ?? ''
-        const company = companiesById.get(id)
-        if (!company) {
-          await route.fulfill({ status: 404, body: JSON.stringify({ detail: 'Not found' }) })
-          return
-        }
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(company)
-        })
-      })
     })
 
     test('experience detail page - scania', async ({ page }) => {
