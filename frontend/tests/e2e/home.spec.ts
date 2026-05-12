@@ -164,7 +164,7 @@ test.describe('Home Page', () => {
       expect(headings.length).toBeGreaterThan(0)
     })
 
-    test('should have alt text on images', async ({ page }) => {
+    test('should declare alt on images', async ({ page }) => {
       const images = page.locator('img')
       const count = await images.count()
 
@@ -173,9 +173,12 @@ test.describe('Home Page', () => {
         const alt = await img.getAttribute('alt')
         const ariaHidden = await img.getAttribute('aria-hidden')
 
-        // Images should have alt text unless they're decorative (aria-hidden)
+        // Every <img> must declare an alt attribute — meaningful text, or ""
+        // for decorative images (the WAI-ARIA pattern; empty alt already
+        // removes the image from the a11y tree, so aria-hidden isn't required).
+        // A *missing* alt attribute is the failure, not an empty one.
         if (ariaHidden !== 'true') {
-          expect(alt).toBeTruthy()
+          expect(alt).not.toBeNull()
         }
       }
     })
