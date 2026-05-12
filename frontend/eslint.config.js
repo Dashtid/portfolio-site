@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import globals from 'globals'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 import vuePlugin from 'eslint-plugin-vue'
@@ -26,70 +27,13 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
+      // Use the `globals` package rather than a hand-maintained list — the
+      // latter silently rotted (e.g. `getComputedStyle` was used in source
+      // but never added, so `no-undef` fired and CI went red).
       globals: {
-        // Browser globals
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
-        console: 'readonly',
-        getComputedStyle: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        fetch: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        IntersectionObserver: 'readonly',
-        IntersectionObserverEntry: 'readonly',
-        IntersectionObserverInit: 'readonly',
-        ResizeObserver: 'readonly',
-        MutationObserver: 'readonly',
-        requestAnimationFrame: 'readonly',
-        cancelAnimationFrame: 'readonly',
-        Image: 'readonly',
-        HTMLElement: 'readonly',
-        HTMLDivElement: 'readonly',
-        HTMLCanvasElement: 'readonly',
-        HTMLImageElement: 'readonly',
-        HTMLInputElement: 'readonly',
-        HTMLButtonElement: 'readonly',
-        MediaQueryListEvent: 'readonly',
-        Event: 'readonly',
-        MouseEvent: 'readonly',
-        KeyboardEvent: 'readonly',
-        CustomEvent: 'readonly',
-        FormData: 'readonly',
-        URLSearchParams: 'readonly',
-        URL: 'readonly',
-        Blob: 'readonly',
-        File: 'readonly',
-        FileReader: 'readonly',
-        AbortController: 'readonly',
-        alert: 'readonly',
-        confirm: 'readonly',
-        prompt: 'readonly',
-        atob: 'readonly',
-        btoa: 'readonly',
-        performance: 'readonly',
-        location: 'readonly',
-        history: 'readonly',
-        queueMicrotask: 'readonly',
-        // Node globals
-        process: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        global: 'readonly',
-        globalThis: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
-        // Vitest globals
-        describe: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        vi: 'readonly'
+        ...globals.browser,
+        ...globals.node,
+        ...globals.vitest
       }
     },
     plugins: {
