@@ -32,6 +32,7 @@ export default [
         document: 'readonly',
         navigator: 'readonly',
         console: 'readonly',
+        getComputedStyle: 'readonly',
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         fetch: 'readonly',

@@ -195,7 +195,7 @@ jobs:
         # (75 of 76 version tags force-pushed to serve malicious payloads)
         # Direct binary download from GitHub Releases is unaffected.
         env:
-          TRIVY_VERSION: '0.62.0'
+          TRIVY_VERSION: '0.70.0'
         run: |
           BASE_URL="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}"
           curl -sSfL "${BASE_URL}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -o trivy.tar.gz
