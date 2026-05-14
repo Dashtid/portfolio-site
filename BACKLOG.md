@@ -50,7 +50,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-015~~ | ~~Backend~~ | ~~LOW-MED~~ | ~~gunicorn worker count~~ — **RESOLVED** (WORKERS documented in .env.example) |
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
-| CI-022 | CI/CD | LOW | Frontend quality + build duplicated across `ci-cd.yml` and `deploy-frontend.yml` (SSG built 3×) |
+| CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` runs in parallel with `ci-cd.yml` (not gated on `e2e-tests`); `build:ssg` still runs 2× |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
@@ -306,25 +306,22 @@ adding a backend service container is not possible).
 
 ---
 
-### CI-022: Frontend quality + build duplicated across workflows
-**Files:** `.github/workflows/ci-cd.yml` (`frontend-quality`, `e2e-tests`), `.github/workflows/deploy-frontend.yml` (`test`)
+### CI-022: Frontend deploy not gated on e2e; `build:ssg` still runs twice
+**Files:** `.github/workflows/ci-cd.yml` (`frontend-quality`, `e2e-tests`), `.github/workflows/deploy-frontend.yml`
 **Priority:** LOW
-**Status:** Open
+**Status:** Partially resolved — see below
 
-Three jobs do near-identical frontend work on every push touching `frontend/**`:
+Originally logged because three jobs did near-identical frontend work per push
+(lint/type-check/unit-tests 2×, `build:ssg` 3×). It also surfaced that
+`type-check` was only running in `deploy-frontend.yml`'s `test` job, so a
+TypeScript error wouldn't fail the main `CI/CD Pipeline` — borderline
+breakage, not just waste.
 
-- `ci-cd.yml` → `frontend-quality`: `npm ci` + lint + type-check + `npm test --coverage` + `build:ssg`
-- `ci-cd.yml` → `e2e-tests`: `npm ci` + `build:ssg` (again) + Playwright
-- `deploy-frontend.yml` → `test`: `npm ci` + lint + type-check + `npm test` + `build:ssg` (again)
+**Resolved:** the `test` job in `deploy-frontend.yml` (lint/type-check/unit-tests/build) was deleted, and `type-check` was added to `ci-cd.yml`'s `frontend-quality`. Lint, type-check, and unit-tests now run exactly once each — in `ci-cd.yml` — and the type-check actually gates the main pipeline.
 
-So lint/type-check/unit-tests run twice and the SSG build runs three times per push — wasted CI minutes and a second place that can drift (e.g. `deploy-frontend.yml`'s `test` job re-declares Node version, cache config, etc. independently of `ci-cd.yml`).
-
-**Fix options:**
-- **A:** Delete `deploy-frontend.yml`'s `test` job; make its `deploy` job `needs:` a `workflow_run` completion of the CI/CD pipeline (or trigger deploy from within `ci-cd.yml` after `e2e-tests`).
-- **B:** Have `e2e-tests` reuse the `dist/` artifact uploaded by `frontend-quality` instead of rebuilding (`download-artifact` → skip `build:ssg`).
-- **C (if CI-021's Vercel fix lands `vercel build --prebuilt`):** the deploy's own `vercel build` becomes the single source of the production bundle; the standalone `build:ssg` in `deploy-frontend.yml`'s `test` job is then pure redundancy.
-
-Low urgency — it's waste, not breakage.
+**Still open:**
+1. **Deploy is not gated on `e2e-tests`.** `deploy-frontend.yml`'s `deploy` job runs in parallel with `ci-cd.yml`; a broken e2e doesn't block a push to main from shipping. Today's branch protection should require both workflows' statuses, but bypasses are possible. Proper gating needs either `workflow_run` (operationally finicky — re-triggers on default branch context) or inlining the deploy into `ci-cd.yml` as a job that `needs: [frontend-quality, e2e-tests]`.
+2. **`build:ssg` still runs twice** — `frontend-quality` (smoke + uploaded artifact) and `e2e-tests` (rebuild for the preview server), plus Vercel's remote build. Halving this means `e2e-tests` reuses the `frontend-dist` artifact via `download-artifact` instead of rebuilding. Worth doing alongside the gating fix.
 
 ---
 
