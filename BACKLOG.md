@@ -51,6 +51,8 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
 | CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` runs in parallel with `ci-cd.yml` (not gated on `e2e-tests`); `build:ssg` still runs 2× |
+| CI-023 | CI/CD | LOW | Lighthouse job runs every push but scores have never been reviewed — could surface real perf regressions |
+| SEC-002 | Security | LOW | Run `/security-review` against the last ~3 weeks of changes — cheap insurance |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
@@ -322,6 +324,41 @@ breakage, not just waste.
 **Still open:**
 1. **Deploy is not gated on `e2e-tests`.** `deploy-frontend.yml`'s `deploy` job runs in parallel with `ci-cd.yml`; a broken e2e doesn't block a push to main from shipping. Today's branch protection should require both workflows' statuses, but bypasses are possible. Proper gating needs either `workflow_run` (operationally finicky — re-triggers on default branch context) or inlining the deploy into `ci-cd.yml` as a job that `needs: [frontend-quality, e2e-tests]`.
 2. **`build:ssg` still runs twice** — `frontend-quality` (smoke + uploaded artifact) and `e2e-tests` (rebuild for the preview server), plus Vercel's remote build. Halving this means `e2e-tests` reuses the `frontend-dist` artifact via `download-artifact` instead of rebuilding. Worth doing alongside the gating fix.
+
+---
+
+### CI-023: Lighthouse job runs every push but scores have never been reviewed
+**Files:** `.github/workflows/ci-cd.yml` (`lighthouse`), `.github/lighthouse/lighthouserc.json`
+**Priority:** LOW
+**Status:** Open
+
+The `lighthouse` job runs on every frontend-touching push (and has stayed
+green), but the actual scores — performance, accessibility, best-practices,
+SEO — have never been reviewed against a baseline. Could surface real
+regressions (perf budget breaches, a11y warnings, etc.) hiding behind a
+green-because-no-asserts checkmark.
+
+**Fix:** pull a few recent runs' Lighthouse reports (artifact or LHCI server),
+read the categorised scores + Core Web Vitals, identify any regressions or
+budgets that should be enforced. If specific budgets are worth gating on, add
+assertions to `lighthouserc.json` (`assert.assertions.{categories,resource-summary}`)
+so future drops fail the job rather than silently shipping.
+
+---
+
+### SEC-002: Run `/security-review` against the recent diff
+**Files:** N/A — review task
+**Priority:** LOW
+**Status:** Open
+
+Three weeks of changes have shipped since the last security review pass.
+`/security-review` (a slash command) runs a security-focused review against
+the current branch's diff vs main. Cheap insurance for a stretch that
+touched auth-store hydration, CSP scopes (FE-005 tightening), Vercel deploy
+workflow, and several admin-CRUD additions.
+
+**Fix:** invoke `/security-review` interactively, triage findings into either
+follow-up backlog items or out-of-scope notes.
 
 ---
 
