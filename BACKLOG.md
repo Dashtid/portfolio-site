@@ -52,7 +52,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
 | CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` + `deploy-backend.yml` run in parallel with `ci-cd.yml` rather than gated on its tests |
 | ~~CI-023~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Lighthouse job runs every push but scores have never been reviewed~~ — **RESOLVED** (2026-05-14 reviewed run 25863731084; medians 97/96/96/100; tightened `lighthouserc.json` — script-size + total-size + best-practices promoted to error; spawned PERF-004 for the unused-JS opportunity surfaced during review) |
-| PERF-004 | Performance | LOW | ~140KB of unused JS shipped to home page (three.js: 106KB unused / 181KB transferred; gsap: 34KB unused / 45KB transferred) |
+| PERF-004 | Performance | LOW | ~~three.js: tree-shaken via static named imports (181KB→120KB gzip, -34%)~~; gsap deferred — no clean tree-shake path without swapping libraries |
 | SEC-002 | Security | LOW | Run `/security-review` against the last ~3 weeks of changes — cheap insurance |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
@@ -369,32 +369,41 @@ Spawned **PERF-004** for the unused-JS opportunity surfaced during review.
 ---
 
 ### PERF-004: ~140KB of unused JS shipped to home page
-**Files:** `frontend/vite.config.ts` (`manualChunks`), `frontend/src/views/HomeView.vue`, `frontend/src/components/ThreeHeroBackground.vue`, `frontend/src/composables/useGsapAnimations.ts`
+**Files:** `frontend/src/components/ThreeHeroBackground.vue`, `frontend/src/composables/useGsapAnimations.ts`
 **Priority:** LOW
-**Status:** Open (surfaced by CI-023 review)
+**Status:** Partially RESOLVED (2026-05-14) — three.js done, gsap deferred
 
 Lighthouse `unused-javascript` audit (CI run 25863731084) flagged:
 - `three-B8KczbbG.js`: **106,471 / 180,628 bytes unused** (59%)
 - `gsap-ZjT3yFBT.js`: **34,231 / 45,218 bytes unused** (76%)
 
-Both are already async chunks (`defineAsyncComponent` for ThreeHeroBackground;
-gsap is in its own manualChunk), but the home page loads them on first render
-because the hero animation and global scroll/stagger animations fire on mount.
-The "unused" % reflects code that's downloaded but never executed in a typical
-home-page session (e.g., three.js loaders/exporters for formats we don't use,
-gsap easings/plugins we don't import).
+**three.js — RESOLVED**: `ThreeHeroBackground.vue` was using
+`await import('three')` (dynamic barrel import) and accessing classes via
+`_THREE.Scene`, `_THREE.WebGLRenderer`, etc. Rollup cannot tree-shake dynamic
+namespace access, so the whole barrel was bundled. Switched to static named
+imports for the 8 actually-used symbols (`Scene`, `PerspectiveCamera`,
+`WebGLRenderer`, `BufferGeometry`, `BufferAttribute`, `PointsMaterial`,
+`Points`, `AdditiveBlending`). The component is still in an async chunk via
+`defineAsyncComponent`, so three.js stays off the critical path either way —
+this just lets Rollup drop unused exports.
 
-**Fix options:**
-- **three.js**: switch to subpath imports (`import { WebGLRenderer } from 'three/build/three.module.js'` or scoped imports from `three/examples/jsm/...`); audit the `ThreeHeroBackground` usage and pull only the geometry/material/renderer classes actually referenced. Could also try `three-stdlib` or `@react-three/drei`'s ESM-friendly subpaths.
-- **gsap**: import only the specific plugins/easings used by `useGsapAnimations.ts` (e.g., `gsap/ScrollTrigger`, `gsap/CSSPlugin`) instead of the default barrel.
-- **Or**: replace `ThreeHeroBackground` with a CSS-only or smaller WebGL alternative (out of scope as "feature work").
+Result: `three.js` chunk dropped from 732KB raw / 181KB gzip → 496KB raw /
+120KB gzip. **~61KB transfer saved**. Home-page script payload drops from
+317,808 → ~257,000 bytes, well below the new 325KB error budget from CI-023.
 
-**Estimated impact**: ~140KB transfer reduction → home page scripts drop from
-318KB to ~178KB, well below the new 325KB error budget. Would also pull perf
-score higher on noisy runs.
+**gsap — DEFERRED**: gsap's package.json declares `sideEffects: false` but our
+usage (`gsap.to`, `gsap.from`, `gsap.set`, `gsap.context`, `gsap.registerPlugin`)
+is all on the default-export object — there are no top-level named exports for
+these methods to import individually. Tree-shaking can't help when the entry
+point is a single object containing all the public surface. Real options:
 
-**Estimated effort**: 1–2 hours for both tree-shake passes; longer if it
-turns into a "rewrite the hero" project.
+- Switch to `motion` (Framer's vanilla lib) or hand-roll CSS animations for the
+  simpler cases — that's a feature/refactor, not a tree-shake.
+- Hand-cherry-pick from `gsap/src/...` internal paths — fragile, unsupported by
+  GreenSock, breaks on minor version bumps.
+
+Not worth the maintenance cost for ~34KB. Closing as deferred unless we
+revisit animation choices for other reasons.
 
 ---
 

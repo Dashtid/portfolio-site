@@ -4,16 +4,25 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import type * as THREE from 'three'
+import {
+  Scene,
+  PerspectiveCamera,
+  WebGLRenderer,
+  BufferGeometry,
+  BufferAttribute,
+  PointsMaterial,
+  Points,
+  AdditiveBlending,
+  type Material
+} from 'three'
 import { logger } from '../utils/logger'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-let _THREE!: typeof import('three')
-let scene: THREE.Scene
-let camera: THREE.PerspectiveCamera
-let renderer: THREE.WebGLRenderer
-let particles: THREE.Points
+let scene: Scene
+let camera: PerspectiveCamera
+let renderer: WebGLRenderer
+let particles: Points
 let animationId: number
 let isReducedMotion = false
 let isVisible = true
@@ -50,14 +59,14 @@ const initScene = () => {
 
   try {
     // Scene setup
-    scene = new _THREE.Scene()
+    scene = new Scene()
 
     // Camera
-    camera = new _THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
     camera.position.z = 30
 
     // Renderer with alpha for transparency
-    renderer = new _THREE.WebGLRenderer({
+    renderer = new WebGLRenderer({
       canvas: canvasRef.value,
       alpha: true,
       antialias: true,
@@ -74,7 +83,7 @@ const initScene = () => {
 }
 
 const createParticles = () => {
-  const particlesGeometry = new _THREE.BufferGeometry()
+  const particlesGeometry = new BufferGeometry()
 
   const posArray = new Float32Array(PARTICLE_COUNT * 3)
   const colorArray = new Float32Array(PARTICLE_COUNT * 3)
@@ -102,22 +111,22 @@ const createParticles = () => {
     sizeArray[i] = PARTICLE_SIZE * (0.5 + Math.random() * 0.5)
   }
 
-  particlesGeometry.setAttribute('position', new _THREE.BufferAttribute(posArray, 3))
-  particlesGeometry.setAttribute('color', new _THREE.BufferAttribute(colorArray, 3))
-  particlesGeometry.setAttribute('size', new _THREE.BufferAttribute(sizeArray, 1))
+  particlesGeometry.setAttribute('position', new BufferAttribute(posArray, 3))
+  particlesGeometry.setAttribute('color', new BufferAttribute(colorArray, 3))
+  particlesGeometry.setAttribute('size', new BufferAttribute(sizeArray, 1))
 
   // Custom shader material for better particle rendering
-  const particlesMaterial = new _THREE.PointsMaterial({
+  const particlesMaterial = new PointsMaterial({
     size: PARTICLE_SIZE,
     vertexColors: true,
     transparent: true,
     opacity: 0.6,
-    blending: _THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     sizeAttenuation: true,
     depthWrite: false
   })
 
-  particles = new _THREE.Points(particlesGeometry, particlesMaterial)
+  particles = new Points(particlesGeometry, particlesMaterial)
   scene.add(particles)
 }
 
@@ -172,15 +181,15 @@ const handleReducedMotionChange = (event: MediaQueryListEvent) => {
   isReducedMotion = event.matches
 }
 
-onMounted(async () => {
-  // Skip Three.js entirely if reduced motion is preferred — saves ~172KB gzipped
-  // download for users who won't see the animation (canvas is also CSS-hidden).
+onMounted(() => {
+  // Skip Three.js init if reduced motion is preferred — canvas is also CSS-hidden.
+  // The three.js code is in an async chunk via defineAsyncComponent so it doesn't
+  // hit the main bundle either way; this just avoids the runtime cost.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     isReducedMotion = true
     return
   }
 
-  _THREE = await import('three')
   initScene()
   animate()
 
@@ -208,7 +217,7 @@ onBeforeUnmount(() => {
   // Dispose Three.js resources
   if (particles) {
     particles.geometry.dispose()
-    ;(particles.material as THREE.Material).dispose()
+    ;(particles.material as Material).dispose()
   }
   renderer?.dispose()
 })
