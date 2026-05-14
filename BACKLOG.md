@@ -50,7 +50,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-015~~ | ~~Backend~~ | ~~LOW-MED~~ | ~~gunicorn worker count~~ — **RESOLVED** (WORKERS documented in .env.example) |
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
-| CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` runs in parallel with `ci-cd.yml` (not gated on `e2e-tests`); `build:ssg` still runs 2× |
+| CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` + `deploy-backend.yml` run in parallel with `ci-cd.yml` rather than gated on its tests |
 | CI-023 | CI/CD | LOW | Lighthouse job runs every push but scores have never been reviewed — could surface real perf regressions |
 | SEC-002 | Security | LOW | Run `/security-review` against the last ~3 weeks of changes — cheap insurance |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
@@ -308,8 +308,8 @@ adding a backend service container is not possible).
 
 ---
 
-### CI-022: Frontend deploy not gated on e2e; `build:ssg` still runs twice
-**Files:** `.github/workflows/ci-cd.yml` (`frontend-quality`, `e2e-tests`), `.github/workflows/deploy-frontend.yml`
+### CI-022: Deploy workflows run in parallel with quality gates rather than after them
+**Files:** `.github/workflows/ci-cd.yml`, `.github/workflows/deploy-frontend.yml`, `.github/workflows/deploy-backend.yml`
 **Priority:** LOW
 **Status:** Partially resolved — see below
 
@@ -317,13 +317,21 @@ Originally logged because three jobs did near-identical frontend work per push
 (lint/type-check/unit-tests 2×, `build:ssg` 3×). It also surfaced that
 `type-check` was only running in `deploy-frontend.yml`'s `test` job, so a
 TypeScript error wouldn't fail the main `CI/CD Pipeline` — borderline
-breakage, not just waste.
+breakage, not just waste. The backend had the same shape: `deploy-backend.yml`
+re-ran pytest in parallel with `ci-cd.yml`'s `backend-quality`.
 
-**Resolved:** the `test` job in `deploy-frontend.yml` (lint/type-check/unit-tests/build) was deleted, and `type-check` was added to `ci-cd.yml`'s `frontend-quality`. Lint, type-check, and unit-tests now run exactly once each — in `ci-cd.yml` — and the type-check actually gates the main pipeline.
+**Resolved:**
+- **bb16507** — deleted `deploy-frontend.yml`'s `test` job; added `Run type check` to `ci-cd.yml`'s `frontend-quality`. Lint, type-check, and unit-tests now run exactly once each (in `ci-cd.yml`), and type-check actually gates the main pipeline.
+- **c925b94** — deleted `deploy-backend.yml`'s `test` job (its env vars weren't even consumed — conftest defines its own `TEST_DATABASE_URL` and `app/config.py` has defaults). `backend-quality` is now the single gate.
+- **b1c9e7d** — `e2e-tests` downloads the `frontend-dist` artifact from `frontend-quality` instead of rebuilding; `playwright.config.ts`'s `webServer.command` is now conditional on `process.env.CI`, so `build:ssg` runs once in CI (was 2×) while devs running `npm run test:e2e` locally still get a build out of the box.
 
 **Still open:**
-1. **Deploy is not gated on `e2e-tests`.** `deploy-frontend.yml`'s `deploy` job runs in parallel with `ci-cd.yml`; a broken e2e doesn't block a push to main from shipping. Today's branch protection should require both workflows' statuses, but bypasses are possible. Proper gating needs either `workflow_run` (operationally finicky — re-triggers on default branch context) or inlining the deploy into `ci-cd.yml` as a job that `needs: [frontend-quality, e2e-tests]`.
-2. **`build:ssg` still runs twice** — `frontend-quality` (smoke + uploaded artifact) and `e2e-tests` (rebuild for the preview server), plus Vercel's remote build. Halving this means `e2e-tests` reuses the `frontend-dist` artifact via `download-artifact` instead of rebuilding. Worth doing alongside the gating fix.
+Both `deploy-frontend.yml` and `deploy-backend.yml` run on the same push as `ci-cd.yml`, not after it — so a broken e2e or a failing backend test doesn't block the deploy of that same commit. Branch protection should require both workflows' statuses, but bypasses are possible. Proper gating needs either:
+
+- **`workflow_run`** — chain deploy workflows to fire on successful completion of the CI/CD Pipeline. Operationally finicky (runs in the default-branch context, status-check plumbing is awkward, can re-trigger on multiple completions).
+- **Inline the deploy jobs into `ci-cd.yml`** — cleanest end state. `deploy-frontend` becomes a job that `needs: [frontend-quality, e2e-tests, lighthouse]`; `deploy-backend` becomes a job that `needs: [backend-quality]`. Loses the separate-workflow status checks (which some branch-protection rules reference by name), and loses the `workflow_dispatch` ability per deploy.
+
+Worth a deliberate decision; not blocking anything today.
 
 ---
 
