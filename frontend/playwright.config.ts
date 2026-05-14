@@ -55,7 +55,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run build:ssg && npm run preview',
+    // In CI the `frontend-quality` job builds and uploads `dist/` as an
+    // artifact; the e2e job downloads it before invoking playwright, so we
+    // skip the build here. Locally there's no upstream build, so chain it.
+    command: process.env.CI ? 'npm run preview' : 'npm run build:ssg && npm run preview',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000,

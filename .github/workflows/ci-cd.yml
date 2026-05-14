@@ -161,10 +161,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build frontend for E2E tests (SSG)
-        run: npm run build:ssg
+      - name: Download frontend-dist artifact (built by frontend-quality)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
 
       - name: Run Playwright E2E tests
+        # webServer in playwright.config.ts skips `build:ssg` when CI=true and
+        # just runs `vite preview` against the downloaded dist/.
         run: npx playwright test --project=chromium --grep-invert "Bundle Size|defer non-critical"
         env:
           HOME: /root
