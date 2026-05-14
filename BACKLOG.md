@@ -51,7 +51,8 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
 | CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` + `deploy-backend.yml` run in parallel with `ci-cd.yml` rather than gated on its tests |
-| CI-023 | CI/CD | LOW | Lighthouse job runs every push but scores have never been reviewed — could surface real perf regressions |
+| ~~CI-023~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Lighthouse job runs every push but scores have never been reviewed~~ — **RESOLVED** (2026-05-14 reviewed run 25863731084; medians 97/96/96/100; tightened `lighthouserc.json` — script-size + total-size + best-practices promoted to error; spawned PERF-004 for the unused-JS opportunity surfaced during review) |
+| PERF-004 | Performance | LOW | ~140KB of unused JS shipped to home page (three.js: 106KB unused / 181KB transferred; gsap: 34KB unused / 45KB transferred) |
 | SEC-002 | Security | LOW | Run `/security-review` against the last ~3 weeks of changes — cheap insurance |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
@@ -338,19 +339,62 @@ Worth a deliberate decision; not blocking anything today.
 ### CI-023: Lighthouse job runs every push but scores have never been reviewed
 **Files:** `.github/workflows/ci-cd.yml` (`lighthouse`), `.github/lighthouse/lighthouserc.json`
 **Priority:** LOW
-**Status:** Open
+**Status:** RESOLVED (2026-05-14)
 
-The `lighthouse` job runs on every frontend-touching push (and has stayed
-green), but the actual scores — performance, accessibility, best-practices,
-SEO — have never been reviewed against a baseline. Could surface real
-regressions (perf budget breaches, a11y warnings, etc.) hiding behind a
-green-because-no-asserts checkmark.
+Pulled the `lighthouse-results` artifact from CI run 25863731084 (latest
+lighthouse-ran run on `main`). Three runs of Lighthouse 12.6.1 on the home
+page; **medians**:
 
-**Fix:** pull a few recent runs' Lighthouse reports (artifact or LHCI server),
-read the categorised scores + Core Web Vitals, identify any regressions or
-budgets that should be enforced. If specific budgets are worth gating on, add
-assertions to `lighthouserc.json` (`assert.assertions.{categories,resource-summary}`)
-so future drops fail the job rather than silently shipping.
+- **Categories** — perf 97%, a11y 96%, best-practices 96%, SEO 100%
+- **Core Web Vitals** — FCP 0.8s, LCP 1.2s, CLS 0, TBT 20ms
+- **Resource summary** — total 691KB / 37 reqs; scripts 318KB / 8 reqs; images 221KB; fonts 97KB; CSS 48KB
+- **LCP element** — the hero `<div>` (good — text, not the three.js canvas)
+- **Outlier**: run 1 had TBT 380ms → perf 80%; runs 2 & 3 had TBT 10-20ms → perf 97%. Normal CI-runner noise, not signal.
+
+**One real consistent finding**: `resource-summary:script:size` was breaching
+the 300,000-byte warn budget on every run (317,808 bytes) — silently warning
+for ~3 weeks because the assertion was at `warn` level. Dominant cost:
+`three.js` (181KB transfer of which 106KB unused) + `gsap` (45KB / 34KB unused).
+Both are already in `defineAsyncComponent` chunks but loaded on initial render
+because they're in the hero / global-animation path.
+
+**Changes to `lighthouserc.json`**:
+- `resource-summary:script:size`: `warn 300_000` → **`error 325_000`** — locks in current (317,808) with ~2% headroom. Future bundle growth fails CI.
+- `resource-summary:total:size`: `warn 1_000_000` → **`error 1_000_000`** — current 691KB has ~30% headroom; promotion costs nothing now and catches genuine bloat.
+- `categories:best-practices`: `warn 0.9` → **`error 0.9`** — current 0.96 has 6pp headroom; promoting is free.
+- Left as `warn`: `categories:performance` (current 97% medians but a single noisy run dropped to 80%; promoting would cause flakes), Core Web Vitals (currently far below thresholds, no urgency to tighten).
+
+Spawned **PERF-004** for the unused-JS opportunity surfaced during review.
+
+---
+
+### PERF-004: ~140KB of unused JS shipped to home page
+**Files:** `frontend/vite.config.ts` (`manualChunks`), `frontend/src/views/HomeView.vue`, `frontend/src/components/ThreeHeroBackground.vue`, `frontend/src/composables/useGsapAnimations.ts`
+**Priority:** LOW
+**Status:** Open (surfaced by CI-023 review)
+
+Lighthouse `unused-javascript` audit (CI run 25863731084) flagged:
+- `three-B8KczbbG.js`: **106,471 / 180,628 bytes unused** (59%)
+- `gsap-ZjT3yFBT.js`: **34,231 / 45,218 bytes unused** (76%)
+
+Both are already async chunks (`defineAsyncComponent` for ThreeHeroBackground;
+gsap is in its own manualChunk), but the home page loads them on first render
+because the hero animation and global scroll/stagger animations fire on mount.
+The "unused" % reflects code that's downloaded but never executed in a typical
+home-page session (e.g., three.js loaders/exporters for formats we don't use,
+gsap easings/plugins we don't import).
+
+**Fix options:**
+- **three.js**: switch to subpath imports (`import { WebGLRenderer } from 'three/build/three.module.js'` or scoped imports from `three/examples/jsm/...`); audit the `ThreeHeroBackground` usage and pull only the geometry/material/renderer classes actually referenced. Could also try `three-stdlib` or `@react-three/drei`'s ESM-friendly subpaths.
+- **gsap**: import only the specific plugins/easings used by `useGsapAnimations.ts` (e.g., `gsap/ScrollTrigger`, `gsap/CSSPlugin`) instead of the default barrel.
+- **Or**: replace `ThreeHeroBackground` with a CSS-only or smaller WebGL alternative (out of scope as "feature work").
+
+**Estimated impact**: ~140KB transfer reduction → home page scripts drop from
+318KB to ~178KB, well below the new 325KB error budget. Would also pull perf
+score higher on noisy runs.
+
+**Estimated effort**: 1–2 hours for both tree-shake passes; longer if it
+turns into a "rewrite the hero" project.
 
 ---
 
