@@ -22,7 +22,7 @@ from app.database import get_db
 from app.middleware import limiter
 from app.models.oauth_state import OAuthState
 from app.models.user import User
-from app.schemas.auth import RefreshTokenRequest, Token, UserResponse
+from app.schemas.auth import RefreshSuccess, RefreshTokenRequest, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -251,7 +251,7 @@ async def github_callback(request: Request, code: str, state: str, db: DbSession
     return response
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh", response_model=RefreshSuccess)
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def refresh_token_endpoint(
     request: Request,
@@ -263,7 +263,11 @@ async def refresh_token_endpoint(
 
     Accepts refresh token from either:
     - HTTP-only cookie (preferred, set by OAuth callback)
-    - Request body (for backwards compatibility)
+    - Request body (for non-browser API clients / tests)
+
+    New tokens are always returned as HTTP-only cookies. The response body
+    is intentionally token-free so an XSS payload that calls this endpoint
+    cannot extract the rotated credentials.
     """
     # Try cookie first, then request body
     refresh_token_value = request.cookies.get("refresh_token")
@@ -292,39 +296,32 @@ async def refresh_token_endpoint(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Create new tokens (refresh token rotation for security - 2025 best practice)
-    # This prevents refresh token reuse attacks - each token is single-use
+    # Create new tokens (refresh token rotation - each token is single-use)
     access_token = create_access_token(subject=user.id)
     new_refresh_token = create_refresh_token(subject=user.id)
 
-    # Update cookies if request came from cookies
-    if request.cookies.get("refresh_token"):
-        is_production = settings.ENVIRONMENT == "production"
+    is_production = settings.ENVIRONMENT == "production"
 
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            httponly=True,
-            secure=is_production,
-            samesite="lax",
-            path="/",
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=new_refresh_token,
-            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-            path="/api/v1/auth",
-            httponly=True,
-            secure=is_production,
-            samesite="lax",
-        )
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        path="/",
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/api/v1/auth",
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+    )
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "refresh_token": new_refresh_token,
-    }
+    return RefreshSuccess()
 
 
 @router.get("/me", response_model=UserResponse)

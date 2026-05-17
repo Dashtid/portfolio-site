@@ -7,18 +7,18 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-class Token(BaseModel):
-    """Token response schema"""
-
-    access_token: str
-    token_type: str = "bearer"
-    refresh_token: str | None = None
-
-
 class TokenData(BaseModel):
     """Token data schema"""
 
     user_id: str | None = None
+
+
+class RefreshSuccess(BaseModel):
+    """Refresh-endpoint response. Tokens are delivered via HTTP-only cookies;
+    the body is intentionally token-free so an XSS payload calling /auth/refresh
+    cannot lift the new credentials from the JSON response."""
+
+    refreshed: bool = True
 
 
 class RefreshTokenRequest(BaseModel):

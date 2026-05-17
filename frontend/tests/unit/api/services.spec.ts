@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as services from '@/api/services'
-import type { Company, Education, Project, Document, LoginRequest } from '@/types'
+import type { Company, Education, Project, Document } from '@/types'
 
 // Mock the API client
 vi.mock('@/api/client', () => ({
@@ -258,47 +258,18 @@ describe('API services', () => {
   })
 
   describe('Authentication APIs', () => {
-    it('logs in user', async () => {
-      const credentials: LoginRequest = {
-        username: 'testuser',
-        password: 'testpass'
-      }
-      const mockResponse = {
-        access_token: 'token123',
-        refresh_token: 'refresh123',
-        token_type: 'bearer'
-      }
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
-
-      const result = await services.login(credentials)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/auth/login', credentials)
-      expect(result).toEqual(mockResponse)
-    })
-
-    it('logs out user and clears tokens', async () => {
-      const mockLocalStorage: { [key: string]: string } = {
-        accessToken: 'token123',
-        refreshToken: 'refresh123'
-      }
-
-      global.localStorage = {
-        getItem: vi.fn((key: string) => mockLocalStorage[key] || null),
-        setItem: vi.fn((key: string, value: string) => {
-          mockLocalStorage[key] = value
-        }),
-        removeItem: vi.fn((key: string) => {
-          delete mockLocalStorage[key]
-        }),
-        clear: vi.fn(),
-        length: 0,
-        key: vi.fn()
-      } as any
+    it('logs out by calling the logout endpoint', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { message: 'Logged out' } })
 
       await services.logout()
 
-      expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken')
-      expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken')
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/auth/logout')
+    })
+
+    it('swallows logout API errors so the client-side intent succeeds', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue(new Error('Network error'))
+
+      await expect(services.logout()).resolves.toBeUndefined()
     })
   })
 
@@ -309,7 +280,6 @@ describe('API services', () => {
       expect(typeof services.getEducation).toBe('function')
       expect(typeof services.getProjects).toBe('function')
       expect(typeof services.getDocuments).toBe('function')
-      expect(typeof services.login).toBe('function')
       expect(typeof services.logout).toBe('function')
     })
   })

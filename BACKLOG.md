@@ -54,8 +54,8 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~CI-023~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Lighthouse job runs every push but scores have never been reviewed~~ — **RESOLVED** (2026-05-14 reviewed run 25863731084; medians 97/96/96/100; tightened `lighthouserc.json` — script-size + total-size + best-practices promoted to error; spawned PERF-004 for the unused-JS opportunity surfaced during review) |
 | PERF-004 | Performance | LOW | ~~three.js: tree-shaken via static named imports (181KB→120KB gzip, -34%)~~; gsap deferred — no clean tree-shake path without swapping libraries |
 | ~~SEC-002~~ | ~~Security~~ | ~~LOW~~ | ~~Run `/security-review` against the last ~3 weeks of changes~~ — **RESOLVED** (2026-05-14 manual pass over commits since 2026-04-23; spawned SEC-003/004/005, three lower-priority findings noted inline) |
-| SEC-003 | Security | MEDIUM | Auth tokens dual-stored in localStorage **and** HTTP-only cookies — XSS still steals tokens despite the cookie-flag protection |
-| SEC-004 | Security | MEDIUM | `/auth/refresh` returns access+refresh tokens in JSON body — defeats the HTTP-only-cookie design |
+| ~~SEC-003~~ | ~~Security~~ | ~~MEDIUM~~ | ~~Auth tokens dual-stored in localStorage **and** HTTP-only cookies~~ — **RESOLVED** (2026-05-14, with SEC-004) |
+| ~~SEC-004~~ | ~~Security~~ | ~~MEDIUM~~ | ~~`/auth/refresh` returns tokens in JSON body~~ — **RESOLVED** (2026-05-14, with SEC-003) |
 | SEC-005 | Security | LOW-MED | Visitor IP hashed with unsalted SHA-256 (rainbow-table-able across IPv4) + raw IP sent to ipapi.co third party |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
@@ -442,9 +442,9 @@ Each is a separate backlog entry below.
 ---
 
 ### SEC-003: Auth tokens dual-stored in localStorage AND HTTP-only cookies
-**Files:** `frontend/src/stores/auth.ts:62-72,108-117,144-145,182-194`
+**Files:** `frontend/src/stores/auth.ts`, `frontend/src/api/client.ts`, `frontend/src/api/services.ts`
 **Priority:** MEDIUM
-**Status:** Open (surfaced by SEC-002 review)
+**Status:** RESOLVED (2026-05-14, paired with SEC-004)
 
 The comment at `auth.ts:39` says "Auth is based on user presence (tokens are
 in HTTP-only cookies)" — but the same store ALSO writes `accessToken` and
@@ -476,9 +476,19 @@ both together.
 ---
 
 ### SEC-004: `/auth/refresh` returns access+refresh tokens in JSON response body
-**Files:** `backend/app/api/v1/auth.py:323-327`, also `backend/app/api/v1/auth.py:297` (callback path) — needs verification
+**Files:** `backend/app/api/v1/auth.py`, `backend/app/schemas/auth.py`
 **Priority:** MEDIUM
-**Status:** Open (surfaced by SEC-002 review)
+**Status:** RESOLVED (2026-05-14, paired with SEC-003)
+
+Frontend now relies exclusively on HTTP-only cookies for auth state. The
+auth Pinia store no longer carries `accessToken`/`refreshToken` fields, the
+axios client no longer reads or writes them from localStorage or its default
+headers, and the dead `setTokens` action + dead `/api/v1/auth/login` service
+helper were removed. The refresh endpoint always sets cookies and returns
+`{"refreshed": True}` — the new `RefreshSuccess` schema replaces the old
+`Token` schema for that path. Three backend tests that asserted on body
+tokens now read the rotated cookies from `response.cookies`. 617 frontend
+tests + 661 backend tests green (85.93% coverage).
 
 The refresh endpoint sets HTTP-only cookies for both tokens (lines 304-321,
 gated on `if request.cookies.get("refresh_token")`), AND returns the same

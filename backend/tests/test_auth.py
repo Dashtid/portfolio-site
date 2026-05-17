@@ -242,28 +242,27 @@ class TestAuthIntegration:
         assert data["is_admin"] is True
 
     def test_refresh_token_with_valid_user_in_db(self, client: TestClient, test_user_in_db: dict):
-        """Test token refresh with valid user in database."""
+        """Refresh succeeds and delivers new tokens via cookies, not the response body."""
         response = client.post(
             "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert "access_token" in data
-        assert "token_type" in data
-        assert data["token_type"] == "bearer"
-        assert "refresh_token" in data
+        # Body is intentionally token-free to keep tokens out of XSS reach
+        assert response.json() == {"refreshed": True}
+        # New tokens are delivered via Set-Cookie
+        assert response.cookies.get("access_token")
+        assert response.cookies.get("refresh_token")
 
     def test_refreshed_token_works_for_me_endpoint(self, client: TestClient, test_user_in_db: dict):
-        """Test that refreshed access token works for protected endpoints."""
-        # First refresh the token
+        """A token issued by /refresh authenticates a follow-up /me call."""
         refresh_response = client.post(
             "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
         )
         assert refresh_response.status_code == 200
-        new_access_token = refresh_response.json()["access_token"]
+        new_access_token = refresh_response.cookies.get("access_token")
+        assert new_access_token
 
-        # Use the new token to access /me
         new_headers = {"Authorization": f"Bearer {new_access_token}"}
         me_response = client.get("/api/v1/auth/me", headers=new_headers)
 
@@ -387,15 +386,20 @@ class TestRefreshTokenEdgeCases:
         # Pydantic validation rejects tokens shorter than 10 chars
         assert response.status_code == 422
 
-    def test_refresh_preserves_same_refresh_token(self, client: TestClient, test_user_in_db: dict):
-        """Test that refresh returns the same refresh token."""
+    def test_refresh_issues_new_refresh_token_cookie(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        """Refresh rotates the refresh token: a fresh cookie value is set on every call."""
         response = client.post(
             "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert data["refresh_token"] == test_user_in_db["refresh_token"]
+        new_refresh_cookie = response.cookies.get("refresh_token")
+        assert new_refresh_cookie
+        # Body never contains tokens
+        assert "refresh_token" not in response.json()
+        assert "access_token" not in response.json()
 
 
 class TestGitHubCallbackMocked:
