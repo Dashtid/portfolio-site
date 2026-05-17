@@ -53,7 +53,10 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` + `deploy-backend.yml` run in parallel with `ci-cd.yml` rather than gated on its tests |
 | ~~CI-023~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Lighthouse job runs every push but scores have never been reviewed~~ — **RESOLVED** (2026-05-14 reviewed run 25863731084; medians 97/96/96/100; tightened `lighthouserc.json` — script-size + total-size + best-practices promoted to error; spawned PERF-004 for the unused-JS opportunity surfaced during review) |
 | PERF-004 | Performance | LOW | ~~three.js: tree-shaken via static named imports (181KB→120KB gzip, -34%)~~; gsap deferred — no clean tree-shake path without swapping libraries |
-| SEC-002 | Security | LOW | Run `/security-review` against the last ~3 weeks of changes — cheap insurance |
+| ~~SEC-002~~ | ~~Security~~ | ~~LOW~~ | ~~Run `/security-review` against the last ~3 weeks of changes~~ — **RESOLVED** (2026-05-14 manual pass over commits since 2026-04-23; spawned SEC-003/004/005, three lower-priority findings noted inline) |
+| SEC-003 | Security | MEDIUM | Auth tokens dual-stored in localStorage **and** HTTP-only cookies — XSS still steals tokens despite the cookie-flag protection |
+| SEC-004 | Security | MEDIUM | `/auth/refresh` returns access+refresh tokens in JSON body — defeats the HTTP-only-cookie design |
+| SEC-005 | Security | LOW-MED | Visitor IP hashed with unsalted SHA-256 (rainbow-table-able across IPv4) + raw IP sent to ipapi.co third party |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
@@ -410,16 +413,122 @@ revisit animation choices for other reasons.
 ### SEC-002: Run `/security-review` against the recent diff
 **Files:** N/A — review task
 **Priority:** LOW
-**Status:** Open
+**Status:** RESOLVED (2026-05-14)
 
-Three weeks of changes have shipped since the last security review pass.
-`/security-review` (a slash command) runs a security-focused review against
-the current branch's diff vs main. Cheap insurance for a stretch that
-touched auth-store hydration, CSP scopes (FE-005 tightening), Vercel deploy
-workflow, and several admin-CRUD additions.
+Manual pass over the ~50 commits since 2026-04-23 (the cut-off the backlog
+named as "three weeks of changes"). Focus areas as scoped by the backlog
+entry: Pinia auth-store hydration, CSP scopes (post-FE-005), Vercel deploy
+workflow, admin-CRUD additions, the new ipapi.co geo lookup, and the markdown
+extraction.
 
-**Fix:** invoke `/security-review` interactively, triage findings into either
-follow-up backlog items or out-of-scope notes.
+**Findings:**
+
+1. **SEC-003 (MEDIUM)** — dual-storage of auth tokens (cookies + localStorage)
+2. **SEC-004 (MEDIUM)** — `/auth/refresh` returns tokens in JSON body
+3. **SEC-005 (LOW-MED)** — unsalted SHA-256 IP hash + raw-IP exposure to ipapi.co
+
+Each is a separate backlog entry below.
+
+**Non-findings (reviewed and OK):**
+- **OAuth CSRF** — `backend/app/api/v1/auth.py:43-82` uses `secrets.token_urlsafe(32)`, single-use, 5-minute TTL, IP-bound, DB-backed, cleaned up by background task. Solid.
+- **Admin CRUD endpoints** — POST/PUT/DELETE on `projects.py`, `companies.py`, `education.py` all gated by `AdminUser` dependency; PUTs use explicit field whitelists (defense-in-depth).
+- **Markdown rendering** — `frontend/src/utils/markdown.ts` escapes HTML *before* emitting the only-ever `<strong>`/`<em>` tags it controls. `v-html` callsites (`ExperienceDetail.vue:91,98`) route through this. Safe.
+- **Pinia hydration** — `main.ts:28-32` serialises *all* store state into the page HTML during SSG. At build time the auth store is all-nulls (no localStorage, no `/auth/me` call), so the leaked state is empty. If that ever changes (e.g. SSG starts hydrating auth from a build-time identity), revisit.
+- **CSP** — `vercel.json` `script-src` keeps `'unsafe-inline'` (required for vite-ssg's serialised initial-state `<script>`), `connect-src` is clean after FE-005, no orphaned third-party hosts.
+- **SQL queries** — only `text("SELECT 1")` literals in health checks; everything else parameterised via SQLAlchemy.
+- **Committed secrets** — only `.env.example` templates in git; trufflehog scan in `ci-cd.yml` covers the live diff.
+- **Vercel deploy** — token via env var, expanded as quoted CLI arg ~30s on the runner. Brief exposure window; Vercel CLI offers no env-only auth path. Accepted.
+
+---
+
+### SEC-003: Auth tokens dual-stored in localStorage AND HTTP-only cookies
+**Files:** `frontend/src/stores/auth.ts:62-72,108-117,144-145,182-194`
+**Priority:** MEDIUM
+**Status:** Open (surfaced by SEC-002 review)
+
+The comment at `auth.ts:39` says "Auth is based on user presence (tokens are
+in HTTP-only cookies)" — but the same store ALSO writes `accessToken` and
+`refreshToken` to `localStorage` via `storage.setItem(STORAGE_KEYS.*)` in
+three places (`setTokens`, `refreshAccessToken`, `initializeAuth`). It also
+sets an `Authorization: Bearer ${accessToken}` header on the axios default
+config.
+
+The XSS-resistance benefit of HTTP-only cookies is defeated: an XSS payload
+running on the page can read both `localStorage` and the axios default
+header. The cookie is a redundant defense-in-depth layer, not a primary
+control.
+
+**Origin:** the comments call this out as "backwards compatibility (localStorage-based auth)".
+If no live deploy path actually still uses localStorage auth, this is dead code that
+materially weakens the security model.
+
+**Fix (recommended sequence):**
+1. Verify no callers rely on `state.accessToken` / `state.refreshToken` being populated. Grep for `authStore.accessToken` and `authStore.refreshToken` outside `auth.ts` itself.
+2. Remove `accessToken` + `refreshToken` from `AuthState`. Drop the two `storage.setItem` calls in `setTokens` and `refreshAccessToken`. Drop the `apiClient.defaults.headers.common['Authorization'] = ...` lines.
+3. In `logout()`, drop the `storage.removeMultiple` and the axios header delete.
+4. In `initializeAuth`, drop the localStorage-token reload (lines 182-194); just call `fetchUser()` and let the cookie do the work.
+5. Optional: delete `STORAGE_KEYS.ACCESS_TOKEN` / `STORAGE_KEYS.REFRESH_TOKEN` from `utils/storage` if no other code uses them.
+
+Pairs with SEC-004 — if you keep returning tokens in the response body but
+don't store them anywhere, the body return becomes inert; cleaner to fix
+both together.
+
+---
+
+### SEC-004: `/auth/refresh` returns access+refresh tokens in JSON response body
+**Files:** `backend/app/api/v1/auth.py:323-327`, also `backend/app/api/v1/auth.py:297` (callback path) — needs verification
+**Priority:** MEDIUM
+**Status:** Open (surfaced by SEC-002 review)
+
+The refresh endpoint sets HTTP-only cookies for both tokens (lines 304-321,
+gated on `if request.cookies.get("refresh_token")`), AND returns the same
+tokens in the JSON response body (lines 323-327). The body return is
+described as "for backwards compatibility" but means an XSS payload can do
+`fetch('/api/v1/auth/refresh', {method: 'POST'}).then(r => r.json())` and
+walk away with both tokens — completely bypassing the HTTP-only protection.
+
+**Fix:**
+1. Confirm no live client reads `access_token` / `refresh_token` from the response body — grep frontend for `response.data.access_token` and `response.data.refresh_token`. (Currently `frontend/src/stores/auth.ts:104-115` does read them, but only because of SEC-003; fixing SEC-003 first removes the dependency.)
+2. Change the response schema to either return `{}` (or `{"refreshed": true}`) or define a new Pydantic model that excludes the tokens.
+3. Update the OpenAPI doc and any client typings to match.
+4. Keep the cookie-set behaviour as-is; that's the actual auth transport.
+
+---
+
+### SEC-005: Unsalted SHA-256 IP hash + raw IP exposure to ipapi.co
+**Files:** `backend/app/api/v1/analytics.py:66,77`, `backend/app/core/geo_ip.py:23,82`
+**Priority:** LOW-MED
+**Status:** Open (surfaced by SEC-002 review)
+
+Two related issues from the new analytics pipeline:
+
+**Part A — unsalted SHA-256 IP hash (analytics.py:66, 77):**
+```python
+ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:16]
+```
+IPv4 has 4.3B possible values. A precomputed rainbow table of `sha256(ip)[:16]`
+for the entire IPv4 space is ~150GB on disk and can be built in hours on
+commodity hardware. An attacker with read access to the PageView table could
+recover the original IPs and undo the pseudonymisation.
+
+**Fix:** add a server-side secret salt before hashing.
+1. Add `IP_HASH_SECRET: str` to `backend/app/config.py` (required env var in
+   prod; generate-once and store in Fly.io secrets via `flyctl secrets set IP_HASH_SECRET=...`).
+2. Change the hash call to `hashlib.sha256(f"{settings.IP_HASH_SECRET}{client_ip}".encode()).hexdigest()[:16]`.
+3. Existing rows keep their old hashes — the salt change invalidates uniqueness comparisons for old vs new rows. Either accept that visitors look "new" for ~30 days (analytics window) or drop the existing PageView rows in a one-off cleanup.
+4. Document the salt rotation procedure (rotation = effectively a one-way wipe).
+
+**Part B — raw IP sent to ipapi.co (geo_ip.py:23, 82):**
+Every uncached page-view triggers a GET to `https://ipapi.co/{ip}/country/`.
+ipapi.co sees the visitor's real IP. The DB stores only the hash, but the
+third party sees the original. This may need a privacy-policy disclosure
+under GDPR / ePrivacy depending on your legal framing.
+
+**Fix options:**
+- **Disclose**: add ipapi.co to the privacy policy under "third-party data processors". Lowest effort.
+- **Self-host MaxMind GeoLite2** (`maxminddb` Python lib + a ~70MB database file deployed alongside the backend). No third-party data flow. ~2-hour effort; database needs monthly refresh. This was already proposed in BE-025 as the "self-hosted" alternative.
+
+---
 
 ---
 
