@@ -123,6 +123,11 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --junitxml=pytest-report.xml
+        env:
+          # SECRET_KEY has no default and the Settings validator rejects None
+          # (security-by-design). A throwaway CI value satisfies the validator;
+          # it never decrypts real data — tests use a separate test DB.
+          SECRET_KEY: test-secret-key-for-ci
 
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
