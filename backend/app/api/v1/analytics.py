@@ -7,7 +7,6 @@ Provides endpoints for:
 - Getting visitor statistics (admin)
 """
 
-import hashlib
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -31,6 +30,7 @@ from app.schemas.analytics import (
     TopPage,
     VisitorStats,
 )
+from app.utils.ip_hash import hash_ip
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -62,9 +62,9 @@ async def track_pageview(
     if page_view.visitor_id:
         session_id = page_view.visitor_id
     else:
-        # Fallback: generate anonymous session from IP hash (for privacy)
-        ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:16]
-        session_id = f"anon_{ip_hash}"
+        # Fallback: generate anonymous session from a keyed hash of the IP.
+        # See app/utils/ip_hash.py for the construction.
+        session_id = f"anon_{hash_ip(client_ip)}"
 
     # Resolve country before persisting. Lookup is best-effort: timeouts and
     # upstream failures return None and the row is still written.
@@ -74,7 +74,7 @@ async def track_pageview(
         page_path=page_view.page_path,
         referrer=page_view.referrer,
         user_agent=request.headers.get("User-Agent"),
-        ip_address=hashlib.sha256(client_ip.encode()).hexdigest()[:16],
+        ip_address=hash_ip(client_ip),
         country=country,
         session_id=session_id,
     )

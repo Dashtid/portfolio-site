@@ -56,7 +56,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~SEC-002~~ | ~~Security~~ | ~~LOW~~ | ~~Run `/security-review` against the last ~3 weeks of changes~~ — **RESOLVED** (2026-05-14 manual pass over commits since 2026-04-23; spawned SEC-003/004/005, three lower-priority findings noted inline) |
 | ~~SEC-003~~ | ~~Security~~ | ~~MEDIUM~~ | ~~Auth tokens dual-stored in localStorage **and** HTTP-only cookies~~ — **RESOLVED** (2026-05-14, with SEC-004) |
 | ~~SEC-004~~ | ~~Security~~ | ~~MEDIUM~~ | ~~`/auth/refresh` returns tokens in JSON body~~ — **RESOLVED** (2026-05-14, with SEC-003) |
-| SEC-005 | Security | LOW-MED | Visitor IP hashed with unsalted SHA-256 (rainbow-table-able across IPv4) + raw IP sent to ipapi.co third party |
+| SEC-005 | Security | LOW-MED | ~~Visitor IP hashed with unsalted SHA-256~~ — **Part A RESOLVED** (2026-05-17, HMAC-SHA256 keyed on SECRET_KEY); Part B (raw IP to ipapi.co) still open pending disclosure-vs-self-host decision |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
@@ -506,35 +506,36 @@ walk away with both tokens — completely bypassing the HTTP-only protection.
 ---
 
 ### SEC-005: Unsalted SHA-256 IP hash + raw IP exposure to ipapi.co
-**Files:** `backend/app/api/v1/analytics.py:66,77`, `backend/app/core/geo_ip.py:23,82`
+**Files:** `backend/app/utils/ip_hash.py`, `backend/app/api/v1/analytics.py`, `backend/app/core/geo_ip.py`
 **Priority:** LOW-MED
-**Status:** Open (surfaced by SEC-002 review)
+**Status:** Part A RESOLVED (2026-05-17); Part B Open
 
-Two related issues from the new analytics pipeline:
+**Part A — RESOLVED**: IP pseudonymisation now goes through HMAC-SHA256 keyed
+on `SECRET_KEY` with a `"ip-hash-v1:"` domain-separation prefix, in the new
+`backend/app/utils/ip_hash.py:hash_ip()` helper. Both call sites in
+`analytics.py` (the anonymous-session fallback and the `ip_address` column)
+were switched over. Rainbow-table reconstruction is no longer feasible
+without also stealing `SECRET_KEY`, which by that point implies a deeper
+compromise than the IP recovery would matter for.
 
-**Part A — unsalted SHA-256 IP hash (analytics.py:66, 77):**
-```python
-ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:16]
-```
-IPv4 has 4.3B possible values. A precomputed rainbow table of `sha256(ip)[:16]`
-for the entire IPv4 space is ~150GB on disk and can be built in hours on
-commodity hardware. An attacker with read access to the PageView table could
-recover the original IPs and undo the pseudonymisation.
+We reuse `SECRET_KEY` rather than introducing a separate `IP_HASH_SECRET`
+because:
+- The two would leak together in practice (same env, same Fly secrets store)
+- Operational cost of a second secret > marginal security gain
+- The domain-separation prefix prevents collisions with other HMAC uses
 
-**Fix:** add a server-side secret salt before hashing.
-1. Add `IP_HASH_SECRET: str` to `backend/app/config.py` (required env var in
-   prod; generate-once and store in Fly.io secrets via `flyctl secrets set IP_HASH_SECRET=...`).
-2. Change the hash call to `hashlib.sha256(f"{settings.IP_HASH_SECRET}{client_ip}".encode()).hexdigest()[:16]`.
-3. Existing rows keep their old hashes — the salt change invalidates uniqueness comparisons for old vs new rows. Either accept that visitors look "new" for ~30 days (analytics window) or drop the existing PageView rows in a one-off cleanup.
-4. Document the salt rotation procedure (rotation = effectively a one-way wipe).
+Existing PageView rows keep their old (unsalted) hashes. For ~30 days after
+deploy, returning visitors look "new" in unique-visitor counts as the new
+keyed hashes don't match the old ones. One-time analytics rebaseline,
+acceptable.
 
-**Part B — raw IP sent to ipapi.co (geo_ip.py:23, 82):**
+**Part B — raw IP sent to ipapi.co (Open)**:
 Every uncached page-view triggers a GET to `https://ipapi.co/{ip}/country/`.
 ipapi.co sees the visitor's real IP. The DB stores only the hash, but the
 third party sees the original. This may need a privacy-policy disclosure
 under GDPR / ePrivacy depending on your legal framing.
 
-**Fix options:**
+**Fix options (your call):**
 - **Disclose**: add ipapi.co to the privacy policy under "third-party data processors". Lowest effort.
 - **Self-host MaxMind GeoLite2** (`maxminddb` Python lib + a ~70MB database file deployed alongside the backend). No third-party data flow. ~2-hour effort; database needs monthly refresh. This was already proposed in BE-025 as the "self-hosted" alternative.
 
