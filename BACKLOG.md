@@ -49,14 +49,15 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~SEO-003~~ | ~~SEO~~ | ~~MEDIUM~~ | ~~No SSR head tags per route~~ — **RESOLVED** (useHead from @unhead/vue) |
 | ~~BE-015~~ | ~~Backend~~ | ~~LOW-MED~~ | ~~gunicorn worker count~~ — **RESOLVED** (WORKERS documented in .env.example) |
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
-| CI-005 | CI/CD | LOW | Dependency-review job requires Dependency Graph enabled in repo settings |
+| ~~CI-005~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Dependency-review job requires Dependency Graph enabled~~ — **RESOLVED** (2026-05-20 verified working on Dependabot PR run 26007931782: action enumerates deps, runs Scorecard, reports "no vulnerable packages") |
 | CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` + `deploy-backend.yml` run in parallel with `ci-cd.yml` rather than gated on its tests |
 | ~~CI-023~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Lighthouse job runs every push but scores have never been reviewed~~ — **RESOLVED** (2026-05-14 reviewed run 25863731084; medians 97/96/96/100; tightened `lighthouserc.json` — script-size + total-size + best-practices promoted to error; spawned PERF-004 for the unused-JS opportunity surfaced during review) |
 | PERF-004 | Performance | LOW | ~~three.js: tree-shaken via static named imports (181KB→120KB gzip, -34%)~~; gsap deferred — no clean tree-shake path without swapping libraries |
 | ~~SEC-002~~ | ~~Security~~ | ~~LOW~~ | ~~Run `/security-review` against the last ~3 weeks of changes~~ — **RESOLVED** (2026-05-14 manual pass over commits since 2026-04-23; spawned SEC-003/004/005, three lower-priority findings noted inline) |
 | ~~SEC-003~~ | ~~Security~~ | ~~MEDIUM~~ | ~~Auth tokens dual-stored in localStorage **and** HTTP-only cookies~~ — **RESOLVED** (2026-05-14, with SEC-004) |
 | ~~SEC-004~~ | ~~Security~~ | ~~MEDIUM~~ | ~~`/auth/refresh` returns tokens in JSON body~~ — **RESOLVED** (2026-05-14, with SEC-003) |
-| SEC-005 | Security | LOW-MED | ~~Visitor IP hashed with unsalted SHA-256~~ — **Part A RESOLVED** (2026-05-17, HMAC-SHA256 keyed on SECRET_KEY); Part B (raw IP to ipapi.co) still open pending disclosure-vs-self-host decision |
+| SEC-005 | Security | LOW-MED | ~~Visitor IP hashed with unsalted SHA-256~~ — **Part A RESOLVED** (2026-05-17, HMAC-SHA256 keyed on SECRET_KEY); Part B (raw IP to ipapi.co) still open pending disclosure-vs-self-host decision — concrete numbers below |
+| ~~CSP-001~~ | ~~Security~~ | ~~LOW~~ | ~~Backend CSP allows `cdn.jsdelivr.net`~~ — **RESOLVED** (2026-05-20 disabled `/docs`/`/redoc`/`openapi.json` in prod + tightened CSP) |
 | ~~DEAD-005~~ | ~~Dead code~~ | ~~LOW~~ | ~~Skills API services unused~~ — **RESOLVED** (deleted) |
 | ~~DEAD-006~~ | ~~Dead code~~ | ~~LOW~~ | ~~Zod validation utilities dead~~ — **RESOLVED** (deleted) |
 | ~~DEAD-007~~ | ~~Dead code~~ | ~~LOW~~ | ~~Vite scaffold leftovers~~ — **RESOLVED** (deleted) |
@@ -278,12 +279,20 @@ tests). Floors baked at ~2pp below baseline:
 ---
 
 ### CI-005: `dependency-review` job requires Dependency Graph enabled
-**Files:** `.github/workflows/ci-cd.yml:218-231`
+**Files:** `.github/workflows/ci-cd.yml`
 **Priority:** LOW
-**Status:** Open (requires GitHub repo setting, not a code change)
+**Status:** RESOLVED (2026-05-20)
 
-The workflow code is correct, but requires enabling Dependency Graph in repo Settings > Security
-& analysis. Without it, the job silently fails on every PR.
+Verified by inspecting the job log for run 26007931782 (Dependabot PR
+`da6ba905`, push event was the wrong query target — the job only fires on PRs
+per its `if:` condition). The action successfully enumerated dependencies,
+reported "Dependency review did not detect any vulnerable packages with
+severity level high or higher", checked denied licenses, and ran the OpenSSF
+Scorecard pass. Dependency Graph IS enabled in repo Settings — no toggle was
+ever needed in this repo, the backlog item just predated the verification.
+
+Also bumped `actions/dependency-review-action@v4` → v5.0.0 in the same
+sweep because v4 runs on Node 20, which GitHub deprecates June 2, 2026.
 
 ---
 
@@ -535,9 +544,52 @@ ipapi.co sees the visitor's real IP. The DB stores only the hash, but the
 third party sees the original. This may need a privacy-policy disclosure
 under GDPR / ePrivacy depending on your legal framing.
 
-**Fix options (your call):**
-- **Disclose**: add ipapi.co to the privacy policy under "third-party data processors". Lowest effort.
-- **Self-host MaxMind GeoLite2** (`maxminddb` Python lib + a ~70MB database file deployed alongside the backend). No third-party data flow. ~2-hour effort; database needs monthly refresh. This was already proposed in BE-025 as the "self-hosted" alternative.
+**Concrete numbers (researched 2026-05-20):**
+
+| Dimension | ipapi.co (current) | MaxMind GeoLite2 self-host |
+|---|---|---|
+| **DB / wire** | HTTP per uncached IP | ~2MB `.mmdb` file, mmap'd in-process |
+| **Lookup latency** | 50-200ms + 1.5s timeout | Microseconds (in-memory) |
+| **Account / key** | None | MaxMind account + license key |
+| **Refresh** | Live API | EULA: delete within 30 days of new release; ≤30 downloads/day free tier |
+| **Refresh mechanism** | N/A | `geoipupdate` cron with license key |
+| **Code change** | N/A | ~10 LOC swap in `geo_ip.py` |
+| **Thread-safety** | Stateless per request | Reader is concurrent-read-safe |
+| **Fly.io storage** | None | Bake into Docker image (2MB; rebuild for updates) OR Fly volume (~50MB min) |
+| **Privacy disclosure** | Required (sub-processor) | None — IP never leaves your infra |
+| **Effort to ship** | ~5 min (policy text) | ~3-4 hours |
+
+**Hybrid worth flagging**: a community jsdelivr-mirrored GeoLite2 ([wp-statistics/GeoLite2-Country](https://github.com/wp-statistics/GeoLite2-Country))
+drops the MaxMind account step. Cuts effort to ~30 min, but you're trusting a third-party CDN to serve unmodified MaxMind data — defeats most of the supply-chain benefit. Skip unless you have specific reason.
+
+**Decision framing**:
+- **Disclose** is right if your privacy policy already lists sub-processors (adding one is routine) OR if you don't expect EU regulators to inspect closely
+- **Self-host** is right if zero third-party data flow is a principle OR if ipapi.co free-tier limits become a real ceiling at higher traffic
+
+Sources: [MaxMind DB-Reader Python](https://github.com/maxmind/MaxMind-DB-Reader-python), [GeoLite2 docs](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/)
+
+---
+
+### CSP-001: Backend CSP cleaned up; production /docs disabled
+**Files:** `backend/app/main.py`
+**Priority:** LOW
+**Status:** RESOLVED (2026-05-20)
+
+The backend's response CSP allowed `cdn.jsdelivr.net` in `script-src`,
+`style-src`, `font-src`, and `connect-src` — necessary because FastAPI's
+`/api/docs` (Swagger UI) and `/api/redoc` load their assets from jsdelivr
+by default. Both endpoints were exposed in production.
+
+Since this API is consumed exclusively by the same-origin frontend (no
+third-party API consumers), the public endpoint catalogue at `/api/docs`
+was information disclosure with no upside. Killed two birds:
+
+- `docs_url`, `redoc_url`, `openapi_url` now all `None` when
+  `ENVIRONMENT == "production"`; the dev/test default of `/api/docs`,
+  `/api/redoc`, `/openapi.json` is preserved everywhere else.
+- Production CSP drops `https://cdn.jsdelivr.net` from all four directives.
+- Root `/` endpoint's `"docs"` field reflects the actual state (`None`
+  in prod, `/api/docs` otherwise).
 
 ---
 

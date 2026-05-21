@@ -99,15 +99,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         ]
         response.headers["Permissions-Policy"] = ", ".join(permissions)
 
-        # Set CSP based on environment: strict for production, relaxed for development
+        # Set CSP based on environment: strict for production, relaxed for development.
+        # Production drops cdn.jsdelivr.net entirely — /api/docs and /api/redoc are
+        # disabled there (see FastAPI() init below) so Swagger UI no longer loads.
         if settings.ENVIRONMENT == "production":
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' https://cdn.jsdelivr.net",
-                "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com",
-                "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
+                "script-src 'self'",
+                "style-src 'self' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net https://*.sentry.io",
+                "connect-src 'self' https://api.github.com https://*.fly.dev https://*.sentry.io",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com/maps https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
@@ -224,13 +226,22 @@ async def lifespan(app: FastAPI):
     logger.info("Database connection closed")
 
 
-# Create FastAPI instance
+# Create FastAPI instance.
+# Swagger UI / ReDoc are off in production: the API is consumed exclusively by
+# our own frontend, so the public endpoint catalogue is information disclosure
+# with no upside. Disabling docs_url/redoc_url/openapi_url also lets the
+# production CSP drop cdn.jsdelivr.net (the default Swagger UI asset host).
+_docs_enabled = settings.ENVIRONMENT != "production"
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="Portfolio API with Vue.js frontend",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url="/api/docs" if _docs_enabled else None,
+    redoc_url="/api/redoc" if _docs_enabled else None,
+    # openapi_url defaults to /openapi.json when not passed; setting it to None
+    # disables the JSON schema endpoint, which is necessary because Swagger UI
+    # alone is moot without the schema it renders.
+    openapi_url=None if not _docs_enabled else "/openapi.json",
     lifespan=lifespan,
 )
 
@@ -303,7 +314,9 @@ async def root():
     return {
         "message": "Portfolio API is running!",
         "version": settings.APP_VERSION,
-        "docs": "/api/docs",
+        # /api/docs is disabled in production; surfacing the URL only when it
+        # actually resolves keeps the response honest for any clients reading it.
+        "docs": "/api/docs" if _docs_enabled else None,
     }
 
 
