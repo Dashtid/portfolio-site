@@ -50,7 +50,7 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 | ~~BE-015~~ | ~~Backend~~ | ~~LOW-MED~~ | ~~gunicorn worker count~~ — **RESOLVED** (WORKERS documented in .env.example) |
 | ~~CI-017~~ | ~~CI/CD~~ | ~~LOW-MED~~ | ~~Vercel CLI @latest~~ — **RESOLVED** (pinned to 44.4.0) |
 | ~~CI-005~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Dependency-review job requires Dependency Graph enabled~~ — **RESOLVED** (2026-05-20 verified working on Dependabot PR run 26007931782: action enumerates deps, runs Scorecard, reports "no vulnerable packages") |
-| CI-022 | CI/CD | LOW | Deploy gating: `deploy-frontend.yml` + `deploy-backend.yml` run in parallel with `ci-cd.yml` rather than gated on its tests |
+| ~~CI-022~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Deploy gating: deploy-frontend.yml + deploy-backend.yml run in parallel with ci-cd.yml~~ — **RESOLVED** (2026-05-20 inlined both deploys as gated jobs in ci-cd.yml; standalone workflows deleted) |
 | ~~CI-023~~ | ~~CI/CD~~ | ~~LOW~~ | ~~Lighthouse job runs every push but scores have never been reviewed~~ — **RESOLVED** (2026-05-14 reviewed run 25863731084; medians 97/96/96/100; tightened `lighthouserc.json` — script-size + total-size + best-practices promoted to error; spawned PERF-004 for the unused-JS opportunity surfaced during review) |
 | PERF-004 | Performance | LOW | ~~three.js: tree-shaken via static named imports (181KB→120KB gzip, -34%)~~; gsap deferred — no clean tree-shake path without swapping libraries |
 | ~~SEC-002~~ | ~~Security~~ | ~~LOW~~ | ~~Run `/security-review` against the last ~3 weeks of changes~~ — **RESOLVED** (2026-05-14 manual pass over commits since 2026-04-23; spawned SEC-003/004/005, three lower-priority findings noted inline) |
@@ -322,9 +322,35 @@ adding a backend service container is not possible).
 ---
 
 ### CI-022: Deploy workflows run in parallel with quality gates rather than after them
-**Files:** `.github/workflows/ci-cd.yml`, `.github/workflows/deploy-frontend.yml`, `.github/workflows/deploy-backend.yml`
+**Files:** `.github/workflows/ci-cd.yml`
 **Priority:** LOW
-**Status:** Partially resolved — see below
+**Status:** RESOLVED (2026-05-20)
+
+**Final shape**: deploy workflows inlined into `ci-cd.yml` as two new jobs
+(`deploy-frontend`, `deploy-backend`), each with explicit `needs:` chains:
+
+- `deploy-frontend` needs `[changes, frontend-quality, e2e-tests, lighthouse]`,
+  fires only when `changes.outputs.frontend == 'true'` and all three quality
+  jobs succeed. Vercel CLI invocation unchanged.
+- `deploy-backend` needs `[changes, backend-quality]`, fires only when
+  `changes.outputs.backend == 'true'` and `backend-quality` succeeds. Fly
+  CLI invocation unchanged.
+
+The two standalone files (`deploy-frontend.yml`, `deploy-backend.yml`) are
+deleted. No branch-protection updates needed (no `required_status_checks`
+were configured against the old workflow names). No `workflow_dispatch`
+loss in practice — both standalone workflows had **zero manual triggers**
+in the last 30 runs.
+
+The dormant `deploy:` job stub that was sitting in `ci-cd.yml` since the
+beginning (just echoed "configure based on hosting provider") is now gone,
+replaced by the two real jobs.
+
+History below kept for context.
+
+---
+
+**Earlier partial resolution:**
 
 Originally logged because three jobs did near-identical frontend work per push
 (lint/type-check/unit-tests 2×, `build:ssg` 3×). It also surfaced that
