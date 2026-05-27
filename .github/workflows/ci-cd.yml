@@ -80,6 +80,15 @@ jobs:
           working-directory: ./frontend
           vite-config-path: ./vite.config.ts
 
+      - name: Upload coverage to Codecov
+        # vitest writes to .coverage/ (per frontend/vitest.config.ts:33),
+        # not coverage/ — keep these in sync if the directory ever moves.
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        with:
+          files: ./frontend/.coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
+
       - name: Build frontend (SSG)
         run: npm run build:ssg
 
@@ -135,6 +144,13 @@ jobs:
         with:
           pytest-xml-coverage-path: ./backend/coverage.xml
           junitxml-path: ./backend/pytest-report.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        with:
+          files: ./backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
 
   # E2E Testing with Playwright — runs on PRs and pushes to main.
   # Intentionally does NOT depend on backend-quality: the SSG build fetches the
@@ -310,7 +326,7 @@ jobs:
       needs.lighthouse.result == 'success'
     timeout-minutes: 10
     environment:
-      name: production-frontend
+      name: production
       url: https://dashti.se
 
     steps:
@@ -354,7 +370,8 @@ jobs:
       needs.backend-quality.result == 'success'
     timeout-minutes: 10
     environment:
-      name: production-backend
+      name: production
+      url: https://dashti-portfolio-backend.fly.dev
 
     steps:
       - name: Checkout code
