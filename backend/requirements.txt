@@ -30,7 +30,7 @@ colorama==0.4.6
     # via
     #   click
     #   uvicorn
-cryptography==46.0.7
+cryptography==47.0.0
     # via
     #   portfolio-backend (pyproject.toml)
     #   authlib
@@ -44,7 +44,7 @@ fastapi==0.135.2
     # via
     #   portfolio-backend (pyproject.toml)
     #   sentry-sdk
-filelock==3.28.0
+filelock==3.29.0
     # via portfolio-backend (pyproject.toml)
 greenlet==3.3.2
     # via
