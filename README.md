@@ -5,13 +5,12 @@
 [![codecov](https://codecov.io/gh/Dashtid/portfolio-site/branch/main/graph/badge.svg)](https://codecov.io/gh/Dashtid/portfolio-site)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Dashtid/portfolio-site/badge)](https://scorecard.dev/viewer/?uri=github.com/Dashtid/portfolio-site)
 [![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey.svg)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/Dashtid/portfolio-site)](https://github.com/Dashtid/portfolio-site/commits/main)
 
-My personal portfolio site, built end-to-end as a playground for modern web
-architecture. Live at **[dashti.se](https://dashti.se)**.
+My personal portfolio site. Vue 3 + FastAPI, deployed to Vercel and Fly.io.
+Live at **[dashti.se](https://dashti.se)**.
 
-This repo is a showcase of how the site is built — not a project intended
-for reuse or external API consumption.
+Source is published as a showcase of the site's architecture and engineering
+practice — not as a project intended for reuse or external API consumption.
 
 ## What it does
 
