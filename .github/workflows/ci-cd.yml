@@ -177,7 +177,7 @@ jobs:
       # Keep in lockstep with the pinned @playwright/test version in frontend/package.json
       # (and the test:e2e:*-docker scripts there) — a mismatch means the container's
       # bundled browsers don't match the installed client and Playwright refuses to run.
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
       options: --ipc=host
     defaults:
       run:
