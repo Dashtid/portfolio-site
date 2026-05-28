@@ -28,7 +28,7 @@ dependencies = [
     # Monitoring
     "sentry-sdk[fastapi]==2.54.0",
     # Security fixes (transitive deps - CVE patches)
-    "starlette==0.52.1",
+    "starlette==1.0.0",
     "urllib3>=2.6.3",
     "filelock>=3.20.3",
     "cryptography>=46.0.7",

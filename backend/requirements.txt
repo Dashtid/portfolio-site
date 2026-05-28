@@ -107,7 +107,7 @@ sqlalchemy==2.0.48
     # via
     #   portfolio-backend (pyproject.toml)
     #   alembic
-starlette==0.52.1
+starlette==1.0.0
     # via
     #   portfolio-backend (pyproject.toml)
     #   fastapi
