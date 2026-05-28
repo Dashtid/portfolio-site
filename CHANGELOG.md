@@ -6,20 +6,39 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Fixed
+### Security
 
-- seed_data.py: Column name mismatches (proficiency → proficiency_level, years_experience → years_of_experience, order → order_index)
+- **Cookie-only authentication**: tokens removed from Pinia state, localStorage, and axios default headers; `/auth/refresh` now sets HTTP-only cookies and returns a token-free body so XSS cannot exfiltrate credentials
+- **HMAC-keyed IP pseudonymisation**: replaced unsalted SHA-256 IP hash in analytics with HMAC-SHA256 keyed off `SECRET_KEY` (rainbow-table resistant)
+- **Strict production posture**: `/api/docs`, `/api/redoc`, and `/openapi.json` disabled in production; backend CSP drops `cdn.jsdelivr.net` (no longer needed)
+- `SECURITY.md` added with vulnerability reporting policy
+- 25 known CVEs patched (5 backend + 7 frontend Dependabot PRs merged; remaining 5 transitives gated behind `@lhci/cli`, dev-only)
+
+### Changed
+
+- **CI/CD consolidated**: standalone `deploy-frontend.yml` / `deploy-backend.yml` workflows inlined as `deploy-frontend` + `deploy-backend` jobs in `ci-cd.yml`, gated on the matching quality jobs
+- **Lighthouse budgets promoted to errors**: `resource-summary:script:size` and `resource-summary:total:size` warns → errors with realistic ceilings; `categories:best-practices` warn → error
+- **Workflow permissions tightened**: workflow-level default reduced to `contents: read`; jobs that need PR-comment write raise their own
+- **Backend Docker image SHA-pinned**: `python:3.13-slim` → `python:3.13-slim@sha256:7ba5f5…` for reproducible builds
+- README rewritten as a portfolio showcase rather than an OSS quick-start
+- LICENSE added as All Rights Reserved
+- `actions/dependency-review-action` bumped v4 → v5.0.0 (Node 24)
 
 ### Added
 
-- 14 tests for seed_data.py (companies, projects, skills, education, clear data)
-- 22 tests for github_service.py (RequestError handling, Link header parsing, pagination, GraphQL edge cases)
+- **Codecov uploads** for both frontend (lcov) and backend (coverage.xml) with `flags:` to separate dashboards
+- **OpenSSF Scorecard** workflow — weekly + on push to main, published badge
+- Three.js tree-shake via static named imports (−61KB gzip on the home page)
+
+### Fixed
+
+- Backend `SECRET_KEY` env var added to `ci-cd.yml` `backend-quality` (latent gap from earlier workflow consolidation)
+- Pre-existing CI failures resolved: eslint global `getComputedStyle` (switched to `globals` package) and Trivy 0.62 (404, bumped to 0.70 with checksum verification)
 
 ### Tested
 
-- Backend: 662 tests passing (80.63% coverage, up from ~47%)
-- github_service.py: 99.43% coverage (up from 17%)
-- seed_data.py: 76.81% coverage (up from 0%)
+- Backend: 667 tests passing, 85.98% coverage (83% floor enforced)
+- Frontend: 617 unit tests passing, real Codecov ingestion on every push
 
 ## [1.1.0] - 2025-12-25
 

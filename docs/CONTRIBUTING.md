@@ -1,5 +1,9 @@
 # Contributing
 
+This repository is published as a portfolio showcase rather than as a
+project soliciting outside contributions. The notes below describe how
+the codebase is set up locally for the author's own reference.
+
 ## Development Setup
 
 ```bash
@@ -17,26 +21,32 @@ npm run dev
 
 ## Code Style
 
-- **Python**: Ruff for linting, Black formatting
+- **Python**: ruff for lint + format (replaces black)
 - **TypeScript**: ESLint + Prettier
-- **Commits**: Conventional commits (`feat:`, `fix:`, `docs:`, etc.)
+- **Commits**: Conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, …)
 
 ## Testing
 
 ```bash
-# Backend
+# Backend (667 tests, 86% coverage floor)
 cd backend && pytest
 
-# Frontend
+# Frontend unit (617 tests)
 cd frontend && npm test
 
-# E2E
-cd frontend && npm run test:e2e
+# Frontend e2e (Playwright, 5 browser projects — run via Docker for parity with CI)
+cd frontend && npm run test:e2e:docker
 ```
 
-## Pull Requests
+## Pre-commit Hooks
 
-1. Create feature branch from `main`
-2. Make changes with tests
-3. Run `pre-commit run --all-files`
-4. Open PR with clear description
+`pre-commit` is configured in `.pre-commit-config.yaml` (trailing whitespace,
+end-of-file fixer, prettier, eslint, ruff, mypy). Install hooks once with:
+
+```bash
+pre-commit install
+```
+
+After that, every `git commit` runs the matching hooks and aborts if any
+file is modified — re-stage and commit again. Run all hooks against the
+full tree explicitly with `pre-commit run --all-files`.

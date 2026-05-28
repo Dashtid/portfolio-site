@@ -113,7 +113,7 @@ fly scale memory 2048
 
 The frontend is configured via `frontend/vercel.json`:
 
-- Build command: `npm run build`
+- Build command: `npm run build:ssg` (vite-ssg static-site generation; pre-renders public routes)
 - Output directory: `dist`
 - Framework: Vite
 
@@ -159,17 +159,23 @@ The following headers are configured in `vercel.json`:
 
 ## CI/CD Pipeline
 
-GitHub Actions workflows handle:
+A single `.github/workflows/ci-cd.yml` workflow handles everything:
 
-1. **Frontend**: Lint, test, build, deploy to Vercel
-2. **Backend**: Lint, test, deploy to Fly.io
-3. **E2E Tests**: Playwright tests on Chromium + Firefox
+| Job | What it does |
+|-----|--------------|
+| `frontend-quality` | ESLint, type-check, vitest unit tests, vite-ssg build, Codecov upload |
+| `backend-quality` | ruff lint + format, pytest with coverage (83% floor), Codecov upload |
+| `e2e-tests` | Playwright on 5 projects (chromium, firefox, webkit, mobile-chrome, mobile-safari) using the built artifact |
+| `lighthouse` | LHCI with assertion budgets on perf/a11y/best-practices/SEO + resource sizes |
+| `security-scan` | Trivy filesystem scan + TruffleHog secret scan |
+| `dependency-review` | Blocks PRs that introduce vulnerable / denied-licence dependencies |
+| `deploy-frontend` | Vercel CLI deploy — gated on `frontend-quality + e2e-tests + lighthouse` |
+| `deploy-backend` | `flyctl deploy --remote-only` — gated on `backend-quality` |
 
-Workflows are in `.github/workflows/`:
+Supporting workflows:
 
-- `ci-cd.yml` - Main test pipeline
-- `deploy-frontend.yml` - Vercel deployment
-- `deploy-backend.yml` - Fly.io deployment
+- `.github/workflows/codeql.yml` — CodeQL SAST for JavaScript/TypeScript + Python
+- `.github/workflows/scorecard.yml` — OpenSSF Scorecard, weekly + on push
 
 ---
 
@@ -295,4 +301,4 @@ vercel logs <deployment-url>
 
 ---
 
-Last Updated: 2025-12-31
+Last Updated: 2026-05-28
