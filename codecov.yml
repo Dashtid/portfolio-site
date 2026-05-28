@@ -1,0 +1,67 @@
+# Codecov configuration.
+# Schema: https://docs.codecov.com/docs/codecov-yaml
+#
+# Frontend (vitest) and backend (pytest) upload coverage separately
+# using the `frontend` and `backend` flags configured in ci-cd.yml.
+
+coverage:
+  # Bar colour on the codecov UI: red below 70%, green at/above 90%.
+  range: "70...90"
+  round: down
+  precision: 2
+
+  status:
+    project:
+      default:
+        # Allow up to 1% drift before flagging the project status red.
+        target: auto
+        threshold: 1%
+        if_ci_failed: error
+      frontend:
+        flags:
+          - frontend
+        # Matches the vitest threshold floor in frontend/vitest.config.ts (70%
+        # statements / functions / lines, 60% branches). Slightly below the
+        # current ~80% baseline to avoid noise on normal fluctuation.
+        target: 70%
+        threshold: 1%
+      backend:
+        flags:
+          - backend
+        # Matches --cov-fail-under=83 baked into pyproject.toml's pytest opts.
+        # Current actual is ~86%, so 83% gives ~3pp headroom for routine churn.
+        target: 83%
+        threshold: 1%
+
+    # Coverage of the changed lines in a PR's diff. Patch coverage tends to be
+    # noisier than project coverage; 70% target is intentionally permissive.
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+
+flag_management:
+  default_rules:
+    carryforward: true
+
+  individual_flags:
+    - name: frontend
+      paths:
+        - frontend/src/
+    - name: backend
+      paths:
+        - backend/app/
+
+comment:
+  layout: "diff, flags, files"
+  behavior: default
+  require_changes: true # only post a PR comment when coverage actually moved
+
+ignore:
+  - "**/tests/**"
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/conftest.py"
+  - "**/__init__.py"
+  - "frontend/dist/**"
+  - "backend/alembic/versions/**"
