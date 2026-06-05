@@ -133,9 +133,13 @@ jobs:
           cache-dependency-path: backend/requirements*.txt
 
       - name: Install dependencies
+        # Pip itself is version-pinned so the bootstrap doesn't drift with
+        # the runner image. Application deps come from the SHA-pinned
+        # requirements files (see backend/scripts/compile-requirements.sh).
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+          python -m pip install --upgrade 'pip==26.1.1'
+          pip install --require-hashes -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Lint with ruff
         run: |

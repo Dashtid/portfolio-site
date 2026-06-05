@@ -8,14 +8,19 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Weekly Monday 6am UTC
 
+# Workflow-level default is least-privilege. The analyze job raises
+# security-events:write because the analyze action publishes SARIF.
+# See OpenSSF Scorecard Token-Permissions check.
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # SARIF upload from codeql-action/analyze
 
     strategy:
       fail-fast: false
