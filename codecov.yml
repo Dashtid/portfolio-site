@@ -5,8 +5,10 @@
 # using the `frontend` and `backend` flags configured in ci-cd.yml.
 
 coverage:
-  # Bar colour on the codecov UI: red below 70%, green at/above 90%.
-  range: "70...90"
+  # Bar colour on the codecov UI: red below 70%, green at/above 85%.
+  # 85% is the calibrated mark for this repo (current combined ~84%, backend
+  # 86%, frontend 78%). Above 85% earns green; raise once coverage moves up.
+  range: "70...85"
   round: down
   precision: 2
 
