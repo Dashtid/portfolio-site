@@ -173,31 +173,6 @@ class TestApplicationLifecycle:
         assert "/" in routes or "/docs" in routes
 
 
-class TestMainEndpoints:
-    """Tests for endpoints defined in main.py."""
-
-    def test_api_health_endpoint(self, client: TestClient):
-        """Test the /api/health endpoint defined in main.py."""
-        response = client.get("/api/health")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "healthy"
-        assert "service" in data
-        assert "version" in data
-
-    def test_api_v1_test_endpoint(self, client: TestClient):
-        """Test the /api/v1/test endpoint for frontend connection."""
-        response = client.get("/api/v1/test")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
-        assert data["message"] == "Hello from FastAPI!"
-        assert "data" in data
-        assert data["data"]["framework"] == "FastAPI"
-        assert "version" in data["data"]
-        assert "description" in data["data"]
-
-
 class TestSecurityHeaders:
     """Tests for security headers middleware."""
 

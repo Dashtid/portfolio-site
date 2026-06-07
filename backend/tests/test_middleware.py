@@ -541,13 +541,11 @@ class TestRateLimitMiddleware:
             rate_limit_api,
             rate_limit_auth,
             rate_limit_public,
-            rate_limit_strict,
         )
 
         assert rate_limit_api is not None
         assert rate_limit_auth is not None
         assert rate_limit_public is not None
-        assert rate_limit_strict is not None
 
     def test_rate_limit_handler_import(self):
         """Test that rate limit exception handler can be imported."""
@@ -563,7 +561,6 @@ class TestRateLimitMiddleware:
         assert hasattr(settings, "RATE_LIMIT_DEFAULT")
         assert hasattr(settings, "RATE_LIMIT_AUTH")
         assert hasattr(settings, "RATE_LIMIT_API")
-        assert hasattr(settings, "RATE_LIMIT_STRICT")
         assert hasattr(settings, "RATE_LIMIT_PUBLIC")
 
     def test_rate_limit_config_defaults(self):
@@ -661,7 +658,7 @@ class TestRateLimitIntegration:
 
     def test_health_endpoint_works(self, client: TestClient):
         """Test that health endpoint works."""
-        response = client.get("/api/health")
+        response = client.get("/api/v1/health")
         assert response.status_code == 200
 
     def test_auth_endpoint_accessible(self, client: TestClient):
@@ -803,7 +800,7 @@ class TestMiddlewareOrder:
     def test_middleware_order_in_app(self, client: TestClient):
         """Test that middleware is applied in correct order."""
 
-        response = client.get("/api/health")
+        response = client.get("/api/v1/health")
         assert response.status_code == 200
         # Check that security headers are applied
         assert response.headers.get("X-Content-Type-Options") is not None

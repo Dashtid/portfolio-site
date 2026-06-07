@@ -1,5 +1,5 @@
 """
-Tests for security utilities (JWT tokens and password hashing)
+Tests for security utilities (JWT tokens — GitHub-OAuth-only).
 """
 
 from datetime import timedelta
@@ -8,54 +8,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
-    get_password_hash,
-    verify_password,
 )
-
-
-class TestPasswordHashing:
-    """Tests for password hashing functions using bcrypt directly."""
-
-    def test_hash_password(self):
-        """Test that password is hashed correctly."""
-        password = "test_password_123"
-        hashed = get_password_hash(password)
-
-        assert hashed != password
-        assert hashed.startswith("$2b$")
-
-    def test_verify_correct_password(self):
-        """Test that correct password is verified."""
-        password = "test_password_123"
-        hashed = get_password_hash(password)
-
-        assert verify_password(password, hashed) is True
-
-    def test_verify_wrong_password(self):
-        """Test that wrong password fails verification."""
-        password = "correct_password"
-        hashed = get_password_hash(password)
-
-        assert verify_password("wrong_password", hashed) is False
-
-    def test_hash_different_passwords(self):
-        """Test that different passwords produce different hashes."""
-        hash1 = get_password_hash("password1")
-        hash2 = get_password_hash("password2")
-
-        assert hash1 != hash2
-
-    def test_hash_same_password_produces_different_hashes(self):
-        """Test that same password produces different hashes (salt)."""
-        password = "same_password"
-        hash1 = get_password_hash(password)
-        hash2 = get_password_hash(password)
-
-        # Hashes should differ due to random salt
-        assert hash1 != hash2
-        # But both should verify
-        assert verify_password(password, hash1) is True
-        assert verify_password(password, hash2) is True
 
 
 class TestJWTTokens:

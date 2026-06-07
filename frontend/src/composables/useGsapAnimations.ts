@@ -1,12 +1,11 @@
-import { ref, onMounted, onBeforeUnmount, type Ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import gsap from 'gsap'
 import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger'
 
-// Lazy-loaded ScrollTrigger reference
+// Lazy-loaded ScrollTrigger reference — keeps it off the initial bundle.
 let ScrollTrigger: typeof ScrollTriggerType | null = null
 let scrollTriggerLoaded = false
 
-// Lazy load ScrollTrigger only when needed (saves initial bundle size)
 const loadScrollTrigger = async (): Promise<typeof ScrollTriggerType> => {
   if (scrollTriggerLoaded && ScrollTrigger) {
     return ScrollTrigger
@@ -41,7 +40,6 @@ export interface GsapBatchOptions extends GsapAnimationOptions {
   stagger?: number
 }
 
-// Animation start and end states
 const animationStates: Record<AnimationType, { from: gsap.TweenVars; to: gsap.TweenVars }> = {
   fadeIn: {
     from: { opacity: 0 },
@@ -70,73 +68,7 @@ const animationStates: Record<AnimationType, { from: gsap.TweenVars; to: gsap.Tw
 }
 
 /**
- * GSAP scroll-triggered animation for a single element
- */
-export function useGsapScrollAnimation(
-  target: Ref<HTMLElement | null>,
-  options: GsapAnimationOptions = {}
-) {
-  const {
-    animation = 'fadeIn',
-    duration = 0.8,
-    delay = 0,
-    ease = 'power2.out',
-    start = 'top 85%',
-    end = 'bottom 15%',
-    markers = false
-  } = options
-
-  const isAnimated = ref(false)
-  let scrollTrigger: ScrollTriggerType | null = null
-  let tween: gsap.core.Tween | null = null
-
-  onMounted(async () => {
-    if (!target.value) return
-
-    // Check reduced motion inside onMounted — window not available during SSG pre-render
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    // If user prefers reduced motion, show element immediately
-    if (prefersReducedMotion) {
-      gsap.set(target.value, animationStates[animation].to)
-      isAnimated.value = true
-      return
-    }
-
-    // Set initial state
-    gsap.set(target.value, animationStates[animation].from)
-
-    // Lazy load ScrollTrigger and create animation
-    const ST = await loadScrollTrigger()
-    scrollTrigger = ST.create({
-      trigger: target.value,
-      start,
-      end,
-      markers,
-      onEnter: () => {
-        tween = gsap.to(target.value, {
-          ...animationStates[animation].to,
-          duration,
-          delay,
-          ease,
-          onComplete: () => {
-            isAnimated.value = true
-          }
-        })
-      }
-    })
-  })
-
-  onBeforeUnmount(() => {
-    tween?.kill()
-    scrollTrigger?.kill()
-  })
-
-  return { isAnimated }
-}
-
-/**
- * GSAP batch animation for multiple elements with stagger
+ * GSAP batch animation for multiple elements with stagger.
  */
 export function useGsapBatchAnimation(selector: string, options: GsapBatchOptions = {}) {
   const {
@@ -154,20 +86,17 @@ export function useGsapBatchAnimation(selector: string, options: GsapBatchOption
     const elements = document.querySelectorAll(selector)
     if (!elements.length) return
 
-    // Check reduced motion inside onMounted — window not available during SSG pre-render
+    // window is unavailable during SSG pre-render; gate inside onMounted.
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    // If user prefers reduced motion, show elements immediately
     if (prefersReducedMotion) {
       gsap.set(elements, animationStates[animation].to)
       isComplete.value = true
       return
     }
 
-    // Set initial state
     gsap.set(elements, animationStates[animation].from)
 
-    // Lazy load ScrollTrigger and create batch animation
     await loadScrollTrigger()
     gsap.to(elements, {
       ...animationStates[animation].to,
@@ -193,156 +122,4 @@ export function useGsapBatchAnimation(selector: string, options: GsapBatchOption
   })
 
   return { isComplete }
-}
-
-/**
- * Page transition animations for Vue Router
- */
-export function usePageTransition() {
-  // Evaluate window.matchMedia lazily inside each callback — window not available during SSG
-  const prefersReducedMotion = () =>
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-  const enter = (el: Element, done: () => void) => {
-    if (prefersReducedMotion()) {
-      done()
-      return
-    }
-
-    gsap.from(el, {
-      opacity: 0,
-      y: 20,
-      duration: 0.4,
-      ease: 'power2.out',
-      onComplete: done
-    })
-  }
-
-  const leave = (el: Element, done: () => void) => {
-    if (prefersReducedMotion()) {
-      done()
-      return
-    }
-
-    gsap.to(el, {
-      opacity: 0,
-      y: -20,
-      duration: 0.3,
-      ease: 'power2.in',
-      onComplete: done
-    })
-  }
-
-  return { enter, leave }
-}
-
-/**
- * Parallax scroll effect
- */
-export function useGsapParallax(
-  target: Ref<HTMLElement | null>,
-  options: { speed?: number; direction?: 'vertical' | 'horizontal' } = {}
-) {
-  const { speed = 0.5, direction = 'vertical' } = options
-  let scrollTrigger: ScrollTriggerType | null = null
-
-  onMounted(async () => {
-    // Check reduced motion inside onMounted — window not available during SSG pre-render
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!target.value || prefersReducedMotion) return
-
-    // Lazy load ScrollTrigger
-    const ST = await loadScrollTrigger()
-    scrollTrigger = ST.create({
-      trigger: target.value,
-      start: 'top bottom',
-      end: 'bottom top',
-      scrub: 1,
-      onUpdate: self => {
-        const progress = self.progress
-        if (direction === 'vertical') {
-          gsap.set(target.value, { y: progress * 100 * speed - 50 * speed })
-        } else {
-          gsap.set(target.value, { x: progress * 100 * speed - 50 * speed })
-        }
-      }
-    })
-  })
-
-  onBeforeUnmount(() => {
-    scrollTrigger?.kill()
-  })
-}
-
-/**
- * Text reveal animation (character by character)
- */
-export function useTextReveal(
-  target: Ref<HTMLElement | null>,
-  options: { duration?: number; stagger?: number; delay?: number } = {}
-) {
-  const { duration = 0.5, stagger = 0.02, delay = 0 } = options
-  const isComplete = ref(false)
-
-  onMounted(async () => {
-    if (!target.value) return
-
-    // Check reduced motion inside onMounted — window not available during SSG pre-render
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (prefersReducedMotion) {
-      isComplete.value = true
-      return
-    }
-
-    const text = target.value.textContent || ''
-    target.value.textContent = ''
-    for (const char of text) {
-      const span = document.createElement('span')
-      span.className = 'char'
-      span.textContent = char === ' ' ? '\u00A0' : char
-      target.value.appendChild(span)
-    }
-
-    const chars = target.value.querySelectorAll('.char')
-
-    // Lazy load ScrollTrigger
-    await loadScrollTrigger()
-    gsap.from(chars, {
-      opacity: 0,
-      y: 20,
-      duration,
-      stagger,
-      delay,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: target.value,
-        start: 'top 85%',
-        once: true
-      },
-      onComplete: () => {
-        isComplete.value = true
-      }
-    })
-  })
-
-  return { isComplete }
-}
-
-/**
- * Cleanup all ScrollTriggers (call on route change if needed)
- */
-export async function cleanupScrollTriggers() {
-  if (ScrollTrigger) {
-    ScrollTrigger.getAll().forEach(trigger => trigger.kill())
-  }
-}
-
-/**
- * Refresh ScrollTrigger (call after dynamic content loads)
- */
-export async function refreshScrollTriggers() {
-  if (ScrollTrigger) {
-    ScrollTrigger.refresh()
-  }
 }

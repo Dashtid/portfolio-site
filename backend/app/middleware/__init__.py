@@ -13,7 +13,6 @@ from .rate_limit import (
     rate_limit_auth,
     rate_limit_exceeded_handler,
     rate_limit_public,
-    rate_limit_strict,
 )
 
 __all__ = [
@@ -25,7 +24,6 @@ __all__ = [
     "limiter",
     "rate_limit_auth",
     "rate_limit_api",
-    "rate_limit_strict",
     "rate_limit_public",
     "rate_limit_exceeded_handler",
 ]

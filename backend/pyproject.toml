@@ -16,7 +16,6 @@ dependencies = [
     "greenlet==3.3.2",
     # Authentication
     "PyJWT==2.13.0",
-    "bcrypt==5.0.0",
     "httpx==0.28.1",
     # Validation & Serialization
     "pydantic==2.12.5",

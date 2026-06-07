@@ -320,26 +320,6 @@ async def root():
     }
 
 
-# Health check endpoint
-@app.get("/api/health")
-async def health_check():
-    return {"status": "healthy", "service": settings.APP_NAME, "version": settings.APP_VERSION}
-
-
-# Test endpoint for frontend connection
-@app.get("/api/v1/test")
-async def test_endpoint():
-    return {
-        "status": "success",
-        "message": "Hello from FastAPI!",
-        "data": {
-            "framework": "FastAPI",
-            "version": settings.APP_VERSION,
-            "description": "Your portfolio backend is ready!",
-        },
-    }
-
-
 # Security.txt endpoint (RFC 9116)
 SECURITY_TXT_CONTENT = """# Security Policy for dashti.se API
 # RFC 9116 compliant security.txt

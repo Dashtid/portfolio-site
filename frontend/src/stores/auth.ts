@@ -65,18 +65,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Refresh access token via cookie-based flow.
-    // The backend rotates cookies; we just refresh the in-memory user.
-    async refreshAccessToken(): Promise<void> {
-      try {
-        await apiClient.post('/api/v1/auth/refresh')
-        await this.fetchUser()
-      } catch (error) {
-        authLogger.error('Failed to refresh token:', error)
-        await this.logout()
-      }
-    },
-
     // Login with GitHub
     loginWithGitHub(): void {
       window.location.href = `${config.apiUrl}/api/v1/auth/github`
@@ -91,11 +79,6 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.user = null
       }
-    },
-
-    // Check auth status on app start
-    async checkAuth(): Promise<void> {
-      await this.fetchUser()
     },
 
     // Initialize auth state (called by route guard)

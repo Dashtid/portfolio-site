@@ -89,6 +89,142 @@ Prioritized work items for the portfolio site. Grouped by category, ordered by s
 
 ---
 
+## Campaign 2026-06: Performance, Backend, Admin Interfaces
+
+Multi-sprint campaign seeded by a 12-dimension block-by-block audit on 2026-06-07
+(workflow `wf_0852eca2-522`). 130 raw findings → 6 sprints, 13 deferred/dropped.
+Audit summary: 4 critical (OAuth admin fail-open, JSON log formatter drops every
+`extra={}` field, Fly volume mounted but unused, untested router auth guard),
+25 high, 44 medium, 50 low, 7 nit. Direction: no new outward-facing features;
+focus is performance, backend correctness, observability, and admin interfaces.
+
+**Sprint 1 — Hygiene sweep** (2 sessions). Delete confirmed-dead code so the
+later sprints aren't tripping over zombies.
+
+| ID | Summary | Effort |
+|----|---------|--------|
+| BACKEND-DEAD-01 | Delete unused `cleanup_expired_states` in `auth.py:37-40` | xs |
+| BACKEND-DEAD-02 | Drop `ANALYTICS_SITE_ID`/`ANALYTICS_URL` settings + `.env.example` lines | xs |
+| BACKEND-DEAD-03 | Remove `rate_limit_strict` decorator + `RATE_LIMIT_STRICT` setting | xs |
+| BACKEND-DEAD-04 | Drop `verify_password`/`get_password_hash` helpers + `bcrypt` dep | xs |
+| BACKEND-DEAD-07 | Delete 3 unused GitHub endpoints (blocked on Q2) | s |
+| BACKEND-DEAD-08 | Delete `/degrees` + `/certifications` (blocked on Q3) | s |
+| BACKEND-DEAD-09 | Remove `/api/health` and `/api/v1/test` legacy duplicates | xs |
+| FRONTEND-DEAD-06 | Delete unused `LoadingSpinner.vue` | xs |
+| FRONTEND-DEAD-07 | Delete unused `ProjectCard.vue` | xs |
+| FRONTEND-DEAD-02 | Prune `useMicroInteractions` (3 of 4 exports unused) | s |
+| FRONTEND-DEAD-03 | Prune `useGsapAnimations` (6 of 7 helpers unused) | s |
+| FRONTEND-DEAD-04 | Delete `utils/storage.ts` (only re-export used) | s |
+| FRONTEND-DEAD-05 | Remove dead auth store actions `refreshAccessToken`/`checkAuth` | xs |
+| FRONTEND-TESTS-11 | Delete stale duplicate `NavBar.test.ts` | xs |
+| FRONTEND-TESTS-10 | Update MEMORY.md — HomeView spec no longer failing | xs |
+
+**Sprint 2 — Security & correctness** (3 sessions). Close the criticals/highs.
+
+| ID | Summary | Effort |
+|----|---------|--------|
+| BACKEND-BUGS-01 | Fix OAuth admin gate fail-open (`ADMIN_GITHUB_ID` unset) | xs |
+| BACKEND-BUGS-03 | Fix `CacheControlMiddleware` exposing `/auth/me` as `public` | s |
+| BACKEND-BUGS-04 | `SameSite=None+Secure` for cross-eTLD+1 cookies (blocked on Q9) | s |
+| BACKEND-BUGS-05 | Mirror cookie attrs on `logout()` delete_cookie | xs |
+| BACKEND-BUGS-07 | Atomic single-use OAuth state consumption | s |
+| BACKEND-BUGS-02 | Real refresh-token rotation with `jti` revocation | m |
+| BACKEND-DB-04 | Make `User.is_admin` NOT NULL with default `False` | xs |
+| BACKEND-BUGS-06 | Streaming body-size limit (chunked-encoding bypass) | s |
+| BACKEND-BUGS-08 | Fix naive `datetime` in `github_service` `since` param | xs |
+| INFRA-CONFIG-01 | Fix Fly volume mount or remove (blocked on Q8) | s |
+
+**Sprint 3 — Observability & DB foundations** (3 sessions). Make perf measurable.
+
+| ID | Summary | Effort |
+|----|---------|--------|
+| BACKEND-OBSERVABILITY-01 | Fix JSON log formatter dropping every `extra={}` field | s |
+| BACKEND-OBSERVABILITY-05 | Request-ID via `ContextVar`, accept upstream header | s |
+| BACKEND-OBSERVABILITY-02 | Sentry integrations: FastAPI, SQLAlchemy, asyncio, httpx | s |
+| BACKEND-OBSERVABILITY-04 | Wire `sentry_sdk.capture_exception` in 500 + error paths | xs |
+| BACKEND-OBSERVABILITY-03 | SQLAlchemy slow-query logging + `statement_timeout` | m |
+| BACKEND-PERF-02 | Index `OAuthState.expires_at` | xs |
+| BACKEND-PERF-03 | Composite indexes for `PageView` analytics aggregations | s |
+| BACKEND-DB-01 | `server_default` on all `updated_at` columns | s |
+| BACKEND-DB-02 | Index `Education.is_certification` | xs |
+| BACKEND-DB-06 | `OAuthState.created_at` `server_default` | xs |
+| BACKEND-DB-05 | Bound length on `User.email`/`github_id`/`username` | xs |
+| BACKEND-DB-07 | Idempotent migration with existence guards | s |
+| BACKEND-DB-09 | Remove redundant `index=True` on PK columns | xs |
+
+**Sprint 4 — Backend performance** (3 sessions). Cut tail latency on hot paths.
+
+| ID | Summary | Effort |
+|----|---------|--------|
+| BACKEND-PERF-01 | Move `ipapi.co` lookup to `BackgroundTasks` | s |
+| BACKEND-PERF-04 | TTL cache for GitHub stats endpoints (`async-lru`) | m |
+| BACKEND-PERF-05 | `PerformanceMetrics` keys by templated route | s |
+| BACKEND-PERF-06 | Drop `threading.Lock` from `PerformanceMiddleware` | xs |
+| BACKEND-PERF-07 | Skip `/health*` paths in `LoggingMiddleware` | s |
+| BACKEND-PERF-08 | Pagination on `/api/v1/companies` (and siblings) | s |
+| BACKEND-PERF-10 | Reuse `httpx` client in OAuth callback | s |
+| BACKEND-OBSERVABILITY-06 | p50/p95/p99 + business counters on `/metrics` | m |
+| BACKEND-OBSERVABILITY-09 | Count rate-limit hits in `/metrics` | xs |
+| FRONTEND-PERF-04 | Add `width`/`height` to logos to fix CLS | xs |
+| FRONTEND-PERF-07 | Inline SVG for `bi bi-*` icons in `ExperienceDetail` | xs |
+| FRONTEND-PERF-08 | Replace 854KB `profile.png` fallback with optimized webp | xs |
+
+**Sprint 5 — Admin console part 1** (3 sessions). Skills, Metrics, Errors UIs +
+admin bug cluster.
+
+| ID | Summary | Effort |
+|----|---------|--------|
+| BACKEND-ADMIN-02 | Add `AdminEducation` to admin nav | xs |
+| BACKEND-ADMIN-01 | Build `AdminSkills.vue` (backend CRUD already exists) | m |
+| BACKEND-ADMIN-03 | Build `AdminMetrics.vue` | m |
+| BACKEND-ADMIN-05 | Frontend-errors persistence + `AdminErrors` browser (blocked on Q4) | m |
+| FRONTEND-BUGS-01 | `isSaving` guard on admin Save buttons | s |
+| FRONTEND-BUGS-11 | `deletingIds` guard on `AdminCompanies` delete | xs |
+| FRONTEND-BUGS-02 | Client-side validation on `AdminEducation` form | s |
+| FRONTEND-BUGS-03 | Fix `AdminEducation` `order` → `order_index` field name | xs |
+| FRONTEND-BUGS-04 | Disable `GitHubStats` Retry button while loading | xs |
+| FRONTEND-BUGS-07 | Fix `useFocusTrap` + `AdminFormModal` watcher | xs |
+| BACKEND-ADMIN-07 / FRONTEND-TESTS-01 | `AdminAnalytics.spec.ts` (combined) | m |
+
+**Sprint 6 — Admin part 2 + frontend perf + test backfill** (3 sessions).
+
+| ID | Summary | Effort |
+|----|---------|--------|
+| BACKEND-ADMIN-06 | Audit log + admin browser (blocked on Q5) | l |
+| BACKEND-ADMIN-09 | Sessions admin (depends on Sprint 2 BUGS-02; blocked on Q5) | l |
+| BACKEND-ADMIN-04 | Documents admin CRUD + upload UI (blocked on Q1) | l |
+| BACKEND-ADMIN-10 | Sentry deep-link panel on dashboard | s |
+| FRONTEND-TESTS-02 | Router auth guard unit tests | m |
+| FRONTEND-TESTS-03 | E2E admin login/refresh/logout | l |
+| FRONTEND-TESTS-04 | E2E admin CRUD round-trip | l |
+| FRONTEND-PERF-01 | Slim Bootstrap CSS to needed partials (blocked on Q6) | m |
+| FRONTEND-PERF-02 | Replace three.js hero with lighter impl (blocked on Q7) | l |
+| FRONTEND-PERF-03 | Replace gsap entrance animations with IntersectionObserver | m |
+| FRONTEND-BUGS-05 | Fix `useGsapBatchAnimation` global kill bug | s |
+| FRONTEND-BUGS-06 | Fix portfolio store parallel-fetch error overwrite | s |
+| FRONTEND-DEAD-01 | Decide `api/services.ts`: migrate admin views or delete | s |
+| BACKEND-TESTS-01 | OAuth state IP-binding mismatch test | s |
+| BACKEND-TESTS-02 | OAuth state TTL expiry + cleanup tests | s |
+| BACKEND-TESTS-04 | `validate_safe_url` XSS schema tests | s |
+| BACKEND-TESTS-05 | Non-admin escalation tests on PUT/PATCH | s |
+| BACKEND-TESTS-10 | Fix `seed_data` 0% coverage (pytest-asyncio fixture) | m |
+
+**Deferred / dropped** (13 items): rate-limit override admin (speculative),
+multi-user management (single-operator YAGNI), `geo_ip` O(n log n) eviction (nit),
+TruffleHog base-SHA edge case (theoretical), MapEmbed + NavBar a11y nits
+(roll into general a11y pass if/when), respx contract test (duplicative),
+unicode round-trip test (no specific risk), real axios round-trip via msw
+(duplicative), `unhead` direct dep removal (SSG peer-chain risk > savings),
+path-filter optimisation for security scans (CI minute saving not constraining).
+
+**10 open questions** that gate Sprints 2-6 (will be batched after Sprint 1 lands):
+documents admin scope, GitHub endpoints fate, education filtered endpoints,
+frontend errors strategy, audit log + sessions priority, Bootstrap CSS approach,
+three.js hero replacement, Fly volume / Postgres migration, OAuth domain layout,
+admin nav order.
+
+---
+
 ## CI/CD
 
 ### CI-007: `build:ssg` never runs in any workflow or Vercel config

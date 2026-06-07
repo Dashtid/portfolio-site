@@ -1,11 +1,10 @@
 """
-Security utilities for JWT tokens and password hashing
+Security utilities for JWT tokens (GitHub-OAuth-only — no password hashing).
 """
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import bcrypt
 import jwt
 from jwt.exceptions import PyJWTError
 
@@ -42,16 +41,6 @@ def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = N
 
     to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
     return jwt.encode(to_encode, _get_secret_key(), algorithm=settings.ALGORITHM)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a hashed password"""
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
-
-
-def get_password_hash(password: str) -> str:
-    """Hash a password"""
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def decode_token(token: str) -> dict[str, Any] | None:

@@ -125,12 +125,6 @@ rate_limit_api = limiter.limit(
     error_message="API rate limit exceeded. Please try again later.",
 )
 
-# Usage: @rate_limit_strict on sensitive endpoints
-rate_limit_strict = limiter.limit(
-    getattr(settings, "RATE_LIMIT_STRICT", "10/minute"),
-    error_message="Rate limit exceeded for this endpoint.",
-)
-
 # Usage: @rate_limit_public on public read-only endpoints
 rate_limit_public = limiter.limit(
     getattr(settings, "RATE_LIMIT_PUBLIC", "120/minute"),

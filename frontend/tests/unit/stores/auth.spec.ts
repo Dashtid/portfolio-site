@@ -159,33 +159,6 @@ describe('Auth Store', () => {
     })
   })
 
-  describe('refreshAccessToken', () => {
-    it('calls refresh endpoint with no body and re-fetches user', async () => {
-      const mockUser = { id: '1', username: 'test' }
-      vi.mocked(apiClient.post).mockResolvedValue({ data: { refreshed: true } })
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
-
-      const store = useAuthStore()
-      await store.refreshAccessToken()
-
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/auth/refresh')
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me')
-      expect(store.user).toEqual(mockUser)
-    })
-
-    it('logs out on refresh failure', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue(new Error('Refresh failed'))
-
-      const store = useAuthStore()
-      store.user = { id: '1', username: 'test' }
-      const logoutSpy = vi.spyOn(store, 'logout').mockResolvedValue()
-
-      await store.refreshAccessToken()
-
-      expect(logoutSpy).toHaveBeenCalled()
-    })
-  })
-
   describe('loginWithGitHub', () => {
     it('redirects to the GitHub OAuth start URL', () => {
       const store = useAuthStore()
@@ -224,19 +197,6 @@ describe('Auth Store', () => {
       await store.logout()
 
       expect(store.user).toBeNull()
-    })
-  })
-
-  describe('checkAuth', () => {
-    it('delegates to fetchUser', async () => {
-      const mockUser = { id: '1', username: 'testuser' }
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
-
-      const store = useAuthStore()
-      await store.checkAuth()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me')
-      expect(store.user).toEqual(mockUser)
     })
   })
 

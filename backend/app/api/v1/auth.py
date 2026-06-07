@@ -11,7 +11,7 @@ from typing import Annotated
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -32,12 +32,6 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 # OAuth state TTL
 OAUTH_STATE_TTL_SECONDS = 300  # 5 minutes
-
-
-async def cleanup_expired_states(db: AsyncSession) -> None:
-    """Remove expired OAuth states from database"""
-    await db.execute(delete(OAuthState).where(OAuthState.expires_at < datetime.now(UTC)))
-    await db.commit()
 
 
 async def create_oauth_state(db: AsyncSession, client_ip: str | None = None) -> str:
