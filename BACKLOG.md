@@ -98,26 +98,31 @@ Audit summary: 4 critical (OAuth admin fail-open, JSON log formatter drops every
 25 high, 44 medium, 50 low, 7 nit. Direction: no new outward-facing features;
 focus is performance, backend correctness, observability, and admin interfaces.
 
-**Sprint 1 — Hygiene sweep** (2 sessions). Delete confirmed-dead code so the
-later sprints aren't tripping over zombies.
+**Sprint 1 — Hygiene sweep** ✅ **SHIPPED 2026-06-07** (commits `de8b8f3` + GitHub/Education endpoint deletions). 15 items, -2034 LOC net first commit, plus DEAD-07/08 in follow-up. 646 backend tests pass at 85.52%; 550 frontend tests pass.
 
-| ID | Summary | Effort |
+| ID | Summary | Status |
 |----|---------|--------|
-| BACKEND-DEAD-01 | Delete unused `cleanup_expired_states` in `auth.py:37-40` | xs |
-| BACKEND-DEAD-02 | Drop `ANALYTICS_SITE_ID`/`ANALYTICS_URL` settings + `.env.example` lines | xs |
-| BACKEND-DEAD-03 | Remove `rate_limit_strict` decorator + `RATE_LIMIT_STRICT` setting | xs |
-| BACKEND-DEAD-04 | Drop `verify_password`/`get_password_hash` helpers + `bcrypt` dep | xs |
-| BACKEND-DEAD-07 | Delete 3 unused GitHub endpoints (blocked on Q2) | s |
-| BACKEND-DEAD-08 | Delete `/degrees` + `/certifications` (blocked on Q3) | s |
-| BACKEND-DEAD-09 | Remove `/api/health` and `/api/v1/test` legacy duplicates | xs |
-| FRONTEND-DEAD-06 | Delete unused `LoadingSpinner.vue` | xs |
-| FRONTEND-DEAD-07 | Delete unused `ProjectCard.vue` | xs |
-| FRONTEND-DEAD-02 | Prune `useMicroInteractions` (3 of 4 exports unused) | s |
-| FRONTEND-DEAD-03 | Prune `useGsapAnimations` (6 of 7 helpers unused) | s |
-| FRONTEND-DEAD-04 | Delete `utils/storage.ts` (only re-export used) | s |
-| FRONTEND-DEAD-05 | Remove dead auth store actions `refreshAccessToken`/`checkAuth` | xs |
-| FRONTEND-TESTS-11 | Delete stale duplicate `NavBar.test.ts` | xs |
-| FRONTEND-TESTS-10 | Update MEMORY.md — HomeView spec no longer failing | xs |
+| BACKEND-DEAD-01 | Delete unused `cleanup_expired_states` | ✅ done |
+| BACKEND-DEAD-02 | Drop `ANALYTICS_SITE_ID`/`ANALYTICS_URL` settings | ✅ done |
+| BACKEND-DEAD-03 | Remove `rate_limit_strict` + `RATE_LIMIT_STRICT` | ✅ done |
+| BACKEND-DEAD-04 | Drop password helpers + `bcrypt` dep | ✅ done |
+| BACKEND-DEAD-07 | Delete 3 unused GitHub endpoints | ✅ done (orphaned service methods `get_project_stats`/`get_repo_details`/`get_repo_commits` deferred — see DEAD-07b) |
+| BACKEND-DEAD-08 | Delete `/degrees` + `/certifications` | ✅ done |
+| BACKEND-DEAD-09 | Remove `/api/health` and `/api/v1/test` duplicates | ✅ done |
+| FRONTEND-DEAD-06 | Delete unused `LoadingSpinner.vue` | ✅ done |
+| FRONTEND-DEAD-07 | Delete unused `ProjectCard.vue` | ✅ done |
+| FRONTEND-DEAD-02 | Delete `useMicroInteractions` (all 5 exports unused) | ✅ done (entire file deleted) |
+| FRONTEND-DEAD-03 | Prune `useGsapAnimations` to single used export | ✅ done |
+| FRONTEND-DEAD-04 | Delete `utils/storage.ts` | ✅ done |
+| FRONTEND-DEAD-05 | Remove dead auth store actions | ✅ done |
+| FRONTEND-TESTS-11 | Delete stale duplicate `NavBar.test.ts` | ✅ done |
+| FRONTEND-TESTS-10 | Update MEMORY.md | ✅ done |
+
+**Sprint 1 follow-ups identified during execution:**
+
+- **DEAD-07b** (LOW, deferred): `github_service.py` carries three now-orphaned methods (`get_project_stats`, `get_repo_details`, `get_repo_commits`) plus their unit-test classes in `test_github_service.py`. Deleted alongside endpoints would have created significant test churn (>200 lines across multiple classes); deferring as a focused follow-up.
+- **CONTENT-001** (HIGH, ✅ done): dashti.se experience card showed "Security Specialist & System Developer / Sep 2022 - Present" — wrong title and start date. Root cause: HomeView.vue's static fallback was stale and the live SSG build is rendering it because the production API fetch is failing (see INFRA-002 below). Updated the fallback to match the resume (Hermes May 2024 - present, QA/RA & Security Specialist + Philips 2022-2024 + Karolinska 2021); added an education fallback that includes Security+ (Jan 2026). Job-search liability resolved.
+- **INFRA-002** (HIGH, open): The SSG build at Vercel is shipping empty `__INITIAL_STATE__.pinia.portfolio.companies/skills/projects/education` arrays — meaning the `includedRoutes()` and pre-render fetches against the production API are failing silently. The README claims "Dynamic portfolio content served from an admin-managed backend" but the live site is in fact rendering the static fallback. Needs investigation: is `VITE_API_URL` set in Vercel? Is the backend reachable from Vercel's build environment? Does the `includedRoutes` fetch error get swallowed?
 
 **Sprint 2 — Security & correctness** (3 sessions). Close the criticals/highs.
 
@@ -177,7 +182,7 @@ admin bug cluster.
 | BACKEND-ADMIN-02 | Add `AdminEducation` to admin nav | xs |
 | BACKEND-ADMIN-01 | Build `AdminSkills.vue` (backend CRUD already exists) | m |
 | BACKEND-ADMIN-03 | Build `AdminMetrics.vue` | m |
-| BACKEND-ADMIN-05 | Frontend-errors persistence + `AdminErrors` browser (blocked on Q4) | m |
+| ~~BACKEND-ADMIN-05~~ | ~~Frontend-errors persistence~~ — **DROPPED** (covered by Sprint 3 BACKEND-OBSERVABILITY-04 wiring Sentry properly per Q4 decision) | — |
 | FRONTEND-BUGS-01 | `isSaving` guard on admin Save buttons | s |
 | FRONTEND-BUGS-11 | `deletingIds` guard on `AdminCompanies` delete | xs |
 | FRONTEND-BUGS-02 | Client-side validation on `AdminEducation` form | s |
@@ -190,15 +195,15 @@ admin bug cluster.
 
 | ID | Summary | Effort |
 |----|---------|--------|
-| BACKEND-ADMIN-06 | Audit log + admin browser (blocked on Q5) | l |
-| BACKEND-ADMIN-09 | Sessions admin (depends on Sprint 2 BUGS-02; blocked on Q5) | l |
-| BACKEND-ADMIN-04 | Documents admin CRUD + upload UI (blocked on Q1) | l |
+| ~~BACKEND-ADMIN-06~~ | ~~Audit log + admin browser~~ — **DEFERRED** per Q5 decision (single-operator site) | — |
+| ~~BACKEND-ADMIN-09~~ | ~~Sessions admin~~ — **DEFERRED** per Q5 decision (revoke infra in Sprint 2 is enough) | — |
+| BACKEND-ADMIN-04 | Documents admin CRUD + upload UI | l |
 | BACKEND-ADMIN-10 | Sentry deep-link panel on dashboard | s |
 | FRONTEND-TESTS-02 | Router auth guard unit tests | m |
 | FRONTEND-TESTS-03 | E2E admin login/refresh/logout | l |
 | FRONTEND-TESTS-04 | E2E admin CRUD round-trip | l |
-| FRONTEND-PERF-01 | Slim Bootstrap CSS to needed partials (blocked on Q6) | m |
-| FRONTEND-PERF-02 | Replace three.js hero with lighter impl (blocked on Q7) | l |
+| FRONTEND-PERF-01 | Slim Bootstrap CSS — **scope tight** per Q6 (drop unused utilities only, no SCSS rewrite) | s |
+| ~~FRONTEND-PERF-02~~ | ~~Replace three.js hero~~ — **DEFERRED (sacred cow)** per Q7 decision; lazy-loaded, off critical path | — |
 | FRONTEND-PERF-03 | Replace gsap entrance animations with IntersectionObserver | m |
 | FRONTEND-BUGS-05 | Fix `useGsapBatchAnimation` global kill bug | s |
 | FRONTEND-BUGS-06 | Fix portfolio store parallel-fetch error overwrite | s |
@@ -217,11 +222,21 @@ unicode round-trip test (no specific risk), real axios round-trip via msw
 (duplicative), `unhead` direct dep removal (SSG peer-chain risk > savings),
 path-filter optimisation for security scans (CI minute saving not constraining).
 
-**10 open questions** that gate Sprints 2-6 (will be batched after Sprint 1 lands):
-documents admin scope, GitHub endpoints fate, education filtered endpoints,
-frontend errors strategy, audit log + sessions priority, Bootstrap CSS approach,
-three.js hero replacement, Fly volume / Postgres migration, OAuth domain layout,
-admin nav order.
+**Open questions resolved 2026-06-07** (decisions affect Sprints 2-6):
+
+| Q | Decision |
+|---|---|
+| Documents admin | **Build full upload UI** (Sprint 6 BACKEND-ADMIN-04 stays in scope) |
+| GitHub endpoints | **Delete** (shipped in Sprint 1 follow-up) |
+| Education `/degrees` + `/certifications` | **Delete** (shipped in Sprint 1 follow-up) |
+| Frontend errors | **Wire Sentry properly** (BACKEND-ADMIN-05 dropped from Sprint 5; covered by Sprint 3's BACKEND-OBSERVABILITY-04) |
+| Audit log (ADMIN-06) | **Defer indefinitely** (single-operator site; revisit on delegation/abuse) |
+| Sessions admin (ADMIN-09) | **Defer indefinitely** (Sprint 2's revoke infra is what matters; UI is sugar) |
+| Bootstrap CSS | **Scope tight** — drop only unused utilities (~30-50KB), no SCSS rewrite |
+| three.js hero | **Sacred cow** — leave it (already lazy-loaded, off critical path, 61KB already shaved via PERF-004) |
+| Fly volume | **Open** — defer decision to when INFRA-CONFIG-01 is picked up in Sprint 2; will choose SQLite-on-volume vs managed Postgres then |
+| OAuth domain | **Open** — defer to Sprint 2 BACKEND-BUGS-04 pick-up (short-term `SameSite=None+Secure` vs `api.dashti.se` long-term) |
+| Admin nav order | **Open** — defer to Sprint 5 build (decide when AdminSkills/AdminMetrics land) |
 
 ---
 

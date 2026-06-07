@@ -12,20 +12,6 @@ def test_get_education_public(client: TestClient):
     assert isinstance(response.json(), list)
 
 
-def test_get_degrees_public(client: TestClient):
-    """Test getting degree records without authentication."""
-    response = client.get("/api/v1/education/degrees/")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-
-
-def test_get_certifications_public(client: TestClient):
-    """Test getting certification records without authentication."""
-    response = client.get("/api/v1/education/certifications/")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-
-
 def test_get_education_not_found(client: TestClient):
     """Test getting a non-existent education record."""
     response = client.get("/api/v1/education/999999/")
@@ -116,22 +102,6 @@ def test_get_education_empty_list(client: TestClient):
     data = response.json()
     assert isinstance(data, list)
     assert len(data) == 0
-
-
-def test_get_degrees_empty_list(client: TestClient):
-    """Test that degrees returns empty list when none exist."""
-    response = client.get("/api/v1/education/degrees/")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-
-
-def test_get_certifications_empty_list(client: TestClient):
-    """Test that certifications returns empty list when none exist."""
-    response = client.get("/api/v1/education/certifications/")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
 
 
 class TestEducationEndpoints:
@@ -376,88 +346,6 @@ class TestEducationCRUDWithAdmin:
         # Verify it's deleted
         get_response = client.get(f"/api/v1/education/{created_id}/")
         assert get_response.status_code == 404
-
-    def test_get_degrees_filters_correctly(self, client: TestClient, admin_user_in_db: dict):
-        """Test that degrees endpoint filters out certifications."""
-        # Create a degree
-        degree_data = {
-            "institution": "Princeton",
-            "degree": "Bachelor of Science",
-            "field_of_study": "Physics",
-            "start_date": "2014-09-01",
-            "end_date": "2018-06-01",
-            "is_certification": False,
-            "order_index": 1,
-        }
-        client.post(
-            "/api/v1/education/",
-            json=degree_data,
-            headers=admin_user_in_db["headers"],
-        )
-
-        # Create a certification
-        cert_data = {
-            "institution": "Google",
-            "degree": "Cloud Professional",
-            "field_of_study": "Cloud",
-            "start_date": "2023-01-01",
-            "end_date": "2023-01-10",
-            "is_certification": True,
-            "order_index": 2,
-        }
-        client.post(
-            "/api/v1/education/",
-            json=cert_data,
-            headers=admin_user_in_db["headers"],
-        )
-
-        # Get degrees only
-        degrees_response = client.get("/api/v1/education/degrees/")
-        assert degrees_response.status_code == 200
-        degrees = degrees_response.json()
-        for degree in degrees:
-            assert degree["is_certification"] is False
-
-    def test_get_certifications_filters_correctly(self, client: TestClient, admin_user_in_db: dict):
-        """Test that certifications endpoint filters out degrees."""
-        # Create a degree
-        degree_data = {
-            "institution": "Columbia",
-            "degree": "MBA",
-            "field_of_study": "Business",
-            "start_date": "2019-09-01",
-            "end_date": "2021-06-01",
-            "is_certification": False,
-            "order_index": 1,
-        }
-        client.post(
-            "/api/v1/education/",
-            json=degree_data,
-            headers=admin_user_in_db["headers"],
-        )
-
-        # Create a certification
-        cert_data = {
-            "institution": "Microsoft",
-            "degree": "Azure Administrator",
-            "field_of_study": "Cloud",
-            "start_date": "2023-02-01",
-            "end_date": "2023-02-10",
-            "is_certification": True,
-            "order_index": 2,
-        }
-        client.post(
-            "/api/v1/education/",
-            json=cert_data,
-            headers=admin_user_in_db["headers"],
-        )
-
-        # Get certifications only
-        certs_response = client.get("/api/v1/education/certifications/")
-        assert certs_response.status_code == 200
-        certs = certs_response.json()
-        for cert in certs:
-            assert cert["is_certification"] is True
 
     def test_education_ordering(self, client: TestClient, admin_user_in_db: dict):
         """Test that education records are ordered correctly."""

@@ -76,16 +76,44 @@
               </div>
             </template>
             <template v-else>
-              <!-- Static companies as fallback -->
+              <!-- Static fallback — rendered when the SSG build fetched no
+                   companies from the backend. Kept in sync with the seed_data
+                   canonical timeline; update both when roles change. -->
               <div class="experience-card fade-in">
                 <div class="company-header">
                   <h3 class="company-name">Hermes Medical Solutions</h3>
-                  <span class="company-dates">Sep 2022 - Present</span>
+                  <span class="company-dates">May 2024 - Present</span>
                 </div>
-                <p class="job-title">Security Specialist & System Developer</p>
+                <p class="job-title">QA/RA & Security Specialist</p>
                 <p class="company-location">Stockholm, Sweden</p>
                 <p class="company-description">
-                  Leading cybersecurity initiatives and developing innovative healthcare solutions.
+                  QA/RA &amp; Security Specialist at Hermes Medical Solutions, ensuring NIS2/ISO
+                  27001 compliance, regulatory clearance, and V&amp;V processes for nuclear medicine
+                  software solutions.
+                </p>
+              </div>
+              <div class="experience-card fade-in">
+                <div class="company-header">
+                  <h3 class="company-name">Philips Healthcare</h3>
+                  <span class="company-dates">Mar 2022 - May 2024</span>
+                </div>
+                <p class="job-title">Incident Support Specialist, Nordics</p>
+                <p class="company-location">Stockholm, Sweden</p>
+                <p class="company-description">
+                  Remote Service Engineer providing Level 1 support for Intellispace Portal (ISP)
+                  and Intellispace Cardiovascular (ISCV) systems across the Nordics.
+                </p>
+              </div>
+              <div class="experience-card fade-in">
+                <div class="company-header">
+                  <h3 class="company-name">Karolinska University Hospital</h3>
+                  <span class="company-dates">Jun 2021 - Dec 2021</span>
+                </div>
+                <p class="job-title">Biomedical Engineer, Medical Imaging and Physiology</p>
+                <p class="company-location">Stockholm, Sweden</p>
+                <p class="company-description">
+                  First-line support for imaging equipment fleet, incident management for RIS/PACS
+                  systems, working with GE, Philips, and Siemens solutions.
                 </p>
               </div>
             </template>
@@ -101,57 +129,173 @@
             Education
           </h2>
           <div class="education-grid">
-            <div v-for="edu in education" :key="edu.id" class="education-card fade-in">
-              <div class="education-header-with-logo">
-                <img
-                  v-if="edu.logo_url"
-                  :src="edu.logo_url"
-                  :alt="`${edu.institution} Logo`"
-                  class="card-logo"
-                  loading="lazy"
-                />
-                <div>
-                  <h3 class="education-institution">{{ edu.institution }}</h3>
-                  <p class="education-degree">
-                    <strong>{{ edu.degree }}</strong>
-                  </p>
+            <template v-if="education.length">
+              <div v-for="edu in education" :key="edu.id" class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <img
+                    v-if="edu.logo_url"
+                    :src="edu.logo_url"
+                    :alt="`${edu.institution} Logo`"
+                    class="card-logo"
+                    loading="lazy"
+                  />
+                  <div>
+                    <h3 class="education-institution">{{ edu.institution }}</h3>
+                    <p class="education-degree">
+                      <strong>{{ edu.degree }}</strong>
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <p v-if="edu.field_of_study" class="education-field">{{ edu.field_of_study }}</p>
-              <p v-if="edu.description" class="education-description">{{ edu.description }}</p>
-              <a
-                v-if="edu.certificate_url"
-                :href="edu.certificate_url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="certificate-link"
-                :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
-              >
-                View Certificate
-                <svg
-                  class="external-icon"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
+                <p v-if="edu.field_of_study" class="education-field">{{ edu.field_of_study }}</p>
+                <p v-if="edu.description" class="education-description">{{ edu.description }}</p>
+                <a
+                  v-if="edu.certificate_url"
+                  :href="edu.certificate_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="certificate-link"
+                  :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
                 >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-              </a>
-              <p class="education-dates">
-                <template v-if="edu.is_certification && edu.end_date">
-                  {{ formatDate(edu.end_date) }}
-                </template>
-                <template v-else>
-                  {{ formatDate(edu.start_date) }} -
-                  {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
-                </template>
-              </p>
-            </div>
+                  View Certificate
+                  <svg
+                    class="external-icon"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+                <p class="education-dates">
+                  <template v-if="edu.is_certification && edu.end_date">
+                    {{ formatDate(edu.end_date) }}
+                  </template>
+                  <template v-else>
+                    {{ formatDate(edu.start_date) }} -
+                    {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
+                  </template>
+                </p>
+              </div>
+            </template>
+            <template v-else>
+              <!-- Static fallback — rendered when the SSG build fetched no
+                   education rows. Kept in sync with seed_data. -->
+              <div class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <div>
+                    <h3 class="education-institution">CompTIA</h3>
+                    <p class="education-degree"><strong>Security+ Certification</strong></p>
+                  </div>
+                </div>
+                <p class="education-field">Cybersecurity</p>
+                <p class="education-description">
+                  Industry-standard certification covering network security, threats,
+                  vulnerabilities, and risk management.
+                </p>
+                <a
+                  href="https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="certificate-link"
+                  aria-label="View Security+ certificate from CompTIA (opens in new tab)"
+                >
+                  View Certificate
+                  <svg
+                    class="external-icon"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+                <p class="education-dates">Jan 2026</p>
+              </div>
+              <div class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <div>
+                    <h3 class="education-institution">Microsoft</h3>
+                    <p class="education-degree">
+                      <strong>Azure Security Engineer Associate (AZ-500)</strong>
+                    </p>
+                  </div>
+                </div>
+                <p class="education-field">Cloud Security</p>
+                <p class="education-description">
+                  Azure security services, identity management, and compliance features.
+                </p>
+                <p class="education-dates">Jun 2023</p>
+              </div>
+              <div class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <div>
+                    <h3 class="education-institution">Företagsuniversitetet</h3>
+                    <p class="education-degree">
+                      <strong>Certified ISO 27001 Lead Implementer</strong>
+                    </p>
+                  </div>
+                </div>
+                <p class="education-field">Information Security Management</p>
+                <p class="education-description">
+                  Intensive certification program for implementing and managing ISO 27001 ISMS.
+                </p>
+                <p class="education-dates">Mar 2023</p>
+              </div>
+              <div class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <div>
+                    <h3 class="education-institution">EC-Council</h3>
+                    <p class="education-degree">
+                      <strong>Certified Ethical Hacker (CEH)</strong>
+                    </p>
+                  </div>
+                </div>
+                <p class="education-field">Cybersecurity</p>
+                <p class="education-description">
+                  Ethical hacking methodologies, penetration testing, and vulnerability assessment.
+                </p>
+                <p class="education-dates">Oct 2022</p>
+              </div>
+              <div class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <div>
+                    <h3 class="education-institution">KTH Royal Institute of Technology</h3>
+                    <p class="education-degree"><strong>M.Sc. Medical Engineering</strong></p>
+                  </div>
+                </div>
+                <p class="education-field">Medical Technology and Bioengineering</p>
+                <p class="education-description">
+                  Specialized in medical imaging, signal processing, and healthcare informatics.
+                  Thesis on AI-driven diagnostic systems.
+                </p>
+                <p class="education-dates">Aug 2017 - Jun 2022</p>
+              </div>
+              <div class="education-card fade-in">
+                <div class="education-header-with-logo">
+                  <div>
+                    <h3 class="education-institution">Lund University (LTH)</h3>
+                    <p class="education-degree">
+                      <strong>B.Sc. Biomedical Engineering (Exchange)</strong>
+                    </p>
+                  </div>
+                </div>
+                <p class="education-field">Biomedical Engineering</p>
+                <p class="education-description">
+                  Exchange program focusing on medical device development and regulatory affairs.
+                </p>
+                <p class="education-dates">Jan 2020 - Jun 2021</p>
+              </div>
+            </template>
           </div>
         </div>
       </section>

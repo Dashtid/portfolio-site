@@ -35,32 +35,6 @@ async def get_all_education(request: Request, db: DbSession):
     return result.scalars().all()
 
 
-@router.get("/degrees", response_model=list[EducationSchema])
-@rate_limit_public
-async def get_degrees(request: Request, db: DbSession):
-    """Get only degree education records (not certifications)"""
-    _ = request  # Required for rate limiting
-    result = await db.execute(
-        select(Education)
-        .where(Education.is_certification.is_(False))
-        .order_by(Education.order_index, Education.start_date.desc())
-    )
-    return result.scalars().all()
-
-
-@router.get("/certifications", response_model=list[EducationSchema])
-@rate_limit_public
-async def get_certifications(request: Request, db: DbSession):
-    """Get only certification records"""
-    _ = request  # Required for rate limiting
-    result = await db.execute(
-        select(Education)
-        .where(Education.is_certification.is_(True))
-        .order_by(Education.order_index, Education.end_date.desc())
-    )
-    return result.scalars().all()
-
-
 @router.get("/{education_id}", response_model=EducationSchema)
 @rate_limit_public
 async def get_education(
