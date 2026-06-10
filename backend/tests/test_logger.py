@@ -6,7 +6,14 @@ import json
 import logging
 from unittest.mock import patch
 
-from app.utils.logger import CustomJsonFormatter, SensitiveDataFilter, get_logger, setup_logger
+from app.utils.logger import (
+    CustomJsonFormatter,
+    RequestIdFilter,
+    SensitiveDataFilter,
+    get_logger,
+    request_id_var,
+    setup_logger,
+)
 
 
 def _make_record(
@@ -63,6 +70,81 @@ class TestCustomJsonFormatter:
 
         assert "file" in log_record
         assert "42" in log_record["file"]
+
+    def test_preserves_extra_fields(self):
+        """OBS-01: extra={} dict must flow into the JSON output."""
+        formatter = CustomJsonFormatter()
+        record = _make_record()
+        # Mirror what logging.Logger does when extra= is passed in.
+        record.user_id = "abc-123"
+        record.duration_ms = 12.5
+        record.path = "/api/v1/companies"
+
+        log_record = json.loads(formatter.format(record))
+
+        assert log_record["user_id"] == "abc-123"
+        assert log_record["duration_ms"] == 12.5
+        assert log_record["path"] == "/api/v1/companies"
+        # Standard fields still present
+        assert log_record["level"] == "INFO"
+        assert log_record["message"] == "Test message"
+
+    def test_does_not_overwrite_fixed_columns_with_extra(self):
+        """`extra={"message": "x"}` must not clobber the rendered message."""
+        formatter = CustomJsonFormatter()
+        record = _make_record(msg="real message")
+        # logging won't let you stomp on standard attrs via extra= at the
+        # public API, but we belt-and-braces in the formatter anyway.
+        record.message = "attempted override"
+
+        log_record = json.loads(formatter.format(record))
+        # The fixed columns win
+        assert log_record["message"] == "real message"
+
+    def test_non_serialisable_extra_is_stringified(self):
+        """A non-JSON-native extra value falls back to repr() rather than crashing."""
+        formatter = CustomJsonFormatter()
+        record = _make_record()
+
+        class _Custom:
+            def __repr__(self) -> str:
+                return "<Custom marker>"
+
+        record.thing = _Custom()
+        log_record = json.loads(formatter.format(record))
+        assert log_record["thing"] == "<Custom marker>"
+
+
+class TestRequestIdFilter:
+    """OBS-05: filter auto-injects the ContextVar value onto each record."""
+
+    def test_injects_context_var(self):
+        token = request_id_var.set("req-xyz")
+        try:
+            filt = RequestIdFilter()
+            record = _make_record()
+            assert filt.filter(record) is True
+            assert record.request_id == "req-xyz"
+        finally:
+            request_id_var.reset(token)
+
+    def test_none_when_unset(self):
+        # Default ContextVar is None when no request is in flight.
+        filt = RequestIdFilter()
+        record = _make_record()
+        filt.filter(record)
+        assert record.request_id is None
+
+    def test_does_not_clobber_explicit_value(self):
+        token = request_id_var.set("ctx-id")
+        try:
+            filt = RequestIdFilter()
+            record = _make_record()
+            record.request_id = "explicit-id"
+            filt.filter(record)
+            assert record.request_id == "explicit-id"
+        finally:
+            request_id_var.reset(token)
 
 
 class TestSensitiveDataFilter:

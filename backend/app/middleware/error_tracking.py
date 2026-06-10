@@ -6,6 +6,7 @@ import sys
 import traceback
 from collections.abc import Callable
 
+import sentry_sdk
 from fastapi import Request, Response
 from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,6 +15,25 @@ from app.config import settings
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _capture_to_sentry(exc: Exception, request: Request, status_code: int | None = None) -> None:
+    """Send an exception to Sentry with request context as a tag/extra.
+
+    Belt-and-braces alongside Sentry's StarletteIntegration: that integration
+    catches exceptions Sentry's middleware sees, but our middleware order
+    re-raises ours *outward* through several intermediate wrappers and we
+    want a guaranteed capture point. capture_exception is a no-op when
+    Sentry is not initialised (no DSN), so this is safe to call unconditionally.
+    """
+    request_id = getattr(request.state, "request_id", None)
+    with sentry_sdk.new_scope() as scope:
+        scope.set_tag("request_id", request_id or "unknown")
+        scope.set_tag("http.method", request.method)
+        scope.set_tag("http.path", request.url.path)
+        if status_code is not None:
+            scope.set_tag("http.status_code", str(status_code))
+        sentry_sdk.capture_exception(exc)
 
 
 class ErrorTrackingMiddleware(BaseHTTPMiddleware):
@@ -39,6 +59,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
                         "error_type": "HTTPException",
                     },
                 )
+                _capture_to_sentry(exc, request, status_code=exc.status_code)
             elif exc.status_code >= 400:
                 # Client errors - log as WARNING
                 logger.warning(
@@ -76,6 +97,7 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
                     "user_agent": request.headers.get("user-agent"),
                 },
             )
+            _capture_to_sentry(exc, request, status_code=500)
 
             # Re-raise to let FastAPI handle the response
             raise
@@ -107,3 +129,12 @@ def track_error(error: Exception, context: dict | None = None):
         log_context.update(context)
 
     logger.error("Tracked error: %s: %s", type(error).__name__, error, extra=log_context)
+
+    # Ship to Sentry as well so call sites that route through track_error
+    # are visible alongside middleware-captured exceptions. No-op if Sentry
+    # isn't initialised.
+    with sentry_sdk.new_scope() as scope:
+        if context:
+            for k, v in context.items():
+                scope.set_extra(k, v)
+        sentry_sdk.capture_exception(error)

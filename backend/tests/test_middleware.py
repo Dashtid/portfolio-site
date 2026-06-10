@@ -637,6 +637,38 @@ class TestRateLimitMiddleware:
         assert not key.startswith("token:")
 
 
+class TestRequestIdPropagation:
+    """OBS-05: upstream X-Request-ID is honoured when well-formed; otherwise minted."""
+
+    def test_accepts_valid_upstream_request_id(self, client: TestClient):
+        client_id = "abc-123_xyz"
+        response = client.get("/api/v1/health", headers={"X-Request-ID": client_id})
+
+        assert response.status_code == 200
+        assert response.headers.get("X-Request-ID") == client_id
+
+    def test_rejects_malformed_upstream_request_id(self, client: TestClient):
+        # Spaces / newlines / control chars are filtered out; we mint a UUID instead.
+        response = client.get(
+            "/api/v1/health",
+            headers={"X-Request-ID": "evil id\nlog injection"},
+        )
+
+        assert response.status_code == 200
+        returned = response.headers.get("X-Request-ID")
+        assert returned is not None
+        # Minted UUIDs are 36 chars with dashes; nothing like the injected value.
+        assert returned != "evil id\nlog injection"
+        assert "\n" not in returned
+
+    def test_generates_request_id_when_missing(self, client: TestClient):
+        response = client.get("/api/v1/health")
+
+        assert response.status_code == 200
+        # UUID4 format: 8-4-4-4-12 = 36 chars total.
+        assert len(response.headers.get("X-Request-ID", "")) == 36
+
+
 class TestSecurityHeadersMiddleware:
     """Tests for security headers middleware."""
 

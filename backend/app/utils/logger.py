@@ -5,12 +5,58 @@ Centralized logging configuration with structured JSON output
 import json
 import logging
 import sys
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any
 
+# ContextVar holding the current request's correlation ID. Middleware sets it
+# on every request (see app.middleware.logging); RequestIdFilter copies the
+# current value onto each LogRecord so JSON logs always carry it without each
+# call site having to pass `extra={"request_id": ...}` manually.
+request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
+
+# These attribute names are populated by logging.LogRecord itself. Anything
+# NOT in this set on record.__dict__ came from `extra={...}` (or via a
+# filter), so we serialise it into the JSON payload. Sourced from the
+# stdlib `logging.LogRecord` constructor + `makeRecord` machinery.
+_RESERVED_LOG_RECORD_ATTRS = frozenset(
+    {
+        "args",
+        "asctime",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "levelname",
+        "levelno",
+        "lineno",
+        "message",
+        "module",
+        "msecs",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "thread",
+        "threadName",
+        "taskName",
+    }
+)
+
 
 class CustomJsonFormatter(logging.Formatter):
-    """JSON log formatter (stdlib only) emitting one JSON object per record."""
+    """JSON log formatter (stdlib only) emitting one JSON object per record.
+
+    Anything passed via `extra={...}` (or attached by a logging Filter) gets
+    serialised into the top-level JSON object alongside the fixed fields.
+    Previously these were silently dropped, making structured log queries on
+    Fly/Sentry essentially impossible — `extra={"request_id": ..., "user_id":
+    ...}` ended up nowhere.
+    """
 
     def format(self, record: logging.LogRecord) -> str:
         log_record: dict[str, Any] = {
@@ -22,7 +68,38 @@ class CustomJsonFormatter(logging.Formatter):
         }
         if record.exc_info:
             log_record["exception"] = self.formatException(record.exc_info)
+
+        # Serialise everything from `extra={...}`. We coerce non-JSON-native
+        # values via str() rather than letting json.dumps raise — losing
+        # exact representation is fine; losing the whole log line is not.
+        for key, value in record.__dict__.items():
+            if key in _RESERVED_LOG_RECORD_ATTRS or key.startswith("_"):
+                continue
+            if key in log_record:
+                # Don't let `extra` clobber the fixed columns above.
+                continue
+            try:
+                json.dumps(value)
+                log_record[key] = value
+            except (TypeError, ValueError):
+                log_record[key] = repr(value)
+
         return json.dumps(log_record)
+
+
+class RequestIdFilter(logging.Filter):
+    """Inject the current request_id ContextVar onto every LogRecord.
+
+    Set by LoggingMiddleware at the start of each request and consumed by
+    CustomJsonFormatter via the regular `extra`-style attribute scan above.
+    Logs emitted outside any request (startup, background tasks) get a
+    `request_id` of None — better than silently lacking the field.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if not hasattr(record, "request_id"):
+            record.request_id = request_id_var.get()
+        return True
 
 
 class SensitiveDataFilter(logging.Filter):
@@ -106,6 +183,8 @@ def setup_logger(name: str | None = None, level: str = "INFO") -> logging.Logger
 
     # Add sensitive data filter
     handler.addFilter(SensitiveDataFilter())
+    # Inject the per-request correlation ID set by LoggingMiddleware.
+    handler.addFilter(RequestIdFilter())
 
     # Add handler to logger
     logger.addHandler(handler)

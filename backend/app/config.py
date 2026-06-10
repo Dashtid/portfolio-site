@@ -214,6 +214,18 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
+    # Database — slow-query observability and Postgres statement_timeout.
+    # SLOW_QUERY_THRESHOLD_MS: queries slower than this log at WARNING with
+    #   the bound SQL + duration. 250ms is a reasonable starting point for a
+    #   small SQLite-backed portfolio; lower it once we have a Postgres
+    #   baseline.
+    # DB_STATEMENT_TIMEOUT_MS: hard cap enforced by the database itself
+    #   (Postgres SET statement_timeout). SQLite has no equivalent; the
+    #   setting is silently no-op there. 5_000 ms (5s) caps any single
+    #   request-path query well below typical web request timeouts.
+    SLOW_QUERY_THRESHOLD_MS: int = 250
+    DB_STATEMENT_TIMEOUT_MS: int = 5000
+
     # Analytics
     ANALYTICS_ENABLED: bool = True
 

@@ -35,9 +35,10 @@ class Company(Base):
     responsibilities = Column(JSON, nullable=True)  # List of responsibilities
     technologies = Column(JSON, nullable=True)  # List of technologies used
 
-    # Timestamps
+    # Timestamps — DB-01: server_default on updated_at so INSERTs populate
+    # the column instead of leaving it NULL until first UPDATE.
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     projects = relationship("Project", back_populates="company", cascade="all, delete-orphan")

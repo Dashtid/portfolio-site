@@ -34,9 +34,10 @@ class Project(Base):
     map_title = Column(String(255), nullable=True)
     responsibilities = Column(JSON, nullable=True)
 
-    # Timestamps
+    # Timestamps — DB-01: server_default on updated_at so INSERTs populate
+    # the column instead of leaving it NULL until first UPDATE.
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     company = relationship("Company", back_populates="projects")

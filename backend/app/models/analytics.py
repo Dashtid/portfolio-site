@@ -4,7 +4,7 @@ Analytics model for tracking page views
 
 import uuid
 
-from sqlalchemy import Column, DateTime, String, Text, func
+from sqlalchemy import Column, DateTime, Index, String, Text, func
 
 from app.database import Base
 
@@ -23,3 +23,13 @@ class PageView(Base):
 
     # Timestamps — indexed for analytics time-range queries
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    # PERF-03: composite indexes for the analytics aggregation queries in
+    # app/api/v1/analytics.py. Both endpoints filter on `created_at >= cutoff`
+    # and then group by either page_path or country; without these indexes
+    # SQLite/Postgres do a full scan of page_views before the GROUP BY. The
+    # column order (created_at first) matches the WHERE-then-GROUP-BY pattern.
+    __table_args__ = (
+        Index("ix_page_views_created_path", "created_at", "page_path"),
+        Index("ix_page_views_created_country", "created_at", "country"),
+    )

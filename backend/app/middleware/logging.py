@@ -2,6 +2,7 @@
 Logging middleware for request/response tracking
 """
 
+import re
 import time
 import uuid
 from collections.abc import Callable
@@ -9,18 +10,41 @@ from collections.abc import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.utils.logger import get_logger
+from app.utils.logger import get_logger, request_id_var
 
 logger = get_logger(__name__)
+
+# Accept only safe upstream IDs so a malicious client can't inject log
+# control characters / poison structured-log queries via X-Request-ID. UUIDs
+# and short opaque traceparent-style IDs are common; we accept up to 64 chars
+# of [A-Za-z0-9_-].
+_UPSTREAM_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+def _resolve_request_id(request: Request) -> str:
+    """Reuse an upstream X-Request-ID if one is supplied and well-formed.
+
+    Lets a CDN / load balancer / upstream service correlate a single user
+    action across multiple backend hops. If absent or malformed we mint a
+    fresh UUID — never trust unconstrained input into structured logs.
+    """
+    upstream = request.headers.get("X-Request-ID")
+    if isinstance(upstream, str) and _UPSTREAM_REQUEST_ID_RE.match(upstream):
+        return upstream
+    return str(uuid.uuid4())
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for structured request/response logging"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Generate unique request ID
-        request_id = str(uuid.uuid4())
+        # Resolve request ID (upstream X-Request-ID if valid, else new UUID).
+        request_id = _resolve_request_id(request)
         request.state.request_id = request_id
+        # Publish to ContextVar so RequestIdFilter (in logger setup) can
+        # tag every log line emitted during this request without each call
+        # site needing to pass `extra={"request_id": ...}` manually.
+        token = request_id_var.set(request_id)
 
         # Start timer
         start_time = time.time()
@@ -40,44 +64,52 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         # Process request
         try:
-            response: Response = await call_next(request)
+            try:
+                response: Response = await call_next(request)
 
-            # Calculate duration
-            duration_ms = round((time.time() - start_time) * 1000, 2)
+                # Calculate duration
+                duration_ms = round((time.time() - start_time) * 1000, 2)
 
-            # Log response
-            logger.info(
-                "Request completed",
-                extra={
-                    "request_id": request_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                    "duration_ms": duration_ms,
-                },
-            )
+                # Log response. The ContextVar-backed RequestIdFilter also
+                # injects request_id onto every record this request emits;
+                # we keep it in the explicit extra here so downstream log
+                # consumers and existing assertions still see it directly.
+                logger.info(
+                    "Request completed",
+                    extra={
+                        "request_id": request_id,
+                        "method": request.method,
+                        "path": request.url.path,
+                        "status_code": response.status_code,
+                        "duration_ms": duration_ms,
+                    },
+                )
 
-            # Add request ID to response headers
-            response.headers["X-Request-ID"] = request_id
-        except Exception as exc:
-            # Calculate duration
-            duration_ms = round((time.time() - start_time) * 1000, 2)
+                # Add request ID to response headers
+                response.headers["X-Request-ID"] = request_id
+            except Exception as exc:
+                # Calculate duration
+                duration_ms = round((time.time() - start_time) * 1000, 2)
 
-            # Log error
-            logger.error(
-                "Request failed",
-                extra={
-                    "request_id": request_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "duration_ms": duration_ms,
-                    "error": str(exc),
-                    "error_type": type(exc).__name__,
-                },
-                exc_info=True,
-            )
+                # Log error
+                logger.error(
+                    "Request failed",
+                    extra={
+                        "request_id": request_id,
+                        "method": request.method,
+                        "path": request.url.path,
+                        "duration_ms": duration_ms,
+                        "error": str(exc),
+                        "error_type": type(exc).__name__,
+                    },
+                    exc_info=True,
+                )
 
-            # Re-raise exception
-            raise
-        else:
-            return response
+                # Re-raise exception
+                raise
+            else:
+                return response
+        finally:
+            # Reset the ContextVar so log lines emitted *after* this request
+            # (e.g. from a background task) don't inherit a stale ID.
+            request_id_var.reset(token)

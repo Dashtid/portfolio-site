@@ -3,7 +3,9 @@ Database connection and session management
 """
 
 import os
+import time
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
@@ -15,6 +17,7 @@ logger = get_logger(__name__)
 
 # Determine if SQLite (which doesn't support pooling well with async)
 is_sqlite = settings.async_database_url.startswith("sqlite")
+is_postgres = settings.async_database_url.startswith("postgresql")
 
 # Create async engine with production-ready settings
 # SQLite doesn't support pool_size/max_overflow - must exclude them entirely
@@ -37,7 +40,58 @@ else:
         }
     )
 
+if is_postgres:
+    # Postgres server-side statement_timeout — caps the slowest single query at
+    # DB_STATEMENT_TIMEOUT_MS so a runaway sequential scan can't hold a request
+    # open for minutes. Set via asyncpg's `server_settings` connect arg, which
+    # issues `SET LOCAL statement_timeout` per session at checkout. SQLite has
+    # no equivalent — the same setting is silently a no-op there.
+    _engine_kwargs.setdefault("connect_args", {})
+    _engine_kwargs["connect_args"].setdefault("server_settings", {})
+    _engine_kwargs["connect_args"]["server_settings"]["statement_timeout"] = str(
+        settings.DB_STATEMENT_TIMEOUT_MS
+    )
+
 engine = create_async_engine(settings.async_database_url, **_engine_kwargs)
+
+
+# Slow-query observability. before_cursor_execute stamps a start time on the
+# connection's info dict; after_cursor_execute computes the delta and logs a
+# WARNING line for anything over SLOW_QUERY_THRESHOLD_MS. The structured
+# payload (sql, duration_ms, params count) flows through the JSON formatter so
+# Fly/Sentry queries can filter on `slow_query=true`.
+#
+# Hooked on the underlying sync engine because SQLAlchemy fires DBAPI events
+# at that level; async engines wrap a sync engine under the hood.
+@event.listens_for(engine.sync_engine, "before_cursor_execute")
+def _slow_query_before(_conn, _cursor, _statement, _parameters, context, _executemany) -> None:
+    context._query_start_time = time.perf_counter()
+
+
+@event.listens_for(engine.sync_engine, "after_cursor_execute")
+def _slow_query_after(_conn, _cursor, statement, parameters, context, _executemany) -> None:
+    start = getattr(context, "_query_start_time", None)
+    if start is None:
+        return
+    duration_ms = (time.perf_counter() - start) * 1000.0
+    if duration_ms < settings.SLOW_QUERY_THRESHOLD_MS:
+        return
+    # Cap the SQL preview so a huge IN (...) clause doesn't blow up the log
+    # line. The full query is still in pg_stat_statements / equivalent.
+    sql_preview = (statement or "").strip()
+    if len(sql_preview) > 500:
+        sql_preview = sql_preview[:500] + "...<truncated>"
+    logger.warning(
+        "Slow query detected",
+        extra={
+            "slow_query": True,
+            "duration_ms": round(duration_ms, 2),
+            "threshold_ms": settings.SLOW_QUERY_THRESHOLD_MS,
+            "sql": sql_preview,
+            "params_count": len(parameters) if parameters else 0,
+        },
+    )
+
 
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(

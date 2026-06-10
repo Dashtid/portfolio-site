@@ -28,7 +28,8 @@ class Document(Base):
 
     __tablename__ = "documents"
 
-    id = Column(String, primary_key=True, index=True)
+    # DB-09: PRIMARY KEY already implies an index; index=True dropped.
+    id = Column(String, primary_key=True)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     document_type = Column(String, nullable=False)  # thesis, paper, report, etc.

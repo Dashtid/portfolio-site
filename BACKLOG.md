@@ -140,23 +140,23 @@ focus is performance, backend correctness, observability, and admin interfaces.
 | BACKEND-BUGS-08 | `github_service.get_repo_commits` now uses `datetime.now(UTC)` and explicit `Z` ISO suffix; window no longer drifts by local UTC offset | ✅ done |
 | INFRA-CONFIG-01 | `DATABASE_URL = sqlite+aiosqlite:////data/portfolio.db` added to fly.toml `[env]` — DB now persists across deploys (was on ephemeral container FS) | ✅ done |
 
-**Sprint 3 — Observability & DB foundations** (3 sessions). Make perf measurable.
+**Sprint 3 — Observability & DB foundations** ✅ **SHIPPED 2026-06-10**. 13 items + 1 new alembic migration (idempotent per DB-07) + 3 new logger tests + 3 new request-ID propagation tests. 657 backend tests pass at 84.92% coverage.
 
-| ID | Summary | Effort |
+| ID | Summary | Status |
 |----|---------|--------|
-| BACKEND-OBSERVABILITY-01 | Fix JSON log formatter dropping every `extra={}` field | s |
-| BACKEND-OBSERVABILITY-05 | Request-ID via `ContextVar`, accept upstream header | s |
-| BACKEND-OBSERVABILITY-02 | Sentry integrations: FastAPI, SQLAlchemy, asyncio, httpx | s |
-| BACKEND-OBSERVABILITY-04 | Wire `sentry_sdk.capture_exception` in 500 + error paths | xs |
-| BACKEND-OBSERVABILITY-03 | SQLAlchemy slow-query logging + `statement_timeout` | m |
-| BACKEND-PERF-02 | Index `OAuthState.expires_at` | xs |
-| BACKEND-PERF-03 | Composite indexes for `PageView` analytics aggregations | s |
-| BACKEND-DB-01 | `server_default` on all `updated_at` columns | s |
-| BACKEND-DB-02 | Index `Education.is_certification` | xs |
-| BACKEND-DB-06 | `OAuthState.created_at` `server_default` | xs |
-| BACKEND-DB-05 | Bound length on `User.email`/`github_id`/`username` | xs |
-| BACKEND-DB-07 | Idempotent migration with existence guards | s |
-| BACKEND-DB-09 | Remove redundant `index=True` on PK columns | xs |
+| BACKEND-OBSERVABILITY-01 | `CustomJsonFormatter` now serialises every `extra={}` field (and Filter-injected attribute) onto the top-level JSON object; reserved LogRecord attrs guarded against; non-JSON-native values fall back to `repr()` | ✅ done |
+| BACKEND-OBSERVABILITY-05 | Per-request correlation ID via `request_id_var: ContextVar`. `LoggingMiddleware` accepts an upstream `X-Request-ID` (whitelisted `[A-Za-z0-9_-]{1,64}` against log injection) and mints a UUID otherwise; `RequestIdFilter` auto-injects the value onto every emitted record so call sites don't need explicit `extra=` | ✅ done |
+| BACKEND-OBSERVABILITY-02 | Sentry init now passes explicit `integrations=[Starlette, FastApi, Sqlalchemy, Httpx, Asyncio]` — deterministic across SDK versions and visible in code review | ✅ done |
+| BACKEND-OBSERVABILITY-04 | `ErrorTrackingMiddleware._capture_to_sentry()` belt-and-braces fires `sentry_sdk.capture_exception` on every 5xx HTTPException and every unhandled exception with `request_id`/`method`/`path` tags; `track_error()` helper also captures with extras as scope context | ✅ done |
+| BACKEND-OBSERVABILITY-03 | SQLAlchemy `before_cursor_execute`/`after_cursor_execute` event listeners log a structured `slow_query=true` line at WARNING for queries exceeding `SLOW_QUERY_THRESHOLD_MS` (default 250ms); SQL preview truncated at 500 chars; new `DB_STATEMENT_TIMEOUT_MS` setting (default 5s) wires `statement_timeout` through asyncpg `server_settings` in Postgres (silently no-op on SQLite) | ✅ done |
+| BACKEND-PERF-02 | `OAuthState.expires_at` indexed; the periodic `cleanup_oauth_states_periodically()` 5-min sweep no longer scans the full table | ✅ done |
+| BACKEND-PERF-03 | Composite `ix_page_views_(created_at, page_path)` and `ix_page_views_(created_at, country)` — both analytics aggregation queries in `app/api/v1/analytics.py` now drive their WHERE+GROUP-BY off an index | ✅ done |
+| BACKEND-DB-01 | `server_default=func.now()` added to `users.updated_at`, `companies.updated_at`, `projects.updated_at` — INSERTs now populate the column instead of leaving it NULL until first UPDATE | ✅ done |
+| BACKEND-DB-02 | `Education.is_certification` indexed — small index, but the public listing splits on this column on every page load | ✅ done |
+| BACKEND-DB-06 | `OAuthState.created_at` gets `server_default=func.now()` alongside its existing Python-side `default=` — out-of-band INSERTs are now correct | ✅ done |
+| BACKEND-DB-05 | `User.github_id` bounded to `String(20)`, `username` to `String(39)` (GitHub policy max), `email` to `String(254)` (RFC 5321), `name` to `String(255)`, `avatar_url` to `String(500)` — prevents accidental multi-MB inserts on Postgres | ✅ done |
+| BACKEND-DB-07 | New `c3f1d96a4b27_sprint_3_schema.py` is fully idempotent via `_create_index_if_absent` / `_drop_index_if_present` / column existence guards driven by the SQLAlchemy inspector; safe to re-run against fresh DBs (where `Base.metadata.create_all` already created the indexes) and stamped DBs alike | ✅ done |
+| BACKEND-DB-09 | Dropped redundant explicit `index=True` from `OAuthState.state`, `Education.id`, `Document.id` — all are PKs and the implicit PK index was duplicated by Postgres as a second btree | ✅ done |
 
 **Sprint 4 — Backend performance** (3 sessions). Cut tail latency on hot paths.
 

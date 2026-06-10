@@ -11,6 +11,11 @@ import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.httpx import HttpxIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse
@@ -33,7 +38,13 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Initialize Sentry for error tracking and performance monitoring
+# Initialize Sentry for error tracking and performance monitoring.
+# We explicitly enumerate integrations rather than relying on Sentry's
+# auto-enable so the exact set is visible in code review and consistent
+# across SDK versions. SqlalchemyIntegration adds spans per query (paired
+# with Sprint 3 slow-query logging), HttpxIntegration covers outbound
+# GitHub API calls, and AsyncioIntegration links task-spawn contexts so
+# spans don't get orphaned across `asyncio.create_task` boundaries.
 if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
@@ -43,6 +54,13 @@ if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
         profiles_sample_rate=settings.SENTRY_PROFILES_SAMPLE_RATE,
         send_default_pii=False,
         enable_tracing=True,
+        integrations=[
+            StarletteIntegration(),
+            FastApiIntegration(),
+            SqlalchemyIntegration(),
+            HttpxIntegration(),
+            AsyncioIntegration(),
+        ],
     )
     logger.info("Sentry initialized", extra={"environment": settings.ENVIRONMENT})
 
