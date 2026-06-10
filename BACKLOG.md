@@ -175,22 +175,20 @@ focus is performance, backend correctness, observability, and admin interfaces.
 | FRONTEND-PERF-07 | Replaced four `<i class="bi bi-*">` tags in `ExperienceDetail.vue` with inline Bootstrap-Icons SVGs (geo-alt, calendar, globe, arrow-left). Fixes a latent rendering bug — `bootstrap-icons` was never bundled, so the icons were invisible — and locks the icon source into the chunk. | ✅ done |
 | FRONTEND-PERF-08 | Deleted unused 854KB `public/images/profile.png`; swapped the `<picture>` fallback `<img>` src to `/images/optimized/cropped.png` (343KB). ~97% of clients hit AVIF/WebP branches above so this is the rare-fallback path; still applies to Lighthouse's total-payload budget. | ✅ done |
 
-**Sprint 5 — Admin console part 1** (3 sessions). Skills, Metrics, Errors UIs +
-admin bug cluster.
+**Sprint 5 — Admin console part 1** ✅ **SHIPPED 2026-06-10**. 10 items (3 new admin views/nav additions + 6 bug fixes + new AdminAnalytics spec). 568 frontend tests pass (+18); 657 backend tests pass at 84.75% coverage.
 
-| ID | Summary | Effort |
+| ID | Summary | Status |
 |----|---------|--------|
-| BACKEND-ADMIN-02 | Add `AdminEducation` to admin nav | xs |
-| BACKEND-ADMIN-01 | Build `AdminSkills.vue` (backend CRUD already exists) | m |
-| BACKEND-ADMIN-03 | Build `AdminMetrics.vue` | m |
-| ~~BACKEND-ADMIN-05~~ | ~~Frontend-errors persistence~~ — **DROPPED** (covered by Sprint 3 BACKEND-OBSERVABILITY-04 wiring Sentry properly per Q4 decision) | — |
-| FRONTEND-BUGS-01 | `isSaving` guard on admin Save buttons | s |
-| FRONTEND-BUGS-11 | `deletingIds` guard on `AdminCompanies` delete | xs |
-| FRONTEND-BUGS-02 | Client-side validation on `AdminEducation` form | s |
-| FRONTEND-BUGS-03 | Fix `AdminEducation` `order` → `order_index` field name | xs |
-| FRONTEND-BUGS-04 | Disable `GitHubStats` Retry button while loading | xs |
-| FRONTEND-BUGS-07 | Fix `useFocusTrap` + `AdminFormModal` watcher | xs |
-| BACKEND-ADMIN-07 / FRONTEND-TESTS-01 | `AdminAnalytics.spec.ts` (combined) | m |
+| BACKEND-ADMIN-02 | Added `AdminEducation` + `AdminSkills` + `AdminMetrics` links to admin nav (`AdminDashboard.vue`). Nav order is Dashboard → Experience → Projects → Skills → Education → Analytics → Metrics; updated the dashboard nav-count test to 7 links. | ✅ done |
+| BACKEND-ADMIN-01 | Built `AdminSkills.vue` (table view + add/edit modal with proficiency slider, category dropdown drawn from a curated taxonomy, year-of-experience field, order_index, full validation parity with AdminCompanies/Projects). Registered `/admin/skills` route. | ✅ done |
+| BACKEND-ADMIN-03 | Built `AdminMetrics.vue` surfacing the Sprint 4 `/api/v1/metrics` payload: summary cards (total requests / endpoints / errors / error rate), per-status pills (2xx/3xx/4xx/5xx coloured), business counters table, per-endpoint latency table sorted by p99 with `latency-warn`/`latency-slow` highlighting at 500ms/1s. 10s auto-refresh + a Reset button gated on confirm. | ✅ done |
+| FRONTEND-BUGS-01 | `isSaving` re-entrancy guard added to AdminCompanies / AdminProjects / AdminEducation / AdminSkills save handlers; the submit + cancel buttons are `:disabled="isSaving"` and the submit shows "Saving…" while pending. | ✅ done |
+| FRONTEND-BUGS-11 | `deletingIds: Set<string>` per-row guard on AdminCompanies + AdminProjects. AdminCardActions accepts a `deleting` prop that disables both its edit and delete buttons (with `aria-busy`) while a delete is in-flight, preventing the double-click → double-DELETE race. | ✅ done |
+| FRONTEND-BUGS-02 | AdminEducation form now mirrors AdminCompanies/Projects validation: required institution + degree, 200-char caps, end_date >= start_date, 5000-char description cap, order_index >= 0. Per-field inline error messages + an aria-live error summary. | ✅ done |
+| FRONTEND-BUGS-03 | Renamed `order` → `order_index` across AdminEducation.vue (form data, v-model, table column, payload) so the field name matches the Education model (`Sprint 3`). Updated the AdminEducation spec fixtures to use the new field. | ✅ done |
+| FRONTEND-BUGS-04 | GitHubStats `Retry` button now `:disabled="loading"` + `aria-busy` and renders "Retrying…" while pending. Disabled style added. | ✅ done |
+| FRONTEND-BUGS-07 | `useFocusTrap` watch in AdminFormModal is now `{ immediate: true, flush: 'post' }` — activates the trap even when the modal mounts already-open (e.g. parent restores edit state after navigation), and `flush: 'post'` defers until the DOM update so `modalRef` is populated. | ✅ done |
+| BACKEND-ADMIN-07 / FRONTEND-TESTS-01 | New `AdminAnalytics.spec.ts` with 18 tests covering: rendering of the four summary cards, formatting (m/s duration, bounce rate %), SVG chart + axis labels, range tab default + switching + clamping (1y → visitor stats capped at 90), loading/error/empty states, retry button, lifecycle. Locale-independent assertions (CI runner is sv-SE). | ✅ done |
 
 **Sprint 6 — Admin part 2 + frontend perf + test backfill** (3 sessions).
 

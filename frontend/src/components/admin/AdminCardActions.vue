@@ -1,6 +1,11 @@
 <template>
   <div class="card-actions">
-    <button class="action-btn edit-btn" :aria-label="`Edit ${itemName}`" @click="emit('edit')">
+    <button
+      class="action-btn edit-btn"
+      :aria-label="`Edit ${itemName}`"
+      :disabled="deleting"
+      @click="emit('edit')"
+    >
       <svg
         class="icon-sm"
         viewBox="0 0 24 24"
@@ -16,6 +21,8 @@
     <button
       class="action-btn delete-btn"
       :aria-label="`Delete ${itemName}`"
+      :aria-busy="deleting"
+      :disabled="deleting"
       @click="emit('delete')"
     >
       <svg
@@ -35,9 +42,12 @@
 <script setup lang="ts">
 interface Props {
   itemName: string
+  // BUGS-11: parent passes deletingIds.has(row.id) so a click on the trash
+  // icon during a pending DELETE no-ops instead of firing a duplicate.
+  deleting?: boolean
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), { deleting: false })
 
 const emit = defineEmits<{
   edit: []
@@ -72,10 +82,15 @@ const emit = defineEmits<{
   color: white;
 }
 
-.delete-btn:hover {
+.delete-btn:hover:not(:disabled) {
   background: var(--color-red-600, #dc2626);
   border-color: var(--color-red-600, #dc2626);
   color: white;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .icon-sm {

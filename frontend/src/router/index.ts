@@ -12,7 +12,9 @@ const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminCompanies = () => import('../views/admin/AdminCompanies.vue')
 const AdminEducation = () => import('../views/admin/AdminEducation.vue')
 const AdminProjects = () => import('../views/admin/AdminProjects.vue')
+const AdminSkills = () => import('../views/admin/AdminSkills.vue')
 const AdminAnalytics = () => import('../views/admin/AdminAnalytics.vue')
+const AdminMetrics = () => import('../views/admin/AdminMetrics.vue')
 
 export const DEFAULT_TITLE = 'David Dashti | Cybersecurity in Healthcare'
 
@@ -62,10 +64,22 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Manage Projects | David Dashti' }
       },
       {
+        path: 'skills',
+        name: 'admin-skills',
+        component: AdminSkills,
+        meta: { title: 'Manage Skills | David Dashti' }
+      },
+      {
         path: 'analytics',
         name: 'admin-analytics',
         component: AdminAnalytics,
         meta: { title: 'Analytics | David Dashti' }
+      },
+      {
+        path: 'metrics',
+        name: 'admin-metrics',
+        component: AdminMetrics,
+        meta: { title: 'Performance Metrics | David Dashti' }
       }
     ]
   }

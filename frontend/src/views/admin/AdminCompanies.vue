@@ -31,6 +31,7 @@
             <h3 class="company-name">{{ company.name }}</h3>
             <AdminCardActions
               :item-name="company.name"
+              :deleting="deletingIds.has(company.id)"
               @edit="editCompany(company)"
               @delete="deleteCompany(company.id)"
             />
@@ -158,9 +159,12 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
-          <button type="submit" class="btn-save">
-            {{ editingCompany ? 'Update' : 'Add' }} Company
+          <button type="button" class="btn-cancel" :disabled="isSaving" @click="closeForm">
+            Cancel
+          </button>
+          <button type="submit" class="btn-save" :disabled="isSaving" :aria-busy="isSaving">
+            <span v-if="isSaving">Saving…</span>
+            <span v-else>{{ editingCompany ? 'Update' : 'Add' }} Company</span>
           </button>
         </div>
       </form>
@@ -195,6 +199,13 @@ interface CompanyFormData {
 // Data
 const companies = ref<Company[]>([])
 const loading = ref<boolean>(false)
+// BUGS-01: re-entrancy guard so a double-click on Save can't fire two
+// POSTs back-to-back. The button is also disabled visually while pending.
+const isSaving = ref<boolean>(false)
+// BUGS-11: per-row guard so a double-click on the delete icon can't fire
+// two DELETEs. AdminCardActions emits a synchronous click; without this the
+// second click reaches the API before fetchCompanies() removes the row.
+const deletingIds = ref<Set<string>>(new Set())
 const showAddForm = ref<boolean>(false)
 const editingCompany = ref<Company | null>(null)
 
@@ -306,6 +317,9 @@ const saveCompany = async (): Promise<void> => {
     return
   }
 
+  if (isSaving.value) return
+  isSaving.value = true
+
   try {
     // Ensure technologies is an array before stringifying
     const technologies = Array.isArray(form.value.technologies) ? form.value.technologies : []
@@ -329,14 +343,18 @@ const saveCompany = async (): Promise<void> => {
   } catch (error) {
     apiLogger.error('Error saving company:', error)
     toast.error('Failed to save company')
+  } finally {
+    isSaving.value = false
   }
 }
 
 const deleteCompany = async (id: string): Promise<void> => {
+  if (deletingIds.value.has(id)) return
   if (!confirm('Are you sure you want to delete this company?')) {
     return
   }
 
+  deletingIds.value.add(id)
   try {
     await apiClient.delete(`/api/v1/companies/${id}`)
     toast.success('Company deleted successfully')
@@ -344,6 +362,8 @@ const deleteCompany = async (id: string): Promise<void> => {
   } catch (error) {
     apiLogger.error('Error deleting company:', error)
     toast.error('Failed to delete company')
+  } finally {
+    deletingIds.value.delete(id)
   }
 }
 
@@ -593,10 +613,18 @@ onMounted((): void => {
   border: none;
 }
 
-.btn-save:hover {
+.btn-save:hover:not(:disabled) {
   background: var(--color-primary-dark, #1e40af);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.btn-cancel:disabled,
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Responsive */

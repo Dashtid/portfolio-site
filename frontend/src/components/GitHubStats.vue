@@ -7,7 +7,14 @@
 
     <div v-else-if="error" class="error-message">
       <p>Failed to load GitHub stats</p>
-      <button class="retry-button" @click="fetchGitHubStats">Retry</button>
+      <button
+        class="retry-button"
+        :disabled="loading"
+        :aria-busy="loading"
+        @click="fetchGitHubStats"
+      >
+        {{ loading ? 'Retrying…' : 'Retry' }}
+      </button>
     </div>
 
     <div v-else-if="stats" class="stats-container">
@@ -199,6 +206,14 @@ onUnmounted(() => {
   background: var(--primary-700, #1d4ed8);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.retry-button:disabled {
+  background: var(--primary-400, #60a5fa);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
 }
 
 .stats-container {

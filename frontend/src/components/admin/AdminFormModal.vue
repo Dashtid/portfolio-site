@@ -39,6 +39,11 @@ const emit = defineEmits<{
 const modalRef = ref<HTMLElement | null>(null)
 const { activate, deactivate } = useFocusTrap(modalRef)
 
+// BUGS-07: previously the watch was lazy, so mounting with `:open="true"`
+// (e.g. when a parent restores edit state after navigation) never fired
+// activate() and focus escaped the modal. `immediate: true` runs on setup;
+// `flush: 'post'` defers until after the DOM update so `modalRef.value` is
+// populated by the time activate() reads it.
 watch(
   () => props.open,
   isOpen => {
@@ -47,7 +52,8 @@ watch(
     } else {
       deactivate()
     }
-  }
+  },
+  { immediate: true, flush: 'post' }
 )
 </script>
 

@@ -43,11 +43,32 @@
         Projects
       </router-link>
       <router-link
+        to="/admin/skills"
+        class="nav-link"
+        :class="{ active: $route.path === '/admin/skills' }"
+      >
+        Skills
+      </router-link>
+      <router-link
+        to="/admin/education"
+        class="nav-link"
+        :class="{ active: $route.path === '/admin/education' }"
+      >
+        Education
+      </router-link>
+      <router-link
         to="/admin/analytics"
         class="nav-link"
         :class="{ active: $route.path === '/admin/analytics' }"
       >
         Analytics
+      </router-link>
+      <router-link
+        to="/admin/metrics"
+        class="nav-link"
+        :class="{ active: $route.path === '/admin/metrics' }"
+      >
+        Metrics
       </router-link>
     </nav>
 

@@ -56,7 +56,7 @@ describe('AdminEducation', () => {
       description: 'Specialized in AI and Machine Learning',
       is_certification: false,
       certificate_number: '',
-      order: 1
+      order_index: 1
     },
     {
       id: '2',
@@ -69,7 +69,7 @@ describe('AdminEducation', () => {
       description: '',
       is_certification: true,
       certificate_number: 'AWS-SAP-123456',
-      order: 2
+      order_index: 2
     },
     {
       id: '3',
@@ -82,7 +82,7 @@ describe('AdminEducation', () => {
       description: '',
       is_certification: false,
       certificate_number: '',
-      order: 0
+      order_index: 0
     }
   ]
 

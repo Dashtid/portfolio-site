@@ -33,6 +33,7 @@
             </div>
             <AdminCardActions
               :item-name="project.name"
+              :deleting="deletingIds.has(project.id)"
               @edit="editProject(project)"
               @delete="deleteProject(project.id)"
             />
@@ -209,9 +210,12 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn-cancel" @click="closeForm">Cancel</button>
-          <button type="submit" class="btn-save">
-            {{ editingProject ? 'Update' : 'Add' }} Project
+          <button type="button" class="btn-cancel" :disabled="isSaving" @click="closeForm">
+            Cancel
+          </button>
+          <button type="submit" class="btn-save" :disabled="isSaving" :aria-busy="isSaving">
+            <span v-if="isSaving">Saving…</span>
+            <span v-else>{{ editingProject ? 'Update' : 'Add' }} Project</span>
           </button>
         </div>
       </form>
@@ -270,6 +274,9 @@ const emptyForm = (): ProjectFormData => ({
 const projects = ref<Project[]>([])
 const companies = ref<Company[]>([])
 const loading = ref<boolean>(false)
+// BUGS-01 / 11: in-flight guards for Save and per-row Delete.
+const isSaving = ref<boolean>(false)
+const deletingIds = ref<Set<string>>(new Set())
 const showAddForm = ref<boolean>(false)
 const editingProject = ref<Project | null>(null)
 
@@ -382,6 +389,9 @@ const saveProject = async (): Promise<void> => {
     return
   }
 
+  if (isSaving.value) return
+  isSaving.value = true
+
   // Send empty optional strings as null so the backend doesn't store "" as
   // a value where None is meant. Lists stay as arrays — backend expects them.
   const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.trim())
@@ -416,13 +426,17 @@ const saveProject = async (): Promise<void> => {
   } catch (error) {
     apiLogger.error('Error saving project:', error)
     toast.error('Failed to save project')
+  } finally {
+    isSaving.value = false
   }
 }
 
 const deleteProject = async (id: string): Promise<void> => {
+  if (deletingIds.value.has(id)) return
   if (!confirm('Are you sure you want to delete this project?')) {
     return
   }
+  deletingIds.value.add(id)
   try {
     await apiClient.delete(`/api/v1/projects/${id}`)
     toast.success('Project deleted successfully')
@@ -430,6 +444,8 @@ const deleteProject = async (id: string): Promise<void> => {
   } catch (error) {
     apiLogger.error('Error deleting project:', error)
     toast.error('Failed to delete project')
+  } finally {
+    deletingIds.value.delete(id)
   }
 }
 
@@ -685,10 +701,18 @@ onMounted((): void => {
   border: none;
 }
 
-.btn-save:hover {
+.btn-save:hover:not(:disabled) {
   background: var(--color-primary-dark, #1e40af);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.btn-cancel:disabled,
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 640px) {

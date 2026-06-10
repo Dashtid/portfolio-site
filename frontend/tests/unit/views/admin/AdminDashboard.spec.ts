@@ -173,13 +173,17 @@ describe('AdminDashboard', () => {
       const wrapper = await createWrapper()
 
       const navLinks = wrapper.findAll('.nav-link')
-      expect(navLinks.length).toBe(4)
+      // Sprint 5: Skills + Education + Metrics joined the nav (ADMIN-01/02/03).
+      expect(navLinks.length).toBe(7)
 
       const linkTexts = navLinks.map(link => link.text())
       expect(linkTexts).toContain('Dashboard')
       expect(linkTexts).toContain('Experience')
       expect(linkTexts).toContain('Projects')
+      expect(linkTexts).toContain('Skills')
+      expect(linkTexts).toContain('Education')
       expect(linkTexts).toContain('Analytics')
+      expect(linkTexts).toContain('Metrics')
     })
 
     it('should have correct navigation hrefs', async () => {

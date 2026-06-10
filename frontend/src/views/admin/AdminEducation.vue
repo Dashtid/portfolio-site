@@ -19,8 +19,12 @@
             v-model="formData.institution"
             type="text"
             class="form-control"
+            :class="{ 'input-error': formErrors.institution }"
             required
           />
+          <span v-if="formErrors.institution" class="error-message">{{
+            formErrors.institution
+          }}</span>
         </div>
 
         <div class="form-group">
@@ -30,8 +34,10 @@
             v-model="formData.degree"
             type="text"
             class="form-control"
+            :class="{ 'input-error': formErrors.degree }"
             required
           />
+          <span v-if="formErrors.degree" class="error-message">{{ formErrors.degree }}</span>
         </div>
 
         <div class="form-group">
@@ -41,7 +47,11 @@
             v-model="formData.field_of_study"
             type="text"
             class="form-control"
+            :class="{ 'input-error': formErrors.field_of_study }"
           />
+          <span v-if="formErrors.field_of_study" class="error-message">{{
+            formErrors.field_of_study
+          }}</span>
         </div>
 
         <div class="row">
@@ -53,7 +63,11 @@
                 v-model="formData.start_date"
                 type="date"
                 class="form-control"
+                :class="{ 'input-error': formErrors.start_date }"
               />
+              <span v-if="formErrors.start_date" class="error-message">{{
+                formErrors.start_date
+              }}</span>
             </div>
           </div>
           <div class="col-md-6">
@@ -64,14 +78,25 @@
                 v-model="formData.end_date"
                 type="date"
                 class="form-control"
+                :class="{ 'input-error': formErrors.end_date }"
               />
+              <span v-if="formErrors.end_date" class="error-message">{{
+                formErrors.end_date
+              }}</span>
             </div>
           </div>
         </div>
 
         <div class="form-group">
           <label for="edu-location">Location</label>
-          <input id="edu-location" v-model="formData.location" type="text" class="form-control" />
+          <input
+            id="edu-location"
+            v-model="formData.location"
+            type="text"
+            class="form-control"
+            :class="{ 'input-error': formErrors.location }"
+          />
+          <span v-if="formErrors.location" class="error-message">{{ formErrors.location }}</span>
         </div>
 
         <div class="form-group">
@@ -81,7 +106,11 @@
             v-model="formData.description"
             class="form-control"
             rows="3"
+            :class="{ 'input-error': formErrors.description }"
           ></textarea>
+          <span v-if="formErrors.description" class="error-message">{{
+            formErrors.description
+          }}</span>
         </div>
 
         <div class="form-check mb-3">
@@ -108,17 +137,36 @@
           <label for="edu-order">Display Order</label>
           <input
             id="edu-order"
-            v-model.number="formData.order"
+            v-model.number="formData.order_index"
             type="number"
             class="form-control"
             min="0"
+            :class="{ 'input-error': formErrors.order_index }"
           />
+          <span v-if="formErrors.order_index" class="error-message">{{
+            formErrors.order_index
+          }}</span>
+        </div>
+
+        <!-- Inline error summary so a failed validation pass is visible even
+             without scrolling to the offending field. -->
+        <div
+          v-if="Object.keys(formErrors).length"
+          class="error-summary"
+          role="alert"
+          aria-live="polite"
+        >
+          Please fix the highlighted field{{ Object.keys(formErrors).length === 1 ? '' : 's' }}
+          before saving.
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" @click="closeForm">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            {{ editingEducation ? 'Update' : 'Add' }} Education
+          <button type="button" class="btn btn-secondary" :disabled="isSaving" @click="closeForm">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" :disabled="isSaving" :aria-busy="isSaving">
+            <span v-if="isSaving">Saving…</span>
+            <span v-else>{{ editingEducation ? 'Update' : 'Add' }} Education</span>
           </button>
         </div>
       </form>
@@ -148,7 +196,7 @@
                 {{ formatDate(edu.start_date) }} -
                 {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
               </td>
-              <td>{{ edu.order }}</td>
+              <td>{{ edu.order_index }}</td>
               <td>
                 <button class="btn btn-sm btn-warning me-2" @click="editEducation(edu)">
                   Edit
@@ -182,7 +230,7 @@
               <td>{{ cert.degree }}</td>
               <td>{{ cert.certificate_number || '-' }}</td>
               <td>{{ cert.end_date ? formatDate(cert.end_date) : '-' }}</td>
-              <td>{{ cert.order }}</td>
+              <td>{{ cert.order_index }}</td>
               <td>
                 <button class="btn btn-sm btn-warning me-2" @click="editEducation(cert)">
                   Edit
@@ -212,7 +260,7 @@ import AdminFormModal from '@/components/admin/AdminFormModal.vue'
 
 const toast = useToast()
 
-// Education form interface
+// Education form interface (BUGS-03: backend column is order_index, not order)
 interface EducationFormData {
   id?: string
   institution: string
@@ -224,7 +272,7 @@ interface EducationFormData {
   description: string
   is_certification: boolean
   certificate_number: string
-  order: number
+  order_index: number
 }
 
 const authStore = useAuthStore()
@@ -233,6 +281,8 @@ const router = useRouter()
 const showForm = ref<boolean>(false)
 const editingEducation = ref<EducationFormData | null>(null)
 const educationList = ref<EducationFormData[]>([])
+// BUGS-01: re-entrancy guard on Save.
+const isSaving = ref<boolean>(false)
 
 const formData = ref<EducationFormData>({
   institution: '',
@@ -244,8 +294,55 @@ const formData = ref<EducationFormData>({
   description: '',
   is_certification: false,
   certificate_number: '',
-  order: 0
+  order_index: 0
 })
+
+// BUGS-02: client-side validation parity with AdminCompanies / AdminProjects.
+// We mirror the backend's String(200)/Text limits so the user sees the
+// failure inline instead of as a 422 toast after a round-trip.
+const formErrors = ref<Record<string, string>>({})
+
+const validateForm = (): boolean => {
+  formErrors.value = {}
+
+  if (!formData.value.institution.trim()) {
+    formErrors.value.institution = 'Institution is required'
+  } else if (formData.value.institution.length > 200) {
+    formErrors.value.institution = 'Institution must be 200 characters or less'
+  }
+
+  if (!formData.value.degree.trim()) {
+    formErrors.value.degree = 'Degree/certification name is required'
+  } else if (formData.value.degree.length > 200) {
+    formErrors.value.degree = 'Degree must be 200 characters or less'
+  }
+
+  if (formData.value.field_of_study && formData.value.field_of_study.length > 200) {
+    formErrors.value.field_of_study = 'Field of study must be 200 characters or less'
+  }
+
+  if (formData.value.location && formData.value.location.length > 200) {
+    formErrors.value.location = 'Location must be 200 characters or less'
+  }
+
+  if (formData.value.end_date && formData.value.start_date) {
+    const start = new Date(formData.value.start_date)
+    const end = new Date(formData.value.end_date)
+    if (end < start) {
+      formErrors.value.end_date = 'End date must be on or after start date'
+    }
+  }
+
+  if (formData.value.description && formData.value.description.length > 5000) {
+    formErrors.value.description = 'Description must be 5000 characters or less'
+  }
+
+  if (formData.value.order_index < 0) {
+    formErrors.value.order_index = 'Display order must be 0 or greater'
+  }
+
+  return Object.keys(formErrors.value).length === 0
+}
 
 // AbortController for request cancellation
 let abortController: AbortController | null = null
@@ -279,6 +376,13 @@ const fetchEducation = async (): Promise<void> => {
 }
 
 const saveEducation = async (): Promise<void> => {
+  if (!validateForm()) {
+    return
+  }
+
+  if (isSaving.value) return
+  isSaving.value = true
+
   try {
     if (editingEducation.value) {
       await api.put(`/education/${editingEducation.value.id}/`, formData.value)
@@ -292,6 +396,8 @@ const saveEducation = async (): Promise<void> => {
   } catch (error) {
     apiLogger.error('Error saving education:', error)
     toast.error('Failed to save education')
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -318,6 +424,7 @@ const deleteEducation = async (id: string | undefined): Promise<void> => {
 const closeForm = (): void => {
   showForm.value = false
   editingEducation.value = null
+  formErrors.value = {}
   formData.value = {
     institution: '',
     degree: '',
@@ -328,7 +435,7 @@ const closeForm = (): void => {
     description: '',
     is_certification: false,
     certificate_number: '',
-    order: 0
+    order_index: 0
   }
 }
 
@@ -389,6 +496,45 @@ onUnmounted(() => {
   padding: 0.5rem;
   border: 1px solid var(--color-gray-300, #dee2e6);
   border-radius: 4px;
+}
+
+/* BUGS-02 inline validation styling, mirrors AdminCompanies/AdminProjects. */
+.input-error {
+  border-color: #dc2626 !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+.error-message {
+  display: block;
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.error-summary {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(220, 38, 38, 0.08);
+  border-left: 3px solid #dc2626;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+[data-theme='dark'] .input-error {
+  border-color: #f87171 !important;
+}
+
+[data-theme='dark'] .error-message {
+  color: #f87171;
+}
+
+[data-theme='dark'] .error-summary {
+  background: rgba(248, 113, 113, 0.12);
+  border-left-color: #f87171;
+  color: #fca5a5;
 }
 
 .form-actions {
