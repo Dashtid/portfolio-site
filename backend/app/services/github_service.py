@@ -5,7 +5,7 @@ GitHub API service for fetching live project statistics
 import asyncio
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -205,12 +205,21 @@ class GitHubService:
     async def get_repo_commits(self, owner: str, repo: str, since: datetime | None = None) -> int:
         """Get commit count for a repository."""
         if not since:
-            since = datetime.now() - timedelta(days=365)  # Default to last year
+            since = datetime.now(UTC) - timedelta(days=365)  # Default to last year
+
+        # GitHub's `since` is documented as UTC. An offset-naive isoformat() on
+        # a non-UTC host silently shifts the window. Pin the suffix to Z so
+        # we're explicit regardless of how `since` was constructed.
+        since_param = (
+            since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+            if since.tzinfo is not None
+            else since.strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
 
         response = await self._request_with_backoff(
             "GET",
             f"{self.base_url}/repos/{owner}/{repo}/commits",
-            params={"since": since.isoformat(), "per_page": 1},
+            params={"since": since_param, "per_page": 1},
         )
 
         if response is None:

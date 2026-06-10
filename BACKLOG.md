@@ -122,22 +122,23 @@ focus is performance, backend correctness, observability, and admin interfaces.
 
 - **DEAD-07b** (LOW, deferred): `github_service.py` carries three now-orphaned methods (`get_project_stats`, `get_repo_details`, `get_repo_commits`) plus their unit-test classes in `test_github_service.py`. Deleted alongside endpoints would have created significant test churn (>200 lines across multiple classes); deferring as a focused follow-up.
 - **CONTENT-001** (HIGH, ✅ done): dashti.se experience card showed "Security Specialist & System Developer / Sep 2022 - Present" — wrong title and start date. Root cause: HomeView.vue's static fallback was stale and the live SSG build is rendering it because the production API fetch is failing (see INFRA-002 below). Updated the fallback to match the resume (Hermes May 2024 - present, QA/RA & Security Specialist + Philips 2022-2024 + Karolinska 2021); added an education fallback that includes Security+ (Jan 2026). Job-search liability resolved.
-- **INFRA-002** (HIGH, open): The SSG build at Vercel is shipping empty `__INITIAL_STATE__.pinia.portfolio.companies/skills/projects/education` arrays — meaning the `includedRoutes()` and pre-render fetches against the production API are failing silently. The README claims "Dynamic portfolio content served from an admin-managed backend" but the live site is in fact rendering the static fallback. Needs investigation: is `VITE_API_URL` set in Vercel? Is the backend reachable from Vercel's build environment? Does the `includedRoutes` fetch error get swallowed?
+- **INFRA-002** (HIGH, partially addressed): The SSG build at Vercel is shipping empty `__INITIAL_STATE__.pinia.portfolio.companies/skills/projects/education` arrays — meaning the `includedRoutes()` and pre-render fetches against the production API are failing silently. Sprint 2's INFRA-CONFIG-01 fix (wiring `DATABASE_URL` to the Fly volume) likely resolves part of this: previously every redeploy wiped the production DB to empty, so even when SSG did reach the API it got empty arrays back. After deploy, verify whether the SSG `__INITIAL_STATE__` populates; if it still doesn't, investigate `VITE_API_URL` in Vercel + whether the backend is reachable from Vercel's build environment + whether `includedRoutes` swallows fetch errors.
+- **INFRA-003** (MEDIUM, open): Long-term OAuth domain alignment — host the backend API at `api.dashti.se` instead of `dashti-portfolio-backend.fly.dev` so the frontend (`dashti.se`) and backend share the registrable domain. With same-eTLD+1, cookies can return to `SameSite=Lax` (Sprint 2 ships `SameSite=None+Secure` as a short-term fix). Requires DNS work (Cloudflare or wherever DNS is hosted) + Fly cert provisioning for `api.dashti.se`. Estimated ~1-2 hours; not blocking anything.
 
-**Sprint 2 — Security & correctness** (3 sessions). Close the criticals/highs.
+**Sprint 2 — Security & correctness** ✅ **SHIPPED 2026-06-08**. 10 items + new `refresh_tokens` table + 2 alembic migrations + 5 new auth test cases. 648 backend tests pass at 84.83% coverage.
 
-| ID | Summary | Effort |
+| ID | Summary | Status |
 |----|---------|--------|
-| BACKEND-BUGS-01 | Fix OAuth admin gate fail-open (`ADMIN_GITHUB_ID` unset) | xs |
-| BACKEND-BUGS-03 | Fix `CacheControlMiddleware` exposing `/auth/me` as `public` | s |
-| BACKEND-BUGS-04 | `SameSite=None+Secure` for cross-eTLD+1 cookies (blocked on Q9) | s |
-| BACKEND-BUGS-05 | Mirror cookie attrs on `logout()` delete_cookie | xs |
-| BACKEND-BUGS-07 | Atomic single-use OAuth state consumption | s |
-| BACKEND-BUGS-02 | Real refresh-token rotation with `jti` revocation | m |
-| BACKEND-DB-04 | Make `User.is_admin` NOT NULL with default `False` | xs |
-| BACKEND-BUGS-06 | Streaming body-size limit (chunked-encoding bypass) | s |
-| BACKEND-BUGS-08 | Fix naive `datetime` in `github_service` `since` param | xs |
-| INFRA-CONFIG-01 | Fix Fly volume mount or remove (blocked on Q8) | s |
+| BACKEND-BUGS-01 | OAuth admin gate fails closed when `ADMIN_GITHUB_ID` unset (503); `is_admin` derived from the gate not hardcoded | ✅ done |
+| BACKEND-BUGS-03 | `CacheControlMiddleware` now defaults to `private, no-store + Vary: Cookie, Authorization` for API responses; explicit allowlist of anonymous-read prefixes (`/projects`, `/companies`, `/skills`, `/education`, `/documents`, `/github/stats`, `/health`) | ✅ done |
+| BACKEND-BUGS-04 | `_auth_cookie_kwargs()` helper centralises cookie attrs: `SameSite=None+Secure` in production (dashti.se ↔ *.fly.dev), `SameSite=Lax` in dev/test where HTTP is OK | ✅ done |
+| BACKEND-BUGS-05 | Logout `delete_cookie` mirrors the original Secure/SameSite/HttpOnly attrs; belt-and-braces explicit `max_age=0 set_cookie` follows | ✅ done |
+| BACKEND-BUGS-07 | OAuth state consumption is now a single `DELETE ... RETURNING` that bundles state + expiry + IP-binding into one atomic WHERE clause | ✅ done |
+| BACKEND-BUGS-02 | New `RefreshToken` model + alembic migration; `create_refresh_token` returns `(token, jti, exp)`; `/refresh` looks up jti server-side, detects revoked/expired reuse, revokes all of user's tokens on reuse; `/logout` revokes the presented jti | ✅ done |
+| BACKEND-DB-04 | `User.is_admin` now `nullable=False, server_default=sa.false()` + alembic migration backfills `NULL → False` | ✅ done |
+| BACKEND-BUGS-06 | `BodySizeLimitMiddleware` falls back to a streaming byte counter when `Content-Length` is missing/invalid (chunked-encoding bypass closed) | ✅ done |
+| BACKEND-BUGS-08 | `github_service.get_repo_commits` now uses `datetime.now(UTC)` and explicit `Z` ISO suffix; window no longer drifts by local UTC offset | ✅ done |
+| INFRA-CONFIG-01 | `DATABASE_URL = sqlite+aiosqlite:////data/portfolio.db` added to fly.toml `[env]` — DB now persists across deploys (was on ephemeral container FS) | ✅ done |
 
 **Sprint 3 — Observability & DB foundations** (3 sessions). Make perf measurable.
 

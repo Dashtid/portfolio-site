@@ -53,21 +53,60 @@ MAX_BODY_SIZE = 5 * 1024 * 1024  # 5 MB
 
 # Body Size Limit Middleware
 class BodySizeLimitMiddleware(BaseHTTPMiddleware):
-    """Limit request body size to prevent DoS attacks."""
+    """Limit request body size to prevent DoS attacks.
+
+    Trusts the Content-Length header when it is present and parseable.
+    Without that, the only way to enforce a cap is to count bytes as they
+    arrive — otherwise a client sending Transfer-Encoding: chunked (or an
+    unparseable Content-Length) gets through unbounded and downstream
+    handlers read the whole payload into memory.
+    """
+
+    @staticmethod
+    def _oversize_response() -> JSONResponse:
+        return JSONResponse(
+            status_code=413,
+            content={"detail": "Request body too large. Maximum size is 5 MB."},
+        )
 
     async def dispatch(self, request: Request, call_next):
         content_length = request.headers.get("content-length")
         if content_length:
             try:
                 if int(content_length) > MAX_BODY_SIZE:
-                    return JSONResponse(
-                        status_code=413,
-                        content={"detail": "Request body too large. Maximum size is 5 MB."},
-                    )
+                    return self._oversize_response()
+                # Trusted Content-Length already covers the entire body.
+                return await call_next(request)
             except ValueError:
-                # Invalid content-length header, let it pass and handle elsewhere
+                # Fall through to the streaming counter.
                 pass
-        return await call_next(request)
+
+        # Missing or invalid Content-Length: wrap the receive callable so we
+        # tally each chunk as it streams in. Once the running total exceeds
+        # the cap we short-circuit with 413 without buffering the rest.
+        oversize = False
+        bytes_seen = 0
+        original_receive = request.receive
+
+        async def counting_receive():
+            nonlocal bytes_seen, oversize
+            message = await original_receive()
+            if message.get("type") == "http.request":
+                body = message.get("body", b"")
+                bytes_seen += len(body)
+                if bytes_seen > MAX_BODY_SIZE:
+                    oversize = True
+                    # Return an empty terminal frame so downstream sees a
+                    # clean (but truncated) request stream while we abort.
+                    return {"type": "http.request", "body": b"", "more_body": False}
+            return message
+
+        # Reassign the request's receive so handler body reads go through us.
+        request._receive = counting_receive  # type: ignore[attr-defined]
+        response = await call_next(request)
+        if oversize:
+            return self._oversize_response()
+        return response
 
 
 # Security Headers Middleware (OWASP 2025 compliant)

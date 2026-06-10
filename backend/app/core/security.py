@@ -2,6 +2,7 @@
 Security utilities for JWT tokens (GitHub-OAuth-only — no password hashing).
 """
 
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -32,15 +33,28 @@ def create_access_token(subject: str | Any, expires_delta: timedelta | None = No
     return jwt.encode(to_encode, _get_secret_key(), algorithm=settings.ALGORITHM)
 
 
-def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
-    """Create a JWT refresh token"""
+def create_refresh_token(
+    subject: str | Any,
+    expires_delta: timedelta | None = None,
+    jti: str | None = None,
+) -> tuple[str, str, datetime]:
+    """Create a JWT refresh token and return (token, jti, expires_at).
+
+    The `jti` claim is recorded server-side (see `RefreshToken` model) so
+    rotation can revoke prior tokens and detect replay. Callers should pass
+    `jti` only when they need a deterministic id; otherwise we mint a
+    fresh url-safe random one here.
+    """
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
         expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
-    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
-    return jwt.encode(to_encode, _get_secret_key(), algorithm=settings.ALGORITHM)
+    token_jti = jti or secrets.token_urlsafe(16)
+
+    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh", "jti": token_jti}
+    token = jwt.encode(to_encode, _get_secret_key(), algorithm=settings.ALGORITHM)
+    return token, token_jti, expire
 
 
 def decode_token(token: str) -> dict[str, Any] | None:

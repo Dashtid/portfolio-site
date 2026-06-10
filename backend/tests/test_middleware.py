@@ -86,12 +86,18 @@ class TestCacheMiddleware:
         assert CacheControlMiddleware._is_static_content("/static/style.css") is True
         assert CacheControlMiddleware._is_static_content("/api/v1/projects/") is False
 
-    def test_is_api_endpoint_detection(self):
-        """Test API endpoint detection."""
+    def test_public_api_prefix_detection(self):
+        """Anonymous reads opt-in to caching; per-user paths default private."""
         from app.middleware.cache import CacheControlMiddleware
 
-        assert CacheControlMiddleware._is_api_endpoint("/api/v1/projects/") is True
-        assert CacheControlMiddleware._is_api_endpoint("/static/image.png") is False
+        # On the public-read allowlist
+        assert CacheControlMiddleware._is_public_api("/api/v1/projects/") is True
+        assert CacheControlMiddleware._is_public_api("/api/v1/companies/") is True
+        assert CacheControlMiddleware._is_public_api("/api/v1/health") is True
+        # NOT on the allowlist: per-user / admin / sensitive
+        assert CacheControlMiddleware._is_public_api("/api/v1/auth/me") is False
+        assert CacheControlMiddleware._is_public_api("/api/v1/analytics/stats/summary") is False
+        assert CacheControlMiddleware._is_public_api("/api/v1/metrics/") is False
 
 
 class TestPerformanceMiddleware:

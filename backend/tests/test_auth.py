@@ -93,14 +93,19 @@ class TestRefreshToken:
         assert response.status_code == 401
         assert "Invalid refresh token" in response.json()["detail"]
 
-    def test_refresh_token_user_not_found(self, client: TestClient):
-        """Test refresh with valid token but user not in database."""
-        refresh_token = create_refresh_token(subject="nonexistent-user-id")
+    def test_refresh_token_unknown_jti(self, client: TestClient):
+        """A signed-but-unknown jti is rejected with 401 (not 404).
+
+        Previously the same arrangement reached the user-lookup path; with
+        server-side jti tracking we reject earlier — we can't safely rotate
+        a token whose jti we have no record of issuing.
+        """
+        refresh_token, _, _ = create_refresh_token(subject="nonexistent-user-id")
 
         response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
 
-        assert response.status_code == 404
-        assert "User not found" in response.json()["detail"]
+        assert response.status_code == 401
+        assert "not recognised" in response.json()["detail"].lower()
 
 
 class TestLogout:
@@ -135,12 +140,13 @@ def test_github_login_redirect(client: TestClient):
 
 def test_token_refresh(client: TestClient):
     """Test token refresh endpoint."""
-    # Create a valid refresh token with nonexistent user - should return 404
-    refresh_token = create_refresh_token(subject="nonexistent_user")
+    # Signed token with no server-side jti record — endpoint rejects 401.
+    refresh_token, _, _ = create_refresh_token(subject="nonexistent_user")
 
     response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
-    # Endpoint returns 404 for nonexistent user, 401 for invalid token, 200 for success
-    assert response.status_code in [200, 401, 404, 422]
+    # Endpoint returns 401 for unknown jti, 422 for validation; 200 only with
+    # a persisted jti (covered by test_user_in_db fixtures elsewhere).
+    assert response.status_code in [200, 401, 422]
 
 
 def test_protected_endpoint_without_auth(client: TestClient):
@@ -400,6 +406,50 @@ class TestRefreshTokenEdgeCases:
         # Body never contains tokens
         assert "refresh_token" not in response.json()
         assert "access_token" not in response.json()
+
+    def test_refresh_reuse_after_rotation_is_rejected(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        """A second /refresh call with the *original* refresh token (now
+        rotated) is rejected as a reuse attempt.
+
+        This is RFC 6819 §5.2.2.3 reuse detection: the first call marks the
+        presented jti revoked, and any subsequent call with the same jti
+        triggers the revoke-everything sweep — forcing a fresh OAuth login.
+        """
+        original = test_user_in_db["refresh_token"]
+
+        first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert first.status_code == 200
+
+        # The first response set a NEW refresh_token cookie; the TestClient
+        # would otherwise replay it on the second call and we'd be probing
+        # the wrong token. Clear cookies so the second call is forced to
+        # fall back to the JSON body (where we send the original/revoked
+        # token).
+        client.cookies.clear()
+
+        second = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert second.status_code == 401
+        assert "revoked" in second.json()["detail"].lower()
+
+    def test_logout_revokes_refresh_token_server_side(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        """Logout marks the presented refresh token's jti as revoked so a
+        copy made before logout can't be replayed into /refresh afterward.
+        """
+        original = test_user_in_db["refresh_token"]
+
+        # Send the cookie alongside logout so the server can read the jti.
+        client.cookies.set("refresh_token", original)
+        logout_response = client.post("/api/v1/auth/logout")
+        assert logout_response.status_code == 200
+        client.cookies.clear()
+
+        replay = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert replay.status_code == 401
+        assert "revoked" in replay.json()["detail"].lower()
 
 
 class TestGitHubCallbackMocked:
@@ -667,8 +717,13 @@ class TestGitHubCallbackFullFlow:
             # Should succeed with redirect
             assert response.status_code == 302
 
-    def test_callback_no_admin_restriction(self, client: TestClient):
-        """Test callback when ADMIN_GITHUB_ID is not set (any user allowed)."""
+    def test_callback_fails_closed_when_admin_id_unset(self, client: TestClient):
+        """Callback refuses to issue tokens when ADMIN_GITHUB_ID is not set.
+
+        Prior behavior was fail-open (anyone became admin if the env var was
+        missing); BUGS-01 reverses this to fail-closed (503) so a
+        misconfigured deploy can't silently promote arbitrary users.
+        """
         state = self._get_valid_state(client)
 
         with (
@@ -678,7 +733,7 @@ class TestGitHubCallbackFullFlow:
             mock_settings.GITHUB_CLIENT_ID = "test_id"
             mock_settings.GITHUB_CLIENT_SECRET = "test_secret"
             mock_settings.GITHUB_REDIRECT_URI = "http://localhost/callback"
-            mock_settings.ADMIN_GITHUB_ID = None  # No admin restriction
+            mock_settings.ADMIN_GITHUB_ID = None  # Misconfigured deploy
             mock_settings.FRONTEND_URL = "http://localhost:3000"
             mock_settings.RATE_LIMIT_AUTH = "100/minute"
 
@@ -708,8 +763,8 @@ class TestGitHubCallbackFullFlow:
                 follow_redirects=False,
             )
 
-            # Should succeed when no admin restriction
-            assert response.status_code == 302
+            assert response.status_code == 503
+            assert "not configured" in response.json()["detail"].lower()
 
 
 class TestAuthNetworkErrors:

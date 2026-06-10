@@ -25,6 +25,7 @@ from app.models.document import Document  # noqa: F401
 from app.models.education import Education  # noqa: F401
 from app.models.oauth_state import OAuthState  # noqa: F401
 from app.models.project import Project  # noqa: F401
+from app.models.refresh_token import RefreshToken  # noqa: F401
 from app.models.skill import Skill  # noqa: F401
 from app.models.user import User  # noqa: F401
 
@@ -130,77 +131,79 @@ def admin_headers(test_admin_token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {test_admin_token}"}
 
 
-@pytest.fixture
-def test_user_in_db(client: TestClient) -> dict[str, Any]:
-    """Create a test user in the database and return user data with tokens."""
+def _seed_user_with_tokens(
+    *,
+    user_id: str,
+    github_id: str,
+    username: str,
+    email: str,
+    name: str,
+    avatar_url: str,
+    is_admin: bool,
+) -> dict[str, Any]:
+    """Create the user row + a server-side refresh-token record, mint tokens."""
     import asyncio
 
     from app.core.security import create_refresh_token
+    from app.models.refresh_token import RefreshToken as _RefreshToken
 
-    user_id = "test-user-id-12345"
+    access_token = create_access_token(subject=user_id)
+    refresh_token, refresh_jti, refresh_exp = create_refresh_token(subject=user_id)
 
-    async def create_user():
+    async def setup():
         async with TestSessionLocal() as session:
             user = User(
                 id=user_id,
-                github_id="12345",
-                username="testuser",
-                email="test@example.com",
-                name="Test User",
-                avatar_url="https://example.com/avatar.png",
-                is_admin=False,
+                github_id=github_id,
+                username=username,
+                email=email,
+                name=name,
+                avatar_url=avatar_url,
+                is_admin=is_admin,
             )
             session.add(user)
+            # Commit the user first so the FK on refresh_tokens.user_id has
+            # a target row by the time we insert the token. SQLAlchemy does
+            # not automatically order dependency-only inserts when no
+            # relationship() is declared on the model.
             await session.commit()
-            await session.refresh(user)
-            return user
+            session.add(_RefreshToken(jti=refresh_jti, user_id=user_id, expires_at=refresh_exp))
+            await session.commit()
 
-    asyncio.run(create_user())
-
-    access_token = create_access_token(subject=user_id)
-    refresh_token = create_refresh_token(subject=user_id)
+    asyncio.run(setup())
 
     return {
         "user_id": user_id,
         "access_token": access_token,
         "refresh_token": refresh_token,
+        "refresh_jti": refresh_jti,
         "headers": {"Authorization": f"Bearer {access_token}"},
     }
+
+
+@pytest.fixture
+def test_user_in_db(client: TestClient) -> dict[str, Any]:
+    """Create a test user in the database and return user data with tokens."""
+    return _seed_user_with_tokens(
+        user_id="test-user-id-12345",
+        github_id="12345",
+        username="testuser",
+        email="test@example.com",
+        name="Test User",
+        avatar_url="https://example.com/avatar.png",
+        is_admin=False,
+    )
 
 
 @pytest.fixture
 def admin_user_in_db(client: TestClient) -> dict[str, Any]:
     """Create an admin user in the database and return user data with tokens."""
-    import asyncio
-
-    from app.core.security import create_refresh_token
-
-    user_id = "admin-user-id-12345"
-
-    async def create_admin():
-        async with TestSessionLocal() as session:
-            user = User(
-                id=user_id,
-                github_id="67890",
-                username="adminuser",
-                email="admin@example.com",
-                name="Admin User",
-                avatar_url="https://example.com/admin-avatar.png",
-                is_admin=True,
-            )
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-            return user
-
-    asyncio.run(create_admin())
-
-    access_token = create_access_token(subject=user_id)
-    refresh_token = create_refresh_token(subject=user_id)
-
-    return {
-        "user_id": user_id,
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "headers": {"Authorization": f"Bearer {access_token}"},
-    }
+    return _seed_user_with_tokens(
+        user_id="admin-user-id-12345",
+        github_id="67890",
+        username="adminuser",
+        email="admin@example.com",
+        name="Admin User",
+        avatar_url="https://example.com/admin-avatar.png",
+        is_admin=True,
+    )

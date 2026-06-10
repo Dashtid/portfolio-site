@@ -22,9 +22,16 @@ class TestJWTTokens:
 
     def test_create_refresh_token(self):
         """Test refresh token creation."""
-        token = create_refresh_token(subject="user123")
+        token, jti, exp = create_refresh_token(subject="user123")
         assert isinstance(token, str)
         assert len(token) > 0
+        assert isinstance(jti, str)
+        assert len(jti) > 0
+        # jti is embedded in the token claims so server-side rotation can
+        # revoke it.
+        payload = decode_token(token)
+        assert payload is not None
+        assert payload["jti"] == jti
 
     def test_decode_valid_token(self):
         """Test decoding a valid token."""
@@ -38,7 +45,7 @@ class TestJWTTokens:
 
     def test_decode_refresh_token(self):
         """Test decoding a refresh token."""
-        token = create_refresh_token(subject="user456")
+        token, _, _ = create_refresh_token(subject="user456")
         payload = decode_token(token)
 
         assert payload is not None

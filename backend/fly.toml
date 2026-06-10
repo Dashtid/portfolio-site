@@ -13,6 +13,12 @@ primary_region = 'arn'
   ENVIRONMENT = 'production'
   LOG_LEVEL = 'INFO'
   PORT = '8000'
+  # Persist SQLite onto the Fly volume mounted at /data below. Without
+  # this, the DB lives on the ephemeral container FS and every redeploy
+  # wipes admin-edited content — root cause of INFRA-002 (visitors saw
+  # the static fallback because the production DB kept resetting to empty
+  # between deploys).
+  DATABASE_URL = 'sqlite+aiosqlite:////data/portfolio.db'
 
 [[mounts]]
   source = 'portfolio_data'
