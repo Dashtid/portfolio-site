@@ -33,7 +33,14 @@
       <section id="experience" class="portfolio-section">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/experience.svg" alt="" class="section-icon" loading="lazy" />
+            <img
+              src="/images/experience.svg"
+              alt=""
+              class="section-icon"
+              width="32"
+              height="32"
+              loading="lazy"
+            />
             Experience
           </h2>
           <div class="experience-list">
@@ -50,6 +57,8 @@
                     :src="company.logo_url"
                     :alt="`${company.name} Logo`"
                     class="card-logo"
+                    width="64"
+                    height="64"
                     loading="lazy"
                   />
                   <div class="company-header-content">
@@ -125,7 +134,14 @@
       <section id="education" class="portfolio-section bg-light">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/education.svg" alt="" class="section-icon" loading="lazy" />
+            <img
+              src="/images/education.svg"
+              alt=""
+              class="section-icon"
+              width="32"
+              height="32"
+              loading="lazy"
+            />
             Education
           </h2>
           <div class="education-grid">
@@ -137,6 +153,8 @@
                     :src="edu.logo_url"
                     :alt="`${edu.institution} Logo`"
                     class="card-logo"
+                    width="64"
+                    height="64"
                     loading="lazy"
                   />
                   <div>
@@ -304,7 +322,14 @@
       <section id="publications" class="portfolio-section bg-dark">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/document.svg" alt="" class="section-icon" loading="lazy" />
+            <img
+              src="/images/document.svg"
+              alt=""
+              class="section-icon"
+              width="32"
+              height="32"
+              loading="lazy"
+            />
             Academic Work
           </h2>
           <div v-if="documentsLoading" class="loading-state" role="status" aria-live="polite">
@@ -323,7 +348,14 @@
       <section id="projects" class="portfolio-section bg-light">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/github.svg" alt="" class="section-icon" loading="lazy" />
+            <img
+              src="/images/github.svg"
+              alt=""
+              class="section-icon"
+              width="32"
+              height="32"
+              loading="lazy"
+            />
             GitHub
           </h2>
 
@@ -336,7 +368,14 @@
       <section id="about" class="portfolio-section">
         <div class="container">
           <h2 class="section-title">
-            <img src="/images/about.svg" alt="" class="section-icon" loading="lazy" />
+            <img
+              src="/images/about.svg"
+              alt=""
+              class="section-icon"
+              width="32"
+              height="32"
+              loading="lazy"
+            />
             About Me
           </h2>
           <div class="about-layout">
@@ -344,8 +383,15 @@
               <picture>
                 <source srcset="/images/optimized/cropped.avif" type="image/avif" />
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
+                <!-- FRONTEND-PERF-08: PNG fallback uses the already-optimised
+                     cropped.png (343 KB) instead of the unprocessed
+                     profile.png (854 KB). >97% of clients hit the AVIF/WebP
+                     branches above so the fallback path is rarely walked,
+                     but the saving still applies to Lighthouse's total-
+                     payload budget and to older browsers/screen readers
+                     that fall back. -->
                 <img
-                  src="/images/profile.png"
+                  src="/images/optimized/cropped.png"
                   alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
                   class="profile-photo"
                   width="280"

@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.db_helpers import db_mutation
+from app.core.db_helpers import Pagination, db_mutation, pagination_params
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
@@ -22,15 +22,24 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 # Type aliases for dependency injection (FastAPI 2025 best practice)
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 AdminUser = Annotated[User, Depends(get_current_admin_user)]
+PaginationDep = Annotated[Pagination, Depends(pagination_params)]
 
 
 @router.get("/", response_model=list[ProjectResponse])
 @rate_limit_public
-async def get_projects(request: Request, db: DbSession):
-    """Get all projects"""
+async def get_projects(
+    request: Request,
+    db: DbSession,
+    pagination: PaginationDep,
+):
+    """Get all projects (PERF-08: paginated via optional limit/offset)."""
     _ = request  # Required for rate limiting
     result = await db.execute(
-        select(Project).options(selectinload(Project.company)).order_by(Project.order_index)
+        select(Project)
+        .options(selectinload(Project.company))
+        .order_by(Project.order_index)
+        .limit(pagination.limit)
+        .offset(pagination.offset)
     )
     return result.scalars().all()
 

@@ -278,6 +278,12 @@ async def lifespan(app: FastAPI):
     await github_service.close()
     logger.info("GitHub service connection pool closed")
 
+    # PERF-10: close the shared OAuth httpx client.
+    from app.api.v1.auth import close_oauth_client  # noqa: PLC0415
+
+    await close_oauth_client()
+    logger.info("OAuth httpx client closed")
+
     logger.info("Shutting down application")
     await engine.dispose()
     logger.info("Database connection closed")

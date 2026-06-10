@@ -20,6 +20,14 @@ logger = get_logger(__name__)
 # of [A-Za-z0-9_-].
 _UPSTREAM_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
+# Health-check paths get polled every few seconds by Fly's load balancer and
+# any uptime monitoring. Skipping request/response log lines for them is
+# PERF-07: it strips ~80% of the log volume on a quiet site, drops the
+# allocations for the start/end pairs, and stops the noise from drowning
+# out signal in Fly's tail. They still go through the rest of the pipeline
+# (CORS, security headers, performance metrics) — only the log lines drop.
+_SILENT_LOG_PREFIXES = ("/api/v1/health", "/api/health")
+
 
 def _resolve_request_id(request: Request) -> str:
     """Reuse an upstream X-Request-ID if one is supplied and well-formed.
@@ -46,21 +54,27 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         # site needing to pass `extra={"request_id": ...}` manually.
         token = request_id_var.set(request_id)
 
+        # PERF-07: opt out of request/response logging for high-frequency
+        # health checks. We still set request_id and propagate it back in
+        # the response header so on-call can correlate if they need to.
+        silent = request.url.path.startswith(_SILENT_LOG_PREFIXES)
+
         # Start timer
         start_time = time.time()
 
-        # Log incoming request
-        logger.info(
-            "Incoming request",
-            extra={
-                "request_id": request_id,
-                "method": request.method,
-                "path": request.url.path,
-                "query_params": dict(request.query_params),
-                "client_ip": request.client.host if request.client else None,
-                "user_agent": request.headers.get("user-agent"),
-            },
-        )
+        # Log incoming request (skipped for /health* to cut log volume).
+        if not silent:
+            logger.info(
+                "Incoming request",
+                extra={
+                    "request_id": request_id,
+                    "method": request.method,
+                    "path": request.url.path,
+                    "query_params": dict(request.query_params),
+                    "client_ip": request.client.host if request.client else None,
+                    "user_agent": request.headers.get("user-agent"),
+                },
+            )
 
         # Process request
         try:
@@ -74,16 +88,17 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 # injects request_id onto every record this request emits;
                 # we keep it in the explicit extra here so downstream log
                 # consumers and existing assertions still see it directly.
-                logger.info(
-                    "Request completed",
-                    extra={
-                        "request_id": request_id,
-                        "method": request.method,
-                        "path": request.url.path,
-                        "status_code": response.status_code,
-                        "duration_ms": duration_ms,
-                    },
-                )
+                if not silent:
+                    logger.info(
+                        "Request completed",
+                        extra={
+                            "request_id": request_id,
+                            "method": request.method,
+                            "path": request.url.path,
+                            "status_code": response.status_code,
+                            "duration_ms": duration_ms,
+                        },
+                    )
 
                 # Add request ID to response headers
                 response.headers["X-Request-ID"] = request_id
@@ -91,7 +106,8 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 # Calculate duration
                 duration_ms = round((time.time() - start_time) * 1000, 2)
 
-                # Log error
+                # Always log errors, even on /health* — a failing health
+                # check is a higher-priority signal than the success noise.
                 logger.error(
                     "Request failed",
                     extra={

@@ -158,22 +158,22 @@ focus is performance, backend correctness, observability, and admin interfaces.
 | BACKEND-DB-07 | New `c3f1d96a4b27_sprint_3_schema.py` is fully idempotent via `_create_index_if_absent` / `_drop_index_if_present` / column existence guards driven by the SQLAlchemy inspector; safe to re-run against fresh DBs (where `Base.metadata.create_all` already created the indexes) and stamped DBs alike | ✅ done |
 | BACKEND-DB-09 | Dropped redundant explicit `index=True` from `OAuthState.state`, `Education.id`, `Document.id` — all are PKs and the implicit PK index was duplicated by Postgres as a second btree | ✅ done |
 
-**Sprint 4 — Backend performance** (3 sessions). Cut tail latency on hot paths.
+**Sprint 4 — Backend performance** ✅ **SHIPPED 2026-06-10**. 9 backend + 3 frontend items. 657 backend tests pass at 84.74% coverage; 550 frontend tests pass.
 
-| ID | Summary | Effort |
+| ID | Summary | Status |
 |----|---------|--------|
-| BACKEND-PERF-01 | Move `ipapi.co` lookup to `BackgroundTasks` | s |
-| BACKEND-PERF-04 | TTL cache for GitHub stats endpoints (`async-lru`) | m |
-| BACKEND-PERF-05 | `PerformanceMetrics` keys by templated route | s |
-| BACKEND-PERF-06 | Drop `threading.Lock` from `PerformanceMiddleware` | xs |
-| BACKEND-PERF-07 | Skip `/health*` paths in `LoggingMiddleware` | s |
-| BACKEND-PERF-08 | Pagination on `/api/v1/companies` (and siblings) | s |
-| BACKEND-PERF-10 | Reuse `httpx` client in OAuth callback | s |
-| BACKEND-OBSERVABILITY-06 | p50/p95/p99 + business counters on `/metrics` | m |
-| BACKEND-OBSERVABILITY-09 | Count rate-limit hits in `/metrics` | xs |
-| FRONTEND-PERF-04 | Add `width`/`height` to logos to fix CLS | xs |
-| FRONTEND-PERF-07 | Inline SVG for `bi bi-*` icons in `ExperienceDetail` | xs |
-| FRONTEND-PERF-08 | Replace 854KB `profile.png` fallback with optimized webp | xs |
+| BACKEND-PERF-07 | `LoggingMiddleware` skips request/response log pairs for `/api/v1/health*` + `/api/health` (Fly's load balancer polls every few seconds; was ~80% of log volume). Failures still log, X-Request-ID still set/returned. | ✅ done |
+| BACKEND-PERF-06 | Dropped `threading.Lock` from `PerformanceMetrics` — async event loop has no true concurrency inside a worker, dict/deque ops are GIL-atomic, and gunicorn workers are separate processes (need redis for cross-worker, not a lock). Removes lock-acquire on every request. | ✅ done |
+| BACKEND-PERF-05 | `PerformanceMetrics` now keys by **templated** route (`GET /api/v1/companies/{company_id}`) instead of resolved URL — 100 GETs against `/companies/abc`, `/companies/def`… now aggregate to one stat row. Resolved via `request.scope["app"].router.routes` walk inside the metrics middleware. | ✅ done |
+| BACKEND-OBSERVABILITY-06 | `get_stats()` now also returns `p50`/`p95`/`p99` per endpoint (linear-interpolation percentile matching NumPy default) computed on-demand from the bounded response-time deque. New `metrics.incr("name")` for business counters exposed under `counters` in the schema. | ✅ done |
+| BACKEND-OBSERVABILITY-09 | `rate_limit_exceeded_handler` bumps `rate_limit.hits` + `rate_limit.hits.{method}` counters so admins can see rate-limit pressure on `/metrics` without grepping logs. Lazy import to dodge the middleware circular. | ✅ done |
+| BACKEND-PERF-01 | `track_pageview` no longer awaits the `ipapi.co` lookup — it inserts the row with `country=NULL` and schedules a `BackgroundTask` to back-fill. Response goes from ~150-1500ms tail latency to pure-DB ~5ms. The analytics aggregations filter `country IS NOT NULL` so the back-fill window only misses geo aggregation, not visit count. | ✅ done |
+| BACKEND-PERF-04 | `get_portfolio_stats(username)` is now cached per-username for 300s in-process; per-username `asyncio.Lock` collapses cache-miss stampede. Cuts a 3-5 round-trip GitHub fan-out to one fetch per 5 min per username. | ✅ done |
+| BACKEND-PERF-10 | Shared module-level `httpx.AsyncClient` for OAuth callback (`get_oauth_client()`); lazy-init on first call, closed in app lifespan shutdown. The two round-trips (token exchange + user info) now reuse the TLS session, ~200ms median saving on the round-trip. | ✅ done |
+| BACKEND-PERF-08 | Optional `limit`/`offset` query params (1-100, default 100; 0) on `/api/v1/companies`, `/projects`, `/skills`, `/education`. Centralised in `app/core/db_helpers.py::Pagination` + `pagination_params`. Non-breaking — defaults preserve current single-page behaviour. | ✅ done |
+| FRONTEND-PERF-04 | Added explicit `width`/`height` to `card-logo` (64×64) and `section-icon` (32×32) `<img>` tags in HomeView — browser reserves the box before image load, eliminating CLS shift. | ✅ done |
+| FRONTEND-PERF-07 | Replaced four `<i class="bi bi-*">` tags in `ExperienceDetail.vue` with inline Bootstrap-Icons SVGs (geo-alt, calendar, globe, arrow-left). Fixes a latent rendering bug — `bootstrap-icons` was never bundled, so the icons were invisible — and locks the icon source into the chunk. | ✅ done |
+| FRONTEND-PERF-08 | Deleted unused 854KB `public/images/profile.png`; swapped the `<picture>` fallback `<img>` src to `/images/optimized/cropped.png` (343KB). ~97% of clients hit AVIF/WebP branches above so this is the rare-fallback path; still applies to Lighthouse's total-payload budget. | ✅ done |
 
 **Sprint 5 — Admin console part 1** (3 sessions). Skills, Metrics, Errors UIs +
 admin bug cluster.

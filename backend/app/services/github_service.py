@@ -5,6 +5,7 @@ GitHub API service for fetching live project statistics
 import asyncio
 import logging
 import re
+import time
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -21,6 +22,15 @@ DEFAULT_TIMEOUT = httpx.Timeout(timeout=10.0, pool=5.0)
 MAX_RETRIES = 3
 BASE_BACKOFF_SECONDS = 1.0
 
+# PERF-04: TTL cache for the public portfolio-stats endpoint. GitHub's API
+# rate-limits unauthenticated callers at 60 req/hr and authenticated ones at
+# 5000/hr; cache hits also shave the ~3-5 round-trips that
+# get_portfolio_stats() makes per call (user-info + repos + per-repo
+# languages + pinned). 5 minutes is long enough to absorb a Lighthouse run
+# and a normal browse session, short enough that pushed commits show up in
+# under 5 min on the public site.
+GITHUB_STATS_CACHE_TTL_SECONDS = 300
+
 
 class GitHubService:
     """Service for interacting with GitHub API."""
@@ -36,6 +46,15 @@ class GitHubService:
             self.headers["Authorization"] = f"token {settings.GITHUB_TOKEN}"
         # Shared client for connection pooling (lazily initialized)
         self._client: httpx.AsyncClient | None = None
+        # PERF-04: per-username portfolio-stats cache.
+        #   username -> (cached_value, expires_at_monotonic)
+        # In-process only — Fly runs us as a single replica today; if we
+        # ever scale to >1 instance, swap for a shared redis/turso layer.
+        self._stats_cache: dict[str, tuple[dict[str, Any], float]] = {}
+        # Per-username asyncio.Lock so a stampede of cache-miss requests
+        # collapses to a single upstream fetch (the rest await the lock,
+        # see the populated cache, and serve from it).
+        self._stats_locks: dict[str, asyncio.Lock] = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create shared AsyncClient for connection pooling."""
@@ -244,7 +263,35 @@ class GitHubService:
             return 0
 
     async def get_portfolio_stats(self, username: str) -> dict[str, Any]:
-        """Get aggregated statistics for portfolio display."""
+        """Get aggregated statistics for portfolio display.
+
+        PERF-04: cached per-username for GITHUB_STATS_CACHE_TTL_SECONDS.
+        On miss, takes a per-username asyncio.Lock so concurrent first-hit
+        callers collapse to a single upstream fetch instead of stampeding
+        GitHub.
+        """
+        now = time.monotonic()
+        cached = self._stats_cache.get(username)
+        if cached is not None and cached[1] > now:
+            return cached[0]
+
+        # Per-username lock so concurrent cache-miss callers don't stampede.
+        lock = self._stats_locks.setdefault(username, asyncio.Lock())
+        async with lock:
+            # Re-check inside the lock: another coroutine may have already
+            # populated the cache while we were waiting.
+            cached = self._stats_cache.get(username)
+            if cached is not None and cached[1] > time.monotonic():
+                return cached[0]
+            result = await self._fetch_portfolio_stats(username)
+            self._stats_cache[username] = (
+                result,
+                time.monotonic() + GITHUB_STATS_CACHE_TTL_SECONDS,
+            )
+            return result
+
+    async def _fetch_portfolio_stats(self, username: str) -> dict[str, Any]:
+        """Underlying GitHub fan-out — only called on cache miss."""
         user_info = await self.get_user_info(username)
         repos = await self.get_user_repos(username)
 

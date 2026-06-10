@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db_helpers import db_mutation
+from app.core.db_helpers import Pagination, db_mutation, pagination_params
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
@@ -21,14 +21,21 @@ router = APIRouter(prefix="/skills", tags=["skills"])
 # Type aliases for dependency injection (FastAPI 2025 best practice)
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 AdminUser = Annotated[User, Depends(get_current_admin_user)]
+PaginationDep = Annotated[Pagination, Depends(pagination_params)]
 
 
 @router.get("/", response_model=list[SkillResponse])
 @rate_limit_public
-async def get_skills(request: Request, db: DbSession):
-    """Get all skills"""
+async def get_skills(
+    request: Request,
+    db: DbSession,
+    pagination: PaginationDep,
+):
+    """Get all skills (PERF-08: paginated via optional limit/offset)."""
     _ = request  # Required for rate limiting
-    result = await db.execute(select(Skill).order_by(Skill.order_index))
+    result = await db.execute(
+        select(Skill).order_by(Skill.order_index).limit(pagination.limit).offset(pagination.offset)
+    )
     return result.scalars().all()
 
 

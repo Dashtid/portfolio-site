@@ -79,6 +79,18 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
     except (AttributeError, IndexError):
         pass  # Keep default
 
+    # OBS-09: bump a process-local counter so the admin /metrics endpoint
+    # can surface rate-limit pressure without a log query. Imported lazily
+    # to avoid a circular import (middleware/__init__.py imports both).
+    try:
+        from app.middleware.performance import metrics as _metrics  # noqa: PLC0415
+
+        _metrics.incr("rate_limit.hits")
+        _metrics.incr(f"rate_limit.hits.{request.method.lower()}")
+    except Exception:
+        # Counter bumping must never break the actual rate-limit response.
+        pass
+
     logger.warning(
         "Rate limit exceeded",
         extra={

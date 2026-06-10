@@ -10,14 +10,14 @@ Provides endpoints for:
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import func, select
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_admin_user
 from app.core.geo_ip import get_country_code
 from app.core.ip_utils import get_client_ip
-from app.database import get_db
+from app.database import AsyncSessionLocal, get_db
 from app.middleware.rate_limit import rate_limit_public
 from app.models.analytics import PageView
 from app.models.user import User
@@ -41,19 +41,51 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 AdminUser = Annotated[User, Depends(get_current_admin_user)]
 
 
+async def _backfill_country(pageview_id: str, client_ip: str) -> None:
+    """Resolve client_ip → country and write it onto the PageView row.
+
+    PERF-01: previously the geo lookup blocked the response — ipapi.co's
+    p50 is ~150ms and p99 can hit 1.5s on the free tier. Now the lookup
+    runs after the response has been returned to the client, so the
+    pageview-tracking endpoint becomes pure-DB (~5ms). The trade-off is
+    the row is briefly committed with `country IS NULL` and back-filled
+    seconds later; the analytics dashboard reads `WHERE country IS NOT
+    NULL` so the NULL-window row only misses geo aggregation, not the
+    visit count. Failures here are swallowed; country stays NULL.
+    """
+    try:
+        country = await get_country_code(client_ip)
+    except Exception:
+        return
+    if country is None:
+        return
+    async with AsyncSessionLocal() as session:
+        try:
+            await session.execute(
+                update(PageView).where(PageView.id == pageview_id).values(country=country)
+            )
+            await session.commit()
+        except Exception:
+            # No retry: a missed back-fill is OK; raising here would only
+            # bloat error logs without changing user-visible behaviour.
+            await session.rollback()
+
+
 @router.post("/track/pageview", response_model=PageViewResponse)
 @rate_limit_public
 async def track_pageview(
     request: Request,
     page_view: PageViewCreate,
     db: DbSession,
+    background_tasks: BackgroundTasks,
 ):
     """
     Track a page view (public endpoint).
 
     Records visitor page views for analytics. The raw client IP is hashed
-    before persistence (GDPR pseudonymisation) and looked up against ipapi.co
-    for a country code; the lookup is best-effort and caches results for 24h.
+    before persistence (GDPR pseudonymisation). PERF-01: geo-IP lookup is
+    deferred to a `BackgroundTask` and back-fills the `country` column
+    asynchronously so the response returns as soon as the row is inserted.
     """
     # Get client IP securely (only trusts X-Forwarded-For from known proxies)
     client_ip = get_client_ip(request)
@@ -66,21 +98,22 @@ async def track_pageview(
         # See app/utils/ip_hash.py for the construction.
         session_id = f"anon_{hash_ip(client_ip)}"
 
-    # Resolve country before persisting. Lookup is best-effort: timeouts and
-    # upstream failures return None and the row is still written.
-    country = await get_country_code(client_ip)
-
     db_pageview = PageView(
         page_path=page_view.page_path,
         referrer=page_view.referrer,
         user_agent=request.headers.get("User-Agent"),
         ip_address=hash_ip(client_ip),
-        country=country,
+        country=None,
         session_id=session_id,
     )
     db.add(db_pageview)
     await db.commit()
     await db.refresh(db_pageview)
+
+    # Schedule the geo-IP back-fill AFTER the response goes out. Starlette
+    # awaits background_tasks before closing the connection but only after
+    # the response body has been sent — the client sees no extra latency.
+    background_tasks.add_task(_backfill_country, str(db_pageview.id), client_ip)
 
     return PageViewResponse(
         id=str(db_pageview.id),

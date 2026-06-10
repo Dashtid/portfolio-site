@@ -494,13 +494,13 @@ class TestGitHubCallbackMocked:
             state = params.get("state", [""])[0]
 
             # Mock the httpx client to return an error
-            with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+            with patch("app.api.v1.auth.get_oauth_client") as mock_client:
                 mock_response = MagicMock()
                 mock_response.status_code = 400
                 mock_response.json.return_value = {"error": "bad_verification_code"}
 
-                mock_async_client = MagicMock()
-                mock_async_client.__aenter__.return_value.post.return_value = mock_response
+                mock_async_client = AsyncMock()
+                mock_async_client.post.return_value = mock_response
                 mock_client.return_value = mock_async_client
 
                 callback_response = client.get(
@@ -530,14 +530,14 @@ class TestGitHubCallbackFullFlow:
         """Test callback when GitHub token exchange fails."""
         state = self._get_valid_state(client)
 
-        with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+        with patch("app.api.v1.auth.get_oauth_client") as mock_client:
             # Mock token exchange to fail
             mock_token_response = MagicMock()
             mock_token_response.status_code = 500
 
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
             assert response.status_code == 400
@@ -547,7 +547,7 @@ class TestGitHubCallbackFullFlow:
         """Test callback when GitHub returns OAuth error."""
         state = self._get_valid_state(client)
 
-        with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+        with patch("app.api.v1.auth.get_oauth_client") as mock_client:
             # Mock token exchange to return error
             mock_token_response = MagicMock()
             mock_token_response.status_code = 200
@@ -558,7 +558,7 @@ class TestGitHubCallbackFullFlow:
 
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(f"/api/v1/auth/github/callback?code=bad&state={state}")
             assert response.status_code == 400
@@ -568,7 +568,7 @@ class TestGitHubCallbackFullFlow:
         """Test callback when GitHub user info request fails."""
         state = self._get_valid_state(client)
 
-        with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+        with patch("app.api.v1.auth.get_oauth_client") as mock_client:
             # Mock token exchange success
             mock_token_response = MagicMock()
             mock_token_response.status_code = 200
@@ -581,7 +581,7 @@ class TestGitHubCallbackFullFlow:
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
             mock_async_client.get.return_value = mock_user_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
             assert response.status_code == 400
@@ -621,7 +621,7 @@ class TestGitHubCallbackFullFlow:
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
             mock_async_client.get.return_value = mock_user_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
             assert response.status_code == 403
@@ -661,7 +661,7 @@ class TestGitHubCallbackFullFlow:
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
             mock_async_client.get.return_value = mock_user_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(
                 f"/api/v1/auth/github/callback?code=valid_code&state={state}",
@@ -707,7 +707,7 @@ class TestGitHubCallbackFullFlow:
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
             mock_async_client.get.return_value = mock_user_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(
                 f"/api/v1/auth/github/callback?code=valid&state={state}",
@@ -756,7 +756,7 @@ class TestGitHubCallbackFullFlow:
             mock_async_client = AsyncMock()
             mock_async_client.post.return_value = mock_token_response
             mock_async_client.get.return_value = mock_user_response
-            mock_client.return_value.__aenter__.return_value = mock_async_client
+            mock_client.return_value = mock_async_client
 
             response = client.get(
                 f"/api/v1/auth/github/callback?code=valid&state={state}",
@@ -786,11 +786,11 @@ class TestAuthNetworkErrors:
             params = urllib.parse.parse_qs(parsed.query)
             state = params.get("state", [""])[0]
 
-            with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+            with patch("app.api.v1.auth.get_oauth_client") as mock_client:
                 # Mock network timeout
                 mock_async_client = AsyncMock()
                 mock_async_client.post.side_effect = httpx.TimeoutException("Connection timed out")
-                mock_client.return_value.__aenter__.return_value = mock_async_client
+                mock_client.return_value = mock_async_client
 
                 response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
                 # Should return error for failed token exchange (400 or 504)
@@ -812,7 +812,7 @@ class TestAuthNetworkErrors:
             params = urllib.parse.parse_qs(parsed.query)
             state = params.get("state", [""])[0]
 
-            with patch("app.api.v1.auth.httpx.AsyncClient") as mock_client:
+            with patch("app.api.v1.auth.get_oauth_client") as mock_client:
                 # Mock token exchange success
                 mock_token_response = MagicMock()
                 mock_token_response.status_code = 200
@@ -822,7 +822,7 @@ class TestAuthNetworkErrors:
                 mock_async_client.post.return_value = mock_token_response
                 # Timeout on user info request
                 mock_async_client.get.side_effect = httpx.TimeoutException("Read timed out")
-                mock_client.return_value.__aenter__.return_value = mock_async_client
+                mock_client.return_value = mock_async_client
 
                 response = client.get(f"/api/v1/auth/github/callback?code=test&state={state}")
                 # Should return error for failed user info fetch (400 or 504)
