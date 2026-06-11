@@ -81,35 +81,17 @@ class TestGitHubServiceMethodsExist:
         assert hasattr(service, "get_user_repos")
         assert callable(service.get_user_repos)
 
-    def test_get_repo_details_method_exists(self):
-        """Test that get_repo_details method exists."""
-        service = GitHubService()
-        assert hasattr(service, "get_repo_details")
-        assert callable(service.get_repo_details)
-
     def test_get_repo_languages_method_exists(self):
         """Test that get_repo_languages method exists."""
         service = GitHubService()
         assert hasattr(service, "get_repo_languages")
         assert callable(service.get_repo_languages)
 
-    def test_get_repo_commits_method_exists(self):
-        """Test that get_repo_commits method exists."""
-        service = GitHubService()
-        assert hasattr(service, "get_repo_commits")
-        assert callable(service.get_repo_commits)
-
     def test_get_portfolio_stats_method_exists(self):
         """Test that get_portfolio_stats method exists."""
         service = GitHubService()
         assert hasattr(service, "get_portfolio_stats")
         assert callable(service.get_portfolio_stats)
-
-    def test_get_project_stats_method_exists(self):
-        """Test that get_project_stats method exists."""
-        service = GitHubService()
-        assert hasattr(service, "get_project_stats")
-        assert callable(service.get_project_stats)
 
 
 class TestGitHubServiceModuleLevel:
@@ -205,41 +187,6 @@ class TestGetUserRepos:
         new_event_loop.run_until_complete(run_test())
 
 
-class TestGetRepoDetails:
-    """Tests for get_repo_details method."""
-
-    def test_get_repo_details_success(self, new_event_loop):
-        """Test successful repo details fetch."""
-
-        async def run_test():
-            mock_repo = {"name": "test-repo", "stargazers_count": 100}
-            mock_response = MagicMock()
-            mock_response.json.return_value = mock_repo
-            mock_response.raise_for_status = MagicMock()
-
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.request = AsyncMock(return_value=mock_response)
-                service = GitHubService()
-                result = await service.get_repo_details("owner", "test-repo")
-                assert result["name"] == "test-repo"
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_get_repo_details_http_error(self, new_event_loop):
-        """Test repo details fetch with HTTP error returns empty dict."""
-
-        async def run_test():
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.request = AsyncMock(
-                    side_effect=httpx.RequestError("Not found")
-                )
-                service = GitHubService()
-                result = await service.get_repo_details("owner", "nonexistent")
-                assert result == {}
-
-        new_event_loop.run_until_complete(run_test())
-
-
 class TestGetRepoLanguages:
     """Tests for get_repo_languages method."""
 
@@ -271,60 +218,6 @@ class TestGetRepoLanguages:
                 service = GitHubService()
                 result = await service.get_repo_languages("owner", "repo")
                 assert result == {}
-
-        new_event_loop.run_until_complete(run_test())
-
-
-class TestGetRepoCommits:
-    """Tests for get_repo_commits method."""
-
-    def test_get_repo_commits_with_link_header(self, new_event_loop):
-        """Test commit count extraction from Link header."""
-
-        async def run_test():
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc123"}]
-            mock_response.raise_for_status = MagicMock()
-            mock_response.headers = {
-                "Link": '<https://api.github.com/repos/o/r/commits?page=150>; rel="last"'
-            }
-
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.request = AsyncMock(return_value=mock_response)
-                service = GitHubService()
-                result = await service.get_repo_commits("owner", "repo")
-                assert result == 150
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_get_repo_commits_no_link_header(self, new_event_loop):
-        """Test commit count without Link header."""
-
-        async def run_test():
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc"}, {"sha": "def"}]
-            mock_response.raise_for_status = MagicMock()
-            mock_response.headers = {}
-
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.request = AsyncMock(return_value=mock_response)
-                service = GitHubService()
-                result = await service.get_repo_commits("owner", "repo")
-                assert result == 2
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_get_repo_commits_http_error(self, new_event_loop):
-        """Test commit count with HTTP error returns 0."""
-
-        async def run_test():
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.request = AsyncMock(
-                    side_effect=httpx.RequestError("Error")
-                )
-                service = GitHubService()
-                result = await service.get_repo_commits("owner", "repo")
-                assert result == 0
 
         new_event_loop.run_until_complete(run_test())
 
@@ -398,52 +291,6 @@ class TestGetPortfolioStats:
 
             assert result["total_stars"] == 0
             assert result["featured_repos"] == []
-
-        new_event_loop.run_until_complete(run_test())
-
-
-class TestGetProjectStats:
-    """Tests for get_project_stats method."""
-
-    def test_get_project_stats_success(self, new_event_loop):
-        """Test successful project stats fetch."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_repo_details = {
-                "name": "test-repo",
-                "stargazers_count": 100,
-                "forks_count": 50,
-                "topics": ["python"],
-            }
-
-            service.get_repo_details = AsyncMock(return_value=mock_repo_details)
-            service.get_repo_languages = AsyncMock(return_value={"Python": 50000})
-            service.get_repo_commits = AsyncMock(return_value=250)
-
-            result = await service.get_project_stats("owner", "test-repo")
-
-            assert result["name"] == "test-repo"
-            assert result["stars"] == 100
-            assert result["commit_count"] == 250
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_get_project_stats_empty_repo(self, new_event_loop):
-        """Test project stats for non-existent repo returns defaults."""
-
-        async def run_test():
-            service = GitHubService()
-
-            service.get_repo_details = AsyncMock(return_value={})
-            service.get_repo_languages = AsyncMock(return_value={})
-            service.get_repo_commits = AsyncMock(return_value=0)
-
-            result = await service.get_project_stats("owner", "nonexistent")
-
-            assert result["name"] is None
-            assert result["stars"] == 0
 
         new_event_loop.run_until_complete(run_test())
 
@@ -791,28 +638,6 @@ class TestHTTPStatusErrors:
 
         new_event_loop.run_until_complete(run_test())
 
-    def test_get_repo_details_http_status_error(self, new_event_loop):
-        """Test get_repo_details handles HTTPStatusError gracefully."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.status_code = 404
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-                "Not found", request=MagicMock(), response=mock_response
-            )
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_details("owner", "nonexistent")
-                assert result == {}
-
-        new_event_loop.run_until_complete(run_test())
-
     def test_get_repo_languages_http_status_error(self, new_event_loop):
         """Test get_repo_languages handles HTTPStatusError gracefully."""
 
@@ -832,28 +657,6 @@ class TestHTTPStatusErrors:
             with patch("httpx.AsyncClient", return_value=mock_client):
                 result = await service.get_repo_languages("owner", "nonexistent")
                 assert result == {}
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_get_repo_commits_http_status_error(self, new_event_loop):
-        """Test get_repo_commits handles HTTPStatusError gracefully."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.status_code = 404
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-                "Not found", request=MagicMock(), response=mock_response
-            )
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_commits("owner", "nonexistent")
-                assert result == 0
 
         new_event_loop.run_until_complete(run_test())
 
@@ -1290,110 +1093,6 @@ class TestRequestWithBackoffRequestError:
         new_event_loop.run_until_complete(run_test())
 
 
-class TestLinkHeaderEdgeCases:
-    """Tests for Link header parsing edge cases in get_repo_commits."""
-
-    def test_malformed_link_header_no_page_number(self, new_event_loop):
-        """Test handling of Link header without page number."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc123"}, {"sha": "def456"}]
-            mock_response.raise_for_status = MagicMock()
-            # Malformed: missing page= prefix
-            mock_response.headers = {
-                "Link": '<https://api.github.com/repos/o/r/commits?foo=bar>; rel="last"'
-            }
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_commits("owner", "repo")
-                # Falls back to counting returned items
-                assert result == 2
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_link_header_missing_rel_last(self, new_event_loop):
-        """Test handling of Link header without rel="last"."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc"}]
-            mock_response.raise_for_status = MagicMock()
-            # Has Link but only rel="next", not rel="last"
-            mock_response.headers = {
-                "Link": '<https://api.github.com/repos/o/r/commits?page=2>; rel="next"'
-            }
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_commits("owner", "repo")
-                # Falls back to counting returned items
-                assert result == 1
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_link_header_with_multiple_rels(self, new_event_loop):
-        """Test parsing Link header with multiple rel values."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc"}]
-            mock_response.raise_for_status = MagicMock()
-            # Standard GitHub pagination format with multiple rels
-            mock_response.headers = {
-                "Link": '<https://api.github.com/repos/o/r/commits?page=2>; rel="next", '
-                '<https://api.github.com/repos/o/r/commits?page=50>; rel="last"'
-            }
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_commits("owner", "repo")
-                assert result == 50
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_link_header_non_numeric_page(self, new_event_loop):
-        """Test handling of Link header with non-numeric page value."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc"}, {"sha": "def"}]
-            mock_response.raise_for_status = MagicMock()
-            # page= exists but value is not numeric
-            mock_response.headers = {
-                "Link": '<https://api.github.com/repos/o/r/commits?page=abc>; rel="last"'
-            }
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_commits("owner", "repo")
-                # Falls back to counting returned items since regex won't match non-digits
-                assert result == 2
-
-        new_event_loop.run_until_complete(run_test())
-
-
 class TestUserReposPaginationBoundaries:
     """Tests for get_user_repos pagination boundary conditions."""
 
@@ -1721,100 +1420,5 @@ class TestPinnedReposEdgeCases:
                 assert result[0]["language"] == "TypeScript"
 
         new_event_loop.run_until_complete(run_test())
-
-
-class TestGetRepoCommitsEdgeCases:
-    """Additional tests for get_repo_commits edge cases."""
-
-    def test_commits_with_default_since_date(self, new_event_loop):
-        """Test that default since date is 365 days ago."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.json.return_value = []
-            mock_response.raise_for_status = MagicMock()
-            mock_response.headers = {}
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                await service.get_repo_commits("owner", "repo")
-
-                # Verify the since param was passed (approximately 365 days ago)
-                call_params = mock_client.request.call_args[1]["params"]
-                assert "since" in call_params
-
-        new_event_loop.run_until_complete(run_test())
-
-    def test_commits_with_custom_since_date(self, new_event_loop):
-        """Test commits with custom since date."""
-
-        async def run_test():
-            from datetime import datetime
-
-            service = GitHubService()
-
-            mock_response = MagicMock()
-            mock_response.json.return_value = [{"sha": "abc"}]
-            mock_response.raise_for_status = MagicMock()
-            mock_response.headers = {}
-
-            mock_client = MagicMock()
-            mock_client.is_closed = False
-            mock_client.request = AsyncMock(return_value=mock_response)
-
-            custom_date = datetime(2024, 1, 1)
-
-            with patch("httpx.AsyncClient", return_value=mock_client):
-                result = await service.get_repo_commits("owner", "repo", since=custom_date)
-
-                assert result == 1
-                call_params = mock_client.request.call_args[1]["params"]
-                assert custom_date.isoformat() in call_params["since"]
-
-        new_event_loop.run_until_complete(run_test())
-
-
-class TestGetProjectStatsIntegration:
-    """Tests for get_project_stats method."""
-
-    def test_project_stats_aggregates_all_data(self, new_event_loop):
-        """Test that project stats aggregates data from all sources."""
-
-        async def run_test():
-            service = GitHubService()
-
-            mock_repo_details = {
-                "name": "my-project",
-                "full_name": "owner/my-project",
-                "description": "A great project",
-                "stargazers_count": 500,
-                "forks_count": 100,
-                "watchers_count": 500,
-                "open_issues_count": 10,
-                "created_at": "2020-01-01T00:00:00Z",
-                "updated_at": "2024-01-01T00:00:00Z",
-                "size": 5000,
-                "topics": ["python", "api"],
-                "homepage": "https://myproject.com",
-                "html_url": "https://github.com/owner/my-project",
-            }
-            mock_languages = {"Python": 80000, "JavaScript": 20000}
-
-            service.get_repo_details = AsyncMock(return_value=mock_repo_details)
-            service.get_repo_languages = AsyncMock(return_value=mock_languages)
-            service.get_repo_commits = AsyncMock(return_value=1500)
-
-            result = await service.get_project_stats("owner", "my-project")
-
-            assert result["name"] == "my-project"
-            assert result["stars"] == 500
-            assert result["commit_count"] == 1500
-            assert result["languages"] == mock_languages
-            assert result["topics"] == ["python", "api"]
 
         new_event_loop.run_until_complete(run_test())

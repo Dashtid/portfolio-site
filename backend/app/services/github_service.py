@@ -4,9 +4,7 @@ GitHub API service for fetching live project statistics
 
 import asyncio
 import logging
-import re
 import time
-from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -193,19 +191,6 @@ class GitHubService:
 
         return repos[:max_repos]  # Ensure we don't exceed the limit
 
-    async def get_repo_details(self, owner: str, repo: str) -> dict[str, Any]:
-        """Get detailed information about a specific repository."""
-        response = await self._request_with_backoff("GET", f"{self.base_url}/repos/{owner}/{repo}")
-        if response is None:
-            return {}
-        try:
-            response.raise_for_status()
-            result: dict[str, Any] = response.json()
-            return result
-        except httpx.HTTPStatusError as e:
-            logger.exception("Error fetching repo %s/%s: %s", owner, repo, e)
-            return {}
-
     async def get_repo_languages(self, owner: str, repo: str) -> dict[str, int]:
         """Get language statistics for a repository."""
         response = await self._request_with_backoff(
@@ -220,47 +205,6 @@ class GitHubService:
         except httpx.HTTPStatusError as e:
             logger.exception("Error fetching languages for %s/%s: %s", owner, repo, e)
             return {}
-
-    async def get_repo_commits(self, owner: str, repo: str, since: datetime | None = None) -> int:
-        """Get commit count for a repository."""
-        if not since:
-            since = datetime.now(UTC) - timedelta(days=365)  # Default to last year
-
-        # GitHub's `since` is documented as UTC. An offset-naive isoformat() on
-        # a non-UTC host silently shifts the window. Pin the suffix to Z so
-        # we're explicit regardless of how `since` was constructed.
-        since_param = (
-            since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-            if since.tzinfo is not None
-            else since.strftime("%Y-%m-%dT%H:%M:%SZ")
-        )
-
-        response = await self._request_with_backoff(
-            "GET",
-            f"{self.base_url}/repos/{owner}/{repo}/commits",
-            params={"since": since_param, "per_page": 1},
-        )
-
-        if response is None:
-            return 0
-
-        try:
-            response.raise_for_status()
-
-            # Get total count from Link header
-            link_header = response.headers.get("Link", "")
-            if link_header:
-                # Parse the last page number from Link header
-                match = re.search(r'page=(\d+)>; rel="last"', link_header)
-                if match:
-                    return int(match.group(1))
-
-            # If no pagination, count the returned items
-            return len(response.json())
-
-        except httpx.HTTPStatusError as e:
-            logger.exception("Error fetching commits for %s/%s: %s", owner, repo, e)
-            return 0
 
     async def get_portfolio_stats(self, username: str) -> dict[str, Any]:
         """Get aggregated statistics for portfolio display.
@@ -423,30 +367,6 @@ class GitHubService:
         except httpx.HTTPStatusError as e:
             logger.exception("Error fetching pinned repos for %s: %s", username, e)
             return []
-
-    async def get_project_stats(self, owner: str, repo: str) -> dict[str, Any]:
-        """Get detailed statistics for a specific project."""
-        repo_details = await self.get_repo_details(owner, repo)
-        languages = await self.get_repo_languages(owner, repo)
-        commit_count = await self.get_repo_commits(owner, repo)
-
-        return {
-            "name": repo_details.get("name"),
-            "full_name": repo_details.get("full_name"),
-            "description": repo_details.get("description"),
-            "stars": repo_details.get("stargazers_count", 0),
-            "forks": repo_details.get("forks_count", 0),
-            "watchers": repo_details.get("watchers_count", 0),
-            "open_issues": repo_details.get("open_issues_count", 0),
-            "created_at": repo_details.get("created_at"),
-            "updated_at": repo_details.get("updated_at"),
-            "size": repo_details.get("size", 0),
-            "commit_count": commit_count,
-            "languages": languages,
-            "topics": repo_details.get("topics", []),
-            "homepage": repo_details.get("homepage"),
-            "html_url": repo_details.get("html_url"),
-        }
 
 
 # Singleton instance
