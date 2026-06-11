@@ -478,7 +478,38 @@ useHead({
 })
 
 const portfolioStore = usePortfolioStore()
-const loading = ref(false)
+
+// INFRA-002: fetch portfolio data in setup (BEFORE component renders) so
+// vite-ssg captures the populated Pinia state into __INITIAL_STATE__ and
+// clients see hydrated content immediately. The previous onMounted-based
+// fetch was fire-and-forget during SSG pre-render — vite-ssg serialized
+// the empty store before the fetch resolved, so the rendered HTML
+// shipped real content (from the static fallback) but the hydration
+// payload was empty.
+//
+// (Tried onServerPrefetch instead to keep setup sync — vite-ssg's
+// renderer doesn't await that hook, so it doesn't populate state.
+// Top-level await + the existing App.vue <Suspense> boundary works.)
+//
+// The guard skips the fetch when the store is already populated, which is
+// the normal client-side case after hydration: SSG ships state via
+// __INITIAL_STATE__, `main.ts` rehydrates it into Pinia before any
+// component runs, and this setup sees a populated store and short-circuits.
+//
+// Failures here MUST NOT throw, because:
+//   - During SSG build, a throw would fail the entire build over a
+//     transient API blip.
+//   - During client hydration, a throw would bubble to <Suspense> and
+//     blank the page rather than gracefully degrade.
+// The static fallback below + the documents fetcher in onMounted carry
+// the user-facing experience when the API is unreachable.
+if (portfolioStore.companies.length === 0) {
+  try {
+    await portfolioStore.fetchAllData()
+  } catch (error) {
+    logger.error('Portfolio data fetch failed in setup:', error)
+  }
+}
 
 // Computed properties for education from API - sorted by end_date (newest first)
 const education = computed(() => {
@@ -534,36 +565,21 @@ const getDetailLinkId = (company: { id: string; name: string; start_date: string
   return company.id
 }
 
-// Load data on mount - use Promise.all to prevent race condition
+// Load data on mount. Portfolio data is fetched in setup() above
+// (INFRA-002); only the documents fetch lives here, because documents are a
+// component-local ref that doesn't need to flow through __INITIAL_STATE__.
 onMounted(async () => {
-  loading.value = true
   documentsLoading.value = true
 
-  // Load all data in parallel
-  await Promise.all([
-    // Fetch portfolio data
-    portfolioStore.fetchAllData().catch(error => {
-      logger.error('Error loading portfolio data:', error)
-    }),
-    // Fetch documents (DEAD-01: inlined after deleting api/services.ts;
-    // this was the only caller of the createCrudService factory pair).
-    apiClient
-      .get<Document[]>('/api/v1/documents')
-      .then(response => {
-        documents.value = response.data
-      })
-      .catch(error => {
-        logger.error('Error loading documents:', error)
-        documentsError.value = getUserMessage(error as Error)
-      })
-  ])
-
-  // Set loading states to false only after ALL data is loaded
-  loading.value = false
-  documentsLoading.value = false
-
-  // Service worker is now handled by vite-plugin-pwa (Workbox)
-  // Manual registration removed - PWA plugin auto-registers SW
+  try {
+    const response = await apiClient.get<Document[]>('/api/v1/documents')
+    documents.value = response.data
+  } catch (error) {
+    logger.error('Error loading documents:', error)
+    documentsError.value = getUserMessage(error as Error)
+  } finally {
+    documentsLoading.value = false
+  }
 
   // Wait for DOM to update before applying animations
   // This ensures elements are rendered before IntersectionObserver setup
