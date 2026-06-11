@@ -190,28 +190,28 @@ focus is performance, backend correctness, observability, and admin interfaces.
 | FRONTEND-BUGS-07 | `useFocusTrap` watch in AdminFormModal is now `{ immediate: true, flush: 'post' }` — activates the trap even when the modal mounts already-open (e.g. parent restores edit state after navigation), and `flush: 'post'` defers until the DOM update so `modalRef` is populated. | ✅ done |
 | BACKEND-ADMIN-07 / FRONTEND-TESTS-01 | New `AdminAnalytics.spec.ts` with 18 tests covering: rendering of the four summary cards, formatting (m/s duration, bounce rate %), SVG chart + axis labels, range tab default + switching + clamping (1y → visitor stats capped at 90), loading/error/empty states, retry button, lifecycle. Locale-independent assertions (CI runner is sv-SE). | ✅ done |
 
-**Sprint 6 — Admin part 2 + frontend perf + test backfill** (3 sessions).
+**Sprint 6 — Admin part 2 + frontend perf + test backfill** ✅ **SHIPPED 2026-06-11**. Final campaign sprint. 769 backend tests pass at 85.46%; frontend unit tests pass; 9 new E2E specs.
 
-| ID | Summary | Effort |
+| ID | Summary | Status |
 |----|---------|--------|
 | ~~BACKEND-ADMIN-06~~ | ~~Audit log + admin browser~~ — **DEFERRED** per Q5 decision (single-operator site) | — |
 | ~~BACKEND-ADMIN-09~~ | ~~Sessions admin~~ — **DEFERRED** per Q5 decision (revoke infra in Sprint 2 is enough) | — |
-| BACKEND-ADMIN-04 | Documents admin CRUD + upload UI | l |
-| BACKEND-ADMIN-10 | Sentry deep-link panel on dashboard | s |
-| FRONTEND-TESTS-02 | Router auth guard unit tests | m |
-| FRONTEND-TESTS-03 | E2E admin login/refresh/logout | l |
-| FRONTEND-TESTS-04 | E2E admin CRUD round-trip | l |
-| FRONTEND-PERF-01 | Slim Bootstrap CSS — **scope tight** per Q6 (drop unused utilities only, no SCSS rewrite) | s |
-| ~~FRONTEND-PERF-02~~ | ~~Replace three.js hero~~ — **DEFERRED (sacred cow)** per Q7 decision; lazy-loaded, off critical path | — |
-| FRONTEND-PERF-03 | Replace gsap entrance animations with IntersectionObserver | m |
-| FRONTEND-BUGS-05 | Fix `useGsapBatchAnimation` global kill bug | s |
-| FRONTEND-BUGS-06 | Fix portfolio store parallel-fetch error overwrite | s |
-| FRONTEND-DEAD-01 | Decide `api/services.ts`: migrate admin views or delete | s |
-| BACKEND-TESTS-01 | OAuth state IP-binding mismatch test | s |
-| BACKEND-TESTS-02 | OAuth state TTL expiry + cleanup tests | s |
-| BACKEND-TESTS-04 | `validate_safe_url` XSS schema tests | s |
-| BACKEND-TESTS-05 | Non-admin escalation tests on PUT/PATCH | s |
-| BACKEND-TESTS-10 | Fix `seed_data` 0% coverage (pytest-asyncio fixture) | m |
+| BACKEND-ADMIN-04 | `documents.py` gains POST / PUT / DELETE / POST upload (admin only). New `AdminDocuments.vue` with table + add/edit modal + PDF upload. Upload endpoint: 25 MB cap, PDF content-type + extension guard, sanitised filename via `_safe_filename`, UUID prefix to avoid collisions. `DocumentUpdate` schema gains `order_index` + safe-URL guard. Admin nav now 8 links (Documents joined). | ✅ done |
+| BACKEND-ADMIN-10 | New `admin_panel` router exposes `GET /api/v1/admin/sentry-panel` returning `{enabled, issues_url}`. `SENTRY_ISSUES_URL` added to `app.config.Settings`. `DashboardOverview.vue` fetches the config on mount and renders a deep-link tile only when `enabled=true`. | ✅ done |
+| FRONTEND-TESTS-02 | Auth guard extracted from `main.ts` to `router/authGuard.ts` (`createAdminAuthGuard`) so it's testable in isolation. 12 unit tests across `requires*` matching, init lazy-call, deep-link redirects, async/sync resolvers. | ✅ done |
+| FRONTEND-TESTS-03 | New `tests/e2e/admin-auth.spec.ts` — 5 specs: unauth → /login redirect, auth user bounces from /login → /admin, dashboard render, logout, refresh-on-401 retry. Backend mocked at the Playwright request layer. | ✅ done |
+| FRONTEND-TESTS-04 | New `tests/e2e/admin-crud.spec.ts` — 4 specs: GET fan-out on /admin/companies, POST on create-form submit, DELETE on accept-confirm, no-DELETE on dismiss-confirm. | ✅ done |
+| FRONTEND-PERF-01 | `postcss.config.cjs` runs `@fullhuman/postcss-purgecss` against the production bundle only. Vendor CSS 230,850 → 83,271 bytes (-64%); index CSS 75,363 → 66,066 bytes (-12%). Bootstrap import unchanged; safelist preserves dynamic `:class` patterns + Bootstrap runtime-toggled classes. | ✅ done |
+| ~~FRONTEND-PERF-02~~ | ~~Replace three.js hero~~ — **DEFERRED (sacred cow)** per Q7 decision | — |
+| FRONTEND-PERF-03 | New `useIntersectionAnimation.ts` (CSS transitions + IntersectionObserver). HomeView calls migrated; `useGsapAnimations.ts` deleted. Drops gsap's static import from the home-page critical path (gsap still loaded by `ExperienceDetail.vue` on that route). Reduced-motion respected. Animation styles via `[data-anim]` attribute selectors in HomeView's scoped block. | ✅ done |
+| FRONTEND-BUGS-05 | `useGsapBatchAnimation` (since deleted by PERF-03) tracked the tween instance per-call and only killed its own ScrollTrigger on unmount — replaced the old `ScrollTrigger.getAll().forEach(t.kill)` which globally nuked every page-wide scroll animation. | ✅ done |
+| FRONTEND-BUGS-06 | `_startRequest()` now clears `error` only on the 0 → 1 transition (start of a batch), not at the top of every individual fetcher. A late-completing successful fetch no longer erases the error a previous fetch already recorded in the same `Promise.all`. | ✅ done |
+| FRONTEND-DEAD-01 | `api/services.ts` (sole external caller: HomeView's `getDocuments`) and `api/createCrudService.ts` (sole caller: services.ts) deleted. HomeView now calls `apiClient.get<Document[]>('/api/v1/documents')` directly. Spec deleted; HomeView spec mock for services removed. | ✅ done |
+| BACKEND-TESTS-01 | New `tests/test_oauth_state.py::TestOAuthStateIpBinding` — 5 tests: originating IP consumes, wrong IP rejected (state survives for the real user), unbound state accepts any IP, single-use enforcement. | ✅ done |
+| BACKEND-TESTS-02 | Same file `TestOAuthStateTtl` — 3 tests: expired state rejected, periodic cleanup deletes only expired rows (with patched `asyncio.sleep` + `AsyncSessionLocal`), cleanup loop exits cleanly on `CancelledError`. | ✅ done |
+| BACKEND-TESTS-04 | New `tests/test_validators_xss.py` — 69 tests across parameterised payloads (javascript:, data:, vbscript:, file:, ftp:, chrome-extension:, protocol-relative) on every URL field of Company/Project/Education/Document create + update schemas + pure-function unit checks (regex anchor, error message). | ✅ done |
+| BACKEND-TESTS-05 | New `tests/test_admin_authorization.py` — 15 tests: every POST/PUT/DELETE on companies/projects/skills/education + `/metrics/reset` rejected with 401/403 when called with a non-admin token; admin tokens still pass (sanity check). | ✅ done |
+| BACKEND-TESTS-10 | `seed_data.py::main()` now covered. New `TestSeedDataMain` (2 tests, monkeypatched engine) drives the orchestrator end-to-end + verifies that a seed-step failure re-raises. Coverage 76.81% → 98.55% (only `__main__` guard untestable from pytest). | ✅ done |
 
 **Deferred / dropped** (13 items): rate-limit override admin (speculative),
 multi-user management (single-operator YAGNI), `geo_ip` O(n log n) eviction (nit),

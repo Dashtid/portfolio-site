@@ -234,6 +234,12 @@ class Settings(BaseSettings):
     SENTRY_DSN: str | None = None  # Sentry DSN for error tracking
     SENTRY_TRACES_SAMPLE_RATE: float = 0.1  # 10% of transactions for performance monitoring
     SENTRY_PROFILES_SAMPLE_RATE: float = 0.1  # 10% of sampled transactions for profiling
+    # Deep-link target for the admin dashboard's Sentry panel
+    # (BACKEND-ADMIN-10). e.g.
+    # "https://my-org.sentry.io/issues/?project=12345&statsPeriod=24h".
+    # Optional — when unset the admin dashboard hides the panel rather
+    # than rendering a broken link.
+    SENTRY_ISSUES_URL: str | None = None
 
     # Performance Monitoring
     METRICS_ENABLED: bool = True

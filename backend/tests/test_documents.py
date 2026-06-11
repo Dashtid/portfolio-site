@@ -2,6 +2,8 @@
 Tests for documents API endpoints
 """
 
+from pathlib import Path
+
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
@@ -152,20 +154,218 @@ class TestDocumentsEdgeCases:
         assert response.status_code == 404
         assert "application/json" in response.headers.get("content-type", "")
 
-    def test_documents_endpoint_method_not_allowed(self, client: TestClient):
-        """Test POST to documents endpoint returns 405."""
+    def test_documents_post_without_auth_rejected(self, client: TestClient):
+        """ADMIN-04: POST is admin-only; anonymous -> 401/403, not 405."""
         response = client.post("/api/v1/documents/", json={"title": "Test"})
-        assert response.status_code == 405
+        assert response.status_code in (401, 403)
 
-    def test_documents_delete_not_allowed(self, client: TestClient):
-        """Test DELETE to documents endpoint returns 405."""
+    def test_documents_delete_without_auth_rejected(self, client: TestClient):
+        """ADMIN-04: DELETE is admin-only; anonymous -> 401/403, not 405."""
         response = client.delete("/api/v1/documents/some-id")
-        assert response.status_code == 405
+        assert response.status_code in (401, 403)
 
-    def test_documents_put_not_allowed(self, client: TestClient):
-        """Test PUT to documents endpoint returns 405."""
+    def test_documents_put_without_auth_rejected(self, client: TestClient):
+        """ADMIN-04: PUT is admin-only; anonymous -> 401/403, not 405."""
         response = client.put("/api/v1/documents/some-id", json={"title": "Test"})
-        assert response.status_code == 405
+        assert response.status_code in (401, 403)
+
+
+class TestDocumentsAdminCrud:
+    """ADMIN-04: end-to-end CRUD round-trips for the admin document API."""
+
+    _CREATE_PAYLOAD = {
+        "id": "test-doc-1",
+        "title": "Master Thesis",
+        "description": "A paper on something academic",
+        "document_type": "thesis",
+        # Schema's validate_safe_url requires a leading slash or http(s)://.
+        "file_path": "/documents/test.pdf",
+        "file_size": 4096,
+        "file_url": "/static/documents/test.pdf",
+        "published_date": "2024-05-01",
+        "order_index": 1,
+    }
+
+    def test_admin_can_create_document(self, client: TestClient, admin_user_in_db: dict):
+        response = client.post(
+            "/api/v1/documents/",
+            json=self._CREATE_PAYLOAD,
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["title"] == "Master Thesis"
+        assert body["file_url"].endswith("/test.pdf")
+
+    def test_duplicate_id_rejected(self, client: TestClient, admin_user_in_db: dict):
+        client.post(
+            "/api/v1/documents/",
+            json=self._CREATE_PAYLOAD,
+            headers=admin_user_in_db["headers"],
+        )
+        response = client.post(
+            "/api/v1/documents/",
+            json=self._CREATE_PAYLOAD,
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 409
+
+    def test_admin_can_update_document(self, client: TestClient, admin_user_in_db: dict):
+        client.post(
+            "/api/v1/documents/",
+            json=self._CREATE_PAYLOAD,
+            headers=admin_user_in_db["headers"],
+        )
+        response = client.put(
+            "/api/v1/documents/test-doc-1",
+            json={"title": "Renamed Thesis", "order_index": 5},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["title"] == "Renamed Thesis"
+        assert body["order_index"] == 5
+
+    def test_update_nonexistent_returns_404(self, client: TestClient, admin_user_in_db: dict):
+        response = client.put(
+            "/api/v1/documents/does-not-exist",
+            json={"title": "Renamed"},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 404
+
+    def test_admin_can_delete_document(self, client: TestClient, admin_user_in_db: dict):
+        client.post(
+            "/api/v1/documents/",
+            json=self._CREATE_PAYLOAD,
+            headers=admin_user_in_db["headers"],
+        )
+        response = client.delete(
+            "/api/v1/documents/test-doc-1", headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 204
+        # Confirm it's gone.
+        get_response = client.get("/api/v1/documents/test-doc-1")
+        assert get_response.status_code == 404
+
+    def test_delete_nonexistent_returns_404(self, client: TestClient, admin_user_in_db: dict):
+        response = client.delete(
+            "/api/v1/documents/does-not-exist", headers=admin_user_in_db["headers"]
+        )
+        assert response.status_code == 404
+
+
+class TestDocumentsAdminUpload:
+    """ADMIN-04: PDF upload endpoint round-trip + rejection cases."""
+
+    def _make_pdf_bytes(self, size: int = 64) -> bytes:
+        # Minimal PDF magic + filler. The endpoint accepts the file based
+        # on the MIME type the client claims, not magic-byte sniffing —
+        # tests just need a payload the right shape for size assertions.
+        return b"%PDF-1.4\n" + b"0" * size + b"\n%%EOF"
+
+    def test_admin_upload_pdf_succeeds(self, client: TestClient, admin_user_in_db: dict, tmp_path):
+        # Run the upload inside the tmp_path CWD so the test doesn't
+        # leave files in the repo's static/documents folder.
+        import os  # noqa: PLC0415
+
+        cwd = Path.cwd()
+        os.chdir(tmp_path)
+        try:
+            payload = self._make_pdf_bytes(128)
+            response = client.post(
+                "/api/v1/documents/upload",
+                files={"file": ("paper.pdf", payload, "application/pdf")},
+                headers=admin_user_in_db["headers"],
+            )
+        finally:
+            os.chdir(cwd)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["file_url"].startswith("/static/documents/")
+        assert body["file_url"].endswith(".pdf")
+        assert body["file_size"] == len(payload)
+        assert body["original_filename"] == "paper.pdf"
+
+    def test_upload_without_auth_rejected(self, client: TestClient):
+        response = client.post(
+            "/api/v1/documents/upload",
+            files={"file": ("paper.pdf", b"%PDF-1.4\n", "application/pdf")},
+        )
+        assert response.status_code in (401, 403)
+
+    def test_upload_rejects_non_pdf_content_type(self, client: TestClient, admin_user_in_db: dict):
+        response = client.post(
+            "/api/v1/documents/upload",
+            files={"file": ("paper.txt", b"plain text", "text/plain")},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 415
+
+    def test_upload_rejects_non_pdf_extension(self, client: TestClient, admin_user_in_db: dict):
+        """Even with the right MIME type, a non-.pdf filename is rejected.
+
+        Belt-and-braces — catches a forged content-type alongside a
+        ``.exe`` filename, which Windows clients would happily try to
+        execute when downloaded.
+        """
+        response = client.post(
+            "/api/v1/documents/upload",
+            files={"file": ("payload.exe", b"%PDF-1.4\n", "application/pdf")},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 415
+
+    def test_upload_rejects_oversize_file(
+        self, client: TestClient, admin_user_in_db: dict, tmp_path
+    ):
+        import os  # noqa: PLC0415
+
+        cwd = Path.cwd()
+        os.chdir(tmp_path)
+        try:
+            oversize = b"%PDF-1.4\n" + b"0" * (26 * 1024 * 1024)  # > 25 MB cap
+            response = client.post(
+                "/api/v1/documents/upload",
+                files={"file": ("big.pdf", oversize, "application/pdf")},
+                headers=admin_user_in_db["headers"],
+            )
+        finally:
+            os.chdir(cwd)
+        assert response.status_code == 413
+
+    def test_safe_filename_strips_path_traversal(self):
+        """Direct unit check on the filename sanitiser.
+
+        Even if a future endpoint passes the raw filename straight to
+        ``Path(...) / name``, the sanitiser cannot let ``..\\evil`` through.
+        ``Path(...).name`` is the first defence — it discards every
+        directory component, so ``../../etc/passwd`` becomes ``passwd``
+        before the regex pass runs.
+        """
+        from app.api.v1.endpoints.documents import _safe_filename  # noqa: PLC0415
+
+        # Each case: (raw input, expected output OR None for "any UUID hex").
+        cases = [
+            ("../../etc/passwd", "passwd"),
+            ("..\\..\\Windows\\System32\\evil.pdf", "evil.pdf"),
+            ("with spaces.pdf", "with-spaces.pdf"),
+            ("/already/slashed.pdf", "slashed.pdf"),
+            ("../../", None),  # collapses to empty; sanitiser falls back to UUID hex
+        ]
+        for raw, expected in cases:
+            cleaned = _safe_filename(raw)
+            # Must never contain a path separator or traversal marker.
+            assert "/" not in cleaned
+            assert "\\" not in cleaned
+            assert ".." not in cleaned
+            assert cleaned != ""  # never returns empty
+            if expected is not None:
+                assert cleaned == expected
+            else:
+                # Empty input falls back to a 32-char UUID hex.
+                assert len(cleaned) == 32 and all(c in "0123456789abcdef" for c in cleaned)
 
 
 class TestDocumentsExceptionHandling:

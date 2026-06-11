@@ -451,7 +451,7 @@ import FooterSection from '../components/FooterSection.vue'
 import BackToTop from '../components/BackToTop.vue'
 import DocumentCard from '../components/DocumentCard.vue'
 import GitHubStats from '../components/GitHubStats.vue'
-import { useGsapBatchAnimation } from '../composables/useGsapAnimations'
+import { useIntersectionAnimation } from '../composables/useIntersectionAnimation'
 
 // Lazy load Three.js hero background to reduce initial bundle size (~172KB gzipped)
 const ThreeHeroBackground = defineAsyncComponent({
@@ -460,7 +460,7 @@ const ThreeHeroBackground = defineAsyncComponent({
   timeout: 10000
 })
 import { useHead } from '@unhead/vue'
-import { getDocuments } from '../api/services'
+import apiClient from '../api/client'
 import type { Document } from '@/types'
 import { logger } from '../utils/logger'
 import { getUserMessage } from '../utils/errorHandler'
@@ -545,10 +545,12 @@ onMounted(async () => {
     portfolioStore.fetchAllData().catch(error => {
       logger.error('Error loading portfolio data:', error)
     }),
-    // Fetch documents
-    getDocuments()
-      .then(docs => {
-        documents.value = docs
+    // Fetch documents (DEAD-01: inlined after deleting api/services.ts;
+    // this was the only caller of the createCrudService factory pair).
+    apiClient
+      .get<Document[]>('/api/v1/documents')
+      .then(response => {
+        documents.value = response.data
       })
       .catch(error => {
         logger.error('Error loading documents:', error)
@@ -567,37 +569,17 @@ onMounted(async () => {
   // This ensures elements are rendered before IntersectionObserver setup
   await nextTick()
 
-  // Apply GSAP scroll animations to cards with staggered effect
-  // Using 0.5s duration and 0.12s stagger for snappier feel
-  useGsapBatchAnimation('.experience-card', {
-    animation: 'slideUp',
-    duration: 0.5,
-    stagger: 0.12
-  })
-
-  useGsapBatchAnimation('.education-card', {
-    animation: 'slideUp',
-    duration: 0.5,
-    stagger: 0.12
-  })
-
-  useGsapBatchAnimation('.project-card', {
-    animation: 'slideUp',
-    duration: 0.5,
-    stagger: 0.12
-  })
-
-  // Document cards animation (publications section)
-  useGsapBatchAnimation('.document-card', {
-    animation: 'slideUp',
-    duration: 0.5,
-    stagger: 0.12
-  })
-
-  useGsapBatchAnimation('.section-title', {
-    animation: 'fadeIn',
-    duration: 0.6
-  })
+  // PERF-03: IntersectionObserver-driven entrance animations replace the
+  // previous GSAP + ScrollTrigger pass. Stagger is now a per-element CSS
+  // transition-delay rather than a tween timeline; the animation itself
+  // is a CSS transition driven by the `[data-anim]` attribute (defined
+  // in the scoped <style> below). Drops ~45 KB gzipped of gsap from the
+  // home-page critical path.
+  useIntersectionAnimation('.experience-card', { stagger: 0.12 })
+  useIntersectionAnimation('.education-card', { stagger: 0.12 })
+  useIntersectionAnimation('.project-card', { stagger: 0.12 })
+  useIntersectionAnimation('.document-card', { stagger: 0.12 })
+  useIntersectionAnimation('.section-title', { stagger: 0 })
 })
 </script>
 
@@ -608,6 +590,40 @@ onMounted(async () => {
 /* Additional Vue-specific styles */
 .portfolio-home {
   padding-top: 0;
+}
+
+/*
+ * PERF-03: entrance animations driven by useIntersectionAnimation.
+ * `[data-anim="hidden"]` is set on mount; the observer flips elements
+ * to `[data-anim="visible"]` as they scroll into view. Transitions are
+ * GPU-friendly (transform + opacity only), so the same look the GSAP
+ * pass produced — slide-up + fade — runs without the GSAP runtime.
+ *
+ * `:deep` because `scoped` doesn't rewrite the attribute selector
+ * across element boundaries (the data attribute lives on cards rendered
+ * by child components).
+ */
+:deep([data-anim='hidden']) {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+  will-change: opacity, transform;
+}
+
+:deep([data-anim='visible']) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :deep([data-anim='hidden']),
+  :deep([data-anim='visible']) {
+    transition: none !important;
+    transform: none !important;
+  }
 }
 
 /* Smooth scrolling */

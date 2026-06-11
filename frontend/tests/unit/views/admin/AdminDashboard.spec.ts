@@ -174,7 +174,8 @@ describe('AdminDashboard', () => {
 
       const navLinks = wrapper.findAll('.nav-link')
       // Sprint 5: Skills + Education + Metrics joined the nav (ADMIN-01/02/03).
-      expect(navLinks.length).toBe(7)
+      // Sprint 6: Documents joined (ADMIN-04).
+      expect(navLinks.length).toBe(8)
 
       const linkTexts = navLinks.map(link => link.text())
       expect(linkTexts).toContain('Dashboard')
@@ -182,6 +183,7 @@ describe('AdminDashboard', () => {
       expect(linkTexts).toContain('Projects')
       expect(linkTexts).toContain('Skills')
       expect(linkTexts).toContain('Education')
+      expect(linkTexts).toContain('Documents')
       expect(linkTexts).toContain('Analytics')
       expect(linkTexts).toContain('Metrics')
     })

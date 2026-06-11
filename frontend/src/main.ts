@@ -2,8 +2,9 @@ import { ViteSSG } from 'vite-ssg'
 import { createPinia } from 'pinia'
 import { nextTick } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
-import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
+import type { RouteLocationNormalized } from 'vue-router'
 import { routes, scrollBehavior, DEFAULT_TITLE } from './router'
+import { createAdminAuthGuard } from './router/authGuard'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './style.css'
 import './assets/portfolio.css'
@@ -32,42 +33,17 @@ export const createApp = ViteSSG(
     }
 
     if (isClient) {
-      // Navigation guards — client-only (localStorage / window not available during SSG)
+      // Navigation guards — client-only (localStorage / window not available
+      // during SSG). The guard body is extracted to `router/authGuard.ts`
+      // so it can be unit-tested without spinning up the full app
+      // (FRONTEND-TESTS-02). Lazy-import the auth store inside the
+      // resolver to keep SSG tree-shaking able to drop it on builds
+      // that don't include /admin routes.
       router.beforeEach(
-        async (
-          to: RouteLocationNormalized,
-          _from: RouteLocationNormalized,
-          next: NavigationGuardNext
-        ) => {
-          // Only initialize auth (which calls /auth/me) on routes that
-          // actually care about auth state. Public routes (/, /experience/*)
-          // skip the call entirely — keeps unauthenticated visitors from
-          // generating a 401 on every page load.
-          const needsAuthState = to.matched.some(r => r.meta.requiresAuth || r.meta.requiresGuest)
-          // Lazy-import auth store inside the guard to avoid SSG tree-shaking issues
+        createAdminAuthGuard(async () => {
           const { useAuthStore } = await import('./stores/auth')
-          const authStore = useAuthStore()
-
-          if (needsAuthState && !authStore.isInitialized) {
-            await authStore.initializeAuth()
-          }
-
-          if (to.matched.some(record => record.meta.requiresAuth)) {
-            if (!authStore.isAuthenticated) {
-              next({ name: 'admin-login' })
-            } else {
-              next()
-            }
-          } else if (to.matched.some(record => record.meta.requiresGuest)) {
-            if (authStore.isAuthenticated) {
-              next({ name: 'admin-dashboard' })
-            } else {
-              next()
-            }
-          } else {
-            next()
-          }
-        }
+          return useAuthStore()
+        })
       )
 
       // Update document title and track page views after navigation

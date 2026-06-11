@@ -56,6 +56,16 @@ class DocumentUpdate(BaseModel):
     file_size: int | None = Field(None, gt=0)
     file_url: str | None = None
     published_date: str | None = None
+    # Admin UI reorders via order_index; added when ADMIN-04 went
+    # admin-writable (Sprint 6) — previously the schema was unused.
+    order_index: int | None = None
+
+    @field_validator("file_url", "file_path", mode="before")
+    @classmethod
+    def validate_optional_urls(cls, v: str | None) -> str | None:
+        """Same XSS guard as DocumentCreate, but tolerates None so partial
+        updates work."""
+        return validate_safe_url(v, "URL")
 
 
 class DocumentResponse(DocumentBase):

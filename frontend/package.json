@@ -52,6 +52,7 @@
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0"
   },
   "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^8.0.0",
     "@lhci/cli": "^0.15.1",
     "@pinia/testing": "^1.0.3",
     "@playwright/test": "1.60.0",
@@ -70,6 +71,7 @@
     "globals": "^17.6.0",
     "happy-dom": "^20.8.4",
     "jsdom": "^26.1.0",
+    "postcss": "^8.5.15",
     "prettier": "^3.8.1",
     "rollup-plugin-visualizer": "^6.0.5",
     "sharp": "^0.34.5",

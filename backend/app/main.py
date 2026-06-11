@@ -21,7 +21,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse
 
 from app.api.v1 import analytics, auth, companies, education, github, projects, skills
-from app.api.v1.endpoints import documents, errors, health, metrics
+from app.api.v1.endpoints import admin_panel, documents, errors, health, metrics
 from app.config import settings
 from app.database import Base, engine
 from app.middleware import (
@@ -358,6 +358,7 @@ app.add_middleware(LoggingMiddleware)
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
+app.include_router(admin_panel.router, prefix="/api/v1/admin", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")

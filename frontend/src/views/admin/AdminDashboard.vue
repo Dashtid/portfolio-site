@@ -57,6 +57,13 @@
         Education
       </router-link>
       <router-link
+        to="/admin/documents"
+        class="nav-link"
+        :class="{ active: $route.path === '/admin/documents' }"
+      >
+        Documents
+      </router-link>
+      <router-link
         to="/admin/analytics"
         class="nav-link"
         :class="{ active: $route.path === '/admin/analytics' }"

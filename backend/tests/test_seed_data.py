@@ -268,3 +268,58 @@ class TestSeedDataIntegration:
         # Verify
         companies = (await db_session.execute(select(Company))).scalars().all()
         assert len(companies) == 8
+
+
+class TestSeedDataMain:
+    """Tests for the ``main()`` orchestrator in seed_data.
+
+    Covers the previously-uncovered lines 466-491 (the CLI entry point).
+    The function does its own engine + session bootstrap, so we patch the
+    module-level ``engine`` to point at the test engine before invoking it.
+    """
+
+    @pytest.mark.asyncio
+    async def test_main_seeds_all_data_types(self, monkeypatch):
+        """``main()`` runs the four seed_* functions and commits via its own
+        session. Patching the module-level engine redirects everything to
+        the test database.
+        """
+        from app import seed_data  # noqa: PLC0415
+        from tests.conftest import test_engine  # noqa: PLC0415
+
+        monkeypatch.setattr(seed_data, "engine", test_engine)
+
+        # Run the orchestrator. It is expected to:
+        #   - call Base.metadata.create_all (no-op since conftest already did)
+        #   - seed companies/projects/skills/education
+        #   - call engine.dispose()
+        # We must call it WITHOUT awaiting dispose actually closing our test
+        # engine pool — but since StaticPool's dispose is a no-op on the
+        # shared connection, this is safe.
+        await seed_data.main()
+
+        from tests.conftest import TestSessionLocal  # noqa: PLC0415
+
+        async with TestSessionLocal() as session:
+            assert len((await session.execute(select(Company))).scalars().all()) == 8
+            assert len((await session.execute(select(Project))).scalars().all()) == 5
+            assert len((await session.execute(select(Skill))).scalars().all()) == 20
+            assert len((await session.execute(select(Education))).scalars().all()) == 6
+
+    @pytest.mark.asyncio
+    async def test_main_rolls_back_on_seed_failure(self, monkeypatch):
+        """If any seed_* call raises, ``main()`` re-raises so the CLI exits
+        non-zero. The ``async with AsyncSession`` block handles teardown.
+        """
+        from app import seed_data  # noqa: PLC0415
+        from tests.conftest import test_engine  # noqa: PLC0415
+
+        monkeypatch.setattr(seed_data, "engine", test_engine)
+
+        async def _boom(_session):
+            raise RuntimeError("simulated seed failure")
+
+        monkeypatch.setattr(seed_data, "seed_companies", _boom)
+
+        with pytest.raises(RuntimeError, match="simulated seed failure"):
+            await seed_data.main()

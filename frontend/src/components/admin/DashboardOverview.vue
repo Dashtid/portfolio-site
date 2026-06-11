@@ -37,6 +37,45 @@
       </div>
     </div>
 
+    <!-- BACKEND-ADMIN-10: Sentry deep-link panel.
+         Mounts only after the admin-only sentry-panel endpoint reports
+         enabled=true; clicking the CTA opens the operator's configured
+         issues view in a new tab. -->
+    <div v-if="sentryPanel?.enabled" class="sentry-panel" data-testid="sentry-panel">
+      <div class="sentry-panel-header">
+        <svg
+          class="sentry-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 2L2 22h20L12 2z" />
+          <line x1="12" y1="9" x2="12" y2="15" />
+          <line x1="12" y1="18" x2="12.01" y2="18" />
+        </svg>
+        <div class="sentry-panel-text">
+          <div class="sentry-panel-title">Error Tracking</div>
+          <div class="sentry-panel-subtitle">
+            {{
+              sentryPanel.issues_url
+                ? 'Sentry is wired up. Open the issues view for the last 24h.'
+                : 'Sentry is wired up but no issues URL is configured.'
+            }}
+          </div>
+        </div>
+        <a
+          v-if="sentryPanel.issues_url"
+          :href="sentryPanel.issues_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sentry-cta"
+        >
+          Open Sentry
+        </a>
+      </div>
+    </div>
+
     <div class="quick-actions">
       <h3 class="subsection-title">Quick Actions</h3>
       <div class="action-buttons">
@@ -100,6 +139,10 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import apiClient from '../../api/client'
+import { adminLogger } from '../../utils/logger'
+
 interface Props {
   companiesCount: number
   skillsCount: number
@@ -108,11 +151,30 @@ interface Props {
   loadError: string | null
 }
 
+interface SentryPanelConfig {
+  enabled: boolean
+  issues_url: string | null
+}
+
 defineProps<Props>()
 
 const emit = defineEmits<{
   retry: []
 }>()
+
+// BACKEND-ADMIN-10: fetch the deep-link config. Silently no-ops on
+// failure (the panel just stays hidden) — a Sentry-config fetch failure
+// shouldn't break the dashboard's primary stats.
+const sentryPanel = ref<SentryPanelConfig | null>(null)
+
+onMounted(async () => {
+  try {
+    const response = await apiClient.get<SentryPanelConfig>('/api/v1/admin/sentry-panel')
+    sentryPanel.value = response.data
+  } catch (error) {
+    adminLogger.error('Failed to load Sentry panel config:', error)
+  }
+})
 </script>
 
 <style scoped>
@@ -213,6 +275,63 @@ const emit = defineEmits<{
   margin-bottom: var(--spacing-6);
 }
 
+.sentry-panel {
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-4) var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+}
+
+.sentry-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.sentry-icon {
+  width: 28px;
+  height: 28px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.sentry-panel-text {
+  flex: 1;
+}
+
+.sentry-panel-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  margin-bottom: 2px;
+}
+
+.sentry-panel-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+}
+
+.sentry-cta {
+  padding: var(--spacing-2) var(--spacing-4);
+  background: #6366f1;
+  color: white;
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-base);
+  transition: background var(--transition-base) ease;
+  white-space: nowrap;
+}
+
+.sentry-cta:hover {
+  background: #4f46e5;
+}
+
+.sentry-cta:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
 .error-icon {
   width: 20px;
   height: 20px;
@@ -302,5 +421,18 @@ const emit = defineEmits<{
 
 [data-theme='dark'] .retry-button:hover {
   background: #ef4444;
+}
+
+[data-theme='dark'] .sentry-panel {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-primary, #334155);
+}
+
+[data-theme='dark'] .sentry-panel-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .sentry-panel-subtitle {
+  color: var(--text-secondary, #cbd5e1);
 }
 </style>

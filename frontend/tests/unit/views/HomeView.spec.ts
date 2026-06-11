@@ -52,11 +52,6 @@ vi.mock('@/components/DocumentCard.vue', () => ({
   }
 }))
 
-// Mock API services
-vi.mock('@/api/services', () => ({
-  getDocuments: vi.fn().mockResolvedValue([])
-}))
-
 // Mock service worker
 Object.defineProperty(navigator, 'serviceWorker', {
   value: {
