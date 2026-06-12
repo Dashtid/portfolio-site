@@ -390,7 +390,7 @@ jobs:
     timeout-minutes: 10
     environment:
       name: production
-      url: https://dashti-portfolio-backend.fly.dev
+      url: https://api.dashti.se
 
     steps:
       - name: Checkout code

@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 FRONTEND_URL="${FRONTEND_URL:-https://dashti.se}"
-BACKEND_URL="${BACKEND_URL:-https://dashti-portfolio-backend.fly.dev}"
+BACKEND_URL="${BACKEND_URL:-https://api.dashti.se}"
 
 echo "========================================"
 echo "Deployment Verification Script"

@@ -73,11 +73,11 @@ async def close_oauth_client() -> None:
 def _auth_cookie_kwargs() -> dict:
     """Common attributes for the auth cookies.
 
-    In production the frontend (dashti.se) and backend (*.fly.dev) live on
-    distinct eTLD+1s, so the cookies must be SameSite=None+Secure for the
-    browser to send them on cross-site fetch from the admin SPA. Dev/test
-    runs over plain HTTP where Secure=True would cause the browser to drop
-    the cookie outright; SameSite=Lax is the correct relaxation there.
+    Post-INFRA-003: frontend (dashti.se) and backend (api.dashti.se) share
+    eTLD+1, so SameSite=Lax is sufficient — the browser treats fetches
+    between the two as same-site and sends the cookies. Secure stays
+    env-conditional because dev/test runs over plain HTTP, where Secure=True
+    would cause the browser to drop the cookie outright.
 
     Note: cookies created with these attributes must be *deleted* with the
     same attributes (Secure, SameSite, HttpOnly) or recent Chromium and
@@ -88,7 +88,7 @@ def _auth_cookie_kwargs() -> dict:
     return {
         "httponly": True,
         "secure": is_production,
-        "samesite": "none" if is_production else "lax",
+        "samesite": "lax",
     }
 
 

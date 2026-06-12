@@ -13,7 +13,7 @@ This guide covers deploying the Portfolio site to production using Vercel (front
 **Production URLs**:
 
 - Frontend: <https://dashti.se>
-- Backend API: <https://dashti-portfolio-backend.fly.dev>
+- Backend API: <https://api.dashti.se>
 
 ---
 
@@ -92,7 +92,7 @@ fly status
 fly logs
 
 # Health check
-curl https://dashti-portfolio-backend.fly.dev/api/v1/health
+curl https://api.dashti.se/api/v1/health
 ```
 
 ### Scaling
@@ -134,7 +134,7 @@ Set in Vercel dashboard under Project Settings > Environment Variables:
 
 | Variable          | Value                                      |
 | ----------------- | ------------------------------------------ |
-| `VITE_API_URL`    | `https://dashti-portfolio-backend.fly.dev` |
+| `VITE_API_URL`    | `https://api.dashti.se`                    |
 | `VITE_SENTRY_DSN` | Your Sentry DSN                            |
 
 ### Security Headers
@@ -196,7 +196,7 @@ Supporting workflows:
 
 1. Create account at [uptimerobot.com](https://uptimerobot.com)
 2. Add HTTP(s) Monitor:
-   - URL: `https://dashti-portfolio-backend.fly.dev/api/v1/health`
+   - URL: `https://api.dashti.se/api/v1/health`
    - Monitoring Interval: 5 minutes
    - Keyword: `healthy` (Type: exists)
 3. Configure alerts (email, Slack, etc.)
@@ -205,7 +205,7 @@ Supporting workflows:
 
 1. Create account at [betterstack.com](https://betterstack.com)
 2. Add Heartbeat Monitor:
-   - URL: `https://dashti-portfolio-backend.fly.dev/api/v1/health`
+   - URL: `https://api.dashti.se/api/v1/health`
    - Check frequency: 3 minutes
 3. Add Incident Management for automatic alerts
 
@@ -259,7 +259,7 @@ fly logs -a dashti-portfolio-backend | grep ERROR
 Access internal metrics:
 
 ```bash
-curl https://dashti-portfolio-backend.fly.dev/api/v1/metrics
+curl https://api.dashti.se/api/v1/metrics
 ```
 
 Returns: request counts, response times, error rates per endpoint.

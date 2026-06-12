@@ -166,7 +166,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "style-src 'self' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev https://*.sentry.io",
+                "connect-src 'self' https://api.github.com https://*.sentry.io",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com/maps https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
@@ -182,7 +182,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.fly.dev https://cdn.jsdelivr.net https://*.sentry.io ws://localhost:* http://localhost:*",
+                "connect-src 'self' https://api.github.com https://cdn.jsdelivr.net https://*.sentry.io ws://localhost:* http://localhost:*",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com/maps https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
@@ -392,7 +392,7 @@ Contact: mailto:security@dashti.se
 Contact: https://www.linkedin.com/in/david-dashti/
 Expires: 2026-12-31T23:59:59.000Z
 Preferred-Languages: en, sv
-Canonical: https://dashti-portfolio-backend.fly.dev/.well-known/security.txt
+Canonical: https://api.dashti.se/.well-known/security.txt
 
 # Policy
 # This is the API backend for dashti.se portfolio.

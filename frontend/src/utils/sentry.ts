@@ -85,11 +85,7 @@ export async function initSentry(app: App, router: Router): Promise<void> {
       tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
-      tracePropagationTargets: [
-        'localhost',
-        /^https:\/\/dashti\.se/,
-        /^https:\/\/dashti-portfolio-backend\.fly\.dev/
-      ]
+      tracePropagationTargets: ['localhost', /^https:\/\/dashti\.se/, /^https:\/\/api\.dashti\.se/]
     })
 
     sentryInitialized = true

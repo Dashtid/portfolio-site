@@ -179,7 +179,7 @@ test.describe('Visual Regression Tests', () => {
     let hermesId = ''
 
     test.beforeAll(async () => {
-      const apiUrl = process.env.VITE_API_URL || 'https://dashti.se'
+      const apiUrl = process.env.VITE_API_URL || 'https://api.dashti.se'
       const ctx = await playwrightRequest.newContext({ baseURL: apiUrl })
       const res = await ctx.get('/api/v1/companies/')
       if (!res.ok()) {

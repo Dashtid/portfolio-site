@@ -27,7 +27,7 @@ are welcome for:
 - The CI/CD configuration (`.github/workflows/`)
 
 The live site is **[dashti.se](https://dashti.se)** and the backend API is at
-`dashti-portfolio-backend.fly.dev`.
+`api.dashti.se`.
 
 ## Out of Scope
 
