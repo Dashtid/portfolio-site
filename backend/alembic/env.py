@@ -17,9 +17,12 @@ from app.database import Base
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override sqlalchemy.url from app settings so we don't duplicate the URL in alembic.ini
-if settings.DATABASE_URL:
-    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Override sqlalchemy.url from app settings so we don't duplicate the URL in alembic.ini.
+# Use async_database_url so deprecated postgres:// is normalised to
+# postgresql+asyncpg:// (SQLAlchemy 2.0 drops the bare postgres dialect, and
+# Fly Postgres' DATABASE_URL secret is set with the legacy scheme).
+if settings.async_database_url:
+    config.set_main_option("sqlalchemy.url", settings.async_database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -8,6 +8,7 @@ from app.models.document import Document
 from app.models.education import Education
 from app.models.oauth_state import OAuthState
 from app.models.project import Project
+from app.models.refresh_token import RefreshToken
 from app.models.skill import Skill
 from app.models.user import User
 
@@ -18,6 +19,7 @@ __all__ = [
     "OAuthState",
     "PageView",
     "Project",
+    "RefreshToken",
     "Skill",
     "User",
 ]
