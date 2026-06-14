@@ -175,7 +175,8 @@ describe('AdminDashboard', () => {
       const navLinks = wrapper.findAll('.nav-link')
       // Sprint 5: Skills + Education + Metrics joined the nav (ADMIN-01/02/03).
       // Sprint 6: Documents joined (ADMIN-04).
-      expect(navLinks.length).toBe(8)
+      // OSS dashboard Phase 3: OSS joined.
+      expect(navLinks.length).toBe(9)
 
       const linkTexts = navLinks.map(link => link.text())
       expect(linkTexts).toContain('Dashboard')
@@ -186,6 +187,7 @@ describe('AdminDashboard', () => {
       expect(linkTexts).toContain('Documents')
       expect(linkTexts).toContain('Analytics')
       expect(linkTexts).toContain('Metrics')
+      expect(linkTexts).toContain('OSS')
     })
 
     it('should have correct navigation hrefs', async () => {
@@ -198,6 +200,7 @@ describe('AdminDashboard', () => {
       expect(hrefs).toContain('/admin/companies')
       expect(hrefs).toContain('/admin/projects')
       expect(hrefs).toContain('/admin/analytics')
+      expect(hrefs).toContain('/admin/oss')
     })
   })
 

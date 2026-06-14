@@ -15,6 +15,17 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Bucket literal mirrored from ``app.services.bucket_classifier.Bucket``.
+# Re-declared as a Literal type here (instead of importing the Bucket enum)
+# to keep the schemas layer free of a dependency on the services layer.
+# If the bucket set ever changes, update both sides in the same change.
+BucketLiteral = Literal["NOW", "WAITING", "WATCHING", "LATER", "DONE"]
+
+# Contribution-kind literal. ``pr`` and ``issue`` come from the GitHub-synced
+# rows; ``later`` is the synthetic kind the admin endpoint stamps on hardcoded
+# LATER_ITEMS so the frontend can route them to a different render path.
+ContributionKindLiteral = Literal["pr", "issue", "later"]
+
 
 class IssueState(str, Enum):
     OPEN = "OPEN"
@@ -267,7 +278,9 @@ class OssContributionRow(OssApiBase):
     """
 
     id: str
-    kind: str = Field(description="'pr' or 'issue'")
+    kind: ContributionKindLiteral = Field(
+        description="'pr' or 'issue' from GitHub, or 'later' for synthetic queue entries"
+    )
     repo_name_with_owner: str = Field(serialization_alias="repoNameWithOwner")
     number: int
     title: str
@@ -275,7 +288,7 @@ class OssContributionRow(OssApiBase):
     state: str
     is_draft: bool = Field(serialization_alias="isDraft")
     author_login: str | None = Field(serialization_alias="authorLogin")
-    bucket: str
+    bucket: BucketLiteral
     created_at: datetime = Field(serialization_alias="createdAt")
     last_activity_at: datetime = Field(serialization_alias="lastActivityAt")
     closed_at: datetime | None = Field(serialization_alias="closedAt")
@@ -291,7 +304,7 @@ class OssDashboardView(OssApiBase):
     all rows — null if the table is empty (no refresh has run yet).
     """
 
-    buckets: dict[str, list[OssContributionRow]]
+    buckets: dict[BucketLiteral, list[OssContributionRow]]
     last_refresh_at: datetime | None = Field(serialization_alias="lastRefreshAt")
     tracked_repos: tuple[str, ...] = Field(serialization_alias="trackedRepos")
     refresh_in_progress: bool = Field(

@@ -24,7 +24,12 @@ from app.database import get_db
 from app.middleware import limiter
 from app.models.oss import OssContribution
 from app.models.user import User
-from app.schemas.oss import OssContributionRow, OssDashboardView, OssRefreshResult
+from app.schemas.oss import (
+    BucketLiteral,
+    OssContributionRow,
+    OssDashboardView,
+    OssRefreshResult,
+)
 from app.services.bucket_classifier import Bucket
 from app.services.oss_queries import LATER_ITEMS, TRACKED_REPOS
 from app.services.oss_sync import OssSyncError, oss_sync_service
@@ -35,10 +40,21 @@ AdminUser = Annotated[User, Depends(get_current_admin_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 
-def _empty_buckets() -> dict[str, list[OssContributionRow]]:
-    """Pre-seed every bucket so the UI doesn't have to handle missing keys."""
+def _empty_buckets() -> dict[BucketLiteral, list[OssContributionRow]]:
+    """Pre-seed every bucket so the UI doesn't have to handle missing keys.
 
-    return {bucket.value: [] for bucket in Bucket}
+    Built as an explicit literal so mypy can verify the key set matches
+    ``BucketLiteral`` instead of relying on a comprehension over the
+    Bucket enum (which mypy can't narrow back to the Literal type).
+    """
+
+    return {
+        "NOW": [],
+        "WAITING": [],
+        "WATCHING": [],
+        "LATER": [],
+        "DONE": [],
+    }
 
 
 def _row_to_dto(row: OssContribution) -> OssContributionRow:
@@ -48,17 +64,19 @@ def _row_to_dto(row: OssContribution) -> OssContributionRow:
 def _later_items_as_rows() -> list[OssContributionRow]:
     """Project the hardcoded LATER tuple onto the row shape.
 
-    Synthetic ID per item (stable for a given title) so the frontend
-    can use it as a Vue key without colliding with real DB ids.
+    The synthetic ID includes the enumeration index so the frontend can
+    use it as a Vue ``:key`` without colliding when two LATER_ITEMS share
+    a title — the unique-key invariant is structural here, not dependent
+    on whoever edits ``LATER_ITEMS`` keeping titles distinct.
     """
 
     rows: list[OssContributionRow] = []
     fallback_ts = datetime(2026, 1, 1, tzinfo=UTC)
-    for item in LATER_ITEMS:
+    for idx, item in enumerate(LATER_ITEMS):
         title = item.get("title", "(untitled)")
         rows.append(
             OssContributionRow(
-                id=f"later::{title}",
+                id=f"later::{idx}::{title}",
                 kind="later",
                 repo_name_with_owner=item.get("repo_name_with_owner", ""),
                 number=0,
@@ -102,13 +120,13 @@ async def get_oss_dashboard(
     buckets = _empty_buckets()
     last_refresh_at: datetime | None = None
     for row in rows:
-        bucket_key = cast("str", row.bucket)
+        bucket_key = cast("BucketLiteral", row.bucket)
         synced_at = cast("datetime", row.synced_at)
         buckets[bucket_key].append(_row_to_dto(row))
         if last_refresh_at is None or synced_at > last_refresh_at:
             last_refresh_at = synced_at
 
-    buckets[Bucket.LATER.value].extend(_later_items_as_rows())
+    buckets["LATER"].extend(_later_items_as_rows())
 
     return OssDashboardView(
         buckets=buckets,

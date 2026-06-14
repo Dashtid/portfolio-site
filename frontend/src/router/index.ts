@@ -16,6 +16,7 @@ const AdminSkills = () => import('../views/admin/AdminSkills.vue')
 const AdminAnalytics = () => import('../views/admin/AdminAnalytics.vue')
 const AdminMetrics = () => import('../views/admin/AdminMetrics.vue')
 const AdminDocuments = () => import('../views/admin/AdminDocuments.vue')
+const AdminOss = () => import('../views/admin/AdminOss.vue')
 
 export const DEFAULT_TITLE = 'David Dashti | Cybersecurity in Healthcare'
 
@@ -87,6 +88,12 @@ export const routes: RouteRecordRaw[] = [
         name: 'admin-documents',
         component: AdminDocuments,
         meta: { title: 'Manage Documents | David Dashti' }
+      },
+      {
+        path: 'oss',
+        name: 'admin-oss',
+        component: AdminOss,
+        meta: { title: 'OSS Contributions | David Dashti' }
       }
     ]
   }

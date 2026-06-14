@@ -77,6 +77,13 @@
       >
         Metrics
       </router-link>
+      <router-link
+        to="/admin/oss"
+        class="nav-link"
+        :class="{ active: $route.path === '/admin/oss' }"
+      >
+        OSS
+      </router-link>
     </nav>
 
     <!-- Admin Content -->

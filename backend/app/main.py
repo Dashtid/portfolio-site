@@ -166,7 +166,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "style-src 'self' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://*.sentry.io",
+                # connect-src: GitHub data is fetched server-side via
+                # httpx in app/services; no browser->api.github.com calls.
+                # Keeping the whitelist narrow blocks XSS-exfiltration to
+                # api.github.com if anything ever slips past the React-style
+                # escaping in our Vue templates.
+                "connect-src 'self' https://*.sentry.io",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com/maps https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
@@ -182,7 +187,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.github.com https://cdn.jsdelivr.net https://*.sentry.io ws://localhost:* http://localhost:*",
+                "connect-src 'self' https://cdn.jsdelivr.net https://*.sentry.io ws://localhost:* http://localhost:*",
                 "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com/maps https://maps.google.com",
                 "object-src 'none'",
                 "base-uri 'self'",
