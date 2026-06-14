@@ -246,3 +246,65 @@ class OssDashboardResponse(_OssBase):
     authored_closed: AuthoredMixedSearchResult = Field(alias="authoredClosed")
     commented_open: CommentedSearchResult = Field(alias="commentedOpen")
     commented_closed: CommentedSearchResult = Field(alias="commentedClosed")
+
+
+# ----------------------------------------------------------------------------
+# API response schemas — what the admin GET endpoint returns.
+# ----------------------------------------------------------------------------
+
+
+class OssApiBase(BaseModel):
+    """API-facing models keep camelCase outputs for the Vue client."""
+
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
+
+
+class OssContributionRow(OssApiBase):
+    """One contribution as the dashboard renders it.
+
+    Mirrors the ``oss_contributions`` row plus a couple of derived fields
+    (``days_since_activity``) the classifier doesn't store.
+    """
+
+    id: str
+    kind: str = Field(description="'pr' or 'issue'")
+    repo_name_with_owner: str = Field(serialization_alias="repoNameWithOwner")
+    number: int
+    title: str
+    url: str
+    state: str
+    is_draft: bool = Field(serialization_alias="isDraft")
+    author_login: str | None = Field(serialization_alias="authorLogin")
+    bucket: str
+    created_at: datetime = Field(serialization_alias="createdAt")
+    last_activity_at: datetime = Field(serialization_alias="lastActivityAt")
+    closed_at: datetime | None = Field(serialization_alias="closedAt")
+    merged_at: datetime | None = Field(serialization_alias="mergedAt")
+
+
+class OssDashboardView(OssApiBase):
+    """Top-level admin GET response.
+
+    ``buckets`` is keyed by bucket name (``NOW`` / ``WAITING`` / ``WATCHING``
+    / ``LATER`` / ``DONE``) so the frontend can render swim-lanes without
+    a second lookup. ``last_refresh_at`` is the max ``synced_at`` over
+    all rows — null if the table is empty (no refresh has run yet).
+    """
+
+    buckets: dict[str, list[OssContributionRow]]
+    last_refresh_at: datetime | None = Field(serialization_alias="lastRefreshAt")
+    tracked_repos: tuple[str, ...] = Field(serialization_alias="trackedRepos")
+    refresh_in_progress: bool = Field(
+        serialization_alias="refreshInProgress",
+        default=False,
+        description="True if a manual refresh is currently running; the UI uses this to disable the refresh button.",
+    )
+
+
+class OssRefreshResult(OssApiBase):
+    """Returned by the POST refresh endpoint when a sync completes."""
+
+    contributions_count: int = Field(serialization_alias="contributionsCount")
+    rate_limit_cost: int = Field(serialization_alias="rateLimitCost")
+    rate_limit_remaining: int = Field(serialization_alias="rateLimitRemaining")
+    finished_at: datetime = Field(serialization_alias="finishedAt")

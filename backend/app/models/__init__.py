@@ -7,6 +7,7 @@ from app.models.company import Company
 from app.models.document import Document
 from app.models.education import Education
 from app.models.oauth_state import OAuthState
+from app.models.oss import OssContribution
 from app.models.project import Project
 from app.models.refresh_token import RefreshToken
 from app.models.skill import Skill
@@ -17,6 +18,7 @@ __all__ = [
     "Document",
     "Education",
     "OAuthState",
+    "OssContribution",
     "PageView",
     "Project",
     "RefreshToken",

@@ -64,6 +64,19 @@ stays under this limit so a 9th tracked repo can't silently break the
 dashboard in production.
 """
 
+LATER_ITEMS: tuple[dict[str, str], ...] = ()
+"""Hardcoded queued future-work items for the LATER bucket.
+
+LATER is intentionally out of GraphQL — these are things Dashtid plans
+to file/upstream but hasn't yet. Each entry is a small dict with
+``title`` and optional ``description`` / ``url`` fields; the endpoint
+merges them into the LATER bucket in the GET response.
+
+Empty for v1; add entries inline when there's queued work worth
+surfacing on the dashboard (or move to a ``queued/`` folder in the
+oss-contributions tracker repo if the list grows past ~5).
+"""
+
 DONE_WINDOW_DAYS: int = 30
 """Rolling window for the DONE bucket. Long tail lives in the tracker repo."""
 
@@ -161,8 +174,20 @@ query OssDashboard(
     issueCount
     nodes {
       __typename
-      ... on Issue { ...IssueCore }
-      ... on PullRequest { ...PrCoreLite }
+      ... on Issue {
+        ...IssueCore
+        comments(last: 5) {
+          totalCount
+          nodes { author { login } createdAt bodyText }
+        }
+      }
+      ... on PullRequest {
+        ...PrCoreLite
+        comments(last: 5) {
+          totalCount
+          nodes { author { login } createdAt bodyText }
+        }
+      }
     }
   }
 }

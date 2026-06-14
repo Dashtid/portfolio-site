@@ -45,6 +45,13 @@ The dashboard lives at `dashti.se/admin/oss`, behind the existing GitHub OAuth a
 
 Classifier is testable in isolation with fixture GraphQL responses; aim for ~95% coverage on classifier logic specifically.
 
+### Bucket-rule edge cases (locked Phase 2)
+
+- **Draft PRs → NOW.** A draft PR is the author's call to promote or abandon; the maintainer literally cannot act until it leaves draft state. Surfacing them as NOW keeps "things requiring my decision" visible.
+- **`mergeStateStatus=BLOCKED` alone → WAITING.** BLOCKED typically means branch-protection waiting on a maintainer review or required CI check. If the author actually broke CI, `statusCheckRollup.state in (FAILURE, ERROR)` catches it first and routes to NOW.
+- **Dedup ordering: authored wins over commented.** The classifier iterates AUTHORED_OPEN_PRS → AUTHORED_OPEN_ISSUES → AUTHORED_CLOSED → COMMENTED_OPEN → COMMENTED_CLOSED. A node that collides on `github_node_id` (shouldn't happen today — `-author:{username}` excludes self in commented_*) keeps its authored row because that carries the richer NOW/WAITING signal set.
+- **Substantive-comment heuristic = 80 chars after `strip()`.** Whitespace doesn't game it; the COMMENT_BOT_ALLOWLIST is consulted as defense-in-depth (Dashtid isn't a bot, but a future relaxation of the author check would otherwise let dependabot comments promote threads).
+
 ## Architecture sketch
 
 ### Data flow
@@ -76,8 +83,9 @@ GitHub GraphQL v4 (githubkit, async)
 ### Auth + secrets
 
 - Reuse existing GitHub OAuth admin gate (HTTP-only cookies, no localStorage).
-- GitHub PAT for the GraphQL queries: `public_repo` scope (all 8 upstream repos are public). Store in Fly.io secrets as `GITHUB_OSS_DASHBOARD_PAT`.
-- Rate limit: GraphQL primary rate limit is 5000 points/hr per user. Each query for 8 repos costs ~50 points. 6h refresh = 4 queries/day = 200 points/day. Well under limit.
+- GitHub PAT for the GraphQL queries: `public_repo` scope (all 8 upstream repos are public). Store in Fly.io secrets as `GITHUB_OSS_DASHBOARD_PAT`. **PAT rotation requires a Fly Machine restart** — Pydantic Settings is module-level and not hot-reloadable; the service reads the PAT into the githubkit client on every refresh, but only from process-start memory.
+- **PAT must never leak via logs or Sentry.** githubkit/httpx exceptions can include `Authorization` header dumps. The fetch path catches every exception, runs the message through `_sanitize_pat()` (literal substring redaction), and re-raises via `raise ... from None` so the original traceback (which may contain the unredacted token) is dropped from the chain.
+- Rate limit: GraphQL primary rate limit is 5000 points/hr per user (120,000 points/day). The Phase 1 query uses 5 aliased `search()` calls + nested connections, measured at ~7-8 points per refresh. 6h refresh = 4 queries/day ≈ 32 points/day. ~3,750x headroom. The earlier ~50-points estimate assumed per-repo `repository(owner, name) { pullRequests issues }` blocks — switched to search-based aliases for the actual implementation.
 
 ## MVP build sequence (12 hours)
 

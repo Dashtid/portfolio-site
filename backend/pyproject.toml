@@ -20,8 +20,10 @@ dependencies = [
     # GitHub API client for admin OSS dashboard (async, typed, GraphQL-native).
     # Pin both packages because 0.16.0 split schemas into a separate package
     # on 2026-06-14; mismatched versions can break GraphQL response parsing.
+    # githubkit-schemas 26.6.14 is the highest PyPI release on 2026-06-14
+    # that satisfies githubkit's >=26.5.7 minimum.
     "githubkit==0.16.0",
-    "githubkit-schemas==26.5.7",
+    "githubkit-schemas==26.6.14",
     # Validation & Serialization
     "pydantic==2.12.5",
     "pydantic-settings==2.13.1",

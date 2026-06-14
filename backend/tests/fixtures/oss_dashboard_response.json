@@ -266,7 +266,16 @@
           "isArchived": false,
           "isDisabled": false
         },
-        "comments": {"totalCount": 0, "nodes": []}
+        "comments": {
+          "totalCount": 1,
+          "nodes": [
+            {
+              "author": {"login": "Dashtid"},
+              "createdAt": "2026-05-28T11:00:00Z",
+              "bodyText": "I tested this against our internal NPM advisory mirror; the cache-busting on the in-memory CRL works correctly even under concurrent advisory updates."
+            }
+          ]
+        }
       }
     ]
   }
