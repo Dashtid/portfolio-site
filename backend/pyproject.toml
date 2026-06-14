@@ -17,6 +17,11 @@ dependencies = [
     # Authentication
     "PyJWT==2.13.0",
     "httpx==0.28.1",
+    # GitHub API client for admin OSS dashboard (async, typed, GraphQL-native).
+    # Pin both packages because 0.16.0 split schemas into a separate package
+    # on 2026-06-14; mismatched versions can break GraphQL response parsing.
+    "githubkit==0.16.0",
+    "githubkit-schemas==26.5.7",
     # Validation & Serialization
     "pydantic==2.12.5",
     "pydantic-settings==2.13.1",

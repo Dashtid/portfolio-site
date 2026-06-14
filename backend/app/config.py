@@ -211,6 +211,12 @@ class Settings(BaseSettings):
     # GitHub API Token (for authenticated requests and GraphQL)
     GITHUB_TOKEN: str | None = None
 
+    # GitHub PAT for the admin OSS contribution dashboard (separate from the
+    # public-profile GITHUB_TOKEN so the dashboard can use a scoped, rotatable
+    # token without disturbing the existing public-stats path). Needs
+    # public_repo scope; the 8 tracked upstreams are all public.
+    GITHUB_OSS_DASHBOARD_PAT: str | None = None
+
     # Logging
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 

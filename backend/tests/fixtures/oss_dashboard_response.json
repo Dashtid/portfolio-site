@@ -1,0 +1,273 @@
+{
+  "rateLimit": {
+    "cost": 7,
+    "remaining": 4993,
+    "limit": 5000,
+    "resetAt": "2026-06-14T22:00:00Z",
+    "nodeCount": 12
+  },
+  "authoredOpenPRs": {
+    "issueCount": 2,
+    "nodes": [
+      {
+        "__typename": "PullRequest",
+        "id": "PR_kwDOExampleNOW01",
+        "number": 14878,
+        "title": "Add Garak LLM red-team parser",
+        "url": "https://github.com/DefectDojo/django-DefectDojo/pull/14878",
+        "state": "OPEN",
+        "isDraft": false,
+        "merged": false,
+        "mergedAt": null,
+        "closedAt": null,
+        "createdAt": "2026-05-20T12:00:00Z",
+        "updatedAt": "2026-06-13T09:15:00Z",
+        "author": {"login": "Dashtid"},
+        "repository": {
+          "nameWithOwner": "DefectDojo/django-DefectDojo",
+          "isArchived": false,
+          "isDisabled": false
+        },
+        "mergeable": "MERGEABLE",
+        "mergeStateStatus": "BLOCKED",
+        "reviewDecision": "CHANGES_REQUESTED",
+        "commits": {
+          "nodes": [
+            {
+              "commit": {
+                "oid": "deadbeefcafef00d1234567890abcdef12345678",
+                "statusCheckRollup": {"state": "SUCCESS"}
+              }
+            }
+          ]
+        },
+        "reviews": {
+          "totalCount": 3,
+          "nodes": [
+            {
+              "state": "COMMENTED",
+              "submittedAt": "2026-06-01T10:00:00Z",
+              "author": {"login": "maintainer-one"}
+            },
+            {
+              "state": "CHANGES_REQUESTED",
+              "submittedAt": "2026-06-10T14:30:00Z",
+              "author": {"login": "maintainer-two"}
+            }
+          ]
+        },
+        "comments": {
+          "totalCount": 5,
+          "nodes": [
+            {"author": {"login": "Dashtid"}, "createdAt": "2026-06-11T09:00:00Z"},
+            {"author": {"login": "maintainer-two"}, "createdAt": "2026-06-13T09:15:00Z"}
+          ]
+        }
+      },
+      {
+        "__typename": "PullRequest",
+        "id": "PR_kwDOExampleWAIT02",
+        "number": 4321,
+        "title": "fix: handle empty SBOM in syft scan",
+        "url": "https://github.com/anchore/syft/pull/4321",
+        "state": "OPEN",
+        "isDraft": false,
+        "merged": false,
+        "mergedAt": null,
+        "closedAt": null,
+        "createdAt": "2026-06-08T08:00:00Z",
+        "updatedAt": "2026-06-08T08:00:00Z",
+        "author": {"login": "Dashtid"},
+        "repository": {
+          "nameWithOwner": "anchore/syft",
+          "isArchived": false,
+          "isDisabled": false
+        },
+        "mergeable": "MERGEABLE",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "REVIEW_REQUIRED",
+        "commits": {
+          "nodes": [
+            {
+              "commit": {
+                "oid": "feedfacefeedface1234567890abcdef12345678",
+                "statusCheckRollup": {"state": "SUCCESS"}
+              }
+            }
+          ]
+        },
+        "reviews": {"totalCount": 0, "nodes": []},
+        "comments": {"totalCount": 0, "nodes": []}
+      }
+    ]
+  },
+  "authoredOpenIssues": {
+    "issueCount": 1,
+    "nodes": [
+      {
+        "__typename": "Issue",
+        "id": "I_kwDOExampleISSUE01",
+        "number": 909,
+        "title": "Stereoscope: cache eviction not honoring TTL on Windows",
+        "url": "https://github.com/anchore/stereoscope/issues/909",
+        "state": "OPEN",
+        "stateReason": null,
+        "createdAt": "2026-05-29T14:00:00Z",
+        "updatedAt": "2026-05-29T14:00:00Z",
+        "closedAt": null,
+        "author": {"login": "Dashtid"},
+        "repository": {
+          "nameWithOwner": "anchore/stereoscope",
+          "isArchived": false,
+          "isDisabled": false
+        }
+      }
+    ]
+  },
+  "authoredClosed": {
+    "issueCount": 2,
+    "nodes": [
+      {
+        "__typename": "PullRequest",
+        "id": "PR_kwDOExampleDONE01",
+        "number": 8765,
+        "title": "feat: presidio recognizer for Swedish personnummer",
+        "url": "https://github.com/microsoft/presidio/pull/8765",
+        "state": "MERGED",
+        "isDraft": false,
+        "merged": true,
+        "mergedAt": "2026-06-05T16:20:00Z",
+        "closedAt": "2026-06-05T16:20:00Z",
+        "createdAt": "2026-05-22T10:00:00Z",
+        "updatedAt": "2026-06-05T16:20:00Z",
+        "author": {"login": "Dashtid"},
+        "repository": {
+          "nameWithOwner": "microsoft/presidio",
+          "isArchived": false,
+          "isDisabled": false
+        },
+        "mergeable": "UNKNOWN",
+        "mergeStateStatus": "UNKNOWN",
+        "reviewDecision": "APPROVED",
+        "commits": {"nodes": []},
+        "reviews": {"totalCount": 2, "nodes": []},
+        "comments": {"totalCount": 4, "nodes": []}
+      },
+      {
+        "__typename": "Issue",
+        "id": "I_kwDOExampleDONEISSUE02",
+        "number": 555,
+        "title": "pydicom: chunked read fails on very large DICOM",
+        "url": "https://github.com/pydicom/pydicom/issues/555",
+        "state": "CLOSED",
+        "stateReason": "NOT_PLANNED",
+        "createdAt": "2026-05-10T11:00:00Z",
+        "updatedAt": "2026-05-25T09:30:00Z",
+        "closedAt": "2026-05-25T09:30:00Z",
+        "author": {"login": "Dashtid"},
+        "repository": {
+          "nameWithOwner": "pydicom/pydicom",
+          "isArchived": false,
+          "isDisabled": false
+        }
+      }
+    ]
+  },
+  "commentedOpen": {
+    "issueCount": 2,
+    "nodes": [
+      {
+        "__typename": "Issue",
+        "id": "I_kwDOExampleWATCH01",
+        "number": 2024,
+        "title": "grype: false positive on Alpine 3.20 musl CVE",
+        "url": "https://github.com/anchore/grype/issues/2024",
+        "state": "OPEN",
+        "stateReason": null,
+        "createdAt": "2026-04-12T08:00:00Z",
+        "updatedAt": "2026-06-10T11:45:00Z",
+        "closedAt": null,
+        "author": {"login": "someone-else"},
+        "repository": {
+          "nameWithOwner": "anchore/grype",
+          "isArchived": false,
+          "isDisabled": false
+        },
+        "comments": {
+          "totalCount": 6,
+          "nodes": [
+            {
+              "author": {"login": "Dashtid"},
+              "createdAt": "2026-05-15T10:00:00Z",
+              "bodyText": "I've reproduced this on Alpine 3.20.3 with both syft+grype 0.81 and 0.82. The musl ECID is matching against a vendor-overridden NVD record."
+            },
+            {
+              "author": {"login": "github-actions[bot]"},
+              "createdAt": "2026-05-15T10:01:00Z",
+              "bodyText": "Thanks for the report! A maintainer will triage shortly."
+            },
+            {
+              "author": {"login": "Dashtid"},
+              "createdAt": "2026-06-10T11:45:00Z",
+              "bodyText": "Pinning vulnerability-db to v6 works around it; flagging in case anyone else hits the same wall."
+            }
+          ]
+        }
+      },
+      {
+        "__typename": "PullRequest",
+        "id": "PR_kwDOExampleCOMMENT01",
+        "number": 312,
+        "title": "fo-dicom: refactor codec registry",
+        "url": "https://github.com/fo-dicom/fo-dicom/pull/312",
+        "state": "OPEN",
+        "merged": false,
+        "mergedAt": null,
+        "closedAt": null,
+        "createdAt": "2026-05-30T09:00:00Z",
+        "updatedAt": "2026-06-12T07:00:00Z",
+        "author": {"login": "another-contributor"},
+        "repository": {
+          "nameWithOwner": "fo-dicom/fo-dicom",
+          "isArchived": false,
+          "isDisabled": false
+        },
+        "comments": {
+          "totalCount": 2,
+          "nodes": [
+            {
+              "author": {"login": "Dashtid"},
+              "createdAt": "2026-06-12T07:00:00Z",
+              "bodyText": "+1, this matches the pattern we landed in pydicom last quarter."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "commentedClosed": {
+    "issueCount": 1,
+    "nodes": [
+      {
+        "__typename": "PullRequest",
+        "id": "PR_kwDOExampleCLOSEDCOMMENT01",
+        "number": 777,
+        "title": "dependency-track: optimize NPM advisory ingestion",
+        "url": "https://github.com/DependencyTrack/dependency-track/pull/777",
+        "state": "MERGED",
+        "merged": true,
+        "mergedAt": "2026-05-30T14:00:00Z",
+        "closedAt": "2026-05-30T14:00:00Z",
+        "createdAt": "2026-05-15T08:00:00Z",
+        "updatedAt": "2026-05-30T14:00:00Z",
+        "author": {"login": "yet-another-contributor"},
+        "repository": {
+          "nameWithOwner": "DependencyTrack/dependency-track",
+          "isArchived": false,
+          "isDisabled": false
+        },
+        "comments": {"totalCount": 0, "nodes": []}
+      }
+    ]
+  }
+}
