@@ -182,6 +182,13 @@ frontend/node_modules/
 frontend/dist/
 frontend/.pnpm-store/
 
+# Private planning notes — kept local, not pushed. The repo is public; these
+# would disclose unshipped scope/roadmap. Past commits still contain them
+# (history rewrite would be a separate, coordinated change).
+BACKLOG.md
+docs/admin-oss-dashboard-NOTES.md
+.private/
+
 # MacOS
 .DS_Store
 .AppleDouble
