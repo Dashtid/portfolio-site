@@ -33,8 +33,12 @@ module.exports = {
         ],
         defaultExtractor: content => content.match(/[A-Za-z0-9_-]+/g) || [],
         // Don't purge CSS custom properties or @keyframes — Vue runtime
-        // styles and theme variables depend on them.
-        variables: true,
+        // styles and theme variables depend on them. In PurgeCSS the
+        // option name reads inverted: `variables: true` means "DO purge
+        // unused variables", which was stripping --primary-500/600 (used
+        // only inside gradient stops, where PurgeCSS's var() detector
+        // missed them) and making the hero accent text render invisibly.
+        variables: false,
         keyframes: true,
         safelist: {
           standard: [
