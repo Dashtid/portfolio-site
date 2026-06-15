@@ -9,6 +9,12 @@ primary_region = 'arn'
 [build]
   dockerfile = 'Dockerfile'
 
+# Runs in a one-off VM with the new image + production secrets before the
+# release is promoted. If it exits non-zero the deploy aborts and the old
+# machines keep serving, so a broken migration can't take prod down.
+[deploy]
+  release_command = 'alembic upgrade head'
+
 [env]
   ENVIRONMENT = 'production'
   LOG_LEVEL = 'INFO'
