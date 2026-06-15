@@ -106,6 +106,26 @@ describe('API client', () => {
       expect(window.location.href).toBe('/admin/login')
     })
 
+    it('does not reload to /admin/login if already on /admin/login (reload-loop guard)', async () => {
+      window.location.pathname = '/admin/login'
+      vi.mocked(axios.post).mockRejectedValue(new Error('Refresh failed'))
+
+      const error: Partial<AxiosError> = {
+        response: { status: 401 } as any,
+        config: { headers: {} as any, url: '/api/v1/auth/me' } as InternalAxiosRequestConfig
+      }
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+
+      try {
+        await errorInterceptor(error)
+      } catch {
+        /* expected */
+      }
+
+      expect(window.location.href).toBe('')
+    })
+
     it('does not retry a request twice (_retry flag short-circuits)', async () => {
       const error: Partial<AxiosError> = {
         response: { status: 401 } as any,

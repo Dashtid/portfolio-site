@@ -97,8 +97,12 @@ apiClient.interceptors.response.use(
         onTokenRefreshFailed(
           refreshError instanceof Error ? refreshError : new Error('Token refresh failed')
         )
-        // Hard redirect to login — full page navigation is appropriate after auth failure
-        window.location.href = '/admin/login'
+        // Skip the redirect if we're already on /admin/login: the auth-guard's
+        // requiresGuest branch also fires fetchUser on that page, so re-redirecting
+        // from /admin/login to /admin/login spins the browser into a reload loop.
+        if (window.location.pathname !== '/admin/login') {
+          window.location.href = '/admin/login'
+        }
         return Promise.reject(refreshError)
       }
     }
