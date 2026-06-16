@@ -1,25 +1,43 @@
 <template>
   <nav
-    class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom"
-    :class="{ 'navbar-scrolled': scrolled }"
+    class="navbar-custom fixed inset-x-0 top-0 z-50 transition-[padding,background,box-shadow,border-color] duration-300"
+    :class="scrolled ? 'navbar-scrolled' : ''"
     data-testid="navbar"
     role="navigation"
     aria-label="Main navigation"
   >
-    <div class="container">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6">
       <a
         aria-label="David Dashti - Home"
         class="navbar-brand"
         href="#hero"
-        @click="scrollToSection('hero')"
+        @click.prevent="scrollToSection('hero')"
       >
         David Dashti
       </a>
-      <!-- Theme toggle always visible on mobile -->
-      <div class="d-flex align-items-center order-lg-2 theme-toggle-container">
+
+      <!-- Desktop nav -->
+      <ul class="ml-auto hidden items-center gap-1 lg:flex">
+        <li v-for="item in navItems" :key="item.href">
+          <a
+            class="nav-link"
+            :class="{ active: activeSection === item.href }"
+            :href="`#${item.href}`"
+            :data-testid="`nav-link-${item.href}`"
+            :aria-label="`Navigate to ${item.name} section`"
+            :aria-current="activeSection === item.href ? 'page' : undefined"
+            @click.prevent="scrollToSection(item.href)"
+          >
+            {{ item.name }}
+          </a>
+        </li>
+      </ul>
+
+      <!-- Right cluster: theme toggle + mobile menu button -->
+      <div class="flex items-center gap-2">
         <ThemeToggle />
         <button
-          class="navbar-toggler ms-2 d-lg-none"
+          class="navbar-toggler inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800"
           type="button"
           data-testid="mobile-menu-toggle"
           aria-controls="navbarNav"
@@ -27,30 +45,47 @@
           aria-label="Toggle navigation menu"
           @click="mobileMenuOpen = !mobileMenuOpen"
         >
-          <span class="navbar-toggler-icon"></span>
+          <svg
+            class="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              :d="mobileMenuOpen ? 'M6 18 18 6M6 6l12 12' : 'M4 7h16M4 12h16M4 17h16'"
+            />
+          </svg>
         </button>
       </div>
-      <div
-        id="navbarNav"
-        class="collapse navbar-collapse order-lg-1"
-        :class="{ show: mobileMenuOpen }"
-      >
-        <ul class="navbar-nav ms-auto">
-          <li v-for="item in navItems" :key="item.href" class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === item.href }"
-              :href="`#${item.href}`"
-              :data-testid="`nav-link-${item.href}`"
-              :aria-label="`Navigate to ${item.name} section`"
-              :aria-current="activeSection === item.href ? 'page' : undefined"
-              @click.prevent="scrollToSection(item.href)"
-            >
-              {{ item.name }}
-            </a>
-          </li>
-        </ul>
-      </div>
+    </div>
+
+    <!-- Mobile menu. Uses .navbar-collapse + .show classes to keep test
+         selectors stable and so the existing data-anim/transition CSS
+         continues to apply. v-show keeps the DOM mounted so the scroll
+         logic can hide the menu after a link click. -->
+    <div
+      id="navbarNav"
+      class="navbar-collapse mx-6 mt-2 overflow-hidden border-t border-slate-200 transition-[max-height] duration-300 ease-out lg:hidden dark:border-slate-800"
+      :class="mobileMenuOpen ? 'show max-h-96' : 'max-h-0 border-transparent'"
+    >
+      <ul class="flex flex-col gap-1 py-2">
+        <li v-for="item in navItems" :key="item.href">
+          <a
+            class="nav-link block w-full rounded-lg px-4 py-2.5 text-center"
+            :class="{ active: activeSection === item.href }"
+            :href="`#${item.href}`"
+            :data-testid="`nav-link-${item.href}-mobile`"
+            :aria-label="`Navigate to ${item.name} section`"
+            @click.prevent="scrollToSection(item.href)"
+          >
+            {{ item.name }}
+          </a>
+        </li>
+      </ul>
     </div>
   </nav>
 </template>
@@ -269,39 +304,33 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Layout + chrome. Tailwind utilities in the template handle spacing and
+   the dark hover states; this scoped block owns the bits that are easier
+   to express in CSS (glassmorphism backdrop, the center-growing nav
+   underline, the active-state colors). */
+
 .navbar-custom {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transition: all 0.3s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 1rem 0;
+  border-bottom: 1px solid transparent;
+  padding-block: 1rem;
 }
 
 .navbar-scrolled {
-  padding: 0.5rem 0;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+  padding-block: 0.5rem;
 }
 
 .navbar-brand {
   font-family: var(--font-family-display, inherit);
   font-weight: 600;
-  font-size: 1.25rem;
-  letter-spacing: var(--letter-spacing-tight, -0.025em);
+  font-size: 1.125rem;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
-  transition:
-    color 0.2s var(--ease-smooth, ease),
-    transform 0.2s var(--ease-smooth, ease);
-}
-
-.navbar-scrolled .navbar-brand {
-  font-size: 1.125rem;
+  transition: color 0.2s ease;
 }
 
 .navbar-brand:hover {
@@ -309,18 +338,16 @@ onUnmounted(() => {
 }
 
 .nav-link {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary);
   font-weight: 500;
-  font-size: 0.95rem;
-  padding: 0.5rem 1rem !important;
-  margin: 0 0.25rem !important;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.875rem;
   text-decoration: none;
-  transition: color 0.2s var(--ease-smooth, ease);
   border-radius: 6px;
+  transition: color 0.2s ease;
   position: relative;
 }
 
-/* Underline that grows from center on hover */
 .nav-link::after {
   content: '';
   position: absolute;
@@ -331,12 +358,12 @@ onUnmounted(() => {
   background: var(--primary-500, #3b82f6);
   border-radius: 1px;
   transition:
-    width 0.25s var(--ease-smooth, ease),
-    left 0.25s var(--ease-smooth, ease);
+    width 0.25s ease,
+    left 0.25s ease;
 }
 
 .nav-link:hover {
-  color: var(--primary-500, #3b82f6) !important;
+  color: var(--primary-500, #3b82f6);
 }
 
 .nav-link:hover::after {
@@ -347,119 +374,71 @@ onUnmounted(() => {
 .nav-link:focus-visible {
   outline: 2px solid var(--primary-500, #3b82f6);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 .nav-link.active {
-  color: var(--primary-500, #3b82f6) !important;
+  color: var(--primary-500, #3b82f6);
   font-weight: 600;
 }
 
 .nav-link.active::after {
   width: 60%;
   left: 20%;
-  background: var(--primary-500, #3b82f6);
 }
 
-/* Dark theme styles */
+/* Dark theme */
 [data-theme='dark'] .navbar-custom {
-  background: var(--navbar-bg);
-  border-bottom: 1px solid var(--border-primary);
+  background: rgba(15, 23, 42, 0.85);
 }
 
 [data-theme='dark'] .navbar-scrolled {
-  background: rgba(15, 23, 42, 0.98);
-  box-shadow: var(--navbar-shadow);
+  background: rgba(15, 23, 42, 0.96);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme='dark'] .navbar-brand {
   color: var(--text-primary);
 }
 
-[data-theme='dark'] .navbar-brand:hover {
-  color: var(--link-color);
+[data-theme='dark'] .navbar-brand:hover,
+[data-theme='dark'] .nav-link:hover,
+[data-theme='dark'] .nav-link.active {
+  color: var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .nav-link {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary);
 }
 
-[data-theme='dark'] .nav-link::after {
-  background: var(--link-color);
-}
-
-[data-theme='dark'] .nav-link:hover {
-  color: var(--link-color) !important;
-}
-
-[data-theme='dark'] .nav-link.active {
-  color: var(--link-color) !important;
+[data-theme='dark'] .nav-link::after,
+[data-theme='dark'] .nav-link.active::after {
+  background: var(--primary-400, #60a5fa);
 }
 
 [data-theme='dark'] .nav-link:focus-visible {
   outline-color: var(--primary-400, #60a5fa);
 }
 
-[data-theme='dark'] .nav-link.active::after {
-  background: var(--link-color);
-}
-
-[data-theme='dark'] .navbar-toggler {
-  border-color: var(--border-primary);
-}
-
-[data-theme='dark'] .navbar-toggler-icon {
-  filter: invert(1);
-}
-
-/* Mobile styles */
+/* Mobile: the center-growing underline doesn't make sense on full-width
+   stacked links — swap to a fill highlight instead. */
 @media (max-width: 991px) {
-  .navbar-collapse {
-    background: var(--bg-primary);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 12px;
-    margin-top: 0.5rem;
-    padding: 1rem;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .navbar-nav {
-    gap: 0.25rem;
-  }
-
-  .nav-link {
-    padding: 0.75rem 1rem !important;
-    border-radius: 8px;
-    text-align: center;
-  }
-
   .nav-link::after {
     display: none;
   }
 
   .nav-link.active {
-    background: var(--color-primary-alpha-15, rgba(59, 130, 246, 0.15)) !important;
-    color: var(--primary-500, #3b82f6) !important;
+    background: rgba(59, 130, 246, 0.1);
   }
 
   [data-theme='dark'] .nav-link.active {
-    background: var(--color-primary-alpha-20) !important;
-    color: var(--link-color) !important;
+    background: rgba(96, 165, 250, 0.15);
   }
 }
 
-/* Theme toggle spacing on desktop */
-@media (min-width: 992px) {
-  .theme-toggle-container {
-    margin-left: 1rem;
-  }
-}
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .nav-link,
   .navbar-custom,
+  .nav-link,
+  .nav-link::after,
   .navbar-toggler {
     transition: none;
   }

@@ -5,22 +5,62 @@
 
     <!-- Main content area for accessibility -->
     <main id="main-content" role="main" tabindex="-1">
-      <!-- Hero Section with Stockholm Background -->
-      <div class="stockholm-background">
+      <!-- Hero Section -->
+      <section
+        id="hero"
+        class="hero-section stockholm-background relative flex min-h-screen items-center justify-center overflow-hidden"
+      >
         <ThreeHeroBackground />
-        <section id="hero" class="hero-section">
-          <div class="hero-content">
-            <h1 class="custom-hero-title fade-in">
-              <span class="hero-accent-primary">Cybersecurity</span> and
-              <span class="hero-accent-secondary">Artificial Intelligence</span><br />
-              in Medical Software Development
-            </h1>
-            <p class="custom-hero-lead fade-in">
-              <strong>Biomedical Engineer | QA/RA & Security Specialist | Stockholm, Sweden</strong>
-            </p>
+
+        <!-- Dark scrim for type legibility regardless of background image area -->
+        <div
+          class="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/60"
+          aria-hidden="true"
+        ></div>
+
+        <div class="relative z-[2] mx-auto max-w-4xl px-6 text-center">
+          <p class="mb-8 font-mono text-xs uppercase tracking-[0.25em] text-primary-300">
+            Cybersecurity · Medical Software · Stockholm
+          </p>
+
+          <h1
+            class="custom-hero-title text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
+          >
+            <span
+              class="bg-gradient-to-r from-primary-300 via-primary-400 to-teal-400 bg-clip-text text-transparent"
+              >Cybersecurity</span
+            >
+            <span class="font-light text-slate-300">and</span>
+            <span
+              class="bg-gradient-to-r from-teal-400 via-primary-400 to-primary-300 bg-clip-text text-transparent"
+              >Artificial Intelligence</span
+            >
+            <br />
+            <span class="text-slate-100">in Medical Software Development</span>
+          </h1>
+
+          <p class="custom-hero-lead mt-10 text-base font-light text-slate-300 sm:text-lg">
+            <span class="font-medium text-white">Biomedical Engineer</span>
+            <span class="mx-3 text-slate-500">·</span>
+            QA/RA &amp; Security Specialist
+            <span class="mx-3 text-slate-500">·</span>
+            <span class="font-medium text-white">Stockholm, Sweden</span>
+          </p>
+        </div>
+
+        <!-- Scroll affordance. Plain anchor — html { scroll-behavior: smooth }
+             handles the animation and scroll-padding-top accounts for the
+             fixed navbar height set in NavBar's syncNavbarHeight(). -->
+        <a
+          href="#experience"
+          aria-label="Scroll to Experience"
+          class="absolute bottom-10 left-1/2 z-[2] -translate-x-1/2 rounded-full p-2 text-slate-400/70 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-400"
+        >
+          <div class="flex h-10 w-6 justify-center rounded-full border-2 border-current pt-2">
+            <span class="block h-2 w-1 animate-bounce rounded-full bg-current"></span>
           </div>
-        </section>
-      </div>
+        </a>
+      </section>
 
       <!-- API Error Banner -->
       <div v-if="portfolioStore.error" class="container" role="alert">
