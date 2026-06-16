@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="navbar-custom fixed inset-x-0 top-0 z-50 transition-[padding,background,box-shadow,border-color] duration-300"
+    class="navbar-custom fixed inset-x-0 top-0 z-50 transition-all duration-300"
     :class="scrolled ? 'navbar-scrolled' : ''"
     data-testid="navbar"
     role="navigation"

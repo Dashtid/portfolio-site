@@ -31,7 +31,13 @@ module.exports = {
           './src/**/*.js',
           './src/**/*.html'
         ],
-        defaultExtractor: content => content.match(/[A-Za-z0-9_-]+/g) || [],
+        // Extractor must recognise Tailwind syntax (`:` for responsive +
+        // variant modifiers, `[ ]` for arbitrary values, `/` for opacity
+        // modifiers, `.` for decimal arbitrary values like `leading-[1.05]`)
+        // — otherwise classes like `lg:flex`, `hover:bg-slate-100`, and
+        // `tracking-[0.25em]` are tokenised as their bare suffix and
+        // purged. Same root cause as the `--primary-500` purge bug.
+        defaultExtractor: content => content.match(/[\w/.:[\]-]+/g) || [],
         // Don't purge CSS custom properties or @keyframes — Vue runtime
         // styles and theme variables depend on them. In PurgeCSS the
         // option name reads inverted: `variables: true` means "DO purge

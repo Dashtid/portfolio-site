@@ -10,6 +10,14 @@
  */
 @import 'tailwindcss';
 
+/* Explicit source roots. The Vite plugin's auto-detection was missing
+   responsive variants (lg:flex / lg:hidden) used in NavBar.vue — declaring
+   the scan roots forces a full re-scan and picks up every Tailwind class
+   actually used in .vue / .ts files across the project. */
+@source '../**/*.vue';
+@source '../**/*.ts';
+@source '../../index.html';
+
 @theme {
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
