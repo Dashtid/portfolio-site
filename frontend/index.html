@@ -42,25 +42,12 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
 
-    <!-- Preconnect for faster external resource loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preconnect for faster external resource loading.
+         Fonts are now self-hosted (@fontsource-variable/geist bundled into
+         the JS bundle), so no fonts.googleapis.com / fonts.gstatic.com
+         handshake. -->
     <link rel="preconnect" href="https://api.dashti.se" crossorigin />
-    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//api.dashti.se" />
-
-    <!-- Inter Font for headings (display=swap for performance) -->
-    <!-- Preload the woff2 to cut 2 sequential round-trips (CSS fetch → woff2 fetch) to 1.
-         v20 latin subset: weights 500/600/700 share one file (Inter is variable-weight).
-         Verify this URL matches the Google Fonts CSS response if font version bumps. -->
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2"
-      crossorigin
-    />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Preload LCP hero image with responsive sources -->
     <link rel="preload" as="image" href="/images/optimized/stockholm-desktop.avif" type="image/avif" fetchpriority="high" media="(min-width: 769px)" />

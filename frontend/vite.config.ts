@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import os from 'os'
@@ -11,6 +12,7 @@ export default defineConfig({
   cacheDir: path.join(os.tmpdir(), 'vite-cache-portfolio'),
   plugins: [
     vue(),
+    tailwindcss(),
     // PWA with Workbox for better offline support
     VitePWA({
       registerType: 'autoUpdate',
