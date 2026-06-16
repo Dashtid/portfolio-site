@@ -8,15 +8,16 @@
       <!-- Hero Section -->
       <section
         id="hero"
-        class="hero-section stockholm-background relative flex min-h-screen items-center justify-center overflow-hidden"
+        class="hero-section relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950"
       >
-        <ThreeHeroBackground />
-
-        <!-- Dark scrim for type legibility regardless of background image area -->
+        <!-- Ambient glow: soft primary-blue halo from top to add depth
+             without competing with the Three.js stars below it. -->
         <div
-          class="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/60"
+          class="pointer-events-none absolute inset-x-0 top-0 z-[1] h-2/3 bg-gradient-to-b from-primary-900/40 via-primary-950/15 to-transparent"
           aria-hidden="true"
         ></div>
+
+        <ThreeHeroBackground />
 
         <div class="relative z-[2] mx-auto max-w-4xl px-6 text-center">
           <p class="mb-8 font-mono text-xs uppercase tracking-[0.25em] text-primary-300">
