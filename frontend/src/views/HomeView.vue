@@ -512,45 +512,62 @@
       </section>
 
       <!-- Publications/Research Section -->
-      <section id="publications" class="portfolio-section bg-dark">
-        <div class="container">
-          <h2 class="section-title">
+      <section id="publications" class="bg-white py-24 dark:bg-slate-950">
+        <div class="mx-auto max-w-7xl px-6">
+          <header class="mb-14 flex items-center gap-3">
             <img
               src="/images/document.svg"
               alt=""
-              class="section-icon"
+              class="section-icon h-7 w-7 opacity-80 dark:invert"
               width="32"
               height="32"
               loading="lazy"
             />
-            Academic Work
-          </h2>
-          <div v-if="documentsLoading" class="loading-state" role="status" aria-live="polite">
+            <h2
+              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+            >
+              Academic Work
+            </h2>
+          </header>
+          <div
+            v-if="documentsLoading"
+            class="rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800"
+            role="status"
+            aria-live="polite"
+          >
             Loading publications...
           </div>
-          <div v-else-if="documentsError" class="error-state" role="alert">
+          <div
+            v-else-if="documentsError"
+            class="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
+            role="alert"
+          >
             {{ documentsError }}
           </div>
-          <div v-else class="documents-grid">
+          <div v-else class="documents-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <DocumentCard v-for="document in documents" :key="document.id" :document="document" />
           </div>
         </div>
       </section>
 
       <!-- Projects Section -->
-      <section id="projects" class="portfolio-section bg-light">
-        <div class="container">
-          <h2 class="section-title">
+      <section id="projects" class="bg-slate-50 py-24 dark:bg-slate-950">
+        <div class="mx-auto max-w-7xl px-6">
+          <header class="mb-14 flex items-center gap-3">
             <img
               src="/images/github.svg"
               alt=""
-              class="section-icon"
+              class="section-icon h-7 w-7 opacity-80 dark:invert"
               width="32"
               height="32"
               loading="lazy"
             />
-            GitHub
-          </h2>
+            <h2
+              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+            >
+              GitHub
+            </h2>
+          </header>
 
           <!-- GitHub Stats with Featured Projects -->
           <GitHubStats username="Dashtid" />
@@ -558,21 +575,28 @@
       </section>
 
       <!-- About Section -->
-      <section id="about" class="portfolio-section">
-        <div class="container">
-          <h2 class="section-title">
+      <section id="about" class="bg-white py-24 dark:bg-slate-950">
+        <div class="mx-auto max-w-7xl px-6">
+          <header class="mb-14 flex items-center gap-3">
             <img
               src="/images/about.svg"
               alt=""
-              class="section-icon"
+              class="section-icon h-7 w-7 opacity-80 dark:invert"
               width="32"
               height="32"
               loading="lazy"
             />
-            About Me
-          </h2>
-          <div class="about-layout">
-            <div class="profile-photo-container">
+            <h2
+              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+            >
+              About Me
+            </h2>
+          </header>
+
+          <div
+            class="about-layout mx-auto grid max-w-5xl items-start gap-12 md:grid-cols-[280px_1fr]"
+          >
+            <div class="md:sticky md:top-28">
               <picture>
                 <source srcset="/images/optimized/cropped.avif" type="image/avif" />
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
@@ -586,41 +610,80 @@
                 <img
                   src="/images/optimized/cropped.png"
                   alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
-                  class="profile-photo"
+                  class="mx-auto h-auto w-[260px] rounded-2xl object-cover ring-1 ring-slate-200 md:mx-0 md:w-full dark:ring-slate-800"
                   width="280"
                   height="326"
                   loading="lazy"
                 />
               </picture>
             </div>
-            <div class="about-text">
-              <p class="about-summary">
+            <div class="space-y-5 text-slate-600 dark:text-slate-300">
+              <p
+                class="border-l-2 border-primary-500 pl-5 text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
+              >
                 Medical software security specialist focusing on cybersecurity governance,
                 regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
                 frameworks.
               </p>
-              <p>
+              <p class="leading-relaxed">
                 I am a biomedical engineer specializing in cybersecurity and regulatory compliance
-                for medical software and AI systems. As a QA/RA & Security Specialist at Hermes
+                for medical software and AI systems. As a QA/RA &amp; Security Specialist at Hermes
                 Medical Solutions, I ensure that our software and digital health solutions meet the
                 highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
                 EU AI Act).
               </p>
-              <p><strong>Current focus areas:</strong></p>
-              <ul>
-                <li>Cybersecurity governance in medical software development</li>
-                <li>Ensuring compliance with NIS2 and ISO 27001</li>
-                <li>Supporting market clearance for medical software (MDR, GDPR)</li>
-                <li>Preparing frameworks for AI Act compliance in healthcare AI systems</li>
-              </ul>
-              <p>
-                <strong>Technical skills:</strong> Windows Server, Unix/Linux, Docker, Kubernetes,
-                PowerShell, Bash, Python, Rust and Git
-              </p>
-              <p>
+              <div>
+                <p
+                  class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                  Current focus areas
+                </p>
+                <ul class="mt-3 space-y-2">
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Cybersecurity governance in medical software development
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Ensuring compliance with NIS2 and ISO 27001
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Supporting market clearance for medical software (MDR, GDPR)
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Preparing frameworks for AI Act compliance in healthcare AI systems
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p
+                  class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                  Technical skills
+                </p>
+                <p class="mt-3 leading-relaxed">
+                  Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
+                  Git
+                </p>
+              </div>
+              <p class="leading-relaxed">
                 I am passionate about making healthcare technology safer and more trustworthy by
                 protecting patient data, ensuring system integrity, and helping organizations
-                navigate the Cybersecurity & AI regulatory landscape.
+                navigate the Cybersecurity &amp; AI regulatory landscape.
               </p>
             </div>
           </div>
@@ -793,10 +856,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Import custom styles */
+/* Import legacy custom styles. portfolio.css still ships .portfolio-section
+   helpers used by other views; trimming it lives in Phase 6 alongside the
+   Bootstrap drop. */
 @import '../assets/portfolio.css';
 
-/* Additional Vue-specific styles */
 .portfolio-home {
   padding-top: 0;
 }
@@ -835,290 +899,11 @@ onMounted(async () => {
   }
 }
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Ensure navbar is above content */
 :deep(.navbar-custom) {
   z-index: 1000;
-}
-
-/* Company and Education logo layout */
-.company-header-with-logo,
-.education-header-with-logo {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.card-logo {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-  margin-right: 1rem;
-  min-width: 56px;
-  border-radius: 8px;
-  flex-shrink: 0;
-  background: #fff;
-  padding: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.company-header-content {
-  flex: 1;
-}
-
-/* Documents grid */
-.documents-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-/* Loading and error states */
-.loading-state,
-.error-state {
-  text-align: center;
-  padding: 3rem;
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-}
-
-.error-state {
-  color: var(--color-error);
-}
-
-/* Dark mode loading states (inside bg-dark section) */
-.bg-dark .loading-state,
-.bg-dark .error-state {
-  color: #cbd5e1; /* always-light text on dark bg section */
-}
-
-[data-theme='dark'] .loading-state,
-[data-theme='dark'] .error-state {
-  color: var(--text-secondary);
-}
-
-[data-theme='dark'] .bg-dark .loading-state {
-  color: var(--text-secondary, #cbd5e1);
-}
-
-/* Experience Card Improvements */
-.experience-card {
-  border-left: 4px solid var(--primary-500);
-}
-
-.experience-card:hover {
-  border-left-color: var(--primary-600);
-}
-
-/* Education Card Improvements */
-.education-card {
-  text-align: center;
-}
-
-.education-header-with-logo {
-  flex-direction: column;
-  align-items: center;
-}
-
-.education-header-with-logo .card-logo {
-  width: 72px;
-  height: 72px;
-  margin-right: 0;
-  margin-bottom: 1rem;
-}
-
-.education-institution {
-  text-align: center;
-}
-
-.education-degree {
-  text-align: center;
-}
-
-.certificate-link {
-  display: inline-flex;
-  align-items: center;
-  align-self: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
-  background: var(--primary-500, #3b82f6);
-  color: #fff;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.certificate-link:hover {
-  background: var(--primary-600, #2563eb);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.certificate-link .external-icon {
-  flex-shrink: 0;
-}
-
-/* Dark mode certificate link */
-[data-theme='dark'] .certificate-link {
-  background: var(--primary-600, #2563eb);
-}
-
-[data-theme='dark'] .certificate-link:hover {
-  background: var(--primary-500, #3b82f6);
-}
-
-/* Project Card Improvements */
-.project-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.project-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.project-links {
-  margin-top: auto;
-  padding-top: 1rem;
-}
-
-@media (max-width: 768px) {
-  .documents-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .card-logo {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-  }
-
-  .education-header-with-logo .card-logo {
-    width: 64px;
-    height: 64px;
-  }
-}
-
-/* About Section Layout */
-.about-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 3rem;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.profile-photo-container {
-  flex-shrink: 0;
-}
-
-.profile-photo {
-  width: 280px;
-  height: auto;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.profile-photo:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-}
-
-.about-text {
-  flex: 1;
-  text-align: left;
-}
-
-.about-text p {
-  margin-bottom: 1rem;
-  line-height: 1.7;
-  color: var(--text-primary, #1e293b);
-}
-
-[data-theme='dark'] .about-text p {
-  color: var(--text-secondary, #cbd5e1);
-}
-
-.about-summary {
-  font-size: 1.15rem;
-  font-weight: 500;
-  color: var(--primary-600);
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--primary-400, #60a5fa);
-}
-
-[data-theme='dark'] .about-summary {
-  color: var(--primary-300);
-  border-bottom-color: var(--primary-800);
-}
-
-.about-text ul {
-  padding-left: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.about-text li {
-  margin-bottom: 0.5rem;
-  color: var(--text-secondary, #475569);
-}
-
-.about-text strong {
-  color: var(--text-primary, #1e293b);
-  font-weight: 600;
-}
-
-[data-theme='dark'] .about-text li {
-  color: var(--text-secondary, #cbd5e1);
-}
-
-[data-theme='dark'] .about-text strong {
-  color: var(--text-primary, #f1f5f9);
-}
-
-[data-theme='dark'] .profile-photo {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-
-[data-theme='dark'] .profile-photo:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-}
-
-@media (max-width: 768px) {
-  .about-layout {
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-  }
-
-  .profile-photo {
-    width: 200px;
-  }
-
-  .about-text {
-    text-align: center;
-  }
-
-  .about-text ul {
-    text-align: left;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 </style>
