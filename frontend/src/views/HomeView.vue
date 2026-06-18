@@ -40,296 +40,472 @@
       </section>
 
       <!-- API Error Banner -->
-      <div v-if="portfolioStore.error" class="container" role="alert">
-        <div class="error-state">
+      <div v-if="portfolioStore.error" class="mx-auto max-w-7xl px-6 pt-6" role="alert">
+        <div
+          class="rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200"
+        >
           Unable to load portfolio data. Showing static fallback content.
         </div>
       </div>
 
       <!-- Experience Section -->
-      <section id="experience" class="portfolio-section">
-        <div class="container">
-          <h2 class="section-title">
+      <section id="experience" class="bg-white py-24 dark:bg-slate-950">
+        <div class="mx-auto max-w-7xl px-6">
+          <header class="mb-14 flex items-center gap-3">
             <img
               src="/images/experience.svg"
               alt=""
-              class="section-icon"
+              class="section-icon h-7 w-7 opacity-80 dark:invert"
               width="32"
               height="32"
               loading="lazy"
             />
-            Experience
-          </h2>
-          <div class="experience-list">
+            <h2
+              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+            >
+              Experience
+            </h2>
+          </header>
+
+          <div class="experience-list grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <!-- Dynamic content from backend or static fallback -->
             <template v-if="companies.length">
-              <div
+              <article
                 v-for="company in companiesByDate"
                 :key="company.id"
-                class="experience-card fade-in"
+                class="experience-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
               >
-                <div class="company-header-with-logo">
+                <header class="flex items-start gap-4">
                   <img
                     v-if="company.logo_url"
                     :src="company.logo_url"
                     :alt="`${company.name} Logo`"
-                    class="card-logo"
+                    class="card-logo h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-800"
                     width="64"
                     height="64"
                     loading="lazy"
                   />
-                  <div class="company-header-content">
-                    <div class="company-header">
-                      <h3 class="company-name">{{ company.name }}</h3>
-                      <span class="company-dates"
-                        >{{ formatDate(company.start_date) }} -
-                        {{ company.end_date ? formatDate(company.end_date) : 'Present' }}</span
-                      >
-                    </div>
+                  <div class="min-w-0 flex-1">
+                    <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
+                      {{ company.name }}
+                    </h3>
+                    <p
+                      class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                    >
+                      {{ formatDate(company.start_date) }} —
+                      {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
+                    </p>
                   </div>
-                </div>
-                <p class="job-title">{{ company.title }}</p>
-                <p class="company-location">{{ company.location }}</p>
-                <p class="company-description">{{ company.description }}</p>
+                </header>
+                <p
+                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                >
+                  {{ company.title }}
+                </p>
+                <p class="company-location mt-0.5 text-sm text-slate-500">
+                  {{ company.location }}
+                </p>
+                <p
+                  class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
+                  {{ company.description }}
+                </p>
 
-                <!-- Learn More Button (show if company has detailed content) -->
                 <router-link
                   :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
-                  class="btn btn-outline-primary btn-sm mt-3"
+                  class="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                 >
-                  Learn More
+                  Learn more
+                  <svg
+                    class="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
                 </router-link>
-              </div>
+              </article>
             </template>
             <template v-else>
               <!-- Static fallback — rendered when the SSG build fetched no
-                   companies from the backend. Kept in sync with the seed_data
-                   canonical timeline; update both when roles change. -->
-              <div class="experience-card fade-in">
-                <div class="company-header">
-                  <h3 class="company-name">Hermes Medical Solutions</h3>
-                  <span class="company-dates">May 2024 - Present</span>
-                </div>
-                <p class="job-title">QA/RA & Security Specialist</p>
-                <p class="company-location">Stockholm, Sweden</p>
-                <p class="company-description">
+                   companies from the backend. Kept in sync with seed_data;
+                   update both when roles change. -->
+              <article
+                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
+                    Hermes Medical Solutions
+                  </h3>
+                  <p
+                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  >
+                    May 2024 — Present
+                  </p>
+                </header>
+                <p
+                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                >
+                  QA/RA &amp; Security Specialist
+                </p>
+                <p class="company-location mt-0.5 text-sm text-slate-500">Stockholm, Sweden</p>
+                <p
+                  class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   QA/RA &amp; Security Specialist at Hermes Medical Solutions, ensuring NIS2/ISO
                   27001 compliance, regulatory clearance, and V&amp;V processes for nuclear medicine
                   software solutions.
                 </p>
-              </div>
-              <div class="experience-card fade-in">
-                <div class="company-header">
-                  <h3 class="company-name">Philips Healthcare</h3>
-                  <span class="company-dates">Mar 2022 - May 2024</span>
-                </div>
-                <p class="job-title">Incident Support Specialist, Nordics</p>
-                <p class="company-location">Stockholm, Sweden</p>
-                <p class="company-description">
+              </article>
+              <article
+                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
+                    Philips Healthcare
+                  </h3>
+                  <p
+                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  >
+                    Mar 2022 — May 2024
+                  </p>
+                </header>
+                <p
+                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                >
+                  Incident Support Specialist, Nordics
+                </p>
+                <p class="company-location mt-0.5 text-sm text-slate-500">Stockholm, Sweden</p>
+                <p
+                  class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Remote Service Engineer providing Level 1 support for Intellispace Portal (ISP)
                   and Intellispace Cardiovascular (ISCV) systems across the Nordics.
                 </p>
-              </div>
-              <div class="experience-card fade-in">
-                <div class="company-header">
-                  <h3 class="company-name">Karolinska University Hospital</h3>
-                  <span class="company-dates">Jun 2021 - Dec 2021</span>
-                </div>
-                <p class="job-title">Biomedical Engineer, Medical Imaging and Physiology</p>
-                <p class="company-location">Stockholm, Sweden</p>
-                <p class="company-description">
+              </article>
+              <article
+                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
+                    Karolinska University Hospital
+                  </h3>
+                  <p
+                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  >
+                    Jun 2021 — Dec 2021
+                  </p>
+                </header>
+                <p
+                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                >
+                  Biomedical Engineer, Medical Imaging and Physiology
+                </p>
+                <p class="company-location mt-0.5 text-sm text-slate-500">Stockholm, Sweden</p>
+                <p
+                  class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   First-line support for imaging equipment fleet, incident management for RIS/PACS
                   systems, working with GE, Philips, and Siemens solutions.
                 </p>
-              </div>
+              </article>
             </template>
           </div>
         </div>
       </section>
 
       <!-- Education Section -->
-      <section id="education" class="portfolio-section bg-light">
-        <div class="container">
-          <h2 class="section-title">
+      <section id="education" class="bg-slate-50 py-24 dark:bg-slate-950">
+        <div class="mx-auto max-w-7xl px-6">
+          <header class="mb-14 flex items-center gap-3">
             <img
               src="/images/education.svg"
               alt=""
-              class="section-icon"
+              class="section-icon h-7 w-7 opacity-80 dark:invert"
               width="32"
               height="32"
               loading="lazy"
             />
-            Education
-          </h2>
-          <div class="education-grid">
+            <h2
+              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+            >
+              Education
+            </h2>
+          </header>
+
+          <div class="education-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <template v-if="education.length">
-              <div v-for="edu in education" :key="edu.id" class="education-card fade-in">
-                <div class="education-header-with-logo">
+              <article
+                v-for="edu in education"
+                :key="edu.id"
+                class="education-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header class="flex items-start gap-4">
                   <img
                     v-if="edu.logo_url"
                     :src="edu.logo_url"
                     :alt="`${edu.institution} Logo`"
-                    class="card-logo"
+                    class="card-logo h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-800"
                     width="64"
                     height="64"
                     loading="lazy"
                   />
-                  <div>
-                    <h3 class="education-institution">{{ edu.institution }}</h3>
-                    <p class="education-degree">
-                      <strong>{{ edu.degree }}</strong>
+                  <div class="min-w-0 flex-1">
+                    <h3
+                      class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                    >
+                      {{ edu.institution }}
+                    </h3>
+                    <p
+                      class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    >
+                      {{ edu.degree }}
                     </p>
                   </div>
-                </div>
-                <p v-if="edu.field_of_study" class="education-field">{{ edu.field_of_study }}</p>
-                <p v-if="edu.description" class="education-description">{{ edu.description }}</p>
+                </header>
+                <p v-if="edu.field_of_study" class="education-field mt-3 text-sm text-slate-500">
+                  {{ edu.field_of_study }}
+                </p>
+                <p
+                  v-if="edu.description"
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
+                  {{ edu.description }}
+                </p>
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  <template v-if="edu.is_certification && edu.end_date">
+                    {{ formatDate(edu.end_date) }}
+                  </template>
+                  <template v-else>
+                    {{ formatDate(edu.start_date) }} —
+                    {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
+                  </template>
+                </p>
                 <a
                   v-if="edu.certificate_url"
                   :href="edu.certificate_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link"
+                  class="certificate-link mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                   :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
                 >
-                  View Certificate
+                  View certificate
                   <svg
-                    class="external-icon"
-                    width="12"
-                    height="12"
+                    class="external-icon h-3.5 w-3.5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    aria-hidden="true"
                   >
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
                   </svg>
                 </a>
-                <p class="education-dates">
-                  <template v-if="edu.is_certification && edu.end_date">
-                    {{ formatDate(edu.end_date) }}
-                  </template>
-                  <template v-else>
-                    {{ formatDate(edu.start_date) }} -
-                    {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
-                  </template>
-                </p>
-              </div>
+              </article>
             </template>
             <template v-else>
               <!-- Static fallback — rendered when the SSG build fetched no
                    education rows. Kept in sync with seed_data. -->
-              <div class="education-card fade-in">
-                <div class="education-header-with-logo">
-                  <div>
-                    <h3 class="education-institution">CompTIA</h3>
-                    <p class="education-degree"><strong>Security+ Certification</strong></p>
-                  </div>
-                </div>
-                <p class="education-field">Cybersecurity</p>
-                <p class="education-description">
+              <article
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3
+                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                  >
+                    CompTIA
+                  </h3>
+                  <p
+                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    Security+ Certification
+                  </p>
+                </header>
+                <p class="education-field mt-3 text-sm text-slate-500">Cybersecurity</p>
+                <p
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Industry-standard certification covering network security, threats,
                   vulnerabilities, and risk management.
+                </p>
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  Jan 2026
                 </p>
                 <a
                   href="https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link"
+                  class="certificate-link mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                   aria-label="View Security+ certificate from CompTIA (opens in new tab)"
                 >
-                  View Certificate
+                  View certificate
                   <svg
-                    class="external-icon"
-                    width="12"
-                    height="12"
+                    class="external-icon h-3.5 w-3.5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    aria-hidden="true"
                   >
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
                   </svg>
                 </a>
-                <p class="education-dates">Jan 2026</p>
-              </div>
-              <div class="education-card fade-in">
-                <div class="education-header-with-logo">
-                  <div>
-                    <h3 class="education-institution">Microsoft</h3>
-                    <p class="education-degree">
-                      <strong>Azure Security Engineer Associate (AZ-500)</strong>
-                    </p>
-                  </div>
-                </div>
-                <p class="education-field">Cloud Security</p>
-                <p class="education-description">
+              </article>
+              <article
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3
+                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                  >
+                    Microsoft
+                  </h3>
+                  <p
+                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    Azure Security Engineer Associate (AZ-500)
+                  </p>
+                </header>
+                <p class="education-field mt-3 text-sm text-slate-500">Cloud Security</p>
+                <p
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Azure security services, identity management, and compliance features.
                 </p>
-                <p class="education-dates">Jun 2023</p>
-              </div>
-              <div class="education-card fade-in">
-                <div class="education-header-with-logo">
-                  <div>
-                    <h3 class="education-institution">Företagsuniversitetet</h3>
-                    <p class="education-degree">
-                      <strong>Certified ISO 27001 Lead Implementer</strong>
-                    </p>
-                  </div>
-                </div>
-                <p class="education-field">Information Security Management</p>
-                <p class="education-description">
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  Jun 2023
+                </p>
+              </article>
+              <article
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3
+                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                  >
+                    Företagsuniversitetet
+                  </h3>
+                  <p
+                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    Certified ISO 27001 Lead Implementer
+                  </p>
+                </header>
+                <p class="education-field mt-3 text-sm text-slate-500">
+                  Information Security Management
+                </p>
+                <p
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Intensive certification program for implementing and managing ISO 27001 ISMS.
                 </p>
-                <p class="education-dates">Mar 2023</p>
-              </div>
-              <div class="education-card fade-in">
-                <div class="education-header-with-logo">
-                  <div>
-                    <h3 class="education-institution">EC-Council</h3>
-                    <p class="education-degree">
-                      <strong>Certified Ethical Hacker (CEH)</strong>
-                    </p>
-                  </div>
-                </div>
-                <p class="education-field">Cybersecurity</p>
-                <p class="education-description">
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  Mar 2023
+                </p>
+              </article>
+              <article
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3
+                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                  >
+                    EC-Council
+                  </h3>
+                  <p
+                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    Certified Ethical Hacker (CEH)
+                  </p>
+                </header>
+                <p class="education-field mt-3 text-sm text-slate-500">Cybersecurity</p>
+                <p
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Ethical hacking methodologies, penetration testing, and vulnerability assessment.
                 </p>
-                <p class="education-dates">Oct 2022</p>
-              </div>
-              <div class="education-card fade-in">
-                <div class="education-header-with-logo">
-                  <div>
-                    <h3 class="education-institution">KTH Royal Institute of Technology</h3>
-                    <p class="education-degree"><strong>M.Sc. Medical Engineering</strong></p>
-                  </div>
-                </div>
-                <p class="education-field">Medical Technology and Bioengineering</p>
-                <p class="education-description">
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  Oct 2022
+                </p>
+              </article>
+              <article
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3
+                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                  >
+                    KTH Royal Institute of Technology
+                  </h3>
+                  <p
+                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    M.Sc. Medical Engineering
+                  </p>
+                </header>
+                <p class="education-field mt-3 text-sm text-slate-500">
+                  Medical Technology and Bioengineering
+                </p>
+                <p
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Specialized in medical imaging, signal processing, and healthcare informatics.
                   Thesis on AI-driven diagnostic systems.
                 </p>
-                <p class="education-dates">Aug 2017 - Jun 2022</p>
-              </div>
-              <div class="education-card fade-in">
-                <div class="education-header-with-logo">
-                  <div>
-                    <h3 class="education-institution">Lund University (LTH)</h3>
-                    <p class="education-degree">
-                      <strong>B.Sc. Biomedical Engineering (Exchange)</strong>
-                    </p>
-                  </div>
-                </div>
-                <p class="education-field">Biomedical Engineering</p>
-                <p class="education-description">
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  Aug 2017 — Jun 2022
+                </p>
+              </article>
+              <article
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+              >
+                <header>
+                  <h3
+                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
+                  >
+                    Lund University (LTH)
+                  </h3>
+                  <p
+                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    B.Sc. Biomedical Engineering (Exchange)
+                  </p>
+                </header>
+                <p class="education-field mt-3 text-sm text-slate-500">Biomedical Engineering</p>
+                <p
+                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                >
                   Exchange program focusing on medical device development and regulatory affairs.
                 </p>
-                <p class="education-dates">Jan 2020 - Jun 2021</p>
-              </div>
+                <p
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                >
+                  Jan 2020 — Jun 2021
+                </p>
+              </article>
             </template>
           </div>
         </div>

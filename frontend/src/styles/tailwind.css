@@ -18,6 +18,13 @@
 @source '../**/*.ts';
 @source '../../index.html';
 
+/* Drive Tailwind's dark: variant from [data-theme='dark'] (set by the
+   ThemeToggle component on <html>) instead of prefers-color-scheme.
+   Without this override, clicking the theme toggle wouldn't flip any
+   `dark:bg-slate-900` / `dark:text-slate-300` utilities — only the
+   user's system preference would. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 @theme {
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
