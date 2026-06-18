@@ -1,12 +1,12 @@
 /*
- * Tailwind v4 entry — added alongside Bootstrap during the phased migration.
- * Imported AFTER bootstrap + style.css + portfolio.css in main.ts so Tailwind
- * utilities win cascade ties as we swap markup component-by-component.
+ * Tailwind v4 entry. Bootstrap + portfolio.css were dropped in Phase 6 — the
+ * public site is now Tailwind-only (admin views still on Bootstrap classes
+ * but bootstrap.min.css no longer ships; admin restyle is the Phase 5 work).
  *
- * @theme aliases re-export the existing portfolio palette under Tailwind's
+ * @theme aliases re-export the portfolio palette under Tailwind's
  * --color-{name}-{shade} naming convention so utilities like bg-primary-500,
- * text-slate-700, ring-primary-400 work against the same tokens the legacy
- * CSS files use. No visual recolor; this is just plumbing.
+ * text-slate-700, ring-primary-400 resolve to the same tokens the global
+ * style.css variables use.
  */
 @import 'tailwindcss';
 

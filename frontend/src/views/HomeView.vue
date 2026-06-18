@@ -856,11 +856,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Import legacy custom styles. portfolio.css still ships .portfolio-section
-   helpers used by other views; trimming it lives in Phase 6 alongside the
-   Bootstrap drop. */
-@import '../assets/portfolio.css';
-
 .portfolio-home {
   padding-top: 0;
 }

@@ -1,33 +1,60 @@
 <template>
-  <div class="experience-detail">
+  <div
+    class="experience-detail min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100"
+  >
     <NavBar />
 
     <!-- Main landmark — always present so router focus() and skip link land correctly -->
-    <main id="main-content" tabindex="-1">
+    <main id="main-content" tabindex="-1" class="pt-24">
       <!-- Loading State -->
-      <div v-if="loading" class="container py-5 text-center">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+      <div v-if="loading" class="mx-auto max-w-3xl px-6 py-20 text-center">
+        <div
+          class="spinner-border mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-primary-500 dark:border-slate-700 dark:border-t-primary-400"
+          role="status"
+        >
+          <span class="sr-only">Loading...</span>
         </div>
-        <p class="mt-3">Loading experience details...</p>
+        <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Loading experience details...</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="container py-5">
-        <div class="alert alert-danger" role="alert">
-          <h4 class="alert-heading">Error Loading Experience</h4>
-          <p>{{ error }}</p>
-          <hr />
-          <router-link to="/" class="btn btn-primary">Return to Home</router-link>
+      <div v-else-if="error" class="mx-auto max-w-3xl px-6 py-20">
+        <div
+          class="alert-danger rounded-2xl border border-rose-200 bg-rose-50 p-6 dark:border-rose-500/30 dark:bg-rose-500/10"
+          role="alert"
+        >
+          <h4 class="text-lg font-semibold text-rose-800 dark:text-rose-200">
+            Error Loading Experience
+          </h4>
+          <p class="mt-2 text-sm text-rose-700 dark:text-rose-300">{{ error }}</p>
+          <router-link
+            to="/"
+            class="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+          >
+            Return to Home
+            <svg
+              class="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </router-link>
         </div>
       </div>
 
       <!-- Company Details -->
-      <div v-else-if="company" class="container py-5">
+      <article v-else-if="company" class="mx-auto max-w-4xl px-6 py-12">
         <!-- Media Section: Video and Map (side-by-side on desktop) -->
-        <div v-if="company.video_url || company.map_url" class="media-section">
+        <div
+          v-if="company.video_url || company.map_url"
+          class="media-section mb-12 grid gap-6 md:grid-cols-2"
+        >
           <!-- YouTube Video -->
-          <div v-if="company.video_url" class="media-item">
+          <div v-if="company.video_url">
             <VideoEmbed
               :url="company.video_url"
               :heading="company.video_title || `${company.name} Video`"
@@ -36,7 +63,7 @@
           </div>
 
           <!-- Google Maps -->
-          <div v-if="company.map_url" class="media-item">
+          <div v-if="company.map_url">
             <MapEmbed
               :url="company.map_url"
               :heading="company.map_title || `${company.name} Location`"
@@ -46,47 +73,58 @@
         </div>
 
         <!-- Company Information -->
-        <div class="mb-5">
-          <div class="d-flex align-items-center mb-3">
+        <section class="experience-section mb-12">
+          <header class="flex items-start gap-5">
             <img
               v-if="company.logo_url && !logoError"
               :src="company.logo_url"
               :alt="`${company.name} logo`"
-              class="me-3"
-              style="width: 64px; height: 64px; object-fit: contain"
+              class="h-16 w-16 shrink-0 rounded-xl object-contain ring-1 ring-slate-200 dark:ring-slate-800"
               @error="logoError = true"
             />
-            <div>
-              <h1 class="mb-1">{{ company.title }}</h1>
-              <h3 class="text-muted mb-0">{{ company.name }}</h3>
+            <div class="min-w-0 flex-1">
+              <p
+                class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+              >
+                {{ company.name }}
+              </p>
+              <h1
+                class="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
+              >
+                {{ company.title }}
+              </h1>
             </div>
-          </div>
+          </header>
 
-          <p class="text-muted">
+          <p
+            class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400"
+          >
             <!-- FRONTEND-PERF-07: Bootstrap Icons are not bundled in this app
                  (no `bootstrap-icons` import / link in the codebase), so the
                  `<i class="bi bi-*">` tags previously rendered as empty
                  boxes. Inlining the SVG paths fixes the visible bug and
                  removes the need to ever ship the ~120 KB icon font. -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-            >
-              <path
-                d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"
-              />
-              <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-            </svg>
-            {{ company.location }}
-            <span v-if="company.start_date" class="ms-3">
+            <span class="inline-flex items-center gap-1.5">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="14"
+                height="14"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"
+                />
+                <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+              </svg>
+              {{ company.location }}
+            </span>
+            <span v-if="company.start_date" class="inline-flex items-center gap-1.5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
                 fill="currentColor"
                 viewBox="0 0 16 16"
                 aria-hidden="true"
@@ -95,23 +133,22 @@
                   d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"
                 />
               </svg>
-              {{ formatDate(company.start_date) }} -
+              {{ formatDate(company.start_date) }} —
               {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
             </span>
           </p>
 
-          <div class="mb-4">
+          <div v-if="company.website" class="mt-6">
             <a
-              v-if="company.website"
               :href="company.website"
               target="_blank"
               rel="noopener noreferrer"
-              class="btn btn-outline-primary me-2"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="14"
+                height="14"
                 fill="currentColor"
                 viewBox="0 0 16 16"
                 aria-hidden="true"
@@ -123,53 +160,84 @@
               Visit Website
             </a>
           </div>
-        </div>
+        </section>
 
         <!-- Description -->
-        <div class="mb-5">
-          <h3>About {{ company.name }}</h3>
-          <!-- eslint-disable-next-line vue/no-v-html -- Input HTML-escaped, only emits strong/em -->
-          <div v-html="formatDescription(company.description)"></div>
-        </div>
+        <section class="experience-section mb-12">
+          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            About {{ company.name }}
+          </h2>
+          <div
+            class="prose-content mt-4 space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
+            v-html="formatDescription(company.description)"
+          ></div>
+        </section>
 
         <!-- Detailed Description -->
-        <div v-if="company.detailed_description" class="mb-5">
-          <h3>Role & Responsibilities</h3>
-          <!-- eslint-disable-next-line vue/no-v-html -- Input HTML-escaped, only emits strong/em -->
-          <div v-html="formatDescription(company.detailed_description)"></div>
-        </div>
+        <section v-if="company.detailed_description" class="experience-section mb-12">
+          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Role &amp; Responsibilities
+          </h2>
+          <div
+            class="prose-content mt-4 space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
+            v-html="formatDescription(company.detailed_description)"
+          ></div>
+        </section>
 
         <!-- Responsibilities List -->
-        <div v-if="company.responsibilities && company.responsibilities.length > 0" class="mb-5">
-          <h3>Key Responsibilities</h3>
-          <ul class="list-group list-group-flush">
+        <section
+          v-if="company.responsibilities && company.responsibilities.length > 0"
+          class="experience-section mb-12"
+        >
+          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Key Responsibilities
+          </h2>
+          <ul class="mt-4 space-y-3">
             <li
               v-for="(responsibility, index) in company.responsibilities"
               :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
-              class="list-group-item"
+              class="list-group-item flex gap-3 leading-relaxed text-slate-700 dark:text-slate-300"
             >
+              <span
+                class="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                aria-hidden="true"
+              ></span>
               {{ responsibility }}
             </li>
           </ul>
-        </div>
+        </section>
 
         <!-- Technologies -->
-        <div v-if="company.technologies && company.technologies.length > 0" class="mb-5">
-          <h3>Technologies & Tools</h3>
-          <div class="d-flex flex-wrap gap-2">
-            <span v-for="tech in company.technologies" :key="tech" class="badge bg-primary">
+        <section
+          v-if="company.technologies && company.technologies.length > 0"
+          class="experience-section mb-12"
+        >
+          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Technologies &amp; Tools
+          </h2>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span
+              v-for="tech in company.technologies"
+              :key="tech"
+              class="badge inline-flex items-center rounded-full bg-primary-50 px-3 py-1 font-mono text-xs uppercase tracking-wider text-primary-700 dark:bg-primary-500/10 dark:text-primary-300"
+            >
               {{ tech }}
             </span>
           </div>
-        </div>
+        </section>
 
         <!-- Back Navigation -->
-        <div class="mt-5 pt-4 border-top">
-          <router-link to="/" class="btn btn-outline-secondary">
+        <div
+          class="experience-back-nav border-top mt-16 border-t border-slate-200 pt-8 dark:border-slate-800"
+        >
+          <router-link
+            to="/"
+            class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
+              width="14"
+              height="14"
               fill="currentColor"
               viewBox="0 0 16 16"
               aria-hidden="true"
@@ -182,7 +250,7 @@
             Back to Portfolio
           </router-link>
         </div>
-      </div>
+      </article>
     </main>
   </div>
 </template>
@@ -220,7 +288,6 @@ const runEntranceAnimations = (): void => {
   }
 
   gsapContext = gsap.context(() => {
-    // Media section fade up
     gsap.from('.media-section', {
       opacity: 0,
       y: 30,
@@ -228,8 +295,7 @@ const runEntranceAnimations = (): void => {
       ease: 'power2.out'
     })
 
-    // Company info section fade up
-    gsap.from('.mb-5:not(.media-section)', {
+    gsap.from('.experience-section', {
       opacity: 0,
       y: 25,
       duration: 0.5,
@@ -238,7 +304,6 @@ const runEntranceAnimations = (): void => {
       delay: 0.15
     })
 
-    // Responsibilities list items stagger
     gsap.from('.list-group-item', {
       opacity: 0,
       x: -20,
@@ -248,7 +313,6 @@ const runEntranceAnimations = (): void => {
       delay: 0.4
     })
 
-    // Technology badges stagger
     gsap.from('.badge', {
       opacity: 0,
       y: 15,
@@ -259,8 +323,7 @@ const runEntranceAnimations = (): void => {
       delay: 0.5
     })
 
-    // Back navigation fade in
-    gsap.from('.border-top', {
+    gsap.from('.experience-back-nav', {
       opacity: 0,
       y: 20,
       duration: 0.5,
@@ -399,179 +462,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.experience-detail {
-  min-height: 100vh;
-  background-color: var(--bg-primary, #ffffff);
-  color: var(--text-primary, #1e293b);
+/* The prose-content block renders v-html output from formatDescription.
+   Scoped <p> styling here is :deep so it reaches the injected paragraphs. */
+.prose-content :deep(p) {
+  margin: 0;
 }
-
-/* Offset fixed navbar so content doesn't slide under it at scroll top */
-.experience-detail > main {
-  padding-top: 80px;
+.prose-content :deep(p + p) {
+  margin-top: 1rem;
 }
-
-/* Media Section - Side by side layout for video and map */
-.media-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.prose-content :deep(strong) {
+  font-weight: 600;
+  color: inherit;
 }
-
-.media-item {
-  flex: 1 1 400px;
-  min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .media-section {
-    flex-direction: column;
-  }
-
-  .media-item {
-    flex: 1 1 100%;
-  }
-}
-
-.badge {
-  font-size: 0.9rem;
-  padding: 0.5rem 0.75rem;
-}
-
-.list-group-item {
-  border-left: none;
-  border-right: none;
-  padding-left: 0;
-  background-color: transparent;
-  color: var(--text-primary, #1e293b);
-}
-
-.list-group-item:first-child {
-  border-top: none;
-}
-
-.ratio iframe {
-  border: none;
-  border-radius: 0.5rem;
-}
-
-h1,
-h2,
-h3 {
-  color: var(--text-primary, #1e293b);
-}
-
-.text-muted {
-  color: var(--text-secondary, #64748b) !important;
-}
-
-main p {
-  color: var(--text-primary, #1e293b);
-}
-
-main :deep(p) {
-  color: var(--text-primary, #1e293b);
-}
-
-.border-top {
-  border-color: var(--border-color, #e2e8f0) !important;
-}
-
-/* Dark mode support */
-[data-theme='dark'] .experience-detail {
-  background-color: var(--bg-primary, #0f172a);
-  color: var(--text-primary, #f1f5f9);
-}
-
-[data-theme='dark'] h1,
-[data-theme='dark'] h2,
-[data-theme='dark'] h3 {
-  color: var(--text-primary);
-}
-
-[data-theme='dark'] .text-muted {
-  color: var(--text-tertiary) !important;
-}
-
-[data-theme='dark'] main p,
-[data-theme='dark'] main :deep(p) {
-  color: var(--text-secondary);
-}
-
-[data-theme='dark'] .list-group-item {
-  color: var(--text-secondary);
-  border-color: var(--border-primary);
-}
-
-[data-theme='dark'] .border-top {
-  border-color: var(--border-primary) !important;
-}
-
-[data-theme='dark'] .btn-outline-primary {
-  color: var(--link-color);
-  border-color: var(--link-color);
-}
-
-[data-theme='dark'] .btn-outline-primary:hover {
-  background-color: var(--primary-400);
-  color: var(--bg-primary);
-}
-
-[data-theme='dark'] .btn-outline-secondary {
-  color: var(--text-tertiary);
-  border-color: var(--border-secondary);
-}
-
-[data-theme='dark'] .btn-outline-secondary:hover {
-  background-color: var(--border-secondary);
-  color: var(--text-primary);
-}
-
-[data-theme='dark'] .badge.bg-primary {
-  background-color: rgba(59, 130, 246, 0.3) !important;
-  color: var(--primary-300, #93c5fd) !important;
-}
-
-[data-theme='dark'] .alert-danger {
-  background-color: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: var(--color-error, #fca5a5);
-}
-
-[data-theme='dark'] .spinner-border.text-primary {
-  color: var(--link-color) !important;
-}
-
-[data-theme='dark'] .container p.mt-3 {
-  color: var(--text-tertiary);
-}
-
-/* Enhanced button hover effects */
-.btn-outline-primary,
-.btn-outline-secondary {
-  transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.btn-outline-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-}
-
-.btn-outline-secondary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.2);
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .btn-outline-primary,
-  .btn-outline-secondary {
-    transition: none;
-  }
-
-  .btn-outline-primary:hover,
-  .btn-outline-secondary:hover {
-    transform: none;
-  }
+.prose-content :deep(em) {
+  font-style: italic;
 }
 </style>

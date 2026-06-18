@@ -1,86 +1,23 @@
 /**
- * PostCSS configuration — FRONTEND-PERF-01.
+ * PostCSS configuration.
  *
- * Strips unused Bootstrap selectors from the final bundle (production
- * build only; dev still ships the full sheet so devtools shows every
- * Bootstrap class). Q6 decision was "drop unused utilities only, no
- * SCSS rewrite", so this keeps the existing
- * `import 'bootstrap/dist/css/bootstrap.min.css'` and prunes the output.
+ * Phase 6 dropped @fullhuman/postcss-purgecss. Tailwind v4's JIT only emits
+ * the utility classes it sees referenced in @source-scanned files, so PurgeCSS
+ * was redundant for Tailwind output — and Bootstrap is no longer shipped to
+ * the public site, so there is nothing left for PurgeCSS to prune.
  *
- * Measured impact on a clean build (2026-06-11):
- *   vendor CSS  230,850 -> 83,271 bytes (-64%)
- *   index CSS    75,363 -> 66,066 bytes (-12%)
+ * Two prior production incidents were caused by PurgeCSS misreading content:
+ *   - `variables: true` (the option name is inverted in PurgeCSS — `true`
+ *     means "DO purge") stripped --primary-500/600 used inside gradient
+ *     stops, making hero accent text render invisibly.
+ *   - The default extractor regex `/[A-Za-z0-9_-]+/g` did not match `:`,
+ *     `[]`, or `/`, so Tailwind classes like `lg:flex` and `tracking-[0.25em]`
+ *     were purged. The fix required a custom extractor.
  *
- * The safelist preserves selectors that are referenced dynamically (Vue
- * `:class` bindings constructed from variables, Bootstrap's own
- * runtime-toggled classes like `.show` / `.collapsing` / `.fade` /
- * `.active`, and the focus/hover pseudo-state suffixes Bootstrap relies
- * on). Adding to the safelist is cheaper than chasing a missing-style
- * bug in prod.
+ * Removing PurgeCSS removes both failure modes. Bundle impact is negative
+ * because the Bootstrap drop more than offsets re-shipping any classes
+ * Tailwind might (it doesn't — JIT handles this).
  */
-const purgecss = require('@fullhuman/postcss-purgecss')
-
 module.exports = {
-  plugins: [
-    process.env.NODE_ENV === 'production' &&
-      purgecss({
-        content: [
-          './index.html',
-          './src/**/*.vue',
-          './src/**/*.ts',
-          './src/**/*.js',
-          './src/**/*.html'
-        ],
-        // Extractor must recognise Tailwind syntax (`:` for responsive +
-        // variant modifiers, `[ ]` for arbitrary values, `/` for opacity
-        // modifiers, `.` for decimal arbitrary values like `leading-[1.05]`)
-        // — otherwise classes like `lg:flex`, `hover:bg-slate-100`, and
-        // `tracking-[0.25em]` are tokenised as their bare suffix and
-        // purged. Same root cause as the `--primary-500` purge bug.
-        defaultExtractor: content => content.match(/[\w/.:[\]-]+/g) || [],
-        // Don't purge CSS custom properties or @keyframes — Vue runtime
-        // styles and theme variables depend on them. In PurgeCSS the
-        // option name reads inverted: `variables: true` means "DO purge
-        // unused variables", which was stripping --primary-500/600 (used
-        // only inside gradient stops, where PurgeCSS's var() detector
-        // missed them) and making the hero accent text render invisibly.
-        variables: false,
-        keyframes: true,
-        safelist: {
-          standard: [
-            'show',
-            'fade',
-            'fade-out',
-            'collapsing',
-            'collapsed',
-            'active',
-            'disabled',
-            'modal-open',
-            'modal-backdrop',
-            'd-none',
-            'd-block',
-            'visible',
-            'invisible',
-            'sr-only',
-            'visually-hidden'
-          ],
-          deep: [
-            /^modal/,
-            /^tooltip/,
-            /^popover/,
-            /^carousel/,
-            /^dropdown/,
-            /^offcanvas/,
-            /^toast/,
-            /^alert-/,
-            /^badge-/,
-            /^btn-/,
-            /^bg-/,
-            /^text-/,
-            /^border-/
-          ],
-          greedy: [/collapse/, /transitioning/]
-        }
-      })
-  ].filter(Boolean)
+  plugins: []
 }
