@@ -16,7 +16,7 @@
 
         <div class="relative z-[2] mx-auto max-w-4xl px-6 text-center">
           <p class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500">
-            Cybersecurity · Medical Software · Stockholm
+            Portfolio — 2026
           </p>
 
           <h1
@@ -29,12 +29,11 @@
             <span class="font-light text-slate-300">in medical software development.</span>
           </h1>
 
-          <p class="custom-hero-lead mt-12 text-base font-light text-slate-400 sm:text-lg">
-            <span class="text-white">Biomedical Engineer</span>
-            <span class="mx-3 text-slate-700">·</span>
-            QA/RA &amp; Security Specialist
-            <span class="mx-3 text-slate-700">·</span>
-            <span class="text-white">Stockholm, Sweden</span>
+          <p
+            class="custom-hero-lead mx-auto mt-12 max-w-2xl text-base font-light leading-relaxed text-slate-400 sm:text-lg"
+          >
+            <span class="text-white">Biomedical Engineer</span> working on QA/RA and security for
+            medical software in <span class="text-white">Stockholm, Sweden</span>.
           </p>
         </div>
       </section>
@@ -617,7 +616,7 @@
                 />
               </picture>
             </div>
-            <div class="space-y-5 text-slate-600 dark:text-slate-300">
+            <div class="text-slate-600 dark:text-slate-300">
               <p
                 class="border-l-2 border-primary-500 pl-5 text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >
@@ -625,20 +624,20 @@
                 regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
                 frameworks.
               </p>
-              <p class="leading-relaxed">
+              <p class="mt-8 leading-relaxed">
                 I am a biomedical engineer specializing in cybersecurity and regulatory compliance
                 for medical software and AI systems. As a QA/RA &amp; Security Specialist at Hermes
                 Medical Solutions, I ensure that our software and digital health solutions meet the
                 highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
                 EU AI Act).
               </p>
-              <div>
+              <div class="mt-10">
                 <p
-                  class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
                   Current focus areas
                 </p>
-                <ul class="mt-3 space-y-2">
+                <ul class="mt-4 space-y-2.5">
                   <li class="flex gap-3 leading-relaxed">
                     <span
                       class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
@@ -669,18 +668,18 @@
                   </li>
                 </ul>
               </div>
-              <div>
+              <div class="mt-10">
                 <p
-                  class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
                   Technical skills
                 </p>
-                <p class="mt-3 leading-relaxed">
+                <p class="mt-4 leading-relaxed">
                   Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
                   Git
                 </p>
               </div>
-              <p class="leading-relaxed">
+              <p class="mt-10 leading-relaxed">
                 I am passionate about making healthcare technology safer and more trustworthy by
                 protecting patient data, ensuring system integrity, and helping organizations
                 navigate the Cybersecurity &amp; AI regulatory landscape.
