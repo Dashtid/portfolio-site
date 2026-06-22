@@ -4,7 +4,7 @@
     data-testid="theme-toggle"
     :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
     :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-    @click="toggleTheme"
+    @click="handleToggle"
   >
     <transition name="icon-fade" mode="out-in">
       <svg
@@ -53,6 +53,14 @@
 import { useTheme } from '../composables/useTheme'
 
 const { isDark, toggleTheme } = useTheme()
+
+// Wrapped because Vue's `@click="toggleTheme"` would pass the MouseEvent
+// as the first argument to useToggle(isDark), which interprets a truthy
+// value as "set to true" instead of "flip current value." Calling with no
+// args is the correct VueUse no-arg toggle behavior.
+const handleToggle = (): void => {
+  toggleTheme()
+}
 </script>
 
 <style scoped>
