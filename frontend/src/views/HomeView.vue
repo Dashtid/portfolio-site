@@ -89,7 +89,7 @@
                       {{ company.name }}
                     </h3>
                     <p
-                      class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                      class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                     >
                       {{ formatDate(company.start_date) }} —
                       {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
@@ -101,7 +101,7 @@
                 >
                   {{ company.title }}
                 </p>
-                <p class="company-location mt-0.5 text-sm text-slate-500">
+                <p class="company-location mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   {{ company.location }}
                 </p>
                 <p
@@ -144,7 +144,7 @@
                     Hermes Medical Solutions
                   </h3>
                   <p
-                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     May 2024 — Present
                   </p>
@@ -154,7 +154,9 @@
                 >
                   QA/RA &amp; Security Specialist
                 </p>
-                <p class="company-location mt-0.5 text-sm text-slate-500">Stockholm, Sweden</p>
+                <p class="company-location mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                  Stockholm, Sweden
+                </p>
                 <p
                   class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
@@ -171,7 +173,7 @@
                     Philips Healthcare
                   </h3>
                   <p
-                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     Mar 2022 — May 2024
                   </p>
@@ -181,7 +183,9 @@
                 >
                   Incident Support Specialist, Nordics
                 </p>
-                <p class="company-location mt-0.5 text-sm text-slate-500">Stockholm, Sweden</p>
+                <p class="company-location mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                  Stockholm, Sweden
+                </p>
                 <p
                   class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
@@ -197,7 +201,7 @@
                     Karolinska University Hospital
                   </h3>
                   <p
-                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500"
+                    class="company-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     Jun 2021 — Dec 2021
                   </p>
@@ -207,7 +211,9 @@
                 >
                   Biomedical Engineer, Medical Imaging and Physiology
                 </p>
-                <p class="company-location mt-0.5 text-sm text-slate-500">Stockholm, Sweden</p>
+                <p class="company-location mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                  Stockholm, Sweden
+                </p>
                 <p
                   class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
@@ -269,7 +275,10 @@
                     </p>
                   </div>
                 </header>
-                <p v-if="edu.field_of_study" class="education-field mt-3 text-sm text-slate-500">
+                <p
+                  v-if="edu.field_of_study"
+                  class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400"
+                >
                   {{ edu.field_of_study }}
                 </p>
                 <p
@@ -279,7 +288,7 @@
                   {{ edu.description }}
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   <template v-if="edu.is_certification && edu.end_date">
                     {{ formatDate(edu.end_date) }}
@@ -331,7 +340,9 @@
                     Security+ Certification
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500">Cybersecurity</p>
+                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                  Cybersecurity
+                </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
@@ -339,7 +350,7 @@
                   vulnerabilities, and risk management.
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Jan 2026
                 </p>
@@ -380,14 +391,16 @@
                     Azure Security Engineer Associate (AZ-500)
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500">Cloud Security</p>
+                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                  Cloud Security
+                </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
                   Azure security services, identity management, and compliance features.
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Jun 2023
                 </p>
@@ -407,7 +420,7 @@
                     Certified ISO 27001 Lead Implementer
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500">
+                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
                   Information Security Management
                 </p>
                 <p
@@ -416,7 +429,7 @@
                   Intensive certification program for implementing and managing ISO 27001 ISMS.
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Mar 2023
                 </p>
@@ -436,14 +449,16 @@
                     Certified Ethical Hacker (CEH)
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500">Cybersecurity</p>
+                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                  Cybersecurity
+                </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
                   Ethical hacking methodologies, penetration testing, and vulnerability assessment.
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Oct 2022
                 </p>
@@ -463,7 +478,7 @@
                     M.Sc. Medical Engineering
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500">
+                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
                   Medical Technology and Bioengineering
                 </p>
                 <p
@@ -473,7 +488,7 @@
                   Thesis on AI-driven diagnostic systems.
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Aug 2017 — Jun 2022
                 </p>
@@ -493,14 +508,16 @@
                     B.Sc. Biomedical Engineering (Exchange)
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500">Biomedical Engineering</p>
+                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                  Biomedical Engineering
+                </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
                   Exchange program focusing on medical device development and regulatory affairs.
                 </p>
                 <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500"
+                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Jan 2020 — Jun 2021
                 </p>
@@ -530,7 +547,7 @@
           </header>
           <div
             v-if="documentsLoading"
-            class="rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800"
+            class="rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400"
             role="status"
             aria-live="polite"
           >

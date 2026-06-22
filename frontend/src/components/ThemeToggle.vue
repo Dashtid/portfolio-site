@@ -52,14 +52,7 @@
 <script setup lang="ts">
 import { useTheme } from '../composables/useTheme'
 
-const { isDark, toggleTheme: toggle } = useTheme()
-
-const handleClick = (): void => {
-  toggle()
-}
-
-// Alias for template usage
-const toggleTheme = handleClick
+const { isDark, toggleTheme } = useTheme()
 </script>
 
 <style scoped>
@@ -121,19 +114,17 @@ const toggleTheme = handleClick
   transform: rotate(90deg) scale(0.5);
 }
 
-/* Dark mode specific styles */
-[data-theme='dark'] .theme-toggle {
-  border-color: var(--color-border);
-}
-
+/* Dark mode overrides. The base rule uses --color-border which already
+   swaps via [data-theme='dark']; only genuinely different dark styling
+   stays here — warm amber hover for the sun/moon flip, brighter icon
+   resting color, and the --primary-400 focus ring. */
 [data-theme='dark'] .theme-toggle:hover {
   background: rgba(251, 191, 36, 0.15);
   border-color: var(--color-warning);
 }
 
 [data-theme='dark'] .theme-icon {
-  /* Brighter icon color for better visibility on dark backgrounds */
-  color: var(--text-secondary, #cbd5e1);
+  color: var(--text-secondary);
 }
 
 [data-theme='dark'] .theme-toggle:hover .theme-icon {
@@ -141,7 +132,7 @@ const toggleTheme = handleClick
 }
 
 [data-theme='dark'] .theme-toggle:focus-visible {
-  outline-color: var(--primary-400, #60a5fa);
+  outline-color: var(--primary-400);
 }
 
 /* Responsive sizing - maintain 44px minimum for WCAG 2.5.8 */

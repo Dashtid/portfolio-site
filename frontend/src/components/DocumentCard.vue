@@ -22,7 +22,7 @@
       {{ document.description }}
     </p>
 
-    <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+    <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
       <div class="meta-item flex items-center gap-1.5">
         <svg
           class="h-3.5 w-3.5"

@@ -42,6 +42,25 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
 
+    <!-- Pre-hydration theme. Vue's useDark() only runs after hydration, so
+         without this block users with a saved `dark` preference see a
+         light-mode flash on every page load. This sets data-theme on <html>
+         before first paint, matching what useDark() will compute on the
+         client. Storage key + values mirror composables/useTheme.ts. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('portfolio-theme')
+          var prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          var theme = stored || (prefersDark ? 'dark' : 'light')
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (e) {
+          /* localStorage / matchMedia may be unavailable; fall through */
+        }
+      })()
+    </script>
+
     <!-- Preconnect for faster external resource loading.
          Fonts are now self-hosted (@fontsource-variable/geist bundled into
          the JS bundle), so no fonts.googleapis.com / fonts.gstatic.com

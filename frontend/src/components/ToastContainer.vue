@@ -163,38 +163,29 @@ const { toasts, remove } = useToast()
   }
 }
 
-/* Dark theme */
+/* Dark theme. The base rules use semantic tokens (--bg-secondary,
+   --text-primary, --text-tertiary) that already swap via variables.css,
+   so background and text overrides were redundant. Only the shadow opacity
+   bump and the tint alpha shift (0.1 -> 0.15 for better visibility on
+   dark surfaces) remain. */
 [data-theme='dark'] .toast {
-  background: var(--bg-secondary, #1e293b);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme='dark'] .toast--success {
-  background: linear-gradient(to right, rgba(16, 185, 129, 0.15), var(--bg-secondary, #1e293b));
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.15), var(--bg-secondary));
 }
 
 [data-theme='dark'] .toast--error {
-  background: linear-gradient(to right, rgba(239, 68, 68, 0.15), var(--bg-secondary, #1e293b));
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.15), var(--bg-secondary));
 }
 
 [data-theme='dark'] .toast--warning {
-  background: linear-gradient(to right, rgba(245, 158, 11, 0.15), var(--bg-secondary, #1e293b));
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.15), var(--bg-secondary));
 }
 
 [data-theme='dark'] .toast--info {
-  background: linear-gradient(to right, rgba(59, 130, 246, 0.15), var(--bg-secondary, #1e293b));
-}
-
-[data-theme='dark'] .toast__message {
-  color: var(--text-primary, #f1f5f9);
-}
-
-[data-theme='dark'] .toast__close {
-  color: var(--text-tertiary, #64748b);
-}
-
-[data-theme='dark'] .toast__close:hover {
-  color: var(--text-primary, #f1f5f9);
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.15), var(--bg-secondary));
 }
 
 /* Reduced motion */

@@ -156,7 +156,7 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   border: 3px solid var(--color-border);
-  border-top: 3px solid var(--primary-600, #2563eb);
+  border-top: 3px solid var(--link-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -262,27 +262,17 @@ onUnmounted(() => {
   }
 }
 
+/* Dark mode overrides. h3 / .loading-spinner / .spinner already use
+   semantic tokens that swap via variables.css; only genuinely different
+   dark-mode treatments remain — glass surface swap, brighter error tint,
+   higher-opacity empty-state border. */
 [data-theme='dark'] .languages-section {
   background: var(--card-bg);
   border-color: var(--border-primary);
 }
 
-[data-theme='dark'] .languages-section h3,
-[data-theme='dark'] .featured-repos h3 {
-  color: var(--text-primary);
-}
-
-[data-theme='dark'] .spinner {
-  border-color: var(--border-primary);
-  border-top-color: var(--link-color);
-}
-
-[data-theme='dark'] .loading-spinner {
-  color: var(--text-tertiary);
-}
-
 [data-theme='dark'] .error-message {
-  color: var(--color-error, #fca5a5);
+  color: var(--color-error);
   background: rgba(252, 165, 165, 0.15);
   border-color: rgba(252, 165, 165, 0.25);
 }

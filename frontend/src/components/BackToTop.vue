@@ -108,7 +108,11 @@ onUnmounted(() => {
 }
 
 .back-to-top:focus-visible {
-  outline: 3px solid var(--color-primary, #2563eb);
+  /* --color-primary-dark contrasts against the button's --color-primary
+     base in both themes (darker on light, lighter on dark) so the focus
+     ring stays visible. The previous --color-primary value matched the
+     button background and effectively disappeared. */
+  outline: 3px solid var(--color-primary-dark);
   outline-offset: 3px;
 }
 
@@ -154,14 +158,10 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* Dark mode styles */
-[data-theme='dark'] .back-to-top {
-  background: var(--primary-600, #2563eb);
-}
-
-[data-theme='dark'] .back-to-top:hover {
-  background: var(--primary-500, #3b82f6);
-}
+/* The base rules use --color-primary / --color-primary-dark which are
+   theme-aware via variables.css [data-theme='dark']; the previous
+   [data-theme='dark'] overrides re-bound identical or near-identical
+   values and have been removed. */
 
 /* Responsive sizing */
 @media (max-width: 768px) {

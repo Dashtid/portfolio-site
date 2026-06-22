@@ -66,20 +66,13 @@ defineProps<Props>()
   transition: width 0.8s ease;
 }
 
-[data-theme='dark'] .language-name {
-  color: var(--text-secondary);
-}
-
+/* Dark mode: .language-name (--text-secondary), .progress-bar
+   (--color-border), .progress-fill (--primary-500/600) all swap via
+   variables.css. Only .language-percentage needs a real override —
+   it shifts from --text-muted to --text-tertiary for better dark-mode
+   contrast against the bar surface. */
 [data-theme='dark'] .language-percentage {
   color: var(--text-tertiary);
-}
-
-[data-theme='dark'] .progress-bar {
-  background: var(--bg-tertiary);
-}
-
-[data-theme='dark'] .progress-fill {
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
 }
 
 @media (prefers-reduced-motion: reduce) {

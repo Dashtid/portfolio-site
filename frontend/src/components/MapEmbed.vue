@@ -63,7 +63,7 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps
 .ratio {
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .map-iframe {
@@ -79,14 +79,15 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps
   }
 }
 
-/* Fallback UI when map cannot be loaded */
+/* Fallback UI when map cannot be loaded. Uses semantic tokens that
+   swap via variables.css — no [data-theme='dark'] override needed. */
 .map-fallback {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: var(--bg-secondary, #f8fafc);
+  background: var(--bg-secondary);
   border-radius: 8px;
   border: 1px dashed var(--border-primary);
   min-height: 200px;
@@ -99,14 +100,8 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps
 }
 
 .fallback-text {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   margin: 0;
   font-size: 0.95rem;
-}
-
-/* Dark mode fallback */
-[data-theme='dark'] .map-fallback {
-  background: var(--bg-secondary);
-  border-color: var(--border-primary);
 }
 </style>

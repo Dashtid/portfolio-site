@@ -77,7 +77,7 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
 .ratio {
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .video-iframe {
@@ -93,14 +93,15 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
   }
 }
 
-/* Fallback UI when video cannot be loaded */
+/* Fallback UI when video cannot be loaded. Uses semantic tokens that
+   swap via variables.css — no [data-theme='dark'] override needed. */
 .video-fallback {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: var(--bg-secondary, #f8fafc);
+  background: var(--bg-secondary);
   border-radius: 8px;
   border: 1px dashed var(--border-primary);
   min-height: 200px;
@@ -113,14 +114,8 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
 }
 
 .fallback-text {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   margin: 0;
   font-size: 0.95rem;
-}
-
-/* Dark mode fallback */
-[data-theme='dark'] .video-fallback {
-  background: var(--bg-secondary);
-  border-color: var(--border-primary);
 }
 </style>

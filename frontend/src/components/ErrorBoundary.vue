@@ -241,41 +241,24 @@ defineExpose({
   outline-offset: 2px;
 }
 
-/* Dark mode */
-[data-theme='dark'] .error-boundary {
-  background: var(--bg-primary, #0f172a);
-}
-
+/* Dark mode. The base rules use semantic tokens (--bg-primary,
+   --bg-secondary, --text-primary, --color-error, etc.) that already swap
+   via variables.css [data-theme='dark'], so most overrides were dead code.
+   The remaining blocks shift the home button to --primary-400 / --primary-500
+   instead of --primary-600 — a genuinely different dark-mode treatment
+   (lighter accent against a dark surface). */
 [data-theme='dark'] .error-container {
-  background: var(--bg-secondary, #1e293b);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme='dark'] .error-title {
-  color: var(--text-primary, #f8fafc);
-}
-
-[data-theme='dark'] .error-message {
-  color: var(--text-secondary, #cbd5e1);
-}
-
-[data-theme='dark'] .error-details {
-  background: var(--bg-tertiary, #334155);
-  border-color: var(--border-primary, #475569);
-}
-
-[data-theme='dark'] .error-details pre {
-  color: var(--color-error, #f87171);
-}
-
 [data-theme='dark'] .btn-home {
-  color: var(--primary-400, #60a5fa);
-  border-color: var(--primary-400, #60a5fa);
+  color: var(--primary-400);
+  border-color: var(--primary-400);
 }
 
 [data-theme='dark'] .btn-home:hover {
-  background: var(--primary-500, #3b82f6);
-  border-color: var(--primary-500, #3b82f6);
+  background: var(--primary-500);
+  border-color: var(--primary-500);
   color: white;
 }
 

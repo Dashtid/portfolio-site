@@ -289,4 +289,21 @@
   --navbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --card-bg: #1e293b;
   --card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+  /* Hover tint for global a:hover and button:hover. Light value (#2563eb)
+     is darker than the base link/button color, which signals emphasis on a
+     light surface. Dark mode flips the direction — lighter on hover so the
+     emphasis still reads against a dark surface. */
+  --color-primary-dark: #93c5fd;
+
+  /* Shadows - Dark Mode. The light-mode tokens use 5-10% black alpha which
+     becomes invisible against #0f172a. These overrides raise the opacity
+     (and add a second offset layer where the light token has one) so cards
+     and floating buttons keep their lift in dark mode. */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -1px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 10px 10px -5px rgb(0 0 0 / 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
 }

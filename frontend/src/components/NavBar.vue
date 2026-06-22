@@ -310,7 +310,7 @@ onUnmounted(() => {
    underline, the active-state colors). */
 
 .navbar-custom {
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--navbar-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid transparent;
@@ -318,8 +318,8 @@ onUnmounted(() => {
 }
 
 .navbar-scrolled {
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom-color: rgba(15, 23, 42, 0.06);
+  background: var(--navbar-bg);
+  border-bottom-color: var(--color-border);
   padding-block: 0.5rem;
 }
 
@@ -386,37 +386,23 @@ onUnmounted(() => {
   left: 20%;
 }
 
-/* Dark theme */
-[data-theme='dark'] .navbar-custom {
-  background: rgba(15, 23, 42, 0.85);
-}
-
-[data-theme='dark'] .navbar-scrolled {
-  background: rgba(15, 23, 42, 0.96);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme='dark'] .navbar-brand {
-  color: var(--text-primary);
-}
-
+/* Dark theme overrides. Navbar background, scrolled border, brand color,
+   and link colors all swap via theme-aware variables in the base rules
+   now — only the brand-blue accent (which intentionally shifts to a
+   lighter --primary-400 on dark surfaces) lives here. */
 [data-theme='dark'] .navbar-brand:hover,
 [data-theme='dark'] .nav-link:hover,
 [data-theme='dark'] .nav-link.active {
-  color: var(--primary-400, #60a5fa);
-}
-
-[data-theme='dark'] .nav-link {
-  color: var(--text-secondary);
+  color: var(--primary-400);
 }
 
 [data-theme='dark'] .nav-link::after,
 [data-theme='dark'] .nav-link.active::after {
-  background: var(--primary-400, #60a5fa);
+  background: var(--primary-400);
 }
 
 [data-theme='dark'] .nav-link:focus-visible {
-  outline-color: var(--primary-400, #60a5fa);
+  outline-color: var(--primary-400);
 }
 
 /* Mobile: the center-growing underline doesn't make sense on full-width
@@ -427,11 +413,7 @@ onUnmounted(() => {
   }
 
   .nav-link.active {
-    background: rgba(59, 130, 246, 0.1);
-  }
-
-  [data-theme='dark'] .nav-link.active {
-    background: rgba(96, 165, 250, 0.15);
+    background: var(--color-primary-alpha-10);
   }
 }
 

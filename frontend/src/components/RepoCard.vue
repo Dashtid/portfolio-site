@@ -79,11 +79,11 @@ defineProps<Props>()
 <style scoped>
 .repo-card-enhanced {
   display: block;
-  background: var(--bg-secondary, #ffffff);
-  border: 1px solid var(--border-primary, #e2e8f0);
-  border-radius: var(--radius-lg, 12px);
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   text-decoration: none;
   color: inherit;
@@ -91,8 +91,8 @@ defineProps<Props>()
 
 .repo-card-enhanced:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
-  border-color: var(--primary-400, #60a5fa);
+  box-shadow: var(--card-hover-shadow);
+  border-color: var(--primary-400);
 }
 
 .project-content {
@@ -174,32 +174,13 @@ defineProps<Props>()
   color: var(--primary-700, #1d4ed8);
 }
 
-[data-theme='dark'] .repo-card-enhanced {
-  background: var(--card-bg);
-  border-color: var(--border-primary);
-}
-
-[data-theme='dark'] .repo-card-enhanced:hover {
-  border-color: var(--primary-400);
-  box-shadow: var(--card-hover-shadow);
-}
-
-[data-theme='dark'] .project-title {
-  color: var(--link-color);
-}
-
-[data-theme='dark'] .project-description {
-  color: var(--text-secondary);
-}
-
-[data-theme='dark'] .repo-meta-enhanced {
-  color: var(--text-tertiary);
-}
-
-[data-theme='dark'] .repo-language {
-  color: var(--text-secondary);
-}
-
+/* Dark mode overrides. Card surface, borders, descriptions, meta, and
+   link color all use semantic tokens that swap via variables.css —
+   redundant blocks have been removed. The orphan .repo-language override
+   (no light counterpart) was inverting visual hierarchy between themes
+   and is also gone. The remaining hover-color shift to --primary-400 is
+   a real dark-mode-only treatment. */
+[data-theme='dark'] .project-title,
 [data-theme='dark'] .project-link {
   color: var(--link-color);
 }

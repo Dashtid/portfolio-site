@@ -40,7 +40,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography */
+/* Typography. Color uses --text-primary (theme-aware) so headings without
+   an explicit Tailwind text-* utility still flip with data-theme. The
+   former hardcoded --color-gray-900 / --color-gray-100 pair bypassed the
+   semantic token cascade. */
 h1,
 h2,
 h3,
@@ -51,7 +54,7 @@ h6 {
   font-weight: var(--font-weight-semibold);
   line-height: 1.1;
   letter-spacing: var(--letter-spacing-tight, -0.025em);
-  color: var(--color-gray-900);
+  color: var(--text-primary);
 }
 
 h1 {
@@ -77,16 +80,19 @@ p {
   margin-bottom: var(--spacing-4);
 }
 
-/* Links */
+/* Links. Underline appears on hover only; force-underlining every link
+   site-wide fought every Tailwind-styled nav/card link. Content links can
+   opt back in with an explicit `underline` utility or a .prose-style rule. */
 a {
   color: var(--color-primary);
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 2px;
   transition: color var(--transition-fast);
 }
 
 a:hover {
   color: var(--color-primary-dark);
+  text-decoration: underline;
 }
 
 a:focus-visible {
@@ -149,32 +155,33 @@ button:focus-visible {
   opacity: 0.85;
 }
 
-/* Dark mode placeholder styling - WCAG compliance */
-[data-theme='dark'] input::placeholder,
-[data-theme='dark'] textarea::placeholder {
-  color: var(--text-tertiary, #94a3b8);
+/* Form inputs. Use semantic tokens that already swap via [data-theme='dark']
+   in variables.css, so a single rule covers both modes. The previous code
+   shipped dark-only rules with no light-mode counterpart, leaving light
+   forms to UA defaults. */
+input,
+textarea,
+select {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
   opacity: 1;
 }
 
-/* Dark mode form inputs */
-[data-theme='dark'] input,
-[data-theme='dark'] textarea,
-[data-theme='dark'] select {
-  background-color: var(--bg-tertiary, #334155);
-  border-color: var(--border-primary, #475569);
-  color: var(--text-primary, #f8fafc);
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--color-primary-alpha-20);
 }
 
-[data-theme='dark'] input:focus,
-[data-theme='dark'] textarea:focus,
-[data-theme='dark'] select:focus {
-  border-color: var(--primary-400, #60a5fa);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.4);
-}
-
-/* Container — intentionally overrides Bootstrap's responsive .container with a
-   fixed 1200px max-width. Loads after Bootstrap CDN so specificity is equal
-   and cascade order wins. Single source of truth; do not redefine elsewhere. */
+/* Container — fixed 1200px max-width. Single source of truth for legacy
+   class hooks still in admin views; do not redefine elsewhere. */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -281,19 +288,11 @@ button:focus-visible {
   }
 }
 
-/* Dark Mode */
-[data-theme='dark'] body {
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-}
-
-[data-theme='dark'] h1,
-[data-theme='dark'] h2,
-[data-theme='dark'] h3,
-[data-theme='dark'] h4,
-[data-theme='dark'] h5,
-[data-theme='dark'] h6 {
-  color: var(--color-gray-100);
-}
+/* Dark Mode. The body and heading overrides are now redundant — the base
+   rules use --bg-primary and --text-primary, which already swap via
+   [data-theme='dark'] in variables.css. The former asymmetric gradient
+   (light: solid, dark: gradient) caused visible banding at wide viewports;
+   keeping a single solid surface makes both modes symmetric. */
 
 /* Responsive */
 @media (max-width: 768px) {
