@@ -2,7 +2,7 @@
   <div class="admin-education">
     <div class="admin-header">
       <h2>Manage Education & Certifications</h2>
-      <button class="btn btn-primary" @click="showForm = true">Add New Education</button>
+      <button class="btn-save btn-primary" @click="showForm = true">Add New Education</button>
     </div>
 
     <AdminFormModal
@@ -54,36 +54,30 @@
           }}</span>
         </div>
 
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="edu-start-date">Start Date</label>
-              <input
-                id="edu-start-date"
-                v-model="formData.start_date"
-                type="date"
-                class="form-control"
-                :class="{ 'input-error': formErrors.start_date }"
-              />
-              <span v-if="formErrors.start_date" class="error-message">{{
-                formErrors.start_date
-              }}</span>
-            </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edu-start-date">Start Date</label>
+            <input
+              id="edu-start-date"
+              v-model="formData.start_date"
+              type="date"
+              class="form-control"
+              :class="{ 'input-error': formErrors.start_date }"
+            />
+            <span v-if="formErrors.start_date" class="error-message">{{
+              formErrors.start_date
+            }}</span>
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="edu-end-date">End Date</label>
-              <input
-                id="edu-end-date"
-                v-model="formData.end_date"
-                type="date"
-                class="form-control"
-                :class="{ 'input-error': formErrors.end_date }"
-              />
-              <span v-if="formErrors.end_date" class="error-message">{{
-                formErrors.end_date
-              }}</span>
-            </div>
+          <div class="form-group">
+            <label for="edu-end-date">End Date</label>
+            <input
+              id="edu-end-date"
+              v-model="formData.end_date"
+              type="date"
+              class="form-control"
+              :class="{ 'input-error': formErrors.end_date }"
+            />
+            <span v-if="formErrors.end_date" class="error-message">{{ formErrors.end_date }}</span>
           </div>
         </div>
 
@@ -113,7 +107,7 @@
           }}</span>
         </div>
 
-        <div class="form-check mb-3">
+        <div class="form-check">
           <input
             id="is_certification"
             v-model="formData.is_certification"
@@ -161,10 +155,20 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" :disabled="isSaving" @click="closeForm">
+          <button
+            type="button"
+            class="btn-cancel btn-secondary"
+            :disabled="isSaving"
+            @click="closeForm"
+          >
             Cancel
           </button>
-          <button type="submit" class="btn btn-primary" :disabled="isSaving" :aria-busy="isSaving">
+          <button
+            type="submit"
+            class="btn-save btn-primary"
+            :disabled="isSaving"
+            :aria-busy="isSaving"
+          >
             <span v-if="isSaving">Saving…</span>
             <span v-else>{{ editingEducation ? 'Update' : 'Add' }} Education</span>
           </button>
@@ -198,10 +202,13 @@
               </td>
               <td>{{ edu.order_index }}</td>
               <td>
-                <button class="btn btn-sm btn-warning me-2" @click="editEducation(edu)">
+                <button class="btn-row-action btn-row-edit btn-warning" @click="editEducation(edu)">
                   Edit
                 </button>
-                <button class="btn btn-sm btn-danger" @click="deleteEducation(edu.id)">
+                <button
+                  class="btn-row-action btn-row-delete btn-danger"
+                  @click="deleteEducation(edu.id)"
+                >
                   Delete
                 </button>
               </td>
@@ -211,7 +218,7 @@
       </div>
       <p v-else class="text-muted">No degrees added yet.</p>
 
-      <h3 class="mt-4">Certifications</h3>
+      <h3>Certifications</h3>
       <div v-if="certifications.length" class="table-responsive">
         <table class="table">
           <thead>
@@ -232,10 +239,16 @@
               <td>{{ cert.end_date ? formatDate(cert.end_date) : '-' }}</td>
               <td>{{ cert.order_index }}</td>
               <td>
-                <button class="btn btn-sm btn-warning me-2" @click="editEducation(cert)">
+                <button
+                  class="btn-row-action btn-row-edit btn-warning"
+                  @click="editEducation(cert)"
+                >
                   Edit
                 </button>
-                <button class="btn btn-sm btn-danger" @click="deleteEducation(cert.id)">
+                <button
+                  class="btn-row-action btn-row-delete btn-danger"
+                  @click="deleteEducation(cert.id)"
+                >
                   Delete
                 </button>
               </td>
@@ -491,11 +504,137 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+/* Two-column form layout, mirrors AdminCompanies/AdminProjects. */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .form-control {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid var(--color-gray-300, #dee2e6);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-check-input {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.form-check-label {
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+/* Modal-action buttons. Same visual vocabulary as AdminCompanies' Save/Cancel,
+   tokenised so dark mode swaps via variables.css. */
+.btn-save,
+.btn-cancel {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base) ease;
+  border: none;
+}
+
+.btn-save {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: var(--color-hover-bg);
+  color: var(--text-primary);
+}
+
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Per-row actions in the degrees/certifications tables. */
+.btn-row-action {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-base);
+  font-size: 0.8125rem;
+  font-weight: var(--font-weight-medium);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-base) ease;
+}
+
+.btn-row-action + .btn-row-action {
+  margin-left: 0.5rem;
+}
+
+.btn-row-edit {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.btn-row-edit:hover {
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.btn-row-delete {
+  background: rgba(220, 38, 38, 0.12);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.btn-row-delete:hover {
+  background: rgba(220, 38, 38, 0.2);
+}
+
+[data-theme='dark'] .btn-row-edit {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+[data-theme='dark'] .btn-row-delete {
+  background: rgba(248, 113, 113, 0.15);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.35);
 }
 
 /* BUGS-02 inline validation styling, mirrors AdminCompanies/AdminProjects. */
@@ -610,13 +749,21 @@ onUnmounted(() => {
 }
 
 /* Focus visible states for buttons */
-.btn:focus-visible {
-  outline: 2px solid var(--color-primary, #2563eb);
+.btn-save:focus-visible,
+.btn-cancel:focus-visible,
+.btn-row-action:focus-visible {
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-[data-theme='dark'] .btn:focus-visible {
-  outline-color: var(--primary-400, #60a5fa);
+[data-theme='dark'] .btn-save:focus-visible,
+[data-theme='dark'] .btn-cancel:focus-visible,
+[data-theme='dark'] .btn-row-action:focus-visible {
+  outline-color: var(--primary-400);
+}
+
+.text-muted {
+  color: var(--text-tertiary);
 }
 
 /* Checkbox focus styles */
