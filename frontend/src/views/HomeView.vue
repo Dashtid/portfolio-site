@@ -50,17 +50,9 @@
       <!-- Experience Section -->
       <section id="experience" class="bg-white py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6">
-          <header class="mb-14 flex items-center gap-3">
-            <img
-              src="/images/experience.svg"
-              alt=""
-              class="section-icon h-7 w-7 opacity-80 dark:invert"
-              width="32"
-              height="32"
-              loading="lazy"
-            />
+          <header class="mb-12">
             <h2
-              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
               Experience
             </h2>
@@ -79,7 +71,7 @@
                     v-if="company.logo_url"
                     :src="company.logo_url"
                     :alt="`${company.name} Logo`"
-                    class="card-logo h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-800"
+                    class="card-logo h-12 w-12 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -97,7 +89,7 @@
                   </div>
                 </header>
                 <p
-                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
                 >
                   {{ company.title }}
                 </p>
@@ -112,7 +104,7 @@
 
                 <router-link
                   :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
-                  class="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                 >
                   Learn more
                   <svg
@@ -150,7 +142,7 @@
                   </p>
                 </header>
                 <p
-                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
                 >
                   QA/RA &amp; Security Specialist
                 </p>
@@ -179,7 +171,7 @@
                   </p>
                 </header>
                 <p
-                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
                 >
                   Incident Support Specialist, Nordics
                 </p>
@@ -207,7 +199,7 @@
                   </p>
                 </header>
                 <p
-                  class="job-title mt-5 text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
                 >
                   Biomedical Engineer, Medical Imaging and Physiology
                 </p>
@@ -229,17 +221,9 @@
       <!-- Education Section -->
       <section id="education" class="bg-slate-50 py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6">
-          <header class="mb-14 flex items-center gap-3">
-            <img
-              src="/images/education.svg"
-              alt=""
-              class="section-icon h-7 w-7 opacity-80 dark:invert"
-              width="32"
-              height="32"
-              loading="lazy"
-            />
+          <header class="mb-12">
             <h2
-              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
               Education
             </h2>
@@ -257,7 +241,7 @@
                     v-if="edu.logo_url"
                     :src="edu.logo_url"
                     :alt="`${edu.institution} Logo`"
-                    class="card-logo h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-800"
+                    class="card-logo h-12 w-12 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -303,7 +287,7 @@
                   :href="edu.certificate_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="certificate-link mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                   :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
                 >
                   View certificate
@@ -358,7 +342,7 @@
                   href="https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="certificate-link mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                   aria-label="View Security+ certificate from CompTIA (opens in new tab)"
                 >
                   View certificate
@@ -530,17 +514,9 @@
       <!-- Publications/Research Section -->
       <section id="publications" class="bg-white py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6">
-          <header class="mb-14 flex items-center gap-3">
-            <img
-              src="/images/document.svg"
-              alt=""
-              class="section-icon h-7 w-7 opacity-80 dark:invert"
-              width="32"
-              height="32"
-              loading="lazy"
-            />
+          <header class="mb-12">
             <h2
-              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
               Academic Work
             </h2>
@@ -569,17 +545,9 @@
       <!-- Projects Section -->
       <section id="projects" class="bg-slate-50 py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6">
-          <header class="mb-14 flex items-center gap-3">
-            <img
-              src="/images/github.svg"
-              alt=""
-              class="section-icon h-7 w-7 opacity-80 dark:invert"
-              width="32"
-              height="32"
-              loading="lazy"
-            />
+          <header class="mb-12">
             <h2
-              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
               GitHub
             </h2>
@@ -593,17 +561,9 @@
       <!-- About Section -->
       <section id="about" class="bg-white py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6">
-          <header class="mb-14 flex items-center gap-3">
-            <img
-              src="/images/about.svg"
-              alt=""
-              class="section-icon h-7 w-7 opacity-80 dark:invert"
-              width="32"
-              height="32"
-              loading="lazy"
-            />
+          <header class="mb-12">
             <h2
-              class="section-title text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
               About Me
             </h2>
@@ -612,7 +572,7 @@
           <div
             class="about-layout mx-auto grid max-w-5xl items-start gap-12 md:grid-cols-[280px_1fr]"
           >
-            <div class="md:sticky md:top-28">
+            <div>
               <picture>
                 <source srcset="/images/optimized/cropped.avif" type="image/avif" />
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
@@ -635,68 +595,68 @@
             </div>
             <div class="text-slate-600 dark:text-slate-300">
               <p
-                class="border-l-2 border-primary-500 pl-5 text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
+                class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >
                 Medical software security specialist focusing on cybersecurity governance,
                 regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
                 frameworks.
               </p>
-              <p class="mt-8 leading-relaxed">
+              <p class="mt-10 leading-relaxed">
                 I am a biomedical engineer specializing in cybersecurity and regulatory compliance
                 for medical software and AI systems. As a QA/RA &amp; Security Specialist at Hermes
                 Medical Solutions, I ensure that our software and digital health solutions meet the
                 highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
                 EU AI Act).
               </p>
-              <div class="mt-10">
+              <div class="mt-14">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
                   Current focus areas
                 </p>
-                <ul class="mt-4 space-y-2.5">
+                <ul class="mt-6 space-y-4">
                   <li class="flex gap-3 leading-relaxed">
                     <span
-                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
                     Cybersecurity governance in medical software development
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
-                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
                     Ensuring compliance with NIS2 and ISO 27001
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
-                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
                     Supporting market clearance for medical software (MDR, GDPR)
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
-                      class="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary-500"
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
                     Preparing frameworks for AI Act compliance in healthcare AI systems
                   </li>
                 </ul>
               </div>
-              <div class="mt-10">
+              <div class="mt-14">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
                   Technical skills
                 </p>
-                <p class="mt-4 leading-relaxed">
+                <p class="mt-6 leading-relaxed">
                   Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
                   Git
                 </p>
               </div>
-              <p class="mt-10 leading-relaxed">
+              <p class="mt-14 leading-relaxed">
                 I am passionate about making healthcare technology safer and more trustworthy by
                 protecting patient data, ensuring system integrity, and helping organizations
                 navigate the Cybersecurity &amp; AI regulatory landscape.

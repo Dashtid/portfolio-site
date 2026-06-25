@@ -240,22 +240,4 @@ describe('HomeView', () => {
       expect(wrapper.find('[data-testid="github-stats"]').exists()).toBe(true)
     })
   })
-
-  describe('Section Icons', () => {
-    it('should have section icons for all main sections', async () => {
-      const wrapper = await createWrapper()
-
-      const sectionIcons = wrapper.findAll('.section-icon')
-      expect(sectionIcons.length).toBeGreaterThanOrEqual(5)
-    })
-
-    it('should have lazy loading on section icons', async () => {
-      const wrapper = await createWrapper()
-
-      const sectionIcons = wrapper.findAll('.section-icon')
-      sectionIcons.forEach(icon => {
-        expect(icon.attributes('loading')).toBe('lazy')
-      })
-    })
-  })
 })
