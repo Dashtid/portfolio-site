@@ -49,7 +49,7 @@
 
       <!-- Experience Section -->
       <section id="experience" class="bg-white py-24 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl px-6">
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
@@ -220,7 +220,7 @@
 
       <!-- Education Section -->
       <section id="education" class="bg-slate-50 py-24 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl px-6">
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
@@ -513,7 +513,7 @@
 
       <!-- Publications/Research Section -->
       <section id="publications" class="bg-white py-24 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl px-6">
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
@@ -544,7 +544,7 @@
 
       <!-- Projects Section -->
       <section id="projects" class="bg-slate-50 py-24 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl px-6">
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
@@ -560,7 +560,7 @@
 
       <!-- About Section -->
       <section id="about" class="bg-white py-24 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl px-6">
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"

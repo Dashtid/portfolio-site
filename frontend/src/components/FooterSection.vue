@@ -2,7 +2,9 @@
   <footer
     class="footer-section border-t border-slate-200 bg-white py-14 text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
   >
-    <div class="mx-auto flex max-w-7xl flex-col items-center gap-5 px-6 text-center">
+    <div
+      class="mx-auto flex max-w-7xl flex-col items-center gap-5 px-6 text-center sm:px-8 lg:px-12"
+    >
       <span
         class="footer-name text-base font-semibold tracking-tight text-slate-900 dark:text-white"
       >

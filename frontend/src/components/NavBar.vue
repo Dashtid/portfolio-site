@@ -6,7 +6,7 @@
     role="navigation"
     aria-label="Main navigation"
   >
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 sm:px-8 lg:px-12">
       <a
         aria-label="David Dashti - Home"
         class="navbar-brand"
