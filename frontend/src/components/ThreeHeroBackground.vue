@@ -13,9 +13,12 @@ import {
   PointsMaterial,
   Points,
   AdditiveBlending,
+  NormalBlending,
   type Material
 } from 'three'
 import { logger } from '../utils/logger'
+
+const props = withDefaults(defineProps<{ isDark?: boolean }>(), { isDark: true })
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
@@ -101,11 +104,21 @@ const createParticles = () => {
     posArray[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta)
     posArray[i3 + 2] = (Math.random() - 0.5) * 40
 
-    // Colors - blue to cyan gradient matching portfolio theme
+    // Particle colors. Dark mode uses a bright cyan-blue gradient designed
+    // to glow additively against the near-black hero. Light mode drops
+    // brightness and shifts toward a deeper indigo so the dots read as
+    // subtle darker points against white (additive blending would just
+    // wash out to white; we swap to normal alpha compositing below).
     const colorVariation = Math.random()
-    colorArray[i3] = 0.2 + colorVariation * 0.2 // R: 0.2-0.4
-    colorArray[i3 + 1] = 0.4 + colorVariation * 0.4 // G: 0.4-0.8
-    colorArray[i3 + 2] = 0.7 + colorVariation * 0.3 // B: 0.7-1.0
+    if (props.isDark) {
+      colorArray[i3] = 0.2 + colorVariation * 0.2 // R: 0.2-0.4
+      colorArray[i3 + 1] = 0.4 + colorVariation * 0.4 // G: 0.4-0.8
+      colorArray[i3 + 2] = 0.7 + colorVariation * 0.3 // B: 0.7-1.0
+    } else {
+      colorArray[i3] = 0.1 + colorVariation * 0.15 // R: 0.10-0.25
+      colorArray[i3 + 1] = 0.2 + colorVariation * 0.2 // G: 0.20-0.40
+      colorArray[i3 + 2] = 0.5 + colorVariation * 0.4 // B: 0.50-0.90
+    }
 
     // Random sizes for depth effect
     sizeArray[i] = PARTICLE_SIZE * (0.5 + Math.random() * 0.5)
@@ -115,13 +128,18 @@ const createParticles = () => {
   particlesGeometry.setAttribute('color', new BufferAttribute(colorArray, 3))
   particlesGeometry.setAttribute('size', new BufferAttribute(sizeArray, 1))
 
-  // Custom shader material for better particle rendering
+  // Blending mode has to swap per theme:
+  //  - AdditiveBlending on dark bg = particles ADD to the (near-black) bg,
+  //    producing a bright glow that reads as stars.
+  //  - AdditiveBlending on light bg = particles ADD to white, clamped to
+  //    white, so they become invisible. NormalBlending alpha-composites
+  //    the (darker) particle over white → subtle indigo dots.
   const particlesMaterial = new PointsMaterial({
     size: PARTICLE_SIZE,
     vertexColors: true,
     transparent: true,
-    opacity: 0.6,
-    blending: AdditiveBlending,
+    opacity: props.isDark ? 0.6 : 0.7,
+    blending: props.isDark ? AdditiveBlending : NormalBlending,
     sizeAttenuation: true,
     depthWrite: false
   })

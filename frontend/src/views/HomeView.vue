@@ -12,7 +12,7 @@
         id="hero"
         class="hero-section relative flex min-h-screen items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
       >
-        <ThreeHeroBackground v-if="isDark" />
+        <ThreeHeroBackground :key="isDark ? 'dark' : 'light'" :is-dark="isDark" />
 
         <div class="relative z-[2] mx-auto max-w-4xl px-6 text-center">
           <p class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500">
