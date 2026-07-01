@@ -10,9 +10,9 @@
            replace this with a properly art-directed treatment. -->
       <section
         id="hero"
-        class="hero-section relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950"
+        class="hero-section relative flex min-h-screen items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
       >
-        <ThreeHeroBackground />
+        <ThreeHeroBackground v-if="isDark" />
 
         <div class="relative z-[2] mx-auto max-w-4xl px-6 text-center">
           <p class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -20,20 +20,15 @@
           </p>
 
           <h1
-            class="custom-hero-title text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
+            class="custom-hero-title text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white"
           >
-            Cybersecurity
-            <span class="font-light text-slate-400">and</span>
-            Artificial Intelligence
-            <br />
-            <span class="font-light text-slate-300">in medical software development.</span>
+            Cybersecurity in medical software development
           </h1>
 
           <p
-            class="custom-hero-lead mx-auto mt-12 max-w-2xl text-base font-light leading-relaxed text-slate-400 sm:text-lg"
+            class="custom-hero-lead mx-auto mt-12 max-w-2xl text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
           >
-            <span class="text-white">Biomedical Engineer</span> working on QA/RA and security for
-            medical software in <span class="text-white">Stockholm, Sweden</span>.
+            Stockholm, Sweden
           </p>
         </div>
       </section>
@@ -684,6 +679,9 @@ import BackToTop from '../components/BackToTop.vue'
 import DocumentCard from '../components/DocumentCard.vue'
 import GitHubStats from '../components/GitHubStats.vue'
 import { useIntersectionAnimation } from '../composables/useIntersectionAnimation'
+import { useTheme } from '../composables/useTheme'
+
+const { isDark } = useTheme()
 
 // Lazy load Three.js hero background to reduce initial bundle size (~172KB gzipped)
 const ThreeHeroBackground = defineAsyncComponent({

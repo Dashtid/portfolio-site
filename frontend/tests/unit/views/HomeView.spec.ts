@@ -209,7 +209,7 @@ describe('HomeView', () => {
       const title = wrapper.find('.custom-hero-title')
       expect(title.exists()).toBe(true)
       expect(title.text()).toContain('Cybersecurity')
-      expect(title.text()).toContain('Artificial Intelligence')
+      expect(title.text()).toContain('medical software')
     })
 
     it('should display the hero lead text', async () => {
@@ -217,7 +217,6 @@ describe('HomeView', () => {
 
       const lead = wrapper.find('.custom-hero-lead')
       expect(lead.exists()).toBe(true)
-      expect(lead.text()).toContain('Biomedical Engineer')
       expect(lead.text()).toContain('Stockholm, Sweden')
     })
   })
