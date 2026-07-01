@@ -48,7 +48,7 @@
       </div>
 
       <!-- Experience Section -->
-      <section id="experience" class="bg-white py-24 dark:bg-slate-950">
+      <section id="experience" class="bg-white py-32 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
@@ -71,7 +71,7 @@
                     v-if="company.logo_url"
                     :src="company.logo_url"
                     :alt="`${company.name} Logo`"
-                    class="card-logo h-12 w-12 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
+                    class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -219,7 +219,7 @@
       </section>
 
       <!-- Education Section -->
-      <section id="education" class="bg-slate-50 py-24 dark:bg-slate-950">
+      <section id="education" class="bg-slate-50 py-32 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
@@ -241,7 +241,7 @@
                     v-if="edu.logo_url"
                     :src="edu.logo_url"
                     :alt="`${edu.institution} Logo`"
-                    class="card-logo h-12 w-12 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
+                    class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -512,7 +512,7 @@
       </section>
 
       <!-- Publications/Research Section -->
-      <section id="publications" class="bg-white py-24 dark:bg-slate-950">
+      <section id="publications" class="bg-white py-32 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
@@ -543,7 +543,7 @@
       </section>
 
       <!-- Projects Section -->
-      <section id="projects" class="bg-slate-50 py-24 dark:bg-slate-950">
+      <section id="projects" class="bg-slate-50 py-32 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
@@ -559,7 +559,7 @@
       </section>
 
       <!-- About Section -->
-      <section id="about" class="bg-white py-24 dark:bg-slate-950">
+      <section id="about" class="bg-white py-32 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-12">
             <h2
