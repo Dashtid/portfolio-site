@@ -10,11 +10,11 @@
            replace this with a properly art-directed treatment. -->
       <section
         id="hero"
-        class="hero-section relative flex min-h-screen items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
+        class="hero-section relative flex min-h-[85vh] items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
       >
         <ThreeHeroBackground :key="isDark ? 'dark' : 'light'" :is-dark="isDark" />
 
-        <div class="relative z-[2] mx-auto max-w-4xl px-6 text-center">
+        <div class="relative z-[2] mx-auto max-w-3xl px-6 text-center">
           <p class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500">
             Portfolio — 2026
           </p>
@@ -43,9 +43,9 @@
       </div>
 
       <!-- Experience Section -->
-      <section id="experience" class="bg-white py-32 dark:bg-slate-950">
+      <section id="experience" class="bg-white py-40 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-12">
+          <header class="mb-20">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -53,7 +53,7 @@
             </h2>
           </header>
 
-          <div class="experience-list grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="experience-list grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <!-- Dynamic content from backend or static fallback -->
             <template v-if="companies.length">
               <article
@@ -66,7 +66,7 @@
                     v-if="company.logo_url"
                     :src="company.logo_url"
                     :alt="`${company.name} Logo`"
-                    class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
+                    class="card-logo h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -99,7 +99,7 @@
 
                 <router-link
                   :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
-                  class="mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                 >
                   Learn more
                   <svg
@@ -214,9 +214,9 @@
       </section>
 
       <!-- Education Section -->
-      <section id="education" class="bg-slate-50 py-32 dark:bg-slate-900/40">
+      <section id="education" class="bg-slate-50 py-40 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-12">
+          <header class="mb-20">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -224,7 +224,7 @@
             </h2>
           </header>
 
-          <div class="education-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="education-grid grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <template v-if="education.length">
               <article
                 v-for="edu in education"
@@ -236,7 +236,7 @@
                     v-if="edu.logo_url"
                     :src="edu.logo_url"
                     :alt="`${edu.institution} Logo`"
-                    class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-1.5 ring-1 ring-slate-200 dark:ring-slate-700"
+                    class="card-logo h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -282,7 +282,7 @@
                   :href="edu.certificate_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                   :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
                 >
                   View certificate
@@ -337,7 +337,7 @@
                   href="https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                   aria-label="View Security+ certificate from CompTIA (opens in new tab)"
                 >
                   View certificate
@@ -507,9 +507,9 @@
       </section>
 
       <!-- Publications/Research Section -->
-      <section id="publications" class="bg-white py-32 dark:bg-slate-950">
+      <section id="publications" class="bg-white py-40 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-12">
+          <header class="mb-20">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -538,9 +538,9 @@
       </section>
 
       <!-- Projects Section -->
-      <section id="projects" class="bg-slate-50 py-32 dark:bg-slate-900/40">
+      <section id="projects" class="bg-slate-50 py-40 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-12">
+          <header class="mb-20">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -554,9 +554,9 @@
       </section>
 
       <!-- About Section -->
-      <section id="about" class="bg-white py-32 dark:bg-slate-950">
+      <section id="about" class="bg-white py-40 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-12">
+          <header class="mb-20">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -603,7 +603,7 @@
                 highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
                 EU AI Act).
               </p>
-              <div class="mt-14">
+              <div class="mt-20">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
@@ -640,7 +640,7 @@
                   </li>
                 </ul>
               </div>
-              <div class="mt-14">
+              <div class="mt-20">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
@@ -651,7 +651,7 @@
                   Git
                 </p>
               </div>
-              <p class="mt-14 leading-relaxed">
+              <p class="mt-20 leading-relaxed">
                 I am passionate about making healthcare technology safer and more trustworthy by
                 protecting patient data, ensuring system integrity, and helping organizations
                 navigate the Cybersecurity &amp; AI regulatory landscape.

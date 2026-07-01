@@ -6,18 +6,19 @@
     role="navigation"
     aria-label="Main navigation"
   >
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 sm:px-8 lg:px-12">
+    <div class="mx-auto grid max-w-7xl grid-cols-3 items-center gap-4 px-6 sm:px-8 lg:px-12">
       <a
         aria-label="David Dashti - Home"
-        class="navbar-brand"
+        class="navbar-brand justify-self-start"
         href="#hero"
         @click.prevent="scrollToSection('hero')"
       >
         David Dashti
       </a>
 
-      <!-- Desktop nav -->
-      <ul class="ml-auto hidden items-center gap-1 lg:flex">
+      <!-- Desktop nav — center column of the 3-col grid, truly centered
+           regardless of brand or actions width. -->
+      <ul class="hidden items-center justify-self-center gap-1 lg:flex">
         <li v-for="item in navItems" :key="item.href">
           <a
             class="nav-link"
@@ -34,7 +35,7 @@
       </ul>
 
       <!-- Right cluster: theme toggle + mobile menu button -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center justify-self-end gap-2">
         <ThemeToggle />
         <button
           class="navbar-toggler inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800"
