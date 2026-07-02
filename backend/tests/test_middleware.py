@@ -1465,3 +1465,33 @@ class TestLoggingMiddlewareExceptionHandling:
             assert "request_id" in extra
             assert "error_type" in extra
             assert extra["error_type"] == "KeyError"
+
+
+class TestCacheControlAuthenticationBypass:
+    """Authenticated requests must not receive public max-age headers.
+
+    The admin UI does mutate-then-refetch against the same collection
+    URLs anonymous visitors read; a browser honouring public max-age=300
+    would serve the pre-edit list after every save (RFC 9111 only
+    invalidates the mutated URL). Regression for the 2026-07 S2 review.
+    """
+
+    def test_anonymous_public_read_is_cacheable(self, client: TestClient):
+        response = client.get("/api/v1/projects/")
+        assert response.status_code == 200
+        assert "public" in response.headers.get("cache-control", "")
+
+    def test_bearer_authenticated_read_is_not_cached(
+        self, client: TestClient, admin_user_in_db: dict
+    ):
+        response = client.get("/api/v1/projects/", headers=admin_user_in_db["headers"])
+        assert response.status_code == 200
+        assert response.headers.get("cache-control") == "private, no-store"
+
+    def test_cookie_authenticated_read_is_not_cached(
+        self, client: TestClient, admin_user_in_db: dict
+    ):
+        client.cookies.set("access_token", admin_user_in_db["access_token"])
+        response = client.get("/api/v1/projects/")
+        assert response.status_code == 200
+        assert response.headers.get("cache-control") == "private, no-store"

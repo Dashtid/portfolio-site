@@ -234,6 +234,7 @@ class GitHubService:
         now = time.monotonic()
         cached = self._stats_cache.get(username)
         if cached is not None and cached[1] > now:
+            self._touch(username)
             return cached[0]
 
         # Per-username lock so concurrent cache-miss callers don't stampede.
@@ -243,26 +244,27 @@ class GitHubService:
             # populated the cache while we were waiting.
             cached = self._stats_cache.get(username)
             if cached is not None and cached[1] > time.monotonic():
+                self._touch(username)
                 return cached[0]
 
             try:
                 async with asyncio.timeout(PORTFOLIO_STATS_DEADLINE_SECONDS):
-                    result = await self._fetch_portfolio_stats(username)
+                    result, fetch_ok = await self._fetch_portfolio_stats(username)
             except TimeoutError:
                 logger.warning(
                     "GitHub stats fan-out for %s exceeded %.0fs deadline",
                     username,
                     PORTFOLIO_STATS_DEADLINE_SECONDS,
                 )
-                result = None
+                result, fetch_ok = None, False
 
-            if result is not None and not self._is_fetch_failure(result):
+            if result is not None and fetch_ok:
                 self._store(username, result, GITHUB_STATS_CACHE_TTL_SECONDS, ok=True)
                 return result
 
-            # Fetch failed. Prefer the last known-good value (stale beats
-            # zeros on the public site); re-store it briefly so the next
-            # requests don't re-hit GitHub mid-outage.
+            # Fetch failed (fully or partially). Prefer the last known-good
+            # value (stale beats zeros on the public site); re-store it
+            # briefly so the next requests don't re-hit GitHub mid-outage.
             if cached is not None and cached[2]:
                 logger.warning("Serving stale GitHub stats for %s after failed refresh", username)
                 self._store(username, cached[0], GITHUB_STATS_FAILURE_TTL_SECONDS, ok=True)
@@ -272,32 +274,39 @@ class GitHubService:
             self._store(username, empty, GITHUB_STATS_FAILURE_TTL_SECONDS, ok=False)
             return empty
 
+    def _touch(self, username: str) -> None:
+        """Move a cache entry to the back of the LRU order (dict order)."""
+        entry = self._stats_cache.pop(username, None)
+        if entry is not None:
+            self._stats_cache[username] = entry
+
     def _store(self, username: str, value: dict[str, Any], ttl: float, *, ok: bool) -> None:
-        """Cache a stats entry and keep the cache/lock dicts bounded."""
+        """Cache a stats entry and keep the cache/lock dicts bounded.
+
+        Eviction is least-recently-used (dict insertion order + _touch on
+        hits), never the entry just stored. LRU matters here: the portfolio
+        owner's entry is touched by every visitor, so attacker-driven churn
+        of garbage usernames evicts the garbage, not the one entry the
+        stale-serving fallback depends on.
+        """
+        self._stats_cache.pop(username, None)
         self._stats_cache[username] = (value, time.monotonic() + ttl, ok)
         while len(self._stats_cache) > STATS_CACHE_MAX_ENTRIES:
-            evictee = min(self._stats_cache, key=lambda k: self._stats_cache[k][1])
+            evictee = next(k for k in self._stats_cache if k != username)
             del self._stats_cache[evictee]
-            # Drop the evictee's lock too unless a coroutine is mid-fetch
-            # with it (those keep their reference; a later request simply
-            # creates a fresh lock).
-            evicted_lock = self._stats_locks.get(evictee)
-            if evicted_lock is not None and not evicted_lock.locked():
-                del self._stats_locks[evictee]
 
-    @staticmethod
-    def _is_fetch_failure(result: dict[str, Any]) -> bool:
-        """Heuristic for "GitHub gave us nothing".
-
-        A real user always has an avatar_url; repos/pinned may legitimately
-        be empty. All three empty together means every upstream stage
-        failed, so the zeros must not be cached at full TTL.
-        """
-        return (
-            not result.get("avatar_url")
-            and not result.get("featured_repos")
-            and not result.get("public_repos")
-        )
+        # Sweep locks for usernames no longer cached. A lock is only
+        # removed when idle: not held AND no coroutine queued on it —
+        # asyncio.Lock.release() leaves the woken waiter in _waiters until
+        # it actually resumes, so checking locked() alone would delete a
+        # lock a scheduled waiter still needs and break single-flight.
+        for name, name_lock in list(self._stats_locks.items()):
+            if (
+                name not in self._stats_cache
+                and not name_lock.locked()
+                and not getattr(name_lock, "_waiters", None)
+            ):
+                del self._stats_locks[name]
 
     @staticmethod
     def _empty_stats(username: str) -> dict[str, Any]:
@@ -316,18 +325,43 @@ class GitHubService:
             "featured_repos": [],
         }
 
-    async def _fetch_portfolio_stats(self, username: str) -> dict[str, Any]:
+    async def _fetch_portfolio_stats(self, username: str) -> tuple[dict[str, Any], bool]:
         """Underlying GitHub fan-out — only called on cache miss.
 
         user-info, the repo list, and pinned repos are independent
         upstream calls, so they run concurrently; only the per-repo
         language calls need the repo list first.
+
+        Returns (stats, fetch_ok). fetch_ok is False when a stage that
+        should have produced data didn't — the caller then applies the
+        short failure TTL / stale-serving instead of caching partial
+        zeros for the full TTL.
         """
-        user_info, repos, pinned = await asyncio.gather(
+        # return_exceptions=True: the helpers swallow HTTP errors, but a
+        # malformed 200 body (json.JSONDecodeError, non-spec GraphQL shape)
+        # would otherwise propagate mid-gather and leave the sibling tasks
+        # running detached against the shared connection pool.
+        gathered = await asyncio.gather(
             self.get_user_info(username),
             self.get_user_repos(username),
             self.get_pinned_repos(username),
+            return_exceptions=True,
         )
+        for stage in gathered:
+            if isinstance(stage, BaseException) and not isinstance(stage, Exception):
+                raise stage  # CancelledError etc. must propagate
+            if isinstance(stage, Exception):
+                logger.warning("GitHub stats stage failed for %s: %r", username, stage)
+        user_info_r, repos_r, pinned_r = gathered
+        user_info: dict[str, Any] = user_info_r if isinstance(user_info_r, dict) else {}
+        repos: list[dict] = repos_r if isinstance(repos_r, list) else []
+        pinned: list[dict] = pinned_r if isinstance(pinned_r, list) else []
+
+        # Per-stage success: a real GitHub user always yields a non-empty
+        # user_info; and if user_info claims repos exist, an empty repo
+        # list means the repos stage failed (empty-for-real only happens
+        # when public_repos == 0).
+        fetch_ok = bool(user_info) and (bool(repos) or not user_info.get("public_repos", 0))
 
         # Filter out forked repositories
         owned_repos = [r for r in repos if not r.get("fork", False)]
@@ -372,7 +406,7 @@ class GitHubService:
             ]
         )
 
-        return {
+        stats = {
             "username": username,
             "avatar_url": user_info.get("avatar_url"),
             "bio": user_info.get("bio"),
@@ -393,6 +427,7 @@ class GitHubService:
             ],
             "featured_repos": featured_repos,
         }
+        return stats, fetch_ok
 
     async def get_pinned_repos(self, username: str) -> list[dict]:
         """Get pinned repositories using GitHub GraphQL API."""

@@ -53,10 +53,15 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
                 # Static content - cache for longer (1 year)
                 response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
             elif path.startswith("/api/"):
-                if self._is_public_api(path):
+                if self._is_public_api(path) and not self._is_authenticated(request):
                     response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
-                    response.headers["Vary"] = "Accept-Encoding"
+                    response.headers["Vary"] = "Accept-Encoding, Cookie, Authorization"
                 else:
+                    # Authenticated requests to public endpoints must not be
+                    # HTTP-cached: the admin UI does mutate-then-refetch on
+                    # these same collection URLs, and a max-age'd browser
+                    # cache serves the pre-edit list (RFC 9111 only
+                    # invalidates the mutated URL, not the collection).
                     response.headers["Cache-Control"] = "private, no-store"
                     response.headers["Vary"] = "Cookie, Authorization"
             else:
@@ -87,3 +92,12 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
     def _is_public_api(path: str) -> bool:
         """True if the path is an opted-in anonymous public read."""
         return any(path.startswith(prefix) for prefix in PUBLIC_API_PREFIXES)
+
+    @staticmethod
+    def _is_authenticated(request: Request) -> bool:
+        """True if the request carries credentials (cookie or bearer)."""
+        return bool(
+            request.headers.get("authorization")
+            or request.cookies.get("access_token")
+            or request.cookies.get("refresh_token")
+        )

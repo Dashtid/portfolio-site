@@ -1487,9 +1487,9 @@ class TestPortfolioStatsCacheResilience:
         async def run_test():
             service = GitHubService()
 
-            async def hang(username: str) -> dict:
+            async def hang(username: str) -> tuple[dict, bool]:
                 await asyncio.sleep(5)
-                return {}
+                return {}, False
 
             service._fetch_portfolio_stats = hang  # type: ignore[method-assign]
 
@@ -1514,5 +1514,93 @@ class TestPortfolioStatsCacheResilience:
 
         assert len(service._stats_cache) == STATS_CACHE_MAX_ENTRIES
         assert len(service._stats_locks) <= STATS_CACHE_MAX_ENTRIES + 1
-        # Most recent insertions survive (eviction removes earliest-expiring).
+        # Most recent insertions survive (LRU evicts the oldest untouched).
         assert f"user-{STATS_CACHE_MAX_ENTRIES * 3 - 1}" in service._stats_cache
+
+    def test_lru_eviction_spares_touched_entries_and_never_self_evicts(self):
+        """Visitor-touched entries (the portfolio owner) survive attacker churn.
+
+        Also: a just-stored entry must never be its own eviction victim,
+        even when it has the earliest expiry in the cache (30s failure TTL
+        vs everyone else's 300s).
+        """
+        from app.services.github_service import STATS_CACHE_MAX_ENTRIES  # noqa: PLC0415
+
+        service = GitHubService()
+        service._store("dashtid", {"username": "dashtid"}, ttl=300, ok=True)
+        for i in range(STATS_CACHE_MAX_ENTRIES - 1):
+            service._store(f"filler-{i}", {"username": f"filler-{i}"}, ttl=300, ok=True)
+
+        # A visitor hits the owner's entry -> LRU bump.
+        service._touch("dashtid")
+
+        # Attacker churns garbage names stored at the SHORT failure TTL.
+        for i in range(10):
+            service._store(f"garbage-{i}", {"username": f"garbage-{i}"}, ttl=30, ok=False)
+            # The just-stored garbage entry is present (not self-evicted)...
+            assert f"garbage-{i}" in service._stats_cache
+
+        # ...and the touched owner entry survived all the churn.
+        assert "dashtid" in service._stats_cache
+        assert len(service._stats_cache) == STATS_CACHE_MAX_ENTRIES
+
+    def test_idle_locks_swept_when_username_leaves_cache(self):
+        """Orphaned locks are reclaimed; held/awaited locks are not."""
+        service = GitHubService()
+        idle = asyncio.Lock()
+        service._stats_locks["gone-idle"] = idle
+
+        held = asyncio.Lock()
+        held._locked = True  # simulate a coroutine mid-fetch
+        service._stats_locks["gone-held"] = held
+
+        service._store("someone", {"username": "someone"}, ttl=300, ok=True)
+
+        assert "gone-idle" not in service._stats_locks
+        assert "gone-held" in service._stats_locks
+
+    def test_partial_failure_uses_short_ttl(self, new_event_loop):
+        """user_info ok but repos stage failed -> not cached at full TTL."""
+        from app.services.github_service import GITHUB_STATS_CACHE_TTL_SECONDS  # noqa: PLC0415
+
+        async def run_test():
+            service = GitHubService()
+            service.get_user_info = AsyncMock(  # type: ignore[method-assign]
+                return_value={"avatar_url": "https://a.png", "public_repos": 12}
+            )
+            # Repos stage fails (rate-limited REST) while GraphQL succeeds.
+            service.get_user_repos = AsyncMock(return_value=[])  # type: ignore[method-assign]
+            service.get_repo_languages = AsyncMock(return_value={})  # type: ignore[method-assign]
+            service.get_pinned_repos = AsyncMock(  # type: ignore[method-assign]
+                return_value=[{"name": "pinned-repo", "stars": 5}]
+            )
+
+            result = await service.get_portfolio_stats("dashtid")
+
+            # Partial data is served, but flagged failed -> short TTL.
+            assert result["public_repos"] == 12
+            _value, expires_at, ok = service._stats_cache["dashtid"]
+            assert ok is False
+            assert expires_at - time.monotonic() < GITHUB_STATS_CACHE_TTL_SECONDS
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_gather_stage_exception_treated_as_failure(self, new_event_loop):
+        """A helper raising (malformed 200 body) must not 500 the endpoint."""
+
+        async def run_test():
+            service = GitHubService()
+            service.get_user_info = AsyncMock(  # type: ignore[method-assign]
+                side_effect=ValueError("malformed JSON body")
+            )
+            service.get_user_repos = AsyncMock(return_value=[])  # type: ignore[method-assign]
+            service.get_repo_languages = AsyncMock(return_value={})  # type: ignore[method-assign]
+            service.get_pinned_repos = AsyncMock(return_value=[])  # type: ignore[method-assign]
+
+            result = await service.get_portfolio_stats("brokenjson")
+
+            assert result["total_stars"] == 0
+            _value, _expires, ok = service._stats_cache["brokenjson"]
+            assert ok is False
+
+        new_event_loop.run_until_complete(run_test())

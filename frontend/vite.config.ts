@@ -16,12 +16,13 @@ export default defineConfig({
     // PWA with Workbox for better offline support
     VitePWA({
       registerType: 'autoUpdate',
-      // Only the favicon is precached from public/ — logos, previews and
-      // manifest icons are fetched on demand and land in the runtime
-      // image cache. images/*.{svg,webp,png} here used to push ~1.5MB
-      // (854KB preview.png, 296KB icon-512, 176KB scania.svg, ...) into
-      // every visitor's precache.
-      includeAssets: ['favicon.ico'],
+      // Nothing from public/ is precached — logos, previews and manifest
+      // icons are fetched on demand and land in the runtime image cache.
+      // includeAssets images/*.{svg,webp,png} used to push ~1.5MB (854KB
+      // preview.png, 296KB icon-512, 176KB scania.svg, ...) into every
+      // visitor's precache, and vite-plugin-pwa additionally injects
+      // manifest.icons unless told not to.
+      includeManifestIcons: false,
       manifest: {
         name: 'David Dashti',
         short_name: 'David Dashti',
@@ -102,9 +103,11 @@ export default defineConfig({
         globIgnores: [
           '**/images/stockholm*',
           '**/images/optimized/*',
-          // Admin bundle: one user needs it; runtime-cached on login.
+          // Admin bundle (one user needs it) and the ~500KB three.js chunk
+          // (lazy-loaded by the hero) stay out of the install-time
+          // precache; the asset-cache runtime rule below picks them up on
+          // first use so offline revisits still work.
           '**/Admin*',
-          // three.js chunk: lazy-loaded by the hero, runtime-cached on use.
           '**/three-*'
         ],
         // Backstop against a single chunk bloating the precache
@@ -112,10 +115,25 @@ export default defineConfig({
         // Runtime caching strategies
         runtimeCaching: [
           {
+            // Hashed build chunks not in the precache (Admin*, three-*).
+            // Content-hashed filenames are immutable, so cache-first is
+            // safe; new deploys produce new URLs.
+            urlPattern: /\/assets\/.*\.(?:js|css)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'asset-cache',
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
+          {
             // Public API GETs: network-first, short-lived offline fallback.
-            // Auth endpoints are deliberately excluded — a cached identity
-            // response can resurrect a session after logout.
-            urlPattern: /^https?:\/\/[^/]+\/api\/(?!v1\/auth\/)/i,
+            // Auth, admin, analytics and metrics endpoints are deliberately
+            // excluded — Workbox ignores response Cache-Control, so cached
+            // private payloads would survive logout in CacheStorage.
+            urlPattern: /^https?:\/\/[^/]+\/api\/(?!v1\/(?:auth|admin|analytics|metrics)(?:\/|$))/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

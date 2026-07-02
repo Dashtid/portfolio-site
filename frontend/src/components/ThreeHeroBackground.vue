@@ -239,7 +239,10 @@ onMounted(() => {
   // Pause rendering while the hero is scrolled out of view
   if (canvasRef.value && 'IntersectionObserver' in window) {
     intersectionObserver = new IntersectionObserver(entries => {
-      inViewport = entries[0]?.isIntersecting ?? true
+      // Entries are chronological; coalesced leave/enter pairs arrive
+      // together, so only the LAST one reflects the current state —
+      // reading entries[0] can latch the loop off while visible.
+      inViewport = entries[entries.length - 1]?.isIntersecting ?? true
       updateRunState()
     })
     intersectionObserver.observe(canvasRef.value)
