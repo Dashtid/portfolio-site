@@ -408,15 +408,20 @@ class TestRefreshTokenEdgeCases:
         assert "access_token" not in response.json()
 
     def test_refresh_reuse_after_rotation_is_rejected(
-        self, client: TestClient, test_user_in_db: dict
+        self, client: TestClient, test_user_in_db: dict, monkeypatch
     ):
-        """A second /refresh call with the *original* refresh token (now
-        rotated) is rejected as a reuse attempt.
+        """A replayed refresh token OUTSIDE the rotation grace window is
+        rejected as a reuse attempt.
 
         This is RFC 6819 §5.2.2.3 reuse detection: the first call marks the
-        presented jti revoked, and any subsequent call with the same jti
-        triggers the revoke-everything sweep — forcing a fresh OAuth login.
+        presented jti revoked, and any later call with the same jti triggers
+        the revoke-everything sweep — forcing a fresh OAuth login. The grace
+        window (which exists for benign multi-tab races) is pinned to -1 so
+        the replay lands firmly in the theft branch.
         """
+        from app.api.v1 import auth as auth_module
+
+        monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
         original = test_user_in_db["refresh_token"]
 
         first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
@@ -433,12 +438,45 @@ class TestRefreshTokenEdgeCases:
         assert second.status_code == 401
         assert "revoked" in second.json()["detail"].lower()
 
-    def test_logout_revokes_refresh_token_server_side(
+    def test_concurrent_refresh_grace_preserves_session(
         self, client: TestClient, test_user_in_db: dict
+    ):
+        """A replay WITHIN the grace window is treated as a benign
+        concurrent rotation (multi-tab race), not theft.
+
+        The loser gets a 401 without the revoke-all sweep, so the token the
+        winner received keeps working. Under the pre-fix behavior the sweep
+        fired and this final refresh returned 401 — logging the admin out of
+        every tab whenever two requests raced.
+        """
+        original = test_user_in_db["refresh_token"]
+
+        first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert first.status_code == 200
+        rotated = first.cookies.get("refresh_token")
+        assert rotated
+
+        client.cookies.clear()
+        replay = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert replay.status_code == 401
+        assert "superseded" in replay.json()["detail"].lower()
+
+        client.cookies.clear()
+        winner = client.post("/api/v1/auth/refresh", json={"refresh_token": rotated})
+        assert winner.status_code == 200
+
+    def test_logout_revokes_refresh_token_server_side(
+        self, client: TestClient, test_user_in_db: dict, monkeypatch
     ):
         """Logout marks the presented refresh token's jti as revoked so a
         copy made before logout can't be replayed into /refresh afterward.
+
+        Grace pinned to -1: the replay must hit the hard revoked branch,
+        not the concurrent-rotation one.
         """
+        from app.api.v1 import auth as auth_module
+
+        monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
         original = test_user_in_db["refresh_token"]
 
         # Send the cookie alongside logout so the server can read the jti.

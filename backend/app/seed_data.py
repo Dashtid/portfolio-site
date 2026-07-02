@@ -5,7 +5,7 @@ Seed data script to populate database with initial portfolio content
 import asyncio
 from datetime import datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base, engine
@@ -16,6 +16,23 @@ from app.models.skill import Skill
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+async def _already_seeded(session: AsyncSession, model: type[Base], label: str) -> bool:
+    """True (with a log line) when the target table already has rows.
+
+    Each seeder skips itself on a populated table, which makes the whole
+    script idempotent. Re-running previously duplicated every project and
+    education row, then crashed mid-way on the skills unique constraint —
+    leaving the database half-duplicated. It also protects prod content
+    curated through the admin UI from being buried under stale seed rows.
+    Use clear_existing_data() explicitly for a true reset.
+    """
+    count = (await session.execute(select(func.count()).select_from(model))).scalar_one()
+    if count:
+        logger.info("Skipping %s seed: table already has %d rows", label, count)
+        return True
+    return False
 
 
 async def clear_existing_data(session: AsyncSession):
@@ -31,6 +48,8 @@ async def clear_existing_data(session: AsyncSession):
 
 async def seed_companies(session: AsyncSession):
     """Seed company/experience data"""
+    if await _already_seeded(session, Company, "companies"):
+        return
     companies = [
         {
             "name": "Hermes Medical Solutions",
@@ -172,6 +191,9 @@ async def seed_companies(session: AsyncSession):
 
 async def seed_projects(session: AsyncSession):
     """Seed project data"""
+    if await _already_seeded(session, Project, "projects"):
+        return
+
     projects = [
         {
             "name": "Portfolio Migration",
@@ -230,6 +252,9 @@ async def seed_projects(session: AsyncSession):
 
 async def seed_skills(session: AsyncSession):
     """Seed skills data - matches dashti.se content"""
+    if await _already_seeded(session, Skill, "skills"):
+        return
+
     skills = [
         # Technical Skills (from dashti.se)
         {
@@ -385,6 +410,9 @@ async def seed_skills(session: AsyncSession):
 
 async def seed_education(session: AsyncSession):
     """Seed education data"""
+    if await _already_seeded(session, Education, "education"):
+        return
+
     education_items = [
         {
             "institution": "KTH Royal Institute of Technology",

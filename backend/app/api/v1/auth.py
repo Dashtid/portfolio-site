@@ -11,7 +11,7 @@ from typing import Annotated
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -33,6 +33,12 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 # OAuth state TTL
 OAUTH_STATE_TTL_SECONDS = 300  # 5 minutes
+
+# Window in which reuse of an already-rotated refresh jti is treated as a
+# benign concurrent refresh (multi-tab race) rather than token theft. Long
+# enough to cover a slow sibling request, short enough that a genuinely
+# stolen-and-replayed token still trips the revoke-all sweep.
+REFRESH_ROTATION_GRACE_SECONDS = 30
 
 # PERF-10: shared httpx.AsyncClient for the OAuth code-exchange + user-info
 # round-trips to github.com. Each `async with httpx.AsyncClient()` in the
@@ -384,14 +390,41 @@ async def refresh_token_endpoint(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token mismatch"
         )
 
-    if stored.is_revoked() or stored.is_expired():
-        # Reuse detection (RFC 6819 §5.2.2.3): if a previously revoked or
-        # expired refresh token shows up, treat it as a stolen-token replay
-        # and revoke ALL of this user's outstanding refresh tokens. Forces
-        # a fresh OAuth login.
+    now = datetime.now(UTC)
+
+    if stored.is_revoked():
+        revoked_at = stored.revoked_at
+        if revoked_at is not None and revoked_at.tzinfo is None:
+            # SQLite returns naive datetimes; reattach UTC (same treatment
+            # as RefreshToken.is_expired).
+            revoked_at = revoked_at.replace(tzinfo=UTC)
+        if (
+            revoked_at is not None
+            and (now - revoked_at).total_seconds() <= REFRESH_ROTATION_GRACE_SECONDS
+        ):
+            # Benign concurrent rotation, not theft: a sibling request
+            # (second tab, double-fired 401 interceptor) rotated this jti
+            # moments ago and the fresh cookie is already in the shared
+            # browser jar — the client only needs to retry. Nuking every
+            # session here is what logged the admin out of all tabs.
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh superseded by a concurrent request",
+            )
+        # Reuse detection (RFC 6819 §5.2.2.3): a token rotated longer ago
+        # than any legitimate race could explain is a stolen-token replay.
+        # Revoke ALL of this user's outstanding refresh tokens, forcing a
+        # fresh OAuth login.
         await _revoke_all_for_user(db, user_id)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
+        )
+
+    if stored.is_expired(now):
+        # Stale-but-never-rotated token: a browser returning after the
+        # expiry window. Not a replay signal — reject without the sweep.
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
         )
 
     # Get user from database. We deliberately check after the jti check so
@@ -402,8 +435,20 @@ async def refresh_token_endpoint(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Happy path: mark the presented jti revoked and mint a new one.
-    stored.revoked_at = datetime.now(UTC)
+    # Happy path: claim the rotation ATOMICALLY. Only one concurrent
+    # request can flip revoked_at from NULL; the read-then-write this
+    # replaces let two requests both pass the checks above and race the
+    # rotation. The loser is treated like the in-grace case, not a thief.
+    claim = await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.jti == presented_jti, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=now)
+    )
+    if claim.rowcount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh superseded by a concurrent request",
+        )
 
     access_token = create_access_token(subject=user.id)
     new_refresh_token, new_jti, new_exp = create_refresh_token(subject=user.id)
