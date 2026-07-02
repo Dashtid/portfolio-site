@@ -5,8 +5,6 @@ Provides configurable rate limiting for API endpoints with different limits
 for public and authenticated endpoints.
 """
 
-import hashlib
-
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from starlette.requests import Request
@@ -14,6 +12,7 @@ from starlette.responses import JSONResponse
 
 from app.config import settings
 from app.core.ip_utils import get_client_ip
+from app.core.security import decode_token
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,28 +22,33 @@ def get_user_or_ip(request: Request) -> str:
     """
     Get rate limit key based on authenticated user ID or client IP.
 
-    This provides per-user rate limiting for authenticated requests,
-    falling back to IP-based limiting for anonymous requests.
+    Only tokens that pass signature verification earn their own bucket,
+    keyed by the token subject. The previous implementation hashed the
+    raw header/cookie value without validating it, so a client rotating
+    a junk `Authorization: Bearer <random>` header (or access_token
+    cookie) minted a fresh bucket per request — a trivial bypass of
+    every limit, including the auth brute-force one. Invalid or absent
+    tokens now always fall through to the client IP.
     """
     # Check for authenticated user in request state
     if hasattr(request.state, "user") and request.state.user:
         return f"user:{request.state.user.id}"
 
-    # Check for user ID in Authorization header (JWT) or cookie
+    # Verified JWT (header or HTTP-only cookie): key by subject, which is
+    # stable across token refreshes — a per-token hash would hand out a
+    # fresh budget on every rotation.
+    token: str | None = None
     auth_header = request.headers.get("Authorization")
-    access_cookie = request.cookies.get("access_token")
-
     if auth_header and auth_header.startswith("Bearer "):
-        # Use SHA256 hash of token for secure, consistent rate limit key
-        # Use 32 chars (128 bits) to reduce collision risk
-        token_hash = hashlib.sha256(auth_header.encode()).hexdigest()[:32]
-        return f"token:{token_hash}"
+        token = auth_header.removeprefix("Bearer ").strip()
+    else:
+        token = request.cookies.get("access_token")
 
-    if access_cookie:
-        # Hash the cookie token for HTTP-only cookie auth
-        # Use 32 chars (128 bits) to reduce collision risk
-        token_hash = hashlib.sha256(access_cookie.encode()).hexdigest()[:32]
-        return f"token:{token_hash}"
+    if token:
+        payload = decode_token(token)
+        subject = payload.get("sub") if payload else None
+        if subject:
+            return f"user:{subject}"
 
     return get_client_ip(request)
 

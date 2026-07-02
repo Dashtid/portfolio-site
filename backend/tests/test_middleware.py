@@ -585,7 +585,11 @@ class TestRateLimitMiddleware:
         assert hasattr(app.state, "limiter")
 
     def test_get_client_ip_function(self):
-        """Test the get_client_ip function with X-Forwarded-For from trusted proxy."""
+        """X-Forwarded-For is walked right-to-left from a trusted proxy.
+
+        The rightmost untrusted entry (5.6.7.8) is what the proxy saw;
+        the leftmost entry is client-controlled and must not win.
+        """
         from app.middleware.rate_limit import get_client_ip
 
         mock_request = MagicMock(spec=Request)
@@ -595,7 +599,7 @@ class TestRateLimitMiddleware:
         mock_request.client.host = "127.0.0.1"
 
         ip = get_client_ip(mock_request)
-        assert ip == "1.2.3.4"
+        assert ip == "5.6.7.8"
 
     def test_get_client_ip_no_forwarded(self):
         """Test get_client_ip without X-Forwarded-For header."""
@@ -610,16 +614,40 @@ class TestRateLimitMiddleware:
         assert ip is not None
 
     def test_get_user_or_ip_with_token(self):
-        """Test get_user_or_ip with Authorization header."""
+        """A VERIFIED bearer token is keyed by its subject."""
+        from app.core.security import create_access_token
         from app.middleware.rate_limit import get_user_or_ip
 
+        token = create_access_token("user-42")
         mock_request = MagicMock(spec=Request)
         mock_request.state = MagicMock()
         mock_request.state.user = None
-        mock_request.headers = {"Authorization": "Bearer test-token-123"}
+        mock_request.headers = {"Authorization": f"Bearer {token}"}
+        mock_request.cookies = {}
 
         key = get_user_or_ip(mock_request)
-        assert key.startswith("token:")
+        assert key == "user:user-42"
+
+    def test_get_user_or_ip_junk_token_falls_back_to_ip(self):
+        """An UNVERIFIED token must NOT mint its own bucket.
+
+        Regression test for the rate-limit bypass: rotating a junk
+        Authorization header previously produced a fresh hash bucket per
+        request, defeating every limit. Invalid tokens now key by IP.
+        """
+        from app.middleware.rate_limit import get_user_or_ip
+
+        for junk in ["Bearer aaaa", "Bearer bbbb", "Bearer cccc"]:
+            mock_request = MagicMock(spec=Request)
+            mock_request.state = MagicMock()
+            mock_request.state.user = None
+            mock_request.headers = {"Authorization": junk}
+            mock_request.cookies = {}
+            mock_request.client = MagicMock()
+            mock_request.client.host = "93.184.216.34"
+
+            # Same attacker IP -> same bucket, no matter the junk token
+            assert get_user_or_ip(mock_request) == "93.184.216.34"
 
     def test_get_user_or_ip_without_token(self):
         """Test get_user_or_ip without Authorization header."""
@@ -770,30 +798,30 @@ class TestRateLimitKeyFunctions:
     """Tests for rate limit key generation functions."""
 
     def test_get_client_ip_multiple_proxies(self):
-        """Test get_client_ip with multiple proxy IPs from trusted source."""
+        """Trusted proxy hops on the right are skipped to find the client."""
         from app.middleware.rate_limit import get_client_ip
 
         mock_request = MagicMock(spec=Request)
-        mock_request.headers = {"X-Forwarded-For": "10.0.0.1, 172.16.0.1, 192.168.1.1"}
+        mock_request.headers = {"X-Forwarded-For": "203.0.113.5, 172.16.0.1, 192.168.1.1"}
         # Must be from trusted proxy for X-Forwarded-For to be trusted
         mock_request.client = MagicMock()
         mock_request.client.host = "127.0.0.1"
 
         ip = get_client_ip(mock_request)
-        assert ip == "10.0.0.1"
+        assert ip == "203.0.113.5"
 
     def test_get_client_ip_whitespace_handling(self):
         """Test get_client_ip handles whitespace in header from trusted proxy."""
         from app.middleware.rate_limit import get_client_ip
 
         mock_request = MagicMock(spec=Request)
-        mock_request.headers = {"X-Forwarded-For": "  10.0.0.1  ,  172.16.0.1  "}
+        mock_request.headers = {"X-Forwarded-For": "  203.0.113.5  ,  172.16.0.1  "}
         # Must be from trusted proxy for X-Forwarded-For to be trusted
         mock_request.client = MagicMock()
         mock_request.client.host = "127.0.0.1"
 
         ip = get_client_ip(mock_request)
-        assert ip == "10.0.0.1"
+        assert ip == "203.0.113.5"
 
     def test_get_user_or_ip_with_user_state(self):
         """Test get_user_or_ip when user is in request state."""
@@ -810,26 +838,29 @@ class TestRateLimitKeyFunctions:
         assert key == "user:user-123-abc"
 
     def test_get_user_or_ip_token_consistency(self):
-        """Test that same token produces same key."""
+        """Same verified token produces the same subject-based key."""
+        from app.core.security import create_access_token
         from app.middleware.rate_limit import get_user_or_ip
 
-        token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test"
+        token = f"Bearer {create_access_token('user-7')}"
 
         mock_request1 = MagicMock(spec=Request)
         mock_request1.state = MagicMock()
         mock_request1.state.user = None
         mock_request1.headers = {"Authorization": token}
+        mock_request1.cookies = {}
 
         mock_request2 = MagicMock(spec=Request)
         mock_request2.state = MagicMock()
         mock_request2.state.user = None
         mock_request2.headers = {"Authorization": token}
+        mock_request2.cookies = {}
 
         key1 = get_user_or_ip(mock_request1)
         key2 = get_user_or_ip(mock_request2)
 
         assert key1 == key2
-        assert key1.startswith("token:")
+        assert key1 == "user:user-7"
 
 
 class TestMiddlewareOrder:
@@ -1149,27 +1180,41 @@ class TestRateLimitCookieToken:
     """Tests for rate limit with cookie token authentication."""
 
     def test_get_user_or_ip_with_cookie_token(self):
-        """Test get_user_or_ip with access_token cookie."""
+        """A verified access_token cookie is keyed by its subject."""
+        from app.core.security import create_access_token
         from app.middleware.rate_limit import get_user_or_ip
 
         mock_request = MagicMock(spec=Request)
         mock_request.state = MagicMock()
         mock_request.state.user = None
         mock_request.headers = {}  # No Authorization header
-        mock_request.cookies = {"access_token": "cookie-token-value-123"}
+        mock_request.cookies = {"access_token": create_access_token("cookie-user")}
         mock_request.client = MagicMock()
         mock_request.client.host = "10.0.0.1"
 
         key = get_user_or_ip(mock_request)
-        assert key.startswith("token:")
-        # Should be consistent hash
-        assert len(key) == len("token:") + 32
+        assert key == "user:cookie-user"
 
-    def test_cookie_token_consistency(self):
-        """Test that same cookie token produces same key."""
+    def test_invalid_cookie_token_falls_back_to_ip(self):
+        """An unverifiable cookie value keys by IP, not its own bucket."""
         from app.middleware.rate_limit import get_user_or_ip
 
-        cookie_token = "my-secure-cookie-token"
+        mock_request = MagicMock(spec=Request)
+        mock_request.state = MagicMock()
+        mock_request.state.user = None
+        mock_request.headers = {}
+        mock_request.cookies = {"access_token": "my-secure-cookie-token"}
+        mock_request.client = MagicMock()
+        mock_request.client.host = "10.0.0.1"
+
+        assert get_user_or_ip(mock_request) == "10.0.0.1"
+
+    def test_cookie_token_consistency(self):
+        """Same verified cookie token produces the same key."""
+        from app.core.security import create_access_token
+        from app.middleware.rate_limit import get_user_or_ip
+
+        cookie_token = create_access_token("cookie-user-2")
 
         mock_request1 = MagicMock(spec=Request)
         mock_request1.state = MagicMock()
@@ -1187,21 +1232,21 @@ class TestRateLimitCookieToken:
         key2 = get_user_or_ip(mock_request2)
 
         assert key1 == key2
-        assert key1.startswith("token:")
+        assert key1 == "user:cookie-user-2"
 
     def test_bearer_token_takes_precedence_over_cookie(self):
-        """Test that Authorization header takes precedence over cookie."""
+        """Authorization header wins over the cookie when both are present."""
+        from app.core.security import create_access_token
         from app.middleware.rate_limit import get_user_or_ip
 
         mock_request = MagicMock(spec=Request)
         mock_request.state = MagicMock()
         mock_request.state.user = None
-        mock_request.headers = {"Authorization": "Bearer header-token"}
-        mock_request.cookies = {"access_token": "cookie-token"}
+        mock_request.headers = {"Authorization": f"Bearer {create_access_token('header-user')}"}
+        mock_request.cookies = {"access_token": create_access_token("cookie-user")}
 
         key = get_user_or_ip(mock_request)
-        # Should use the header token, not cookie
-        assert key.startswith("token:")
+        assert key == "user:header-user"
 
 
 class TestRateLimitExceededHandlerEdgeCases:

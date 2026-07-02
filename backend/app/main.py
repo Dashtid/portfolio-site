@@ -68,6 +68,15 @@ if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
 # Maximum request body size (5 MB) to prevent DoS attacks
 MAX_BODY_SIZE = 5 * 1024 * 1024  # 5 MB
 
+# Routes that legitimately accept larger bodies. The documents upload
+# endpoint enforces its own 25 MB cap after reading the stream; the
+# middleware allowance adds multipart-framing headroom on top so the
+# handler's check stays the effective limit. Without this override the
+# global 5 MB cap made the documented 25 MB upload limit unreachable.
+BODY_SIZE_OVERRIDES = {
+    "/api/v1/documents/upload": 26 * 1024 * 1024,
+}
+
 
 # Body Size Limit Middleware
 class BodySizeLimitMiddleware(BaseHTTPMiddleware):
@@ -81,18 +90,21 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     """
 
     @staticmethod
-    def _oversize_response() -> JSONResponse:
+    def _oversize_response(limit: int) -> JSONResponse:
         return JSONResponse(
             status_code=413,
-            content={"detail": "Request body too large. Maximum size is 5 MB."},
+            content={
+                "detail": (f"Request body too large. Maximum size is {limit // (1024 * 1024)} MB.")
+            },
         )
 
     async def dispatch(self, request: Request, call_next):
+        max_body_size = BODY_SIZE_OVERRIDES.get(request.url.path, MAX_BODY_SIZE)
         content_length = request.headers.get("content-length")
         if content_length:
             try:
-                if int(content_length) > MAX_BODY_SIZE:
-                    return self._oversize_response()
+                if int(content_length) > max_body_size:
+                    return self._oversize_response(max_body_size)
                 # Trusted Content-Length already covers the entire body.
                 return await call_next(request)
             except ValueError:
@@ -112,7 +124,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
             if message.get("type") == "http.request":
                 body = message.get("body", b"")
                 bytes_seen += len(body)
-                if bytes_seen > MAX_BODY_SIZE:
+                if bytes_seen > max_body_size:
                     oversize = True
                     # Return an empty terminal frame so downstream sees a
                     # clean (but truncated) request stream while we abort.
@@ -123,7 +135,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         request._receive = counting_receive  # type: ignore[attr-defined]
         response = await call_next(request)
         if oversize:
-            return self._oversize_response()
+            return self._oversize_response(max_body_size)
         return response
 
 
@@ -319,25 +331,19 @@ if settings.RATE_LIMIT_ENABLED:
     app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
     logger.info("Rate limiting enabled", extra={"default_limit": settings.RATE_LIMIT_DEFAULT})
 
-# Add middleware (order matters: first added = outermost layer)
-# CORS must be outermost so error responses also get CORS headers (2025 best practice)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Content-Type",
-        "Authorization",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-        "Cache-Control",
-        "Pragma",
-    ],
-)
+# Add middleware. Starlette's add_middleware PREPENDS: the LAST call added
+# is the OUTERMOST layer. The previous ordering assumed first-added =
+# outermost, which put CORS innermost — any response short-circuited by an
+# outer layer (e.g. a BodySizeLimit 413) reached the browser without CORS
+# headers, so frontend JS could not read the error. Layers below are added
+# innermost-first; effective order outermost -> innermost:
+#   CORS -> Logging -> ErrorTracking -> Performance -> SecurityHeaders
+#   -> CacheControl -> Compression -> BodySizeLimit -> routes
+# BodySizeLimit sits just outside the routes: nothing between it and the
+# handlers reads request bodies, so DoS protection is preserved while its
+# 413s pass through every header/logging layer on the way out.
 
-# Body size limit (DoS protection) - check early
+# Body size limit (DoS protection) — innermost, just outside the routes
 app.add_middleware(BodySizeLimitMiddleware)
 
 # Compression (compress final response)
@@ -359,6 +365,24 @@ if settings.ERROR_TRACKING_ENABLED:
 
 # Request/response logging
 app.add_middleware(LoggingMiddleware)
+
+# CORS — added last, therefore outermost: every response, including errors
+# produced by any layer below, carries CORS headers.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "Cache-Control",
+        "Pragma",
+    ],
+)
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])

@@ -106,13 +106,18 @@ class TestGetClientIp:
         assert get_client_ip(mock_request) == "93.184.216.34"
 
     def test_forwarded_header_trusted_from_localhost(self):
-        """X-Forwarded-For IS trusted when connection is from localhost."""
+        """X-Forwarded-For IS consulted when connection is from localhost.
+
+        The chain is walked right-to-left: rightmost entries are appended
+        by our own proxies, so the first untrusted address from the right
+        (5.6.7.8) is what the proxy actually saw. The leftmost entry is a
+        client-supplied claim and must not win.
+        """
         mock_request = self._create_mock_request(
             client_host="127.0.0.1",  # Localhost (trusted proxy)
-            forwarded_for="1.2.3.4, 5.6.7.8",  # Real client IP
+            forwarded_for="1.2.3.4, 5.6.7.8",  # claimed-by-client, seen-by-proxy
         )
-        # Should return the first IP from the header
-        assert get_client_ip(mock_request) == "1.2.3.4"
+        assert get_client_ip(mock_request) == "5.6.7.8"
 
     def test_forwarded_header_trusted_from_private_10(self):
         """X-Forwarded-For IS trusted when connection is from 10.x.x.x."""
@@ -138,8 +143,8 @@ class TestGetClientIp:
         )
         assert get_client_ip(mock_request) == "100.64.0.1"
 
-    def test_forwarded_header_multiple_ips_returns_first(self):
-        """Multiple IPs in X-Forwarded-For returns the first (client) IP."""
+    def test_forwarded_header_skips_trusted_proxies_from_right(self):
+        """Trusted proxy hops on the right are skipped to find the client."""
         mock_request = self._create_mock_request(
             client_host="127.0.0.1",  # Trusted proxy
             forwarded_for="1.2.3.4, 10.0.0.1, 192.168.1.1",  # Client + proxies
@@ -152,7 +157,25 @@ class TestGetClientIp:
             client_host="127.0.0.1",
             forwarded_for="  1.2.3.4  ,  5.6.7.8  ",
         )
-        assert get_client_ip(mock_request) == "1.2.3.4"
+        # Right-to-left: 5.6.7.8 is the first untrusted entry from the right.
+        assert get_client_ip(mock_request) == "5.6.7.8"
+
+    def test_fly_client_ip_preferred_over_forwarded(self):
+        """Fly-Client-IP (set by the Fly edge itself) wins over XFF."""
+        mock_request = self._create_mock_request(
+            client_host="172.16.1.114",  # fly-proxy
+            forwarded_for="8.8.8.8, 203.0.113.50",
+        )
+        mock_request.headers["Fly-Client-IP"] = "203.0.113.50"
+        assert get_client_ip(mock_request) == "203.0.113.50"
+
+    def test_fly_6pn_ipv6_direct_connection_is_trusted(self):
+        """Fly's private 6PN (fdaa:...) direct IPs count as trusted proxies."""
+        mock_request = self._create_mock_request(
+            client_host="fdaa:31:d8db:a7b:5ba:de2f:fd51:2",
+            forwarded_for="203.0.113.50",
+        )
+        assert get_client_ip(mock_request) == "203.0.113.50"
 
     def test_empty_forwarded_header_returns_direct_ip(self):
         """Empty X-Forwarded-For returns the direct connection IP."""
@@ -207,6 +230,22 @@ class TestSecurityScenarios:
             )
             # Should always return attacker's real IP, not the spoofed one
             assert get_client_ip(mock_request) == attacker_ip
+
+    def test_prevent_spoofed_leftmost_entry_behind_proxy(self):
+        """
+        A client-prepended XFF entry cannot choose the rate-limit bucket.
+
+        Scenario: attacker at 203.0.113.99 connects THROUGH the trusted
+        proxy and sends their own X-Forwarded-For: 8.8.8.8. The proxy
+        appends the real address, producing "8.8.8.8, 203.0.113.99".
+        The old leftmost-first logic returned 8.8.8.8 (attacker-chosen);
+        the right-to-left walk returns the address the proxy saw.
+        """
+        mock_request = self._create_mock_request(
+            client_host="172.16.0.1",  # trusted proxy
+            forwarded_for="8.8.8.8, 203.0.113.99",
+        )
+        assert get_client_ip(mock_request) == "203.0.113.99"
 
     def test_legitimate_proxy_chain(self):
         """
