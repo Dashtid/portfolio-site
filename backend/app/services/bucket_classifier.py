@@ -16,7 +16,7 @@ suite can exercise every branch with cheap fixture nodes.
 """
 
 import logging
-from enum import Enum
+from enum import StrEnum
 from typing import assert_never
 
 from app.schemas.oss import (
@@ -57,7 +57,7 @@ _AUTHOR_ACTION_CHECK_STATES: frozenset[CheckStatusState] = frozenset(
 )
 
 
-class Bucket(str, Enum):
+class Bucket(StrEnum):
     """The 5 dashboard buckets. ``LATER`` is hardcoded; never produced here."""
 
     NOW = "NOW"
@@ -67,7 +67,7 @@ class Bucket(str, Enum):
     DONE = "DONE"
 
 
-class Source(str, Enum):
+class Source(StrEnum):
     """Which top-level search alias produced the node.
 
     Knowing the source lets the classifier short-circuit branches —

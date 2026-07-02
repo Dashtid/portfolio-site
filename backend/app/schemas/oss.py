@@ -10,7 +10,7 @@ keeps the schema forward-compatible if GitHub adds new fields.
 """
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -27,30 +27,30 @@ BucketLiteral = Literal["NOW", "WAITING", "WATCHING", "LATER", "DONE"]
 ContributionKindLiteral = Literal["pr", "issue", "later"]
 
 
-class IssueState(str, Enum):
+class IssueState(StrEnum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
 
 
-class IssueStateReason(str, Enum):
+class IssueStateReason(StrEnum):
     COMPLETED = "COMPLETED"
     NOT_PLANNED = "NOT_PLANNED"
     REOPENED = "REOPENED"
 
 
-class PullRequestState(str, Enum):
+class PullRequestState(StrEnum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
     MERGED = "MERGED"
 
 
-class MergeableState(str, Enum):
+class MergeableState(StrEnum):
     MERGEABLE = "MERGEABLE"
     CONFLICTING = "CONFLICTING"
     UNKNOWN = "UNKNOWN"
 
 
-class MergeStateStatus(str, Enum):
+class MergeStateStatus(StrEnum):
     CLEAN = "CLEAN"
     DIRTY = "DIRTY"
     BLOCKED = "BLOCKED"
@@ -60,13 +60,13 @@ class MergeStateStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class ReviewDecision(str, Enum):
+class ReviewDecision(StrEnum):
     APPROVED = "APPROVED"
     CHANGES_REQUESTED = "CHANGES_REQUESTED"
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
 
 
-class ReviewState(str, Enum):
+class ReviewState(StrEnum):
     APPROVED = "APPROVED"
     CHANGES_REQUESTED = "CHANGES_REQUESTED"
     COMMENTED = "COMMENTED"
@@ -74,7 +74,7 @@ class ReviewState(str, Enum):
     PENDING = "PENDING"
 
 
-class CheckStatusState(str, Enum):
+class CheckStatusState(StrEnum):
     SUCCESS = "SUCCESS"
     FAILURE = "FAILURE"
     PENDING = "PENDING"
