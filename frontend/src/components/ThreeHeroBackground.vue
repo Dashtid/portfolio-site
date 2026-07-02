@@ -28,7 +28,9 @@ let renderer: WebGLRenderer
 let particles: Points
 let animationId: number
 let isReducedMotion = false
-let isVisible = true
+let isRunning = false
+let inViewport = true
+let intersectionObserver: IntersectionObserver | null = null
 
 // Configuration
 const PARTICLE_COUNT = 400
@@ -149,13 +151,8 @@ const createParticles = () => {
 }
 
 const animate = () => {
-  // Skip if renderer wasn't initialized (e.g., WebGL not available)
-  if (!renderer) return
-
-  if (!isVisible) {
-    animationId = requestAnimationFrame(animate)
-    return
-  }
+  // Stop entirely when paused or if renderer wasn't initialized
+  if (!renderer || !isRunning) return
 
   // Smooth mouse following
   mouse.x += (mouse.targetX - mouse.x) * 0.05
@@ -191,8 +188,31 @@ const handleMouseMove = (event: MouseEvent) => {
   mouse.targetY = -(event.clientY / window.innerHeight) * 2 + 1
 }
 
+// The render loop fully stops (no rAF scheduled at all) whenever the
+// hero canvas is scrolled out of the viewport or the tab is hidden —
+// a full-screen WebGL render at 60fps for an invisible canvas is pure
+// battery drain. It restarts when both conditions clear.
+const startLoop = () => {
+  if (isRunning || !renderer) return
+  isRunning = true
+  animationId = requestAnimationFrame(animate)
+}
+
+const stopLoop = () => {
+  isRunning = false
+  cancelAnimationFrame(animationId)
+}
+
+const updateRunState = () => {
+  if (inViewport && !document.hidden) {
+    startLoop()
+  } else {
+    stopLoop()
+  }
+}
+
 const handleVisibilityChange = () => {
-  isVisible = !document.hidden
+  updateRunState()
 }
 
 const handleReducedMotionChange = (event: MediaQueryListEvent) => {
@@ -209,20 +229,29 @@ onMounted(() => {
   }
 
   initScene()
-  animate()
+  startLoop()
 
   // Event listeners
   window.addEventListener('resize', handleResize, { passive: true })
   window.addEventListener('mousemove', handleMouseMove, { passive: true })
   document.addEventListener('visibilitychange', handleVisibilityChange)
 
+  // Pause rendering while the hero is scrolled out of view
+  if (canvasRef.value && 'IntersectionObserver' in window) {
+    intersectionObserver = new IntersectionObserver(entries => {
+      inViewport = entries[0]?.isIntersecting ?? true
+      updateRunState()
+    })
+    intersectionObserver.observe(canvasRef.value)
+  }
+
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   mediaQuery.addEventListener('change', handleReducedMotionChange)
 })
 
 onBeforeUnmount(() => {
-  // Cancel animation frame
-  cancelAnimationFrame(animationId)
+  stopLoop()
+  intersectionObserver?.disconnect()
 
   // Remove event listeners
   window.removeEventListener('resize', handleResize)

@@ -16,7 +16,12 @@ export default defineConfig({
     // PWA with Workbox for better offline support
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'images/*.svg', 'images/*.webp', 'images/*.png'],
+      // Only the favicon is precached from public/ — logos, previews and
+      // manifest icons are fetched on demand and land in the runtime
+      // image cache. images/*.{svg,webp,png} here used to push ~1.5MB
+      // (854KB preview.png, 296KB icon-512, 176KB scania.svg, ...) into
+      // every visitor's precache.
+      includeAssets: ['favicon.ico'],
       manifest: {
         name: 'David Dashti',
         short_name: 'David Dashti',
@@ -90,23 +95,33 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Precache app shell (exclude large images from precaching)
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
-        // Exclude large images from precaching - they'll be runtime cached
-        globIgnores: ['**/images/stockholm*', '**/images/optimized/*'],
-        // Allow larger files (up to 3MB)
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // Precache the app shell only. SVGs (company logos) and images go
+        // through the runtime image-cache instead of inflating every
+        // visitor's SW install.
+        globPatterns: ['**/*.{js,css,html,ico,woff2}'],
+        globIgnores: [
+          '**/images/stockholm*',
+          '**/images/optimized/*',
+          // Admin bundle: one user needs it; runtime-cached on login.
+          '**/Admin*',
+          // three.js chunk: lazy-loaded by the hero, runtime-cached on use.
+          '**/three-*'
+        ],
+        // Backstop against a single chunk bloating the precache
+        maximumFileSizeToCacheInBytes: 1024 * 1024,
         // Runtime caching strategies
         runtimeCaching: [
           {
-            // Cache API responses (network-first with fallback)
-            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            // Public API GETs: network-first, short-lived offline fallback.
+            // Auth endpoints are deliberately excluded — a cached identity
+            // response can resurrect a session after logout.
+            urlPattern: /^https?:\/\/[^/]+\/api\/(?!v1\/auth\/)/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 5 // 5 minutes — matches backend stats TTL
               },
               networkTimeoutSeconds: 10,
               cacheableResponse: {

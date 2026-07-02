@@ -36,14 +36,16 @@ function onTokenRefreshFailed(error: Error): void {
   refreshSubscribers = []
 }
 
+// No blanket Cache-Control: no-cache here — it forced revalidation on
+// every GET and defeated both the browser cache and the backend's
+// Cache-Control response headers. Endpoints that must never be cached
+// (auth) already send their own response headers.
 const apiClient: AxiosInstance = axios.create({
   baseURL: config.apiUrl,
   timeout: 30000,
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache',
-    Pragma: 'no-cache'
+    'Content-Type': 'application/json'
   }
 })
 

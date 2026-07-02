@@ -47,10 +47,10 @@ describe('API client', () => {
         baseURL: 'http://localhost:8001',
         timeout: 30000,
         withCredentials: true,
+        // No Cache-Control/Pragma request headers: they forced revalidation
+        // on every GET and defeated HTTP caching end to end.
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache'
+          'Content-Type': 'application/json'
         }
       })
     })
