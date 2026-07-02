@@ -6,9 +6,12 @@
 # all — a finding from the 2026-07 full-stack review.
 #
 # Required repository secrets:
-#   FLY_API_TOKEN  - deploy token: flyctl tokens create deploy -a dashti-portfolio-db
-#   DB_PASSWORD    - password of the portfolio_app Postgres user (from the
-#                    backend's DATABASE_URL secret)
+#   FLY_DB_TOKEN - deploy token: flyctl tokens create deploy -a dashti-portfolio-db
+#                  (NOT FLY_API_TOKEN — that one is scoped to the backend
+#                  app for deploys; each app gets its own least-privilege
+#                  token)
+#   DB_PASSWORD  - password of the portfolio_app Postgres user (from the
+#                  backend's DATABASE_URL secret)
 name: DB Backup
 
 on:
@@ -42,7 +45,7 @@ jobs:
 
       - name: Open proxy to Postgres
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_DB_TOKEN }}
         run: |
           flyctl proxy 15432:5432 -a dashti-portfolio-db &
           # Wait for the tunnel to accept connections

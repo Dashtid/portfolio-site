@@ -73,8 +73,8 @@ describe('AdminAnalytics', () => {
       const wrapper = await createWrapper()
       expect(wrapper.findAll('.stat-card')).toHaveLength(4)
       // toLocaleString uses the CI runner's locale (sv-SE on this box) and
-      // varies in thousands-separator (',' vs ' ' vs ' '). Strip the
-      // separator before asserting.
+      // varies in thousands-separator: comma, regular space, or narrow
+      // no-break space U+202F. Strip the separator before asserting.
       const normalized = wrapper.text().replace(/[\s,]/g, '')
       expect(normalized).toContain('1234')
       expect(normalized).toContain('456')
