@@ -29,10 +29,16 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Install postgresql client
-        # pg_dump must be >= the server's major version (17). The runner's
-        # default postgresql-client is older, so install the matching one
-        # from the PGDG repo (preconfigured on ubuntu-latest images).
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+        # pg_dump must be >= the server's major version (17). The runner
+        # image only bakes in an older client .deb — the PGDG apt source
+        # itself is not configured — so add it before installing.
+        run: |
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
 
       - name: Open proxy to Postgres
         env:
