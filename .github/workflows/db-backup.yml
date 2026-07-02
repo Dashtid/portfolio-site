@@ -29,7 +29,10 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Install postgresql client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+        # pg_dump must be >= the server's major version (17). The runner's
+        # default postgresql-client is older, so install the matching one
+        # from the PGDG repo (preconfigured on ubuntu-latest images).
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
 
       - name: Open proxy to Postgres
         env:
@@ -51,7 +54,9 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          pg_dump \
+          # Versioned path: the runner also ships an older pg_dump, and the
+          # Debian wrapper's pick between them is not deterministic.
+          /usr/lib/postgresql/17/bin/pg_dump \
             --host 127.0.0.1 --port 15432 \
             --username portfolio_app \
             --dbname dashti_portfolio_backend \
