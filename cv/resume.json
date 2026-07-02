@@ -1,0 +1,202 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "David Dashti",
+    "label": "Product Security Engineer - Regulated Medical Software",
+    "image": "",
+    "email": "dashtid@pm.me",
+    "phone": "",
+    "url": "https://dashti.se",
+    "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
+    "location": {
+      "city": "Stockholm",
+      "countryCode": "SE",
+      "region": "Stockholm"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "david-dashti",
+        "url": "https://www.linkedin.com/in/david-dashti/"
+      },
+      {
+        "network": "GitHub",
+        "username": "Dashtid",
+        "url": "https://github.com/Dashtid"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Hermes Medical Solutions",
+      "position": "QA/RA & Security Specialist",
+      "location": "Stockholm, Sweden",
+      "startDate": "2024-05",
+      "endDate": "",
+      "highlights": [
+        "Extending STRIDE-based threat models with product-specific threats and translating them into actionable, traceable security requirements for medical software.",
+        "Conducting SBOM-based SCA by manually compiling SBOMs from SOUP lists and analyzing with Grype; triaging vulnerabilities and feeding results into risk assessments and post-market monitoring.",
+        "Improving secure development practices by advocating Roslyn-based static analysis (rules tailored to a desktop DICOM viewer) and introducing DICOM fuzzing as dynamic security testing, supporting FDA premarket cybersecurity guidance and IEC 81001-5-1 documentation needs."
+      ]
+    },
+    {
+      "name": "Philips",
+      "position": "Incident Support Specialist, Nordics & IIG",
+      "location": "Stockholm, Sweden",
+      "startDate": "2022-03",
+      "endDate": "2024-05",
+      "highlights": [
+        "Spearheaded Level 1 support for image processing systems in healthcare IT across Nordics, UK&I, and IIG.",
+        "Collaborated with installation teams to resolve support cases and improve system integrations."
+      ]
+    },
+    {
+      "name": "Karolinska Universitetssjukhuset",
+      "position": "Biomedical Engineer, Medical Imaging and Physiology",
+      "location": "Stockholm, Sweden",
+      "startDate": "2021-06",
+      "endDate": "2021-12",
+      "highlights": [
+        "Provided support for imaging IT systems and a large imaging equipment fleet at two hospital sites."
+      ]
+    },
+    {
+      "name": "SoftPro Medical Solutions",
+      "position": "Master Thesis Student",
+      "location": "Stockholm, Sweden",
+      "startDate": "2020-10",
+      "endDate": "2021-06",
+      "highlights": [
+        "Drove digital transformation by integrating Medusa with the workflow for maintenance of radiology equipment, enhancing QA processes."
+      ]
+    },
+    {
+      "name": "Södersjukhuset AB",
+      "position": "Biomedical Engineer, Radiology Department",
+      "location": "Stockholm, Sweden",
+      "startDate": "2020-06",
+      "endDate": "2021-06",
+      "highlights": [
+        "Provided support for IT systems and imaging equipment for a radiology department."
+      ]
+    },
+    {
+      "name": "Scania Group",
+      "position": "Technician, Engine Analysis",
+      "location": "Södertälje, Sweden",
+      "startDate": "2016-06",
+      "endDate": "2016-08",
+      "highlights": [
+        "Handled troubleshooting cases from intake to resolution while coordinating with production teams."
+      ]
+    },
+    {
+      "name": "Finnish Defence Forces",
+      "position": "Platoon Leader, 2nd Lieutenant (Military Service)",
+      "location": "Ekenäs, Finland",
+      "startDate": "2014-01",
+      "endDate": "2015-01",
+      "highlights": [
+        "Day-to-day command of 150 soldiers.",
+        "Field operation command of 30 soldiers.",
+        "In-depth officer training in stress resilience and organizational skills."
+      ]
+    },
+    {
+      "name": "Scania Group",
+      "position": "Technician, Engine Analysis",
+      "location": "Södertälje, Sweden",
+      "startDate": "2012-06",
+      "endDate": "2012-08",
+      "highlights": [
+        "Supported a team of engineers and technicians, acquiring foundational troubleshooting skills."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Royal Institute of Technology in Sweden (KTH)",
+      "area": "Biomedical Engineering - Computer Science",
+      "studyType": "Master of Science (MS)",
+      "location": "Stockholm, Sweden",
+      "startDate": "2018-08",
+      "endDate": "2021-06",
+      "courses": [
+        "Master's Thesis: Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis"
+      ]
+    },
+    {
+      "institution": "Lund University, Faculty of Engineering (LTH)",
+      "area": "Biomedical Engineering",
+      "studyType": "Bachelor of Science (BS)",
+      "location": "Lund, Sweden",
+      "startDate": "2015-08",
+      "endDate": "2018-06",
+      "courses": [
+        "Bachelor's Thesis: Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers"
+      ]
+    }
+  ],
+  "certificates": [
+    {
+      "name": "CompTIA Security+",
+      "date": "2026-01",
+      "issuer": "CompTIA",
+      "url": "https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
+    },
+    {
+      "name": "Cybersecurity Fundamentals (Course)",
+      "date": "2024-12",
+      "issuer": "Företagsuniversitetet",
+      "url": "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourseselect-title-4436/"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Security Engineering",
+      "keywords": [
+        "Secure SDLC / DevSecOps",
+        "Threat Modeling (STRIDE)",
+        "Security Requirements (traceability)",
+        "SBOM (SOUP-based) / SCA (Grype)",
+        "Vulnerability Evaluation / Triage",
+        "Static Analysis Enablement",
+        "Fuzzing / Dynamic Security Testing"
+      ]
+    },
+    {
+      "name": "Programming & Tooling",
+      "keywords": ["Python", "PowerShell", "Bash", "Git", "Docker", "Linux (Ubuntu Server)"]
+    },
+    {
+      "name": "Standards & Regulations",
+      "keywords": [
+        "IEC 81001-5-1",
+        "FDA Premarket Cybersecurity Guidance",
+        "ISO 27001 (alignment)",
+        "NIS2 (alignment)"
+      ]
+    },
+    {
+      "name": "Domain",
+      "keywords": ["DICOM", "PACS", "Medical Imaging"]
+    }
+  ],
+  "languages": [
+    { "language": "Swedish", "fluency": "Native" },
+    { "language": "English", "fluency": "Fluent" }
+  ],
+  "projects": [
+    {
+      "name": "portfolio-site",
+      "description": "Personal portfolio: Vue 3 + FastAPI, security-hardened, SHA-pinned CI/CD. Live at dashti.se.",
+      "url": "https://dashti.se",
+      "keywords": ["Vue 3", "FastAPI", "DevSecOps"]
+    }
+  ],
+  "meta": {
+    "canonical": "https://dashti.se",
+    "version": "v1.0.0",
+    "note": "FEAT-001 seed. Transcribed from cv-david-dashti.pdf (Jun 2026). 'projects' trimmed Jul 2026: dicom-fuzzer/sbom-sentinel/medtech-ai-security removed (employer-IP guardrail; repos now private) - add oidc-reach when v0.1 ships. 'phone' intentionally left blank for the public repo."
+  }
+}
