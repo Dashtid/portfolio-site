@@ -41,38 +41,11 @@ export function useIntersectionAnimation(
   const isComplete = ref(false)
 
   let observer: IntersectionObserver | null = null
+  let trackedCount = 0
+  let revealedCount = 0
 
-  onMounted(() => {
-    const elements = Array.from(document.querySelectorAll(selector))
-    if (!elements.length) {
-      isComplete.value = true
-      return
-    }
-
-    // SSG pre-render guard: window is undefined during the build pass.
-    if (typeof window === 'undefined') return
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    // Initial state: hide everything. The transition is owned by host CSS
-    // on `[data-anim="hidden"]` / `[data-anim="visible"]`.
-    for (const el of elements) {
-      ;(el as HTMLElement).dataset.anim = 'hidden'
-    }
-
-    if (prefersReducedMotion) {
-      // Reduced motion: skip the observer entirely and reveal in place.
-      for (const el of elements) {
-        ;(el as HTMLElement).dataset.anim = 'visible'
-        ;(el as HTMLElement).style.transitionDuration = '0s'
-      }
-      isComplete.value = true
-      return
-    }
-
-    let revealedCount = 0
-    const total = elements.length
-
+  const ensureObserver = (): IntersectionObserver => {
+    if (observer) return observer
     observer = new IntersectionObserver(
       entries => {
         for (const entry of entries) {
@@ -88,19 +61,63 @@ export function useIntersectionAnimation(
           target.dataset.anim = 'visible'
           observer?.unobserve(target)
           revealedCount += 1
-          if (revealedCount >= total) {
+          if (revealedCount >= trackedCount) {
             isComplete.value = true
           }
         }
       },
       { rootMargin, threshold }
     )
+    return observer
+  }
 
-    elements.forEach((el, idx) => {
-      ;(el as HTMLElement).dataset.animIndex = String(idx)
-      observer?.observe(el)
-    })
-  })
+  // Queries the selector and starts observing any elements not yet
+  // tracked. Runs once on mount; content that renders later (e.g. cards
+  // for data fetched in onMounted) is picked up by calling the returned
+  // `refresh()` after the DOM has updated.
+  const scan = (): void => {
+    // SSG pre-render guard: window is undefined during the build pass.
+    if (typeof window === 'undefined') return
+
+    const elements = Array.from(document.querySelectorAll(selector)).filter(
+      el => (el as HTMLElement).dataset.animIndex === undefined
+    )
+    if (!elements.length) {
+      if (trackedCount === 0) isComplete.value = true
+      return
+    }
+    isComplete.value = false
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReducedMotion) {
+      // Reduced motion: skip the observer entirely and reveal in place.
+      for (const el of elements) {
+        ;(el as HTMLElement).dataset.animIndex = 'static'
+        ;(el as HTMLElement).dataset.anim = 'visible'
+        ;(el as HTMLElement).style.transitionDuration = '0s'
+      }
+      if (trackedCount === revealedCount) isComplete.value = true
+      return
+    }
+
+    // Initial state: hide everything. The transition is owned by host CSS
+    // on `[data-anim="hidden"]` / `[data-anim="visible"]`.
+    const io = ensureObserver()
+    for (const el of elements) {
+      const htmlEl = el as HTMLElement
+      htmlEl.dataset.anim = 'hidden'
+      htmlEl.dataset.animIndex = String(trackedCount)
+      trackedCount += 1
+      io.observe(htmlEl)
+    }
+  }
+
+  // NOTE: must be invoked from synchronous setup (or before the first
+  // await in an async setup) — after an await inside an onMounted callback
+  // there is no active component instance, so these hooks silently never
+  // register and the whole animation becomes dead code.
+  onMounted(scan)
 
   onBeforeUnmount(() => {
     if (observer) {
@@ -111,5 +128,5 @@ export function useIntersectionAnimation(
     }
   })
 
-  return { isComplete }
+  return { isComplete, refresh: scan }
 }

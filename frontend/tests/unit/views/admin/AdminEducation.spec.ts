@@ -314,7 +314,7 @@ describe('AdminEducation', () => {
       await flushPromises()
 
       expect(api.post).toHaveBeenCalledWith(
-        '/education/',
+        '/api/v1/education/',
         expect.objectContaining({
           institution: 'New University',
           degree: 'PhD'
@@ -474,7 +474,9 @@ describe('AdminEducation', () => {
       await flushPromises()
 
       // Component uses AbortSignal for request cancellation
-      expect(api.get).toHaveBeenCalledWith('/education/', { signal: expect.any(AbortSignal) })
+      expect(api.get).toHaveBeenCalledWith('/api/v1/education/', {
+        signal: expect.any(AbortSignal)
+      })
     })
 
     it('should refetch after successful operations', async () => {
@@ -493,7 +495,9 @@ describe('AdminEducation', () => {
       await flushPromises()
 
       // Component uses AbortSignal for request cancellation
-      expect(api.get).toHaveBeenCalledWith('/education/', { signal: expect.any(AbortSignal) })
+      expect(api.get).toHaveBeenCalledWith('/api/v1/education/', {
+        signal: expect.any(AbortSignal)
+      })
     })
   })
 })

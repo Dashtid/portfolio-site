@@ -84,8 +84,15 @@ apiClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        // Cookies are sent automatically; refresh-token cookie is scoped to /api/v1/auth
-        await axios.post(`${config.apiUrl}/api/v1/auth/refresh`, {}, { withCredentials: true })
+        // Cookies are sent automatically; refresh-token cookie is scoped to /api/v1/auth.
+        // The timeout mirrors REFRESH_TIMEOUT_MS: without it a hung refresh
+        // never resolves, isRefreshing never resets, and every queued request
+        // (plus all future 401s) wedges permanently.
+        await axios.post(
+          `${config.apiUrl}/api/v1/auth/refresh`,
+          {},
+          { withCredentials: true, timeout: REFRESH_TIMEOUT_MS }
+        )
 
         isRefreshing = false
         onTokenRefreshed()

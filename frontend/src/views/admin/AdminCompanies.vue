@@ -321,11 +321,14 @@ const saveCompany = async (): Promise<void> => {
   isSaving.value = true
 
   try {
-    // Ensure technologies is an array before stringifying
+    // CompanyCreate/CompanyUpdate expect technologies as a list and
+    // end_date as date-or-null — Pydantic rejects a JSON string and an
+    // empty-string date with 422, so normalize both before sending.
     const technologies = Array.isArray(form.value.technologies) ? form.value.technologies : []
     const data = {
       ...form.value,
-      technologies: JSON.stringify(technologies)
+      technologies,
+      end_date: form.value.end_date || null
     }
 
     if (editingCompany.value) {

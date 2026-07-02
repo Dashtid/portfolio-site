@@ -377,7 +377,7 @@ const fetchEducation = async (): Promise<void> => {
   abortController = new AbortController()
 
   try {
-    const response = await api.get<EducationFormData[]>('/education/', {
+    const response = await api.get<EducationFormData[]>('/api/v1/education/', {
       signal: abortController.signal
     })
     educationList.value = response.data
@@ -385,6 +385,7 @@ const fetchEducation = async (): Promise<void> => {
     // Ignore cancelled requests
     if (axios.isCancel(error)) return
     apiLogger.error('Error fetching education:', error)
+    toast.error('Failed to load education')
   }
 }
 
@@ -398,10 +399,10 @@ const saveEducation = async (): Promise<void> => {
 
   try {
     if (editingEducation.value) {
-      await api.put(`/education/${editingEducation.value.id}/`, formData.value)
+      await api.put(`/api/v1/education/${editingEducation.value.id}`, formData.value)
       toast.success('Education updated successfully')
     } else {
-      await api.post('/education/', formData.value)
+      await api.post('/api/v1/education/', formData.value)
       toast.success('Education added successfully')
     }
     await fetchEducation()
@@ -425,7 +426,7 @@ const deleteEducation = async (id: string | undefined): Promise<void> => {
   if (!confirm('Are you sure you want to delete this education record?')) return
 
   try {
-    await api.delete(`/education/${id}/`)
+    await api.delete(`/api/v1/education/${id}`)
     toast.success('Education deleted successfully')
     await fetchEducation()
   } catch (error) {

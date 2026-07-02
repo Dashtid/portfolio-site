@@ -83,7 +83,7 @@ describe('API client', () => {
       expect(axios.post).toHaveBeenCalledWith(
         'http://localhost:8001/api/v1/auth/refresh',
         {},
-        { withCredentials: true }
+        { withCredentials: true, timeout: 10000 }
       )
     })
 
@@ -178,7 +178,7 @@ describe('API client', () => {
       expect(axios.post).toHaveBeenCalledWith(
         'http://localhost:8001/api/v1/auth/refresh',
         {},
-        { withCredentials: true }
+        { withCredentials: true, timeout: 10000 }
       )
     })
 

@@ -11,7 +11,6 @@ import './styles/tailwind.css'
 import App from './App.vue'
 import analyticsService from './services/analytics'
 import { errorTracker } from './utils/errorTracking'
-import { performanceMonitor } from './utils/performance'
 import { initSentry, captureException, isSentryInitialized } from './utils/sentry'
 
 export const createApp = ViteSSG(
@@ -70,9 +69,6 @@ export const createApp = ViteSSG(
 
       // Initialize error tracking (custom implementation, works alongside Sentry)
       errorTracker.init()
-
-      // Initialize performance monitoring
-      performanceMonitor.init()
 
       // Global error handler for Vue
       app.config.errorHandler = (

@@ -795,6 +795,25 @@ const getDetailLinkId = (company: { id: string; name: string; start_date: string
   return company.id
 }
 
+// PERF-03: IntersectionObserver-driven entrance animations replace the
+// previous GSAP + ScrollTrigger pass. Stagger is now a per-element CSS
+// transition-delay rather than a tween timeline; the animation itself
+// is a CSS transition driven by the `[data-anim]` attribute (defined
+// in the scoped <style> below). Drops ~45 KB gzipped of gsap from the
+// home-page critical path.
+//
+// These MUST be called here in setup, not inside onMounted: the composable
+// registers its own onMounted/onBeforeUnmount hooks, and after an await
+// inside an onMounted callback Vue has no active instance to register
+// against — the previous call site silently made every entrance animation
+// dead code. Document cards render only after the fetch below resolves,
+// so that batch is re-scanned via refresh() once the data is in the DOM.
+useIntersectionAnimation('.experience-card', { stagger: 0.12 })
+useIntersectionAnimation('.education-card', { stagger: 0.12 })
+useIntersectionAnimation('.project-card', { stagger: 0.12 })
+const documentCardAnimation = useIntersectionAnimation('.document-card', { stagger: 0.12 })
+useIntersectionAnimation('.section-title', { stagger: 0 })
+
 // Load data on mount. Portfolio data is fetched in setup() above
 // (INFRA-002); only the documents fetch lives here, because documents are a
 // component-local ref that doesn't need to flow through __INITIAL_STATE__.
@@ -811,21 +830,10 @@ onMounted(async () => {
     documentsLoading.value = false
   }
 
-  // Wait for DOM to update before applying animations
-  // This ensures elements are rendered before IntersectionObserver setup
+  // Document cards exist only now that the fetch resolved — wait for the
+  // DOM update, then hand the new elements to the observer.
   await nextTick()
-
-  // PERF-03: IntersectionObserver-driven entrance animations replace the
-  // previous GSAP + ScrollTrigger pass. Stagger is now a per-element CSS
-  // transition-delay rather than a tween timeline; the animation itself
-  // is a CSS transition driven by the `[data-anim]` attribute (defined
-  // in the scoped <style> below). Drops ~45 KB gzipped of gsap from the
-  // home-page critical path.
-  useIntersectionAnimation('.experience-card', { stagger: 0.12 })
-  useIntersectionAnimation('.education-card', { stagger: 0.12 })
-  useIntersectionAnimation('.project-card', { stagger: 0.12 })
-  useIntersectionAnimation('.document-card', { stagger: 0.12 })
-  useIntersectionAnimation('.section-title', { stagger: 0 })
+  documentCardAnimation.refresh()
 })
 </script>
 
