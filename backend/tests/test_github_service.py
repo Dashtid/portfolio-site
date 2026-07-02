@@ -3,6 +3,7 @@ Tests for GitHub service module - initialization, configuration, and API methods
 """
 
 import asyncio
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -1421,4 +1422,97 @@ class TestPinnedReposEdgeCases:
 
         new_event_loop.run_until_complete(run_test())
 
+
+class TestPortfolioStatsCacheResilience:
+    """Deadline, failure-TTL, stale-serving and bounding of the stats cache."""
+
+    @staticmethod
+    def _failing_helpers(service: GitHubService) -> None:
+        """Simulate every upstream stage failing (helpers swallow errors)."""
+        service.get_user_info = AsyncMock(return_value={})  # type: ignore[method-assign]
+        service.get_user_repos = AsyncMock(return_value=[])  # type: ignore[method-assign]
+        service.get_repo_languages = AsyncMock(return_value={})  # type: ignore[method-assign]
+        service.get_pinned_repos = AsyncMock(return_value=[])  # type: ignore[method-assign]
+
+    def test_failure_cached_only_briefly(self, new_event_loop):
+        """All-stages-failed zeros must use the short failure TTL, not 5 min."""
+        from app.services.github_service import (  # noqa: PLC0415
+            GITHUB_STATS_CACHE_TTL_SECONDS,
+            GITHUB_STATS_FAILURE_TTL_SECONDS,
+        )
+
+        async def run_test():
+            service = GitHubService()
+            self._failing_helpers(service)
+
+            result = await service.get_portfolio_stats("ghost")
+
+            assert result["total_stars"] == 0
+            value, expires_at, ok = service._stats_cache["ghost"]
+            assert ok is False
+            remaining = expires_at - time.monotonic()
+            assert remaining <= GITHUB_STATS_FAILURE_TTL_SECONDS + 1
+            assert remaining < GITHUB_STATS_CACHE_TTL_SECONDS
+
         new_event_loop.run_until_complete(run_test())
+
+    def test_stale_good_value_served_on_failed_refresh(self, new_event_loop):
+        """An expired good entry beats fresh zeros when GitHub is down."""
+
+        async def run_test():
+            service = GitHubService()
+            good = {"username": "dashtid", "avatar_url": "https://a.png", "total_stars": 42}
+            service._stats_cache["dashtid"] = (good, time.monotonic() - 1, True)
+            self._failing_helpers(service)
+
+            result = await service.get_portfolio_stats("dashtid")
+
+            assert result is good
+            value, _expires, ok = service._stats_cache["dashtid"]
+            assert value is good
+            assert ok is True
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_deadline_produces_failure_entry(self, new_event_loop, monkeypatch):
+        """A fan-out exceeding the overall deadline returns zeroed stats."""
+        import sys  # noqa: PLC0415
+
+        # NB: `import app.services.github_service as m` would bind the
+        # singleton INSTANCE (app/services/__init__.py re-exports a name
+        # that shadows the submodule); go through sys.modules instead.
+        gs_module = sys.modules["app.services.github_service"]
+        monkeypatch.setattr(gs_module, "PORTFOLIO_STATS_DEADLINE_SECONDS", 0.05)
+
+        async def run_test():
+            service = GitHubService()
+
+            async def hang(username: str) -> dict:
+                await asyncio.sleep(5)
+                return {}
+
+            service._fetch_portfolio_stats = hang  # type: ignore[method-assign]
+
+            result = await service.get_portfolio_stats("slowpoke")
+
+            assert result["username"] == "slowpoke"
+            assert result["total_stars"] == 0
+            _value, _expires, ok = service._stats_cache["slowpoke"]
+            assert ok is False
+
+        new_event_loop.run_until_complete(run_test())
+
+    def test_cache_and_locks_are_bounded(self):
+        """The public endpoint takes any username; dicts must not grow unbounded."""
+        from app.services.github_service import STATS_CACHE_MAX_ENTRIES  # noqa: PLC0415
+
+        service = GitHubService()
+        for i in range(STATS_CACHE_MAX_ENTRIES * 3):
+            username = f"user-{i}"
+            service._stats_locks.setdefault(username, asyncio.Lock())
+            service._store(username, {"username": username}, ttl=300, ok=True)
+
+        assert len(service._stats_cache) == STATS_CACHE_MAX_ENTRIES
+        assert len(service._stats_locks) <= STATS_CACHE_MAX_ENTRIES + 1
+        # Most recent insertions survive (eviction removes earliest-expiring).
+        assert f"user-{STATS_CACHE_MAX_ENTRIES * 3 - 1}" in service._stats_cache
