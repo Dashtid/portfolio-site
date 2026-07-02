@@ -11,7 +11,7 @@ to ``static/documents/`` and served back by the ``/static`` mount.
 
 import re
 import uuid
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Annotated
 
 from fastapi import (
@@ -74,7 +74,10 @@ def _safe_filename(original: str) -> str:
     pattern, and (if the input was empty after cleaning) fall back to a
     UUID-based stem so we never store an empty filename.
     """
-    just_name = Path(original).name  # drops any leading directories
+    # Backslash is only a separator on Windows, but uploads can carry
+    # Windows-style paths regardless of what OS the server runs on —
+    # normalise before splitting so the basename is platform-independent.
+    just_name = PurePosixPath(original.replace("\\", "/")).name
     cleaned = _FILENAME_SAFE.sub("-", just_name).strip("-.")
     if not cleaned:
         cleaned = uuid.uuid4().hex
