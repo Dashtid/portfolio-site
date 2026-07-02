@@ -12,19 +12,25 @@ primary_region = 'arn'
 # Runs in a one-off VM with the new image + production secrets before the
 # release is promoted. If it exits non-zero the deploy aborts and the old
 # machines keep serving, so a broken migration can't take prod down.
+# scripts/migrate.py wraps alembic: fresh DBs get create_all + stamp head
+# (the raw `alembic upgrade head` crashed on empty schemas), existing DBs
+# get a normal upgrade.
 [deploy]
-  release_command = 'alembic upgrade head'
+  release_command = 'python -m scripts.migrate'
 
 [env]
   ENVIRONMENT = 'production'
   LOG_LEVEL = 'INFO'
   PORT = '8000'
-  # Persist SQLite onto the Fly volume mounted at /data below. Without
-  # this, the DB lives on the ephemeral container FS and every redeploy
-  # wipes admin-edited content — root cause of INFRA-002 (visitors saw
-  # the static fallback because the production DB kept resetting to empty
-  # between deploys).
-  DATABASE_URL = 'sqlite+aiosqlite:////data/portfolio.db'
+  # Admin-uploaded PDFs go on the persistent volume, not the ephemeral
+  # rootfs — before this, every deploy wiped uploads.
+  # NOTE: DATABASE_URL deliberately does NOT appear here. Production runs
+  # on the dashti-portfolio-db Postgres app via the DATABASE_URL secret;
+  # the SQLite pin that used to live here was dead config masked by the
+  # secret, and if the secret ever vanished the app would silently boot
+  # an empty SQLite DB. config.py now refuses sqlite in production, so a
+  # missing secret fails the deploy loudly instead.
+  UPLOAD_DIR = '/data/uploads/documents'
 
 [[mounts]]
   source = 'portfolio_data'
@@ -44,12 +50,16 @@ primary_region = 'arn'
     hard_limit = 25
     soft_limit = 20
 
+  # /health/ready does SELECT 1 against the DB and returns 503 when it
+  # fails. The previous shallow /health never touched the DB, which is
+  # why a 21-hour Postgres outage (June 2026) stayed invisible: the app
+  # kept answering 200 while every data endpoint returned 500.
   [[http_service.checks]]
     interval = '30s'
     timeout = '5s'
     grace_period = '10s'
     method = 'GET'
-    path = '/api/v1/health'
+    path = '/api/v1/health/ready'
 
 [[vm]]
   memory = '1gb'

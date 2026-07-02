@@ -395,8 +395,17 @@ app.include_router(projects.router, prefix="/api/v1")
 app.include_router(skills.router, prefix="/api/v1")
 app.include_router(education.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
-# Mount static files for document downloads
+# Mount static files for document downloads (repo-baked assets, in-image)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+# Admin-uploaded documents live under settings.UPLOAD_DIR — on Fly that's
+# the persistent volume (/data/uploads/documents), NOT the image, so they
+# survive deploys. check_dir=False: the directory is created lazily by
+# the first upload, and must not fail boot before it exists.
+app.mount(
+    "/media",
+    StaticFiles(directory=settings.UPLOAD_DIR, check_dir=False),
+    name="media",
+)
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
 app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(errors.router, prefix="/api/v1")

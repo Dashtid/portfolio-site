@@ -29,6 +29,32 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str | None = "sqlite+aiosqlite:///./portfolio.db"
 
+    # Filesystem directory for admin-uploaded documents. Defaults to the
+    # repo's static/documents for local dev; production points this at the
+    # Fly volume (/data/uploads/documents) via fly.toml [env] — the previous
+    # hardcoded static/documents lived on the ephemeral rootfs, so every
+    # deploy silently wiped uploaded PDFs.
+    UPLOAD_DIR: str = "static/documents"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str | None, info) -> str | None:
+        """Fail loudly if production would silently fall back to SQLite.
+
+        The DATABASE_URL secret is what points production at Postgres. If
+        it ever goes missing, the app would otherwise boot against an
+        empty SQLite file and quietly serve a blank site — a failure mode
+        that has actually happened (INFRA-002) and that the 2026-07 review
+        flagged again via the dead fly.toml [env] pin.
+        """
+        environment = info.data.get("ENVIRONMENT", "development")
+        if environment == "production" and (v is None or v.startswith("sqlite")):
+            raise ValueError(
+                "DATABASE_URL must point at the production database in "
+                "production — refusing to fall back to SQLite."
+            )
+        return v
+
     @property
     def async_database_url(self) -> str:
         """

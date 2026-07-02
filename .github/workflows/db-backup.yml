@@ -1,0 +1,68 @@
+# Nightly logical backup of the production Postgres (dashti-portfolio-db).
+#
+# Complements Fly's automatic volume snapshots (5-day retention, restore-
+# only-to-new-volume) with portable pg_dump artifacts kept for 30 days.
+# Before this workflow existed there was NO durable backup of the DB at
+# all — a finding from the 2026-07 full-stack review.
+#
+# Required repository secrets:
+#   FLY_API_TOKEN  - deploy token: flyctl tokens create deploy -a dashti-portfolio-db
+#   DB_PASSWORD    - password of the portfolio_app Postgres user (from the
+#                    backend's DATABASE_URL secret)
+name: DB Backup
+
+on:
+  schedule:
+    # 03:30 UTC nightly — after the analytics day rolls over, before CET morning.
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Install postgresql client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Open proxy to Postgres
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl proxy 15432:5432 -a dashti-portfolio-db &
+          # Wait for the tunnel to accept connections
+          for i in $(seq 1 30); do
+            if pg_isready -h 127.0.0.1 -p 15432 >/dev/null 2>&1; then
+              echo "proxy ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "proxy never became ready" >&2
+          exit 1
+
+      - name: Dump database
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          pg_dump \
+            --host 127.0.0.1 --port 15432 \
+            --username portfolio_app \
+            --dbname dashti_portfolio_backend \
+            --format custom \
+            --file "portfolio-$(date -u +%Y%m%d).dump"
+          ls -la portfolio-*.dump
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pg-backup-${{ github.run_id }}
+          path: portfolio-*.dump
+          retention-days: 30
+          if-no-files-found: error

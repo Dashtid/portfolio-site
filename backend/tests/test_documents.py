@@ -283,7 +283,10 @@ class TestDocumentsAdminUpload:
 
         assert response.status_code == 200
         body = response.json()
-        assert body["file_url"].startswith("/static/documents/")
+        # Uploads are served from the /media mount (settings.UPLOAD_DIR,
+        # the persistent volume in prod) — not /static, which serves
+        # image-baked assets only.
+        assert body["file_url"].startswith("/media/")
         assert body["file_url"].endswith(".pdf")
         assert body["file_size"] == len(payload)
         assert body["original_filename"] == "paper.pdf"

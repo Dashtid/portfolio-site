@@ -1,0 +1,42 @@
+# External uptime + database-health monitor.
+#
+# The June 2026 incident: Postgres was down for 21 hours and nothing
+# noticed, because the Fly health check hit a shallow /health that never
+# touched the DB and no alerting existed anywhere. The Fly check now hits
+# /health/ready (DB SELECT 1), and this workflow adds an external probe:
+# when a check fails, the job fails, and GitHub emails the repo owner.
+#
+# Deliberately zero-dependency: no external uptime service, no secrets.
+name: Uptime Check
+
+on:
+  schedule:
+    # Every 15 minutes. GitHub cron is best-effort; expect some jitter.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: API readiness (hits the database)
+        run: |
+          curl --silent --show-error --fail \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            --max-time 20 \
+            https://api.dashti.se/api/v1/health/ready \
+            | tee /tmp/ready.json
+          # Belt-and-braces: assert the body actually says ready.
+          grep -q '"status":[[:space:]]*"ready"' /tmp/ready.json
+
+      - name: Frontend serves HTML
+        run: |
+          curl --silent --show-error --fail \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            --max-time 20 \
+            --output /dev/null \
+            https://dashti.se/

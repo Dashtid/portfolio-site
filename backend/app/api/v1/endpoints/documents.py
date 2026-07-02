@@ -27,6 +27,7 @@ from fastapi import (
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.deps import get_current_admin_user
 from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
@@ -42,10 +43,15 @@ router = APIRouter()
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 AdminUser = Annotated[User, Depends(get_current_admin_user)]
 
-# Where uploaded files land. The ``/static`` mount in main.py serves
-# this directory back at ``/static/documents/<filename>``, which is what
-# the admin UI sets as ``file_url`` when creating the row.
-_UPLOAD_DIR = Path("static") / "documents"
+# Where uploaded files land. settings.UPLOAD_DIR defaults to the repo's
+# static/documents for local dev; on Fly it points at the persistent
+# volume (/data/uploads/documents) so uploads survive deploys — the
+# previous hardcoded path lived on the ephemeral rootfs and every deploy
+# wiped them. The ``/media`` mount in main.py serves this directory back
+# at ``/media/<filename>``, which is what the admin UI sets as
+# ``file_url`` when creating the row. (Seeded PDFs baked into the image
+# keep their /static/documents/ URLs via the existing /static mount.)
+_UPLOAD_DIR = Path(settings.UPLOAD_DIR)
 # Reject anything that isn't a PDF — the public catalogue is academic
 # papers + theses, so other types would be out-of-scope content. Add to
 # the whitelist when a real use case arrives.
@@ -242,7 +248,7 @@ async def upload_document_file(
     target_path.write_bytes(contents)
 
     relative_path = f"documents/{unique_name}"
-    public_url = f"/static/documents/{unique_name}"
+    public_url = f"/media/{unique_name}"
     return {
         "file_path": relative_path,
         "file_size": len(contents),
