@@ -9,10 +9,11 @@ venv/
 ENV/
 env/
 
-# Testing — exclude test code and dev deps from production image
+# Testing — exclude test code and dev deps from production image.
+# NOTE: scripts/ must ship in the image — scripts/migrate.py is the
+# fly.toml release_command entrypoint.
 tests/
 requirements-dev.txt
-scripts/
 .pytest_cache/
 .coverage
 htmlcov/
