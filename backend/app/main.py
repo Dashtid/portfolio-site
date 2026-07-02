@@ -6,6 +6,7 @@ import asyncio
 import contextlib
 from contextlib import asynccontextmanager
 from datetime import UTC
+from pathlib import Path
 
 import sentry_sdk
 from fastapi import FastAPI, Request
@@ -277,6 +278,13 @@ async def lifespan(app: FastAPI):
 
     # Validate CSP configuration
     validate_csp_configuration()
+
+    # The /media StaticFiles mount defers its directory check to the first
+    # request (check_dir=False) and 500s while UPLOAD_DIR is missing, so
+    # create it before serving traffic. On Fly it lives on the volume,
+    # which is mounted by the time lifespan runs.
+    Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
@@ -399,8 +407,8 @@ app.include_router(documents.router, prefix="/api/v1/documents", tags=["Document
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # Admin-uploaded documents live under settings.UPLOAD_DIR — on Fly that's
 # the persistent volume (/data/uploads/documents), NOT the image, so they
-# survive deploys. check_dir=False: the directory is created lazily by
-# the first upload, and must not fail boot before it exists.
+# survive deploys. check_dir=False: this mount is constructed at import
+# time, before the directory exists — lifespan startup creates it.
 app.mount(
     "/media",
     StaticFiles(directory=settings.UPLOAD_DIR, check_dir=False),

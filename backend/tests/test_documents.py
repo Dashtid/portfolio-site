@@ -370,6 +370,17 @@ class TestDocumentsAdminUpload:
                 # Empty input falls back to a 32-char UUID hex.
                 assert len(cleaned) == 32 and all(c in "0123456789abcdef" for c in cleaned)
 
+    def test_media_mount_missing_file_returns_404(self, client: TestClient):
+        """A miss on the /media mount must be a 404, not a 500.
+
+        StaticFiles(check_dir=False) defers its directory-exists check to
+        the first request and raises RuntimeError if UPLOAD_DIR is still
+        absent; lifespan startup creates the directory so this never
+        happens. Regression for the post-deploy 500 on 2026-07-02.
+        """
+        response = client.get("/media/does-not-exist.pdf")
+        assert response.status_code == 404
+
 
 class TestDocumentsExceptionHandling:
     """Tests for exception handling in documents endpoints."""
