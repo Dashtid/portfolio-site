@@ -101,7 +101,9 @@
                   :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
                   class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
                 >
-                  Learn more
+                  <!-- sr-only suffix: distinct link text per card, for screen
+                       readers and the Lighthouse link-text audit alike -->
+                  Learn more<span class="sr-only"> about {{ company.name }}</span>
                   <svg
                     class="h-3.5 w-3.5"
                     fill="none"

@@ -61,7 +61,9 @@ async function authedAsAdmin(page: Page) {
 }
 
 async function mockCompaniesEndpoints(page: Page, state: CompanyMockState) {
-  await page.route('**/api/v1/companies/**', async (route: Route) => {
+  // Match both the collection URL (/companies, no trailing slash) and item
+  // URLs (/companies/{id}); the app fetches the list without a trailing slash.
+  await page.route('**/api/v1/companies**', async (route: Route) => {
     const request = route.request()
     const method = request.method()
     const url = request.url()
@@ -127,7 +129,8 @@ test.describe('Admin CRUD round-trip (Companies, mocked backend)', () => {
     await mockCompaniesEndpoints(page, state)
 
     await page.goto('/admin/companies')
-    await expect(page.locator('h2')).toContainText('Manage Companies')
+    // The companies admin page is titled "Manage Experience" in the UI.
+    await expect(page.locator('h2')).toContainText('Manage Experience')
     // Seed row is rendered.
     await expect(page.getByText('Seed Company')).toBeVisible()
   })
@@ -144,18 +147,18 @@ test.describe('Admin CRUD round-trip (Companies, mocked backend)', () => {
 
     await page.goto('/admin/companies')
 
-    // Open the "add" modal. AdminCompanies uses an "Add Company" CTA.
-    const addButton = page.getByRole('button', { name: /add company/i })
-    await addButton.click()
+    // Open the "add" modal via the page-header CTA. The modal's submit
+    // button is ALSO named "Add Company", so target the CTA by class.
+    await page.locator('button.add-button').click()
 
-    // Fill in the minimum-required fields.
-    await page.locator('input#company-name').fill('New Inc')
-    await page.locator('input#company-title').fill('CTO')
-    await page.locator('textarea#company-description').fill('a description')
-    await page.locator('input#company-location').fill('Stockholm')
-    await page.locator('input#company-start-date').fill('2024-01-01')
+    // Fill in the minimum-required fields (ids match the form labels).
+    await page.locator('input#name').fill('New Inc')
+    await page.locator('input#title').fill('CTO')
+    await page.locator('textarea#description').fill('a description')
+    await page.locator('input#location').fill('Stockholm')
+    await page.locator('input#start_date').fill('2024-01-01')
 
-    await page.getByRole('button', { name: /^add company$/i }).click()
+    await page.locator('button.btn-save').click()
     await expect.poll(() => state.posts.length).toBeGreaterThanOrEqual(1)
 
     const posted = state.posts[0] as Record<string, unknown>
@@ -178,9 +181,8 @@ test.describe('Admin CRUD round-trip (Companies, mocked backend)', () => {
 
     await page.goto('/admin/companies')
 
-    // The delete button lives inside AdminCardActions for the seed row.
-    const deleteButton = page.locator('.action-btn.delete').first()
-    await deleteButton.click()
+    // AdminCardActions labels each delete button with the item name.
+    await page.getByRole('button', { name: 'Delete Seed Company' }).click()
 
     await expect.poll(() => state.deletes.length).toBeGreaterThanOrEqual(1)
     expect(state.deletes[0]).toBe(SEED_COMPANY.id)
@@ -200,8 +202,7 @@ test.describe('Admin CRUD round-trip (Companies, mocked backend)', () => {
     page.on('dialog', dialog => dialog.dismiss())
 
     await page.goto('/admin/companies')
-    const deleteButton = page.locator('.action-btn.delete').first()
-    await deleteButton.click()
+    await page.getByRole('button', { name: 'Delete Seed Company' }).click()
 
     // Wait a beat; the request should NOT have fired.
     await page.waitForTimeout(150)
