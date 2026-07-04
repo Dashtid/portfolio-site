@@ -21,8 +21,21 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse
 
-from app.api.v1 import analytics, auth, companies, education, github, projects, skills
-from app.api.v1.endpoints import admin_panel, documents, errors, health, metrics, oss
+from app.api.v1 import (
+    admin_panel,
+    analytics,
+    auth,
+    companies,
+    documents,
+    education,
+    errors,
+    github,
+    health,
+    metrics,
+    oss,
+    projects,
+    skills,
+)
 from app.config import settings
 from app.database import Base, engine
 from app.middleware import (

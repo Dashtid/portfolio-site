@@ -337,7 +337,7 @@ onMounted(fetchSkills)
 .page-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
@@ -358,7 +358,7 @@ onMounted(fetchSkills)
 .add-button:hover {
   background: var(--color-primary-dark, #1e40af);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .icon {
@@ -370,14 +370,14 @@ onMounted(fetchSkills)
   background: white;
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
 }
 
 .loading-state,
 .empty-state {
   text-align: center;
   padding: var(--spacing-8);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
 }
 
 .skill-table-wrap {
@@ -394,13 +394,13 @@ onMounted(fetchSkills)
 .skill-table td {
   text-align: left;
   padding: var(--spacing-3);
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   vertical-align: middle;
 }
 
 .skill-table th {
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: var(--font-size-xs);
@@ -408,14 +408,14 @@ onMounted(fetchSkills)
 
 .skill-name-cell {
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
 }
 
 .proficiency-bar {
   display: inline-block;
   width: 120px;
   height: 8px;
-  background: var(--color-gray-200);
+  background: var(--color-slate-200);
   border-radius: var(--radius-full);
   vertical-align: middle;
   margin-right: var(--spacing-2);
@@ -430,7 +430,7 @@ onMounted(fetchSkills)
 .proficiency-label {
   font-variant-numeric: tabular-nums;
   font-size: var(--font-size-xs);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
 }
 
 .actions-col {
@@ -456,14 +456,14 @@ onMounted(fetchSkills)
 
 .form-group label {
   font-weight: var(--font-weight-medium);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   margin-bottom: var(--spacing-1);
   font-size: var(--font-size-sm);
 }
 
 .form-input {
   padding: var(--spacing-2);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-300);
   border-radius: var(--radius-base);
   font-size: var(--font-size-base);
   transition: border-color var(--transition-base) ease;
@@ -508,7 +508,7 @@ onMounted(fetchSkills)
   gap: var(--spacing-3);
   margin-top: var(--spacing-4);
   padding-top: var(--spacing-4);
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-slate-200);
 }
 
 .btn-cancel,
@@ -522,12 +522,12 @@ onMounted(fetchSkills)
 
 .btn-cancel {
   background: transparent;
-  color: var(--color-gray-600);
-  border: 1px solid var(--color-gray-300);
+  color: var(--color-slate-600);
+  border: 1px solid var(--color-slate-300);
 }
 
 .btn-cancel:hover:not(:disabled) {
-  background: var(--color-gray-100);
+  background: var(--color-slate-100);
 }
 
 .btn-save {
@@ -539,7 +539,7 @@ onMounted(fetchSkills)
 .btn-save:hover:not(:disabled) {
   background: var(--color-primary-dark, #1e40af);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .btn-cancel:disabled,

@@ -91,7 +91,7 @@ onUnmounted(() => {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
+  box-shadow: var(--elevation-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
   transition: all 0.3s ease;
   outline: none;
 }
@@ -99,12 +99,12 @@ onUnmounted(() => {
 .back-to-top:hover {
   background: var(--color-primary-dark, #1d4ed8);
   transform: translateY(-3px);
-  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
+  box-shadow: var(--elevation-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
 }
 
 .back-to-top:active {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  box-shadow: var(--elevation-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
 }
 
 .back-to-top:focus-visible {

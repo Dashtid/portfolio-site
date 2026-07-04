@@ -154,13 +154,13 @@ onMounted(async (): Promise<void> => {
 <style scoped>
 .admin-dashboard {
   min-height: 100vh;
-  background: var(--color-gray-50);
+  background: var(--color-slate-50);
 }
 
 /* Admin Header */
 .admin-header {
   background: white;
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   padding: var(--spacing-4) 0;
 }
 
@@ -182,7 +182,7 @@ onMounted(async (): Promise<void> => {
 .dashboard-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
@@ -202,20 +202,20 @@ onMounted(async (): Promise<void> => {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-full);
-  border: 2px solid var(--color-gray-200);
+  border: 2px solid var(--color-slate-200);
 }
 
 .user-name {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   font-weight: var(--font-weight-medium);
 }
 
 .logout-button {
   padding: var(--spacing-2) var(--spacing-4);
   background: transparent;
-  color: var(--color-gray-600);
-  border: 1px solid var(--color-gray-300);
+  color: var(--color-slate-600);
+  border: 1px solid var(--color-slate-300);
   border-radius: var(--radius-base);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -224,8 +224,8 @@ onMounted(async (): Promise<void> => {
 }
 
 .logout-button:hover {
-  background: var(--color-gray-100);
-  color: var(--color-gray-900);
+  background: var(--color-slate-100);
+  color: var(--color-slate-900);
 }
 
 .logout-button:focus-visible {
@@ -236,7 +236,7 @@ onMounted(async (): Promise<void> => {
 /* Admin Navigation */
 .admin-nav {
   background: white;
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   padding: 0;
   display: flex;
   gap: var(--spacing-1);
@@ -247,7 +247,7 @@ onMounted(async (): Promise<void> => {
 
 .nav-link {
   padding: var(--spacing-3) var(--spacing-4);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
@@ -256,7 +256,7 @@ onMounted(async (): Promise<void> => {
 }
 
 .nav-link:hover {
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
 }
 
 .nav-link.active {

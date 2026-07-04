@@ -25,7 +25,12 @@
    user's system preference would. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
-@theme {
+/* `static` is required: admin scoped styles consume these tokens directly
+   via var(--color-slate-*) / var(--radius-*), which Tailwind's scanner
+   cannot see. A plain @theme block is tree-shaken down to the variables
+   used by generated utilities, so var()-only shades would silently
+   resolve to nothing at runtime. */
+@theme static {
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-200: #bfdbfe;
@@ -62,4 +67,16 @@
   --font-sans:
     'Geist Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+
+  /* Radius scale — deliberately one step larger than Tailwind's defaults
+     (e.g. rounded-2xl = 1.25rem, not 1rem). The card system was designed
+     on these values while variables.css accidentally shadowed Tailwind's
+     theme from an unlayered :root (pre-S4); this block makes that override
+     explicit and properly layered. Admin scoped styles also consume
+     var(--radius-*) directly. */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
 }

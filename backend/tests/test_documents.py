@@ -84,7 +84,7 @@ class TestDocumentsEndpoints:
 
     def test_documents_router_exists(self):
         """Test that documents router is properly configured."""
-        from app.api.v1.endpoints.documents import router
+        from app.api.v1.documents import router
 
         assert router is not None
 
@@ -115,7 +115,7 @@ class TestDocumentsEndpoints:
 
     def test_documents_logger_exists(self):
         """Test that documents module has logger configured."""
-        from app.api.v1.endpoints.documents import logger
+        from app.api.v1.documents import logger
 
         assert logger is not None
 
@@ -347,7 +347,7 @@ class TestDocumentsAdminUpload:
         directory component, so ``../../etc/passwd`` becomes ``passwd``
         before the regex pass runs.
         """
-        from app.api.v1.endpoints.documents import _safe_filename  # noqa: PLC0415
+        from app.api.v1.documents import _safe_filename  # noqa: PLC0415
 
         # Each case: (raw input, expected output OR None for "any UUID hex").
         cases = [
@@ -391,7 +391,7 @@ class TestDocumentsExceptionHandling:
 
         from fastapi import HTTPException
 
-        from app.api.v1.endpoints.documents import get_documents
+        from app.api.v1.documents import get_documents
 
         # Create a mock db session that raises an exception
         mock_db = AsyncMock()
@@ -414,7 +414,7 @@ class TestDocumentsExceptionHandling:
 
         from fastapi import HTTPException
 
-        from app.api.v1.endpoints.documents import get_document
+        from app.api.v1.documents import get_document
 
         # Create a mock db session that raises an exception
         mock_db = AsyncMock()
@@ -437,7 +437,7 @@ class TestDocumentsExceptionHandling:
 
         from fastapi import HTTPException
 
-        from app.api.v1.endpoints.documents import get_document
+        from app.api.v1.documents import get_document
 
         # Create a mock db session that returns None
         mock_db = AsyncMock()
@@ -459,7 +459,7 @@ class TestDocumentsExceptionHandling:
         """Test successful document retrieval."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from app.api.v1.endpoints.documents import get_document
+        from app.api.v1.documents import get_document
 
         # Create a mock document
         mock_document = MagicMock()
@@ -482,7 +482,7 @@ class TestDocumentsExceptionHandling:
         """Test successful documents list retrieval."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from app.api.v1.endpoints.documents import get_documents
+        from app.api.v1.documents import get_documents
 
         # Create mock documents
         mock_docs = [MagicMock(), MagicMock()]
@@ -507,7 +507,7 @@ class TestDocumentsExceptionHandling:
         """Pagination params are forwarded to the SQL query."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from app.api.v1.endpoints.documents import get_documents
+        from app.api.v1.documents import get_documents
 
         mock_db = AsyncMock()
         mock_result = MagicMock()

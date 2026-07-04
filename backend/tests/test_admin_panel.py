@@ -19,7 +19,7 @@ class TestSentryPanelEndpoint:
     ):
         """With DSN + URL configured, the panel reports ``enabled=True`` and
         the deep-link URL the admin dashboard should render."""
-        with patch("app.api.v1.endpoints.admin_panel.settings") as mock_settings:
+        with patch("app.api.v1.admin_panel.settings") as mock_settings:
             mock_settings.ERROR_TRACKING_ENABLED = True
             mock_settings.SENTRY_DSN = "https://abc@o12345.ingest.sentry.io/12345"
             mock_settings.SENTRY_ISSUES_URL = (
@@ -41,7 +41,7 @@ class TestSentryPanelEndpoint:
         Keeps the dashboard from rendering a misleading panel when Sentry
         was deliberately turned off in a deploy.
         """
-        with patch("app.api.v1.endpoints.admin_panel.settings") as mock_settings:
+        with patch("app.api.v1.admin_panel.settings") as mock_settings:
             mock_settings.ERROR_TRACKING_ENABLED = True
             mock_settings.SENTRY_DSN = None
             mock_settings.SENTRY_ISSUES_URL = None
@@ -57,7 +57,7 @@ class TestSentryPanelEndpoint:
         self, client: TestClient, admin_user_in_db: dict[str, Any]
     ):
         """ERROR_TRACKING_ENABLED=False overrides a configured DSN."""
-        with patch("app.api.v1.endpoints.admin_panel.settings") as mock_settings:
+        with patch("app.api.v1.admin_panel.settings") as mock_settings:
             mock_settings.ERROR_TRACKING_ENABLED = False
             mock_settings.SENTRY_DSN = "https://abc@o12345.ingest.sentry.io/12345"
             mock_settings.SENTRY_ISSUES_URL = "https://example.sentry.io/issues/"
@@ -79,7 +79,7 @@ class TestSentryPanelEndpoint:
         Lets the dashboard render an "errors enabled but no deep link
         configured" hint rather than a 404-prone link.
         """
-        with patch("app.api.v1.endpoints.admin_panel.settings") as mock_settings:
+        with patch("app.api.v1.admin_panel.settings") as mock_settings:
             mock_settings.ERROR_TRACKING_ENABLED = True
             mock_settings.SENTRY_DSN = "https://abc@o12345.ingest.sentry.io/12345"
             mock_settings.SENTRY_ISSUES_URL = None

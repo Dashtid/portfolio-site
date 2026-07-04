@@ -44,21 +44,9 @@ def test_reset_metrics_requires_auth(client: TestClient):
     assert response.status_code in [401, 403]
 
 
-def test_metrics_health_check(client: TestClient):
-    """Test metrics health endpoint."""
-    response = client.get("/api/v1/metrics/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert "status" in data
-    assert data["status"] == "healthy"
-    assert "metrics_enabled" in data
-    assert "error_tracking_enabled" in data
-    assert "analytics_enabled" in data
-
-
 def test_get_metrics_disabled(client: TestClient, admin_user_in_db: dict):
     """Test metrics when disabled (requires admin auth)."""
-    with patch("app.api.v1.endpoints.metrics.settings") as mock_settings:
+    with patch("app.api.v1.metrics.settings") as mock_settings:
         mock_settings.METRICS_ENABLED = False
         response = client.get("/api/v1/metrics/", headers=admin_user_in_db["headers"])
         assert response.status_code == 200
@@ -69,7 +57,7 @@ def test_get_metrics_disabled(client: TestClient, admin_user_in_db: dict):
 
 def test_reset_metrics_disabled(client: TestClient, admin_user_in_db: dict):
     """Test reset when metrics disabled (requires admin auth)."""
-    with patch("app.api.v1.endpoints.metrics.settings") as mock_settings:
+    with patch("app.api.v1.metrics.settings") as mock_settings:
         mock_settings.METRICS_ENABLED = False
         response = client.post("/api/v1/metrics/reset", headers=admin_user_in_db["headers"])
         assert response.status_code == 200
@@ -89,7 +77,7 @@ class TestMetricsEndpointsExtended:
 
     def test_metrics_router_exists(self):
         """Test metrics router is importable."""
-        from app.api.v1.endpoints.metrics import router
+        from app.api.v1.metrics import router
 
         assert router is not None
 

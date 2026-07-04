@@ -55,12 +55,3 @@ class MetricsResetResponse(BaseModel):
     """Response for the /metrics/reset admin endpoint."""
 
     message: str
-
-
-class MetricsHealth(BaseModel):
-    """Basic health check for metrics subsystem."""
-
-    status: str
-    metrics_enabled: bool
-    error_tracking_enabled: bool
-    analytics_enabled: bool

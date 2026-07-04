@@ -65,7 +65,7 @@ const emit = defineEmits<{
 .action-btn {
   padding: var(--spacing-1);
   background: transparent;
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-300);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-base) ease;
@@ -83,8 +83,10 @@ const emit = defineEmits<{
 }
 
 .delete-btn:hover:not(:disabled) {
-  background: var(--color-red-600, #dc2626);
-  border-color: var(--color-red-600, #dc2626);
+  /* red-600 literal: Tailwind only emits --color-red-600 while some utility
+     happens to use red-600, so var() here would be a coin flip per build. */
+  background: #dc2626;
+  border-color: #dc2626;
   color: white;
 }
 

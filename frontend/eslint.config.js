@@ -17,7 +17,16 @@ export default [
       '*.config.js',
       '*.config.ts',
       '.vscode/**',
-      'public/**'
+      'public/**',
+      // Playwright artifacts: the HTML report bundles minified vendor JS
+      // (CodeMirror etc.) that floods lint with 700+ errors. CI lints
+      // before any report exists, so without these ignores local `npm run
+      // lint` and CI disagree.
+      '.playwright-report/**',
+      'playwright-report/**',
+      'test-results/**',
+      // Gitignored local tooling (image conversion etc.) — never in CI.
+      'scripts/**'
     ]
   },
 

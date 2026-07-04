@@ -78,7 +78,7 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
 .ratio {
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .video-iframe {

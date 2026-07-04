@@ -57,12 +57,6 @@ class TestSettings:
 
         assert isinstance(settings.METRICS_ENABLED, bool)
 
-    def test_analytics_settings(self):
-        """Test analytics settings."""
-        settings = Settings()
-
-        assert isinstance(settings.ANALYTICS_ENABLED, bool)
-
     def test_async_database_url_property(self):
         """Test async_database_url property converts URL correctly."""
         settings = Settings()

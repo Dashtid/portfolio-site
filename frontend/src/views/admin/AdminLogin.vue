@@ -53,20 +53,20 @@ const loginWithGitHub = (): void => {
   background: white;
   border-radius: var(--radius-xl);
   padding: var(--spacing-8);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: var(--elevation-2xl);
 }
 
 .login-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   text-align: center;
   margin: 0 0 var(--spacing-2);
 }
 
 .login-subtitle {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   text-align: center;
   margin: 0 0 var(--spacing-8);
   line-height: var(--line-height-relaxed);
@@ -79,7 +79,7 @@ const loginWithGitHub = (): void => {
   justify-content: center;
   gap: var(--spacing-3);
   padding: var(--spacing-3) var(--spacing-6);
-  background: var(--color-gray-900);
+  background: var(--color-slate-900);
   color: white;
   border: none;
   border-radius: var(--radius-base);
@@ -90,9 +90,9 @@ const loginWithGitHub = (): void => {
 }
 
 .github-login-button:hover {
-  background: var(--color-gray-800);
+  background: var(--color-slate-800);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .github-icon {
@@ -103,12 +103,12 @@ const loginWithGitHub = (): void => {
 .login-note {
   margin-top: var(--spacing-8);
   padding-top: var(--spacing-6);
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-slate-200);
 }
 
 .note-text {
   font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   text-align: center;
   margin: 0;
   line-height: var(--line-height-relaxed);
@@ -141,12 +141,12 @@ const loginWithGitHub = (): void => {
 
 /* GitHub button stays dark in dark mode to match GitHub branding */
 [data-theme='dark'] .github-login-button {
-  background: var(--color-gray-700); /* #334155 */
+  background: var(--color-slate-700); /* #334155 */
   color: var(--text-primary);
 }
 
 [data-theme='dark'] .github-login-button:hover {
-  background: var(--color-gray-600); /* #475569 */
+  background: var(--color-slate-600); /* #475569 */
 }
 
 [data-theme='dark'] .login-note {

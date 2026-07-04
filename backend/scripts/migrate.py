@@ -77,6 +77,15 @@ def main() -> None:
     if mode == "stamp":
         command.stamp(config, "head")
         logger.info("Stamped fresh database at head")
+
+        # Fresh environment: populate initial portfolio content. Each seeder
+        # skips tables that already have rows, and this branch never runs
+        # against an existing database, so admin-curated content can't be
+        # overwritten or resurrected by a redeploy.
+        from app.seed_data import main as seed_main  # noqa: PLC0415
+
+        asyncio.run(seed_main())
+        logger.info("Seeded fresh database with initial content")
     else:
         command.upgrade(config, "head")
         logger.info("Upgraded database to head")

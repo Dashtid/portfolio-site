@@ -213,18 +213,18 @@ onMounted(load)
 .section-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
 .page-header-meta {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   margin: 0;
 }
 
 .meta-strong {
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -241,11 +241,11 @@ onMounted(load)
   font-weight: var(--font-weight-medium);
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-base);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
 }
 
 .pulls-link:hover {
-  background: var(--color-gray-50);
+  background: var(--color-slate-50);
 }
 
 .pulls-link:focus-visible {
@@ -299,13 +299,13 @@ onMounted(load)
   align-items: baseline;
   gap: var(--spacing-3);
   padding-bottom: var(--spacing-2);
-  border-bottom: 2px solid var(--color-gray-200);
+  border-bottom: 2px solid var(--color-slate-200);
 }
 
 .bucket-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -316,11 +316,11 @@ onMounted(load)
   justify-content: center;
   min-width: 1.5rem;
   padding: 0 var(--spacing-2);
-  background: var(--color-gray-100);
+  background: var(--color-slate-100);
   border-radius: var(--radius-full, 999px);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
 }
 
 /* Per-bucket accent colors so the visual triage is faster than reading. */
@@ -366,7 +366,7 @@ onMounted(load)
 
 .bucket-description {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   margin: 0;
   font-style: italic;
 }
@@ -386,13 +386,13 @@ onMounted(load)
   gap: var(--spacing-2);
   padding: var(--spacing-4);
   background: white;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-base);
   transition: box-shadow var(--transition-base) ease;
 }
 
 .contrib-card:hover {
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--elevation-sm);
 }
 
 .contrib-card-draft {
@@ -405,12 +405,12 @@ onMounted(load)
   align-items: center;
   gap: var(--spacing-2);
   font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   font-variant-numeric: tabular-nums;
 }
 
 .contrib-repo {
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   font-weight: var(--font-weight-medium);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -419,7 +419,7 @@ onMounted(load)
 }
 
 .contrib-number {
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
 }
 
 .contrib-draft-badge,
@@ -448,7 +448,7 @@ onMounted(load)
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
@@ -460,7 +460,7 @@ onMounted(load)
 }
 
 .contrib-title-plain {
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
 }
 
 .contrib-footer {
@@ -469,7 +469,7 @@ onMounted(load)
   justify-content: space-between;
   gap: var(--spacing-2);
   font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
 }
 
 .contrib-author {
@@ -479,17 +479,17 @@ onMounted(load)
 .empty-state {
   padding: var(--spacing-6);
   text-align: center;
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   font-size: var(--font-size-sm);
-  background: var(--color-gray-50);
-  border: 1px dashed var(--color-gray-200);
+  background: var(--color-slate-50);
+  border: 1px dashed var(--color-slate-200);
   border-radius: var(--radius-base);
 }
 
 .loading-state {
   padding: var(--spacing-8);
   text-align: center;
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
 }
 
 .error-alert {

@@ -84,7 +84,7 @@ watch(
 .modal-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0 0 var(--spacing-4);
 }
 

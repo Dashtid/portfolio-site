@@ -435,7 +435,7 @@ onMounted(() => {
 .page-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
@@ -461,15 +461,15 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: var(--spacing-8);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   background: white;
-  border: 1px dashed var(--color-gray-300);
+  border: 1px dashed var(--color-slate-300);
   border-radius: var(--radius-lg);
 }
 
 .doc-table-wrap {
   background: white;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   overflow-x: auto;
 }
@@ -480,14 +480,14 @@ onMounted(() => {
 }
 
 .doc-table thead {
-  background: var(--color-gray-50);
+  background: var(--color-slate-50);
 }
 
 .doc-table th,
 .doc-table td {
   text-align: left;
   padding: var(--spacing-3) var(--spacing-4);
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-slate-200);
   font-size: var(--font-size-sm);
 }
 
@@ -521,7 +521,7 @@ onMounted(() => {
 .form-input,
 .form-textarea {
   padding: var(--spacing-2) var(--spacing-3);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-300);
   border-radius: var(--radius-base);
   font-size: var(--font-size-base);
 }
@@ -561,7 +561,7 @@ onMounted(() => {
 
 .upload-status {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
 }
 
 .upload-status-ok {
@@ -570,7 +570,7 @@ onMounted(() => {
 
 .upload-hint {
   font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
 }
 
 .form-actions {
@@ -586,12 +586,12 @@ onMounted(() => {
   border-radius: var(--radius-base);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-300);
 }
 
 .btn-cancel {
   background: white;
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
 }
 
 .btn-save {

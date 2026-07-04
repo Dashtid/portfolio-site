@@ -37,7 +37,7 @@ class TestFrontendErrorEndpoint:
             userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
         )
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -51,7 +51,7 @@ class TestFrontendErrorEndpoint:
         """Test frontend error logging with minimal required fields."""
         error_data = make_error_data()
 
-        with patch("app.api.v1.endpoints.errors.logger"):
+        with patch("app.api.v1.errors.logger"):
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -70,7 +70,7 @@ class TestFrontendErrorEndpoint:
             },
         )
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -84,7 +84,7 @@ class TestFrontendErrorEndpoint:
 
         error_data = make_error_data(message=long_message)
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -100,7 +100,7 @@ class TestFrontendErrorEndpoint:
 
         error_data = make_error_data(userAgent=long_ua)
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -115,7 +115,7 @@ class TestFrontendErrorEndpoint:
 
         error_data = make_error_data()
 
-        with patch("app.api.v1.endpoints.errors.logger"):
+        with patch("app.api.v1.errors.logger"):
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -132,7 +132,7 @@ class TestFrontendErrorEndpoint:
             componentName="ProjectCard",
         )
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -154,7 +154,7 @@ class TestFrontendErrorEndpoint:
         """Test that client IP is logged with the error."""
         error_data = make_error_data()
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -166,7 +166,7 @@ class TestFrontendErrorEndpoint:
         """Test that presence of stack trace is logged."""
         error_data = make_error_data(stack="Error: Test\n    at foo:1:1")
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -178,7 +178,7 @@ class TestFrontendErrorEndpoint:
         """Test that absence of stack trace is logged correctly."""
         error_data = make_error_data()
 
-        with patch("app.api.v1.endpoints.errors.logger") as mock_logger:
+        with patch("app.api.v1.errors.logger") as mock_logger:
             response = client.post("/api/v1/errors", json=error_data)
 
             assert response.status_code == 200
@@ -192,19 +192,19 @@ class TestErrorsRouterConfiguration:
 
     def test_router_exists(self):
         """Test that errors router is importable."""
-        from app.api.v1.endpoints.errors import router
+        from app.api.v1.errors import router
 
         assert router is not None
 
     def test_router_has_correct_tags(self):
         """Test that router has correct tags."""
-        from app.api.v1.endpoints.errors import router
+        from app.api.v1.errors import router
 
         assert "errors" in router.tags
 
     def test_logger_exists(self):
         """Test that logger is configured."""
-        from app.api.v1.endpoints.errors import logger
+        from app.api.v1.errors import logger
 
         assert logger is not None
 
@@ -216,7 +216,7 @@ class TestErrorTypesValidation:
         """Test 'error' type is accepted."""
         error_data = make_error_data(type="error")
 
-        with patch("app.api.v1.endpoints.errors.logger"):
+        with patch("app.api.v1.errors.logger"):
             response = client.post("/api/v1/errors", json=error_data)
             assert response.status_code == 200
 
@@ -224,7 +224,7 @@ class TestErrorTypesValidation:
         """Test 'unhandledRejection' type is accepted."""
         error_data = make_error_data(type="unhandledRejection")
 
-        with patch("app.api.v1.endpoints.errors.logger"):
+        with patch("app.api.v1.errors.logger"):
             response = client.post("/api/v1/errors", json=error_data)
             assert response.status_code == 200
 
@@ -232,7 +232,7 @@ class TestErrorTypesValidation:
         """Test 'vueError' type is accepted."""
         error_data = make_error_data(type="vueError")
 
-        with patch("app.api.v1.endpoints.errors.logger"):
+        with patch("app.api.v1.errors.logger"):
             response = client.post("/api/v1/errors", json=error_data)
             assert response.status_code == 200
 
@@ -240,7 +240,7 @@ class TestErrorTypesValidation:
         """Test 'manual' type is accepted."""
         error_data = make_error_data(type="manual")
 
-        with patch("app.api.v1.endpoints.errors.logger"):
+        with patch("app.api.v1.errors.logger"):
             response = client.post("/api/v1/errors", json=error_data)
             assert response.status_code == 200
 

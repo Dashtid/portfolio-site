@@ -1,12 +1,22 @@
-/* Design System Variables - Based on Original Portfolio */
+/* Design System Variables - Based on Original Portfolio
+
+   NAMING RULE (S4): this file is loaded UNLAYERED, so any token here whose
+   name matches a Tailwind v4 theme variable (--radius-*, --shadow-*,
+   --color-{palette}-{shade}, --font-sans/mono, ...) silently overrides the
+   value Tailwind's utilities resolve — that is how rounded-2xl rendered a
+   stealth 1.25rem for months. Theme-namespace customization belongs in
+   styles/tailwind.css inside @theme; only project-specific names live here.
+
+   Pruned in S4: 72 tokens with zero var() references (verified by sweep),
+   the --slate-N / --space-N alias families, and the --color-gray-* family
+   (it held slate values; consumers now read Tailwind's @theme
+   --color-slate-* directly). Shadows renamed --shadow-* -> --elevation-*
+   to leave Tailwind's shadow namespace untouched. */
 :root {
   /* Primary Colors - Softer blue palette */
   --color-primary: #3b82f6;
   --color-primary-dark: #2563eb;
-  --color-primary-light: #60a5fa;
-  --color-primary-lighter: #93c5fd;
   --color-primary-rgb: 59, 130, 246;
-  --color-primary-dark-rgb: 37, 99, 235;
 
   /* Primary Aliases (for component compatibility) */
   --primary-50: #eff6ff;
@@ -17,50 +27,8 @@
   --primary-500: #3b82f6;
   --primary-600: #2563eb;
   --primary-700: #1d4ed8;
-  --primary-900: #1e3a8a;
-
-  --color-secondary: #64748b;
-  --color-secondary-dark: #475569;
-  --color-secondary-light: #94a3b8;
 
   --color-teal: #14b8a6;
-  --color-teal-dark: #0f766e;
-  --color-teal-light: #5eead4;
-  --color-teal-rgb: 20, 184, 166;
-
-  --color-emerald: #10b981;
-  --color-emerald-light: #6ee7b7;
-  --color-emerald-400: #34d399;
-  --color-emerald-500: #10b981;
-  --color-emerald-600: #059669;
-  --color-emerald-700: #047857;
-
-  /* Neutral Colors */
-  --color-white: #ffffff;
-  --color-gray-50: #f8fafc;
-  --color-gray-50-rgb: 248, 250, 252;
-  --color-gray-100: #f1f5f9;
-  --color-gray-200: #e2e8f0;
-  --color-gray-300: #cbd5e1;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #64748b;
-  --color-gray-600: #475569;
-  --color-gray-700: #334155;
-  --color-gray-800: #1e293b;
-  --color-gray-900: #0f172a;
-  --color-black: #000000;
-
-  /* Slate Aliases (for component compatibility) */
-  --slate-50: #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1e293b;
-  --slate-900: #0f172a;
 
   /* Typography — Geist Variable (self-hosted via @fontsource-variable/geist).
      Display and base use the same family by design; subtle hierarchy comes
@@ -69,13 +37,8 @@
     'Geist Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-family-base:
     'Geist Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-mono:
-    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 
-  /* Letter Spacing */
   --letter-spacing-tight: -0.025em;
-  --letter-spacing-normal: 0;
-  --letter-spacing-wide: 0.025em;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -86,18 +49,14 @@
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
 
-  --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --line-height-tight: 1.25;
   --line-height-base: 1.5;
   --line-height-relaxed: 1.625;
-  --line-height-loose: 2;
 
   /* Spacing */
-  --spacing-0: 0;
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
   --spacing-3: 0.75rem;
@@ -105,53 +64,27 @@
   --spacing-5: 1.25rem;
   --spacing-6: 1.5rem;
   --spacing-8: 2rem;
-  --spacing-10: 2.5rem;
-  --spacing-12: 3rem;
-  --spacing-16: 4rem;
 
-  /* Spacing aliases (--space-N shorthand used by component styles) */
-  --space-2: var(--spacing-2);
-  --space-3: var(--spacing-3);
-  --space-4: var(--spacing-4);
-  --space-6: var(--spacing-6);
-  --space-8: var(--spacing-8);
-  --space-12: var(--spacing-12);
-  --space-16: var(--spacing-16);
-
-  /* Border Radius */
-  --radius-sm: 0.375rem;
+  /* Border Radius. The sm..2xl scale lives in tailwind.css @theme
+     (Tailwind namespace); these two names are project-specific. */
   --radius-base: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
   --radius-full: 9999px;
 
-  /* Shadows - Softer, more diffused */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.2);
+  /* Elevation (box shadows) - softer, more diffused than Tailwind's
+     --shadow-* scale, with dark-mode overrides below. */
+  --elevation-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --elevation-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+  --elevation-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  --elevation-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+  --elevation-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.2);
 
   /* Transitions */
   --transition-fast: 150ms;
   --transition-base: 300ms;
-  --transition-slow: 500ms;
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Z-index */
-  --z-index-dropdown: 1000;
-  --z-index-sticky: 1020;
   --z-index-fixed: 1030;
-  --z-index-modal-backdrop: 1040;
-  --z-index-modal: 1050;
-  --z-index-popover: 1060;
-  --z-index-tooltip: 1070;
-  --z-index-overlay: 1080; /* full-screen loading overlays */
   --z-index-skip-link: 1090; /* accessibility skip link — must sit above all overlays */
 
   /* Layout */
@@ -161,29 +94,19 @@
      own internal padding provides visual breathing room before the title. */
   --navbar-height: 72px;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-blur: 10px;
-
   /* Interactive Elements */
   --color-border: #e2e8f0;
   --color-hover-bg: rgba(59, 130, 246, 0.08);
   --color-icon: #64748b;
   --color-warning: #fbbf24;
   --color-error: #ef4444;
-  --color-success: #22c55e;
-  --color-info: #3b82f6;
 
   /* Alpha variants - Light Mode */
   --color-primary-alpha-10: rgba(59, 130, 246, 0.1);
-  --color-primary-alpha-15: rgba(59, 130, 246, 0.15);
   --color-primary-alpha-20: rgba(59, 130, 246, 0.2);
-  --color-primary-alpha-25: rgba(59, 130, 246, 0.25);
 
   /* Border Aliases */
   --border-primary: var(--primary-200);
-  --border-secondary: var(--primary-300);
 
   /* Background Colors */
   --bg-primary: var(--primary-50);
@@ -191,16 +114,13 @@
   --bg-tertiary: var(--primary-100);
 
   /* Text Colors */
-  --text-primary: var(--color-gray-800);
+  --text-primary: var(--color-slate-800);
   --text-secondary: #475569;
-  --text-tertiary: var(--color-gray-600);
+  --text-tertiary: var(--color-slate-600);
   --text-muted: #64748b;
-  --text-color: #0f172a;
-  --text-inverse: #ffffff;
 
   /* Link Colors */
   --link-color: #3b82f6;
-  --link-hover: #2563eb;
 
   /* Input Colors */
   --input-bg: #ffffff;
@@ -211,9 +131,7 @@
 
   /* Component Specific */
   --navbar-bg: rgba(255, 255, 255, 0.95);
-  --navbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --card-bg: #ffffff;
-  --card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Dark Mode Variables */
@@ -226,18 +144,13 @@
   --primary-600: #3b82f6;
   --primary-700: #93c5fd;
   --color-primary: #3b82f6;
-  --color-primary-light: #60a5fa;
-  --color-primary-lighter: #93c5fd;
 
-  /* Slate aliases are NOT redefined here: --slate-N keeps its light-mode value.
-   * Components use semantic tokens (--text-primary, --text-secondary,
-   * --color-border, etc.) which are explicitly defined below for dark-mode
-   * contrast. Raw --slate-N is now only safe for always-dark or always-light
-   * hardcoded contexts (e.g. DocumentCard glass cards). */
-
-  /* Glassmorphism - Dark Mode */
-  --glass-bg: rgba(0, 0, 0, 0.2);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Tailwind's --color-slate-N (@theme) is NOT redefined here: raw slate
+   * shades keep one value in both modes. Components use semantic tokens
+   * (--text-primary, --text-secondary, --color-border, etc.) which are
+   * explicitly defined below for dark-mode contrast. Raw slate is only
+   * safe for always-dark or always-light hardcoded contexts (e.g.
+   * DocumentCard glass cards). */
 
   /* Interactive Elements - Dark Mode */
   --color-border: #334155;
@@ -247,18 +160,13 @@
   /* Semantic Colors - Dark Mode (lighter for contrast) */
   --color-warning: #fbbf24;
   --color-error: #fca5a5;
-  --color-success: #4ade80;
-  --color-info: #60a5fa;
 
   /* Alpha variants - Dark Mode (higher opacity for visibility) */
   --color-primary-alpha-10: rgba(96, 165, 250, 0.2);
-  --color-primary-alpha-15: rgba(96, 165, 250, 0.25);
   --color-primary-alpha-20: rgba(96, 165, 250, 0.3);
-  --color-primary-alpha-25: rgba(96, 165, 250, 0.35);
 
   /* Border Aliases - Dark Mode */
   --border-primary: #475569;
-  --border-secondary: #64748b;
 
   /* Background Colors - Dark Mode */
   --bg-primary: #0f172a;
@@ -270,12 +178,9 @@
   --text-secondary: #cbd5e1;
   --text-tertiary: #b0bece; /* Improved contrast for WCAG AA */
   --text-muted: #94a3b8;
-  --text-color: #f1f5f9;
-  --text-inverse: #0f172a;
 
   /* Link Colors - Dark Mode */
   --link-color: #60a5fa;
-  --link-hover: #93c5fd;
 
   /* Input Colors - Dark Mode */
   --input-bg: #1e293b;
@@ -286,9 +191,7 @@
 
   /* Component Specific - Dark Mode */
   --navbar-bg: rgba(15, 23, 42, 0.95);
-  --navbar-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --card-bg: #1e293b;
-  --card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 
   /* Hover tint for global a:hover and button:hover. Light value (#2563eb)
      is darker than the base link/button color, which signals emphasis on a
@@ -296,14 +199,13 @@
      emphasis still reads against a dark surface. */
   --color-primary-dark: #93c5fd;
 
-  /* Shadows - Dark Mode. The light-mode tokens use 5-10% black alpha which
-     becomes invisible against #0f172a. These overrides raise the opacity
-     (and add a second offset layer where the light token has one) so cards
-     and floating buttons keep their lift in dark mode. */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.35);
-  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -1px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -2px rgb(0 0 0 / 0.4);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 10px 10px -5px rgb(0 0 0 / 0.4);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+  /* Elevation - Dark Mode. The light-mode tokens use 5-10% black alpha
+     which becomes invisible against #0f172a. These overrides raise the
+     opacity (and add a second offset layer where the light token has one)
+     so cards and floating buttons keep their lift in dark mode. */
+  --elevation-sm: 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  --elevation-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -1px rgb(0 0 0 / 0.3);
+  --elevation-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -2px rgb(0 0 0 / 0.4);
+  --elevation-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 10px 10px -5px rgb(0 0 0 / 0.4);
+  --elevation-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
 }

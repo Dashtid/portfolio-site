@@ -476,7 +476,7 @@ onMounted((): void => {
 .page-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
@@ -497,7 +497,7 @@ onMounted((): void => {
 .add-button:hover {
   background: var(--color-primary-dark, #1e40af);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .icon {
@@ -514,14 +514,14 @@ onMounted((): void => {
   background: white;
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
 }
 
 .loading-state,
 .empty-state {
   text-align: center;
   padding: var(--spacing-8);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
 }
 
 .project-cards {
@@ -531,15 +531,15 @@ onMounted((): void => {
 
 .project-card {
   padding: var(--spacing-4);
-  background: var(--color-gray-50);
+  background: var(--color-slate-50);
   border-radius: var(--radius-base);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   transition: all var(--transition-base) ease;
 }
 
 .project-card:hover {
   border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--elevation-sm);
 }
 
 .project-header {
@@ -560,7 +560,7 @@ onMounted((): void => {
 .project-name {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
@@ -580,7 +580,7 @@ onMounted((): void => {
 }
 
 .project-description {
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   line-height: var(--line-height-relaxed);
   margin: 0 0 var(--spacing-2);
 }
@@ -596,8 +596,8 @@ onMounted((): void => {
   font-size: var(--font-size-xs);
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--color-gray-200);
-  color: var(--color-gray-700);
+  background: var(--color-slate-200);
+  color: var(--color-slate-700);
 }
 
 .project-form {
@@ -619,7 +619,7 @@ onMounted((): void => {
 
 .form-group label {
   font-weight: var(--font-weight-medium);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   margin-bottom: var(--spacing-1);
   font-size: var(--font-size-sm);
 }
@@ -634,7 +634,7 @@ onMounted((): void => {
 .form-input,
 .form-textarea {
   padding: var(--spacing-2);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-slate-300);
   border-radius: var(--radius-base);
   font-size: var(--font-size-base);
   transition: border-color var(--transition-base) ease;
@@ -673,7 +673,7 @@ onMounted((): void => {
   gap: var(--spacing-3);
   margin-top: var(--spacing-4);
   padding-top: var(--spacing-4);
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--color-slate-200);
 }
 
 .btn-cancel,
@@ -687,12 +687,12 @@ onMounted((): void => {
 
 .btn-cancel {
   background: transparent;
-  color: var(--color-gray-600);
-  border: 1px solid var(--color-gray-300);
+  color: var(--color-slate-600);
+  border: 1px solid var(--color-slate-300);
 }
 
 .btn-cancel:hover {
-  background: var(--color-gray-100);
+  background: var(--color-slate-100);
 }
 
 .btn-save {
@@ -704,7 +704,7 @@ onMounted((): void => {
 .btn-save:hover:not(:disabled) {
   background: var(--color-primary-dark, #1e40af);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .btn-cancel:disabled,

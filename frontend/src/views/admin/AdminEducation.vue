@@ -565,7 +565,7 @@ onUnmounted(() => {
 .btn-save:hover:not(:disabled) {
   background: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .btn-save:disabled {
@@ -700,16 +700,16 @@ onUnmounted(() => {
 .table th {
   padding: 0.75rem;
   vertical-align: top;
-  border-top: 1px solid var(--color-gray-300, #dee2e6);
+  border-top: 1px solid var(--color-slate-300, #dee2e6);
   font-weight: 600;
-  color: var(--color-gray-900, #1f2937);
+  color: var(--color-slate-900, #1f2937);
 }
 
 .table td {
   padding: 0.75rem;
   vertical-align: top;
-  border-top: 1px solid var(--color-gray-300, #dee2e6);
-  color: var(--color-gray-700, #374151);
+  border-top: 1px solid var(--color-slate-300, #dee2e6);
+  color: var(--color-slate-700, #374151);
 }
 
 @media (max-width: 768px) {

@@ -64,7 +64,7 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps
 .ratio {
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--elevation-md);
 }
 
 .map-iframe {

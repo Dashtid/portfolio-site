@@ -256,14 +256,14 @@ onMounted(load)
 .section-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
 .range-tabs {
   display: inline-flex;
-  background: var(--color-gray-100);
-  border: 1px solid var(--color-gray-200);
+  background: var(--color-slate-100);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-base);
   padding: 2px;
   gap: 2px;
@@ -277,18 +277,18 @@ onMounted(load)
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   transition: all var(--transition-base) ease;
 }
 
 .range-tab:hover {
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
 }
 
 .range-tab.active {
   background: white;
-  color: var(--color-gray-900);
-  box-shadow: var(--shadow-sm);
+  color: var(--color-slate-900);
+  box-shadow: var(--elevation-sm);
 }
 
 .range-tab:focus-visible {
@@ -306,7 +306,7 @@ onMounted(load)
   background: white;
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   text-align: center;
 }
 
@@ -319,14 +319,14 @@ onMounted(load)
 
 .stat-label {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .card {
   background: white;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   padding: var(--spacing-6);
 }
@@ -342,13 +342,13 @@ onMounted(load)
 .card-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin: 0;
 }
 
 .card-meta {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
 }
 
 .chart {
@@ -368,7 +368,7 @@ onMounted(load)
 }
 
 .chart-axis {
-  stroke: var(--color-gray-200);
+  stroke: var(--color-slate-200);
   stroke-width: 1;
 }
 
@@ -376,7 +376,7 @@ onMounted(load)
   display: flex;
   justify-content: space-between;
   font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   margin-top: var(--spacing-2);
 }
 
@@ -401,7 +401,7 @@ onMounted(load)
   justify-content: space-between;
   gap: var(--spacing-3);
   padding: var(--spacing-2) 0;
-  border-bottom: 1px solid var(--color-gray-100);
+  border-bottom: 1px solid var(--color-slate-100);
 }
 
 .top-list-item:last-child {
@@ -415,7 +415,7 @@ onMounted(load)
 .top-list-primary {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -423,7 +423,7 @@ onMounted(load)
 
 .top-list-secondary {
   font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -432,7 +432,7 @@ onMounted(load)
 .top-list-value {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-700);
+  color: var(--color-slate-700);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
@@ -440,14 +440,14 @@ onMounted(load)
 .empty-state {
   padding: var(--spacing-6);
   text-align: center;
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
   font-size: var(--font-size-sm);
 }
 
 .loading-state {
   padding: var(--spacing-8);
   text-align: center;
-  color: var(--color-gray-500);
+  color: var(--color-slate-500);
 }
 
 .error-alert {

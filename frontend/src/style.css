@@ -175,77 +175,11 @@
   }
 }
 
-@layer components {
-  /* No .container rule: nothing in the app uses a bare `container` class
-     (admin views use login-container/stats-container etc.), and Tailwind
-     generates its own .container utility that would outrank a components-
-     layer clone anyway. */
-
-  /* Loading Spinner */
-  .loading-spinner {
-    border: 3px solid var(--color-gray-200);
-    border-top: 3px solid var(--color-primary);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: var(--spacing-8) auto;
-  }
-
-  /* Skeleton Shimmer Utility */
-  .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      var(--color-gray-200) 25%,
-      var(--color-gray-100) 50%,
-      var(--color-gray-200) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-    border-radius: var(--radius-md, 0.375rem);
-  }
-
-  [data-theme='dark'] .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      var(--color-gray-700) 25%,
-      var(--color-gray-600) 50%,
-      var(--color-gray-700) 75%
-    );
-    background-size: 200% 100%;
-  }
-
-  /* Respect reduced motion preference for shimmer */
-  @media (prefers-reduced-motion: reduce) {
-    .skeleton-shimmer {
-      animation: none;
-      background: var(--color-gray-200);
-    }
-
-    [data-theme='dark'] .skeleton-shimmer {
-      background: var(--color-gray-700);
-    }
-  }
-}
-
-/* Keyframes are not layer-sensitive; keep them top-level. */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
+/* No @layer components rules remain. The old .container clone had no
+   users, .skeleton-shimmer was an orphaned utility, and the global
+   .loading-spinner circle rules corrupted GitHubStats' identically-named
+   loading CONTAINER (40px spinning box around the text) — the component
+   owns its spinner in scoped CSS. */
 
 /* The old mobile `html { font-size: 14px }` override is gone: rescaling the
    root rem resized every rem-based Tailwind utility to 87.5% below 768px,

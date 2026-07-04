@@ -43,12 +43,10 @@
     "pinia": "^3.0.4",
     "tailwindcss": "^4.3.1",
     "three": "^0.184.0",
-    "unhead": "^3.1.1",
     "vite-ssg": "^28.3.0",
     "vue": "^3.5.35",
     "vue-router": "^4.6.3",
-    "web-vitals": "^5.1.0",
-    "zod": "^4.4.3"
+    "web-vitals": "^5.1.0"
   },
   "overrides": {
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0"

@@ -258,9 +258,6 @@ class Settings(BaseSettings):
     SLOW_QUERY_THRESHOLD_MS: int = 250
     DB_STATEMENT_TIMEOUT_MS: int = 5000
 
-    # Analytics
-    ANALYTICS_ENABLED: bool = True
-
     # Error Tracking (Sentry)
     ERROR_TRACKING_ENABLED: bool = True
     SENTRY_DSN: str | None = None  # Sentry DSN for error tracking

@@ -181,7 +181,7 @@ onMounted(async () => {
 .section-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin-bottom: var(--spacing-6);
 }
 
@@ -196,7 +196,7 @@ onMounted(async () => {
   background: white;
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   text-align: center;
 }
 
@@ -209,7 +209,7 @@ onMounted(async () => {
 
 .stat-label {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -218,13 +218,13 @@ onMounted(async () => {
   background: white;
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
 }
 
 .subsection-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin-bottom: var(--spacing-4);
 }
 
@@ -239,13 +239,13 @@ onMounted(async () => {
   align-items: center;
   gap: var(--spacing-2);
   padding: var(--spacing-3) var(--spacing-4);
-  background: var(--color-gray-50);
-  color: var(--color-gray-700);
+  background: var(--color-slate-50);
+  color: var(--color-slate-700);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-base);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   transition: all var(--transition-base) ease;
 }
 
@@ -254,7 +254,7 @@ onMounted(async () => {
   color: white;
   border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--elevation-sm);
 }
 
 .action-icon {
@@ -277,7 +277,7 @@ onMounted(async () => {
 
 .sentry-panel {
   background: white;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-slate-200);
   border-radius: var(--radius-lg);
   padding: var(--spacing-4) var(--spacing-6);
   margin-bottom: var(--spacing-6);
@@ -302,13 +302,13 @@ onMounted(async () => {
 
 .sentry-panel-title {
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-900);
+  color: var(--color-slate-900);
   margin-bottom: 2px;
 }
 
 .sentry-panel-subtitle {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
+  color: var(--color-slate-600);
 }
 
 .sentry-cta {
