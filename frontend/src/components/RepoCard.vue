@@ -1,58 +1,71 @@
 <template>
+  <!-- .project-card is a behavior hook (entrance animation in HomeView +
+       e2e hover test), not a style class. Visuals follow the same Tailwind
+       recipe as the experience/education cards so all card systems match. -->
   <a
     :href="repo.html_url"
     target="_blank"
     rel="noopener noreferrer"
-    class="project-card repo-card-enhanced"
+    class="project-card group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 no-underline transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
     :aria-label="`${repo.name} repository on GitHub (opens in new tab)`"
   >
-    <div class="project-content">
-      <h3 class="project-title">{{ repo.name }}</h3>
-      <p v-if="repo.description" class="project-description">
-        {{ repo.description }}
-      </p>
+    <h3 class="text-lg font-semibold text-primary-600 dark:text-primary-400">
+      {{ repo.name }}
+    </h3>
 
-      <div class="repo-meta-enhanced">
-        <span v-if="repo.language" class="repo-language">
-          <span
-            class="language-dot"
-            :style="{ background: getLanguageColor(repo.language) }"
-          ></span>
-          {{ repo.language }}
-        </span>
-        <span class="repo-stats">
-          <span class="repo-stat">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <polygon
-                points="8 1 10.5 6 16 6.5 12 10.5 13 16 8 13 3 16 4 10.5 0 6.5 5.5 6 8 1"
-              ></polygon>
-            </svg>
-            {{ repo.stars }}
-          </span>
-          <span class="repo-stat">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
-              ></path>
-            </svg>
-            {{ repo.forks }}
-          </span>
-        </span>
-      </div>
+    <p
+      v-if="repo.description"
+      class="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+    >
+      {{ repo.description }}
+    </p>
 
-      <div class="project-links">
-        <span class="project-link">View on GitHub</span>
-      </div>
+    <div
+      class="mt-4 flex items-center justify-between font-mono text-xs text-slate-500 dark:text-slate-400"
+    >
+      <span v-if="repo.language" class="flex items-center gap-1.5 font-semibold">
+        <span
+          class="inline-block h-3 w-3 shrink-0 rounded-full"
+          :style="{ background: getLanguageColor(repo.language) }"
+        ></span>
+        {{ repo.language }}
+      </span>
+      <span class="flex gap-4">
+        <span class="flex items-center gap-1">
+          <svg
+            class="h-3.5 w-3.5 opacity-70"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <polygon
+              points="8 1 10.5 6 16 6.5 12 10.5 13 16 8 13 3 16 4 10.5 0 6.5 5.5 6 8 1"
+            ></polygon>
+          </svg>
+          {{ repo.stars }}
+        </span>
+        <span class="flex items-center gap-1">
+          <svg
+            class="h-3.5 w-3.5 opacity-70"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
+            ></path>
+          </svg>
+          {{ repo.forks }}
+        </span>
+      </span>
+    </div>
+
+    <div
+      class="mt-auto pt-4 text-sm font-medium text-primary-600 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300"
+    >
+      View on GitHub
     </div>
   </a>
 </template>
@@ -75,127 +88,3 @@ interface Props {
 
 defineProps<Props>()
 </script>
-
-<style scoped>
-.repo-card-enhanced {
-  display: block;
-  background: var(--card-bg);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
-  text-decoration: none;
-  color: inherit;
-}
-
-.repo-card-enhanced:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--card-hover-shadow);
-  border-color: var(--primary-400);
-}
-
-.project-content {
-  padding: var(--space-6, 1.5rem);
-}
-
-.project-title {
-  font-size: var(--font-size-xl, 1.25rem);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--primary-600, #2563eb);
-  margin: 0 0 var(--space-3, 0.75rem) 0;
-}
-
-.project-description {
-  color: var(--text-secondary, #475569);
-  line-height: 1.6;
-  margin: 0 0 var(--space-4, 1rem) 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 0.9375rem;
-}
-
-.repo-meta-enhanced {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4, 1rem);
-  font-size: 0.875rem;
-  color: var(--text-tertiary, #64748b);
-}
-
-.repo-language {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-weight: 600;
-}
-
-.language-dot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.repo-stats {
-  display: flex;
-  gap: 1rem;
-}
-
-.repo-stat {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.repo-stat svg {
-  width: 14px;
-  height: 14px;
-  opacity: 0.7;
-}
-
-.project-links {
-  display: flex;
-  gap: var(--space-4, 1rem);
-}
-
-.project-link {
-  color: var(--primary-600, #2563eb);
-  font-weight: var(--font-weight-medium, 500);
-  font-size: 0.875rem;
-  transition: color 0.2s ease;
-}
-
-.repo-card-enhanced:hover .project-link {
-  color: var(--primary-700, #1d4ed8);
-}
-
-/* Dark mode overrides. Card surface, borders, descriptions, meta, and
-   link color all use semantic tokens that swap via variables.css —
-   redundant blocks have been removed. The orphan .repo-language override
-   (no light counterpart) was inverting visual hierarchy between themes
-   and is also gone. The remaining hover-color shift to --primary-400 is
-   a real dark-mode-only treatment. */
-[data-theme='dark'] .project-title,
-[data-theme='dark'] .project-link {
-  color: var(--link-color);
-}
-
-[data-theme='dark'] .repo-card-enhanced:hover .project-link {
-  color: var(--primary-400);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .repo-card-enhanced {
-    transition: none;
-  }
-
-  .repo-card-enhanced:hover {
-    transform: none;
-  }
-}
-</style>

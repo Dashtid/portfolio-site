@@ -15,7 +15,9 @@
         <ThreeHeroBackground :key="isDark ? 'dark' : 'light'" :is-dark="isDark" />
 
         <div class="relative z-[2] mx-auto max-w-3xl px-6 text-center">
-          <p class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500">
+          <p
+            class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400"
+          >
             Portfolio — 2026
           </p>
 

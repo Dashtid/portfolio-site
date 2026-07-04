@@ -66,8 +66,9 @@ describe('GitHubStats', () => {
     const wrapper = mount(GitHubStats)
     await flushPromises()
 
-    expect(wrapper.find('.project-title').text()).toBe('cool-repo')
-    expect(wrapper.find('.project-description').text()).toBe('A cool repo')
+    // RepoCard renders name as h3 and description as p (Tailwind card, S3)
+    expect(wrapper.find('.project-card h3').text()).toBe('cool-repo')
+    expect(wrapper.find('.project-card p').text()).toBe('A cool repo')
   })
 
   it('renders top languages with percentages', async () => {

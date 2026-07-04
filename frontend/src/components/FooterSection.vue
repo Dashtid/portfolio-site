@@ -60,7 +60,8 @@
         aria-hidden="true"
       ></div>
 
-      <p class="footer-copyright text-xs text-slate-500 dark:text-slate-500">
+      <!-- dark:text-slate-400 — slate-500 on slate-950 fails WCAG AA at this size -->
+      <p class="footer-copyright text-xs text-slate-500 dark:text-slate-400">
         &copy; {{ currentYear }} David Dashti. All rights reserved.
       </p>
     </div>

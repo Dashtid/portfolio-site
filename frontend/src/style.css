@@ -1,240 +1,233 @@
-/* Import design system variables */
+/* Establish Tailwind's canonical layer order up front. main.ts imports this
+   file BEFORE tailwind.css, so the first @layer statement the browser sees
+   must already agree with the order `@import 'tailwindcss'` declares —
+   otherwise whichever layer name appears first would jump the queue.
+
+   CRITICAL CASCADE RULE (the root cause of a site-wide bug fixed in S3):
+   unlayered author CSS beats every layered rule regardless of specificity,
+   and all Tailwind utilities live in the utilities layer. Any rule added
+   to this file OUTSIDE a layer block silently overrides every Tailwind
+   utility on every element it matches — the old unlayered universal
+   margin/padding reset disabled all padding, margin and gap utilities
+   across the whole site. Always wrap additions in @layer base (elements)
+   or @layer components (class hooks). */
+@layer theme, base, components, utilities;
+
+/* Import design system variables (tokens stay unlayered on purpose —
+   nothing competes with custom-property definitions) */
 @import './styles/variables.css';
 
-/* Global Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@layer base {
+  /* No universal margin/padding reset here: Tailwind preflight (also in
+     @layer base, emitted later) already zeroes margins/paddings and sets
+     border-box on everything. */
 
-/* Base Styles */
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-  scroll-padding-top: var(--navbar-height, 72px);
-}
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--navbar-height, 72px);
+  }
 
-/* Custom Selection Color */
-::selection {
-  background: rgba(59, 130, 246, 0.2);
-  color: inherit;
-}
+  /* Custom Selection Color */
+  ::selection {
+    background: rgba(59, 130, 246, 0.2);
+    color: inherit;
+  }
 
-[data-theme='dark'] ::selection {
-  background: rgba(96, 165, 250, 0.3);
-}
+  [data-theme='dark'] ::selection {
+    background: rgba(96, 165, 250, 0.3);
+  }
 
-body {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-base);
-  color: var(--text-primary);
-  background-color: var(--bg-primary);
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-/* Typography. Color uses --text-primary (theme-aware) so headings without
-   an explicit Tailwind text-* utility still flip with data-theme. The
-   former hardcoded --color-gray-900 / --color-gray-100 pair bypassed the
-   semantic token cascade. */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-family-display, inherit);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.1;
-  letter-spacing: var(--letter-spacing-tight, -0.025em);
-  color: var(--text-primary);
-}
+  /* Typography. Color uses --text-primary (theme-aware) so headings without
+     an explicit Tailwind text-* utility still flip with data-theme. These
+     are defaults for unstyled content — any text or font utility wins. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-family-display, inherit);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.1;
+    letter-spacing: var(--letter-spacing-tight, -0.025em);
+    color: var(--text-primary);
+  }
 
-h1 {
-  font-size: var(--font-size-4xl);
-}
-h2 {
-  font-size: var(--font-size-3xl);
-}
-h3 {
-  font-size: var(--font-size-2xl);
-}
-h4 {
-  font-size: var(--font-size-xl);
-}
-h5 {
-  font-size: var(--font-size-lg);
-}
-h6 {
-  font-size: var(--font-size-base);
-}
+  h1 {
+    font-size: var(--font-size-4xl);
+  }
+  h2 {
+    font-size: var(--font-size-3xl);
+  }
+  h3 {
+    font-size: var(--font-size-2xl);
+  }
+  h4 {
+    font-size: var(--font-size-xl);
+  }
+  h5 {
+    font-size: var(--font-size-lg);
+  }
+  h6 {
+    font-size: var(--font-size-base);
+  }
 
-p {
-  margin-bottom: var(--spacing-4);
-}
+  /* No global p margin: it inflated gaps in every card/list where the
+     design controls rhythm with mt-* utilities. Long-form content should
+     opt in locally (e.g. a .prose-style rule). */
 
-/* Links. Underline appears on hover only; force-underlining every link
-   site-wide fought every Tailwind-styled nav/card link. Content links can
-   opt back in with an explicit `underline` utility or a .prose-style rule. */
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-  text-underline-offset: 2px;
-  transition: color var(--transition-fast);
-}
+  /* Links. Underline appears on hover only; content links can opt out with
+     the `no-underline` utility (utilities layer always wins over base). */
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    text-underline-offset: 2px;
+    transition: color var(--transition-fast);
+  }
 
-a:hover {
-  color: var(--color-primary-dark);
-  text-decoration: underline;
-}
+  a:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+  }
 
-a:focus-visible {
-  outline: 2px solid var(--color-primary, #3b82f6);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
   a:focus-visible {
-    transition: outline-offset 0.15s var(--ease-smooth, ease);
+    outline: 2px solid var(--color-primary, #3b82f6);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a:focus-visible {
+      transition: outline-offset 0.15s var(--ease-smooth, ease);
+    }
+  }
+
+  /* Buttons carry NO global visual identity — every button in the app
+     styles itself (scoped CSS or utilities). The old global blue
+     background + padding painted unstyled chrome (e.g. the mobile
+     hamburger) as primary CTAs. Only ergonomics live here. */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--color-primary, #3b82f6);
+    outline-offset: 2px;
+  }
+
+  /* Form inputs. Use semantic tokens that already swap via
+     [data-theme='dark'] in variables.css, so a single rule covers both
+     modes. */
+  input,
+  textarea,
+  select {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--input-placeholder);
+    opacity: 1;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px var(--color-primary-alpha-20);
+  }
+
+  /* App Root */
+  #app {
+    min-height: 100vh;
   }
 }
 
-/* Buttons */
-button {
-  font-family: inherit;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  padding: var(--spacing-3) var(--spacing-6);
-  border-radius: var(--radius-lg);
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition:
-    background 0.2s var(--ease-smooth, ease),
-    transform 0.2s var(--ease-smooth, ease),
-    box-shadow 0.2s var(--ease-smooth, ease);
-  background: var(--color-primary);
-  color: white;
+@layer components {
+  /* Container — fixed 1200px max-width. Single source of truth for legacy
+     class hooks still in admin views; do not redefine elsewhere. */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-4);
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 var(--spacing-3);
+    }
+  }
+
+  /* Loading Spinner */
+  .loading-spinner {
+    border: 3px solid var(--color-gray-200);
+    border-top: 3px solid var(--color-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: var(--spacing-8) auto;
+  }
+
+  /* Skeleton Shimmer Utility */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-gray-200) 25%,
+      var(--color-gray-100) 50%,
+      var(--color-gray-200) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md, 0.375rem);
+  }
+
+  [data-theme='dark'] .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-gray-700) 25%,
+      var(--color-gray-600) 50%,
+      var(--color-gray-700) 75%
+    );
+    background-size: 200% 100%;
+  }
+
+  /* Respect reduced motion preference for shimmer */
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer {
+      animation: none;
+      background: var(--color-gray-200);
+    }
+
+    [data-theme='dark'] .skeleton-shimmer {
+      background: var(--color-gray-700);
+    }
+  }
 }
 
-button:hover {
-  background: var(--color-primary-dark);
-  transform: scale(1.02);
-  box-shadow: var(--shadow-md);
-}
-
-button:focus {
-  outline: 2px solid var(--color-primary, #3b82f6);
-  outline-offset: 2px;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background: var(--color-gray-400, #94a3b8);
-  border-color: var(--color-gray-400, #94a3b8);
-}
-
-button:focus-visible {
-  outline: 2px solid var(--color-primary, #3b82f6);
-  outline-offset: 2px;
-}
-
-/* Dark mode disabled button */
-[data-theme='dark'] button:disabled {
-  background: var(--color-gray-600, #475569);
-  border-color: var(--color-gray-500, #64748b);
-  color: var(--text-tertiary, #94a3b8);
-  opacity: 0.85;
-}
-
-/* Form inputs. Use semantic tokens that already swap via [data-theme='dark']
-   in variables.css, so a single rule covers both modes. The previous code
-   shipped dark-only rules with no light-mode counterpart, leaving light
-   forms to UA defaults. */
-input,
-textarea,
-select {
-  background-color: var(--input-bg);
-  border: 1px solid var(--input-border);
-  color: var(--input-text);
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--input-placeholder);
-  opacity: 1;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--input-focus-border);
-  box-shadow: 0 0 0 3px var(--color-primary-alpha-20);
-}
-
-/* Container — fixed 1200px max-width. Single source of truth for legacy
-   class hooks still in admin views; do not redefine elsewhere. */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-4);
-}
-
-/* App Root */
-#app {
-  min-height: 100vh;
-}
-
-/* Utility Classes */
-.text-center {
-  text-align: center;
-}
-.text-left {
-  text-align: left;
-}
-.text-right {
-  text-align: right;
-}
-
-.mt-4 {
-  margin-top: var(--spacing-4);
-}
-.mt-8 {
-  margin-top: var(--spacing-8);
-}
-.mb-4 {
-  margin-bottom: var(--spacing-4);
-}
-.mb-8 {
-  margin-bottom: var(--spacing-8);
-}
-
-.p-4 {
-  padding: var(--spacing-4);
-}
-.p-8 {
-  padding: var(--spacing-8);
-}
-
-/* Loading Spinner */
-.loading-spinner {
-  border: 3px solid var(--color-gray-200);
-  border-top: 3px solid var(--color-primary);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: var(--spacing-8) auto;
-}
-
+/* Keyframes are not layer-sensitive; keep them top-level. */
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -242,29 +235,6 @@ select:focus {
   100% {
     transform: rotate(360deg);
   }
-}
-
-/* Skeleton Shimmer Utility */
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--color-gray-200) 25%,
-    var(--color-gray-100) 50%,
-    var(--color-gray-200) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-md, 0.375rem);
-}
-
-[data-theme='dark'] .skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--color-gray-700) 25%,
-    var(--color-gray-600) 50%,
-    var(--color-gray-700) 75%
-  );
-  background-size: 200% 100%;
 }
 
 @keyframes shimmer {
@@ -276,31 +246,8 @@ select:focus {
   }
 }
 
-/* Respect reduced motion preference for shimmer */
-@media (prefers-reduced-motion: reduce) {
-  .skeleton-shimmer {
-    animation: none;
-    background: var(--color-gray-200);
-  }
-
-  [data-theme='dark'] .skeleton-shimmer {
-    background: var(--color-gray-700);
-  }
-}
-
-/* Dark Mode. The body and heading overrides are now redundant — the base
-   rules use --bg-primary and --text-primary, which already swap via
-   [data-theme='dark'] in variables.css. The former asymmetric gradient
-   (light: solid, dark: gradient) caused visible banding at wide viewports;
-   keeping a single solid surface makes both modes symmetric. */
-
-/* Responsive */
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
-
-  .container {
-    padding: 0 var(--spacing-3);
-  }
-}
+/* The old mobile `html { font-size: 14px }` override is gone: rescaling the
+   root rem resized every rem-based Tailwind utility to 87.5% below 768px,
+   fighting the responsive sm:/lg: variants that already handle small
+   screens. Utility clones (.text-center, .mt-4, .p-8, ...) are gone too —
+   Tailwind generates the identical class names with identical values. */
