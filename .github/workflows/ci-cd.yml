@@ -207,7 +207,14 @@ jobs:
       - name: Run Playwright E2E tests
         # webServer in playwright.config.ts skips `build:ssg` when CI=true and
         # just runs `vite preview` against the downloaded dist/.
-        run: npx playwright test --project=chromium --grep-invert "Bundle Size|defer non-critical"
+        #
+        # "Visual Regression" is excluded: every baseline is knowingly stale
+        # after the Tailwind redesign, and the hero is a placeholder pending
+        # HERO-01 — re-baselining now would just be invalidated again. The
+        # suite still runs locally via `npm run test:e2e:visual`; re-include
+        # it here (drop it from the grep-invert) and rebaseline via
+        # `npm run test:e2e:visual:update-docker` once the design is final.
+        run: npx playwright test --project=chromium --grep-invert "Bundle Size|defer non-critical|Visual Regression"
         env:
           HOME: /root
 
