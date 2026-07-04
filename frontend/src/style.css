@@ -1,20 +1,30 @@
-/* Establish Tailwind's canonical layer order up front. main.ts imports this
-   file BEFORE tailwind.css, so the first @layer statement the browser sees
-   must already agree with the order `@import 'tailwindcss'` declares —
-   otherwise whichever layer name appears first would jump the queue.
+/* Tailwind's canonical layer order, including its lowest-priority
+   `properties` layer. main.ts imports tailwind.css BEFORE this file, so
+   Tailwind has already declared this order — restating it here is a
+   guard against the import order ever being flipped (whichever statement
+   the browser sees first fixes the order).
 
-   CRITICAL CASCADE RULE (the root cause of a site-wide bug fixed in S3):
-   unlayered author CSS beats every layered rule regardless of specificity,
-   and all Tailwind utilities live in the utilities layer. Any rule added
-   to this file OUTSIDE a layer block silently overrides every Tailwind
-   utility on every element it matches — the old unlayered universal
-   margin/padding reset disabled all padding, margin and gap utilities
-   across the whole site. Always wrap additions in @layer base (elements)
-   or @layer components (class hooks). */
-@layer theme, base, components, utilities;
+   TWO CASCADE RULES THIS FILE DEPENDS ON (both bit us in S3):
+   1. Unlayered author CSS beats every layered rule regardless of
+      specificity, and all Tailwind utilities live in the utilities
+      layer. Any rule added here OUTSIDE a layer block silently overrides
+      every Tailwind utility it matches — the old unlayered universal
+      margin/padding reset disabled all padding/margin/gap utilities
+      across the whole site.
+   2. Within ONE layer, later source order wins ties. Tailwind preflight
+      also lives in @layer base and resets h1-h6/a/input aggressively, so
+      this file's element defaults only work because tailwind.css is
+      imported first in main.ts. Do not reorder the imports.
+   Wrap additions in @layer base (element defaults) or @layer components
+   (class hooks). */
+@layer properties, theme, base, components, utilities;
 
-/* Import design system variables (tokens stay unlayered on purpose —
-   nothing competes with custom-property definitions) */
+/* Design-system tokens. NOTE: variables.css is unlayered and a couple of
+   dozen of its :root token names collide with Tailwind v4 theme variables
+   (--radius-sm..2xl, --color-gray-*) — the legacy values win, so e.g.
+   rounded-2xl resolves to 1.25rem instead of Tailwind's 1rem. The site is
+   internally consistent on the legacy values; renaming the colliding
+   tokens is queued for the S4 pruning sprint. */
 @import './styles/variables.css';
 
 @layer base {
@@ -166,19 +176,10 @@
 }
 
 @layer components {
-  /* Container — fixed 1200px max-width. Single source of truth for legacy
-     class hooks still in admin views; do not redefine elsewhere. */
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-4);
-  }
-
-  @media (max-width: 768px) {
-    .container {
-      padding: 0 var(--spacing-3);
-    }
-  }
+  /* No .container rule: nothing in the app uses a bare `container` class
+     (admin views use login-container/stats-container etc.), and Tailwind
+     generates its own .container utility that would outrank a components-
+     layer clone anyway. */
 
   /* Loading Spinner */
   .loading-spinner {

@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import axios from 'axios'
 import { apiLogger } from '../utils/logger'
@@ -74,6 +74,8 @@ const props = withDefaults(defineProps<Props>(), {
   username: config.github.username
 })
 
+const emit = defineEmits<{ loaded: [] }>()
+
 const stats = ref<GitHubStatsData | null>(null)
 const loading = ref<boolean>(true)
 const error = ref<boolean>(false)
@@ -102,6 +104,10 @@ const fetchGitHubStats = async (): Promise<void> => {
       { signal: abortController.signal }
     )
     stats.value = response.data
+    // Let the parent re-scan entrance animations now the repo cards exist
+    // in the DOM (HomeView registers .project-card before this fetch lands).
+    await nextTick()
+    emit('loaded')
   } catch (err) {
     // Aborted requests on unmount don't count as errors
     if (axios.isCancel(err)) {

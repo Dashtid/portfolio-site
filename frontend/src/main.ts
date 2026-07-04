@@ -6,8 +6,15 @@ import type { RouteLocationNormalized } from 'vue-router'
 import { routes, scrollBehavior, DEFAULT_TITLE } from './router'
 import { createAdminAuthGuard } from './router/authGuard'
 import '@fontsource-variable/geist'
-import './style.css'
+// Order matters: tailwind.css MUST come first. style.css's element
+// defaults share @layer base with Tailwind preflight, and within a layer
+// later source order wins ties — imported the other way round, preflight
+// (h1-h6 font-size:inherit, a color:inherit, input background:transparent)
+// silently kills every element default in style.css. This order also keeps
+// Tailwind's own `properties` layer lowest-priority, as its runtime
+// fallback for non-@property browsers requires.
 import './styles/tailwind.css'
+import './style.css'
 import App from './App.vue'
 import analyticsService from './services/analytics'
 import { errorTracker } from './utils/errorTracking'

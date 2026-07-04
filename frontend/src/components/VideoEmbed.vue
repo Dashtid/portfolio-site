@@ -63,9 +63,10 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
 </script>
 
 <style scoped>
-.video-embed {
-  margin-bottom: 2rem;
-}
+/* No margin here: the parent media-section grid owns spacing (mb-12 +
+   gap-6). A scoped margin-bottom cannot collapse out of a grid cell and
+   double-spaced the section while spacing utilities were rediscovered
+   in S3. */
 
 .video-heading {
   font-size: 1.5rem;

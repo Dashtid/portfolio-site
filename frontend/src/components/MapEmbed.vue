@@ -49,9 +49,10 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps
 </script>
 
 <style scoped>
-.map-embed {
-  margin-bottom: 2rem;
-}
+/* No margin here: the parent media-section grid owns spacing (mb-12 +
+   gap-6). A scoped margin-bottom cannot collapse out of a grid cell and
+   double-spaced the section while spacing utilities were rediscovered
+   in S3. */
 
 .map-heading {
   font-size: 1.5rem;

@@ -101,7 +101,7 @@
 
                 <router-link
                   :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
-                  class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                 >
                   <!-- sr-only suffix: distinct link text per card, for screen
                        readers and the Lighthouse link-text audit alike -->
@@ -286,7 +286,7 @@
                   :href="edu.certificate_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                   :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
                 >
                   View certificate
@@ -341,7 +341,7 @@
                   href="https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400"
+                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                   aria-label="View Security+ certificate from CompTIA (opens in new tab)"
                 >
                   View certificate
@@ -553,7 +553,7 @@
           </header>
 
           <!-- GitHub Stats with Featured Projects -->
-          <GitHubStats username="Dashtid" />
+          <GitHubStats username="Dashtid" @loaded="projectCardAnimation.refresh()" />
         </div>
       </section>
 
@@ -814,7 +814,9 @@ const getDetailLinkId = (company: { id: string; name: string; start_date: string
 // so that batch is re-scanned via refresh() once the data is in the DOM.
 useIntersectionAnimation('.experience-card', { stagger: 0.12 })
 useIntersectionAnimation('.education-card', { stagger: 0.12 })
-useIntersectionAnimation('.project-card', { stagger: 0.12 })
+// Repo cards render only after GitHubStats' lazy fetch resolves —
+// re-scanned via @loaded on the <GitHubStats> tag, like document cards.
+const projectCardAnimation = useIntersectionAnimation('.project-card', { stagger: 0.12 })
 const documentCardAnimation = useIntersectionAnimation('.document-card', { stagger: 0.12 })
 useIntersectionAnimation('.section-title', { stagger: 0 })
 
@@ -857,12 +859,23 @@ onMounted(async () => {
  * across element boundaries (the data attribute lives on cards rendered
  * by child components).
  */
+/* Transition lives on [data-anim] (both states): CSS transitions run from
+   the AFTER-change style, so a transition declared only on the hidden
+   state makes the reveal snap. border/bg/color are included so cards
+   whose transition-colors utility this rule overrides (scoped beats the
+   utilities layer) keep their hover feedback. */
+:deep([data-anim]) {
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
 :deep([data-anim='hidden']) {
   opacity: 0;
   transform: translate3d(0, 30px, 0);
-  transition:
-    opacity 0.5s ease-out,
-    transform 0.5s ease-out;
   will-change: opacity, transform;
 }
 
@@ -873,8 +886,7 @@ onMounted(async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :deep([data-anim='hidden']),
-  :deep([data-anim='visible']) {
+  :deep([data-anim]) {
     transition: none !important;
     transform: none !important;
   }
