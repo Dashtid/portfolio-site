@@ -10,13 +10,13 @@
            replace this with a properly art-directed treatment. -->
       <section
         id="hero"
-        class="hero-section relative flex min-h-[85vh] items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
+        class="hero-section relative flex min-h-[60vh] items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
       >
         <ThreeHeroBackground :key="isDark ? 'dark' : 'light'" :is-dark="isDark" />
 
         <div class="relative z-[2] mx-auto max-w-3xl px-6 text-center">
           <p
-            class="mb-10 font-mono text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400"
+            class="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400"
           >
             Portfolio — 2026
           </p>
@@ -28,7 +28,7 @@
           </h1>
 
           <p
-            class="custom-hero-lead mx-auto mt-12 max-w-2xl text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
+            class="custom-hero-lead mx-auto mt-6 max-w-2xl text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
           >
             Stockholm, Sweden
           </p>
@@ -45,9 +45,9 @@
       </div>
 
       <!-- Experience Section -->
-      <section id="experience" class="bg-white py-40 dark:bg-slate-950">
+      <section id="experience" class="bg-white py-16 md:py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-20">
+          <header class="mb-10 md:mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -218,9 +218,9 @@
       </section>
 
       <!-- Education Section -->
-      <section id="education" class="bg-slate-50 py-40 dark:bg-slate-900/40">
+      <section id="education" class="bg-slate-50 py-16 md:py-24 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-20">
+          <header class="mb-10 md:mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -511,9 +511,9 @@
       </section>
 
       <!-- Publications/Research Section -->
-      <section id="publications" class="bg-white py-40 dark:bg-slate-950">
+      <section id="publications" class="bg-white py-16 md:py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-20">
+          <header class="mb-10 md:mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -542,9 +542,9 @@
       </section>
 
       <!-- Projects Section -->
-      <section id="projects" class="bg-slate-50 py-40 dark:bg-slate-900/40">
+      <section id="projects" class="bg-slate-50 py-16 md:py-24 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-20">
+          <header class="mb-10 md:mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -558,9 +558,9 @@
       </section>
 
       <!-- About Section -->
-      <section id="about" class="bg-white py-40 dark:bg-slate-950">
+      <section id="about" class="bg-white py-16 md:py-24 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-20">
+          <header class="mb-10 md:mb-12">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -607,7 +607,7 @@
                 highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
                 EU AI Act).
               </p>
-              <div class="mt-20">
+              <div class="mt-12">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
@@ -644,7 +644,7 @@
                   </li>
                 </ul>
               </div>
-              <div class="mt-20">
+              <div class="mt-12">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
@@ -655,7 +655,7 @@
                   Git
                 </p>
               </div>
-              <p class="mt-20 leading-relaxed">
+              <p class="mt-12 leading-relaxed">
                 I am passionate about making healthcare technology safer and more trustworthy by
                 protecting patient data, ensuring system integrity, and helping organizations
                 navigate the Cybersecurity &amp; AI regulatory landscape.

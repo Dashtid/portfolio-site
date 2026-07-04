@@ -51,7 +51,7 @@
         <!-- Media Section: Video and Map (side-by-side on desktop) -->
         <div
           v-if="company.video_url || company.map_url"
-          class="media-section mb-12 grid gap-6 md:grid-cols-2"
+          class="media-section mb-10 grid gap-6 md:grid-cols-2"
         >
           <!-- YouTube Video -->
           <div v-if="company.video_url">
@@ -73,7 +73,7 @@
         </div>
 
         <!-- Company Information -->
-        <section class="experience-section mb-12">
+        <section class="experience-section mb-10">
           <header class="flex items-start gap-5">
             <img
               v-if="company.logo_url && !logoError"
@@ -163,7 +163,7 @@
         </section>
 
         <!-- Description -->
-        <section class="experience-section mb-12">
+        <section class="experience-section mb-10">
           <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
             About {{ company.name }}
           </h2>
@@ -174,7 +174,7 @@
         </section>
 
         <!-- Detailed Description -->
-        <section v-if="company.detailed_description" class="experience-section mb-12">
+        <section v-if="company.detailed_description" class="experience-section mb-10">
           <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Role &amp; Responsibilities
           </h2>
@@ -187,7 +187,7 @@
         <!-- Responsibilities List -->
         <section
           v-if="company.responsibilities && company.responsibilities.length > 0"
-          class="experience-section mb-12"
+          class="experience-section mb-10"
         >
           <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Key Responsibilities
@@ -210,7 +210,7 @@
         <!-- Technologies -->
         <section
           v-if="company.technologies && company.technologies.length > 0"
-          class="experience-section mb-12"
+          class="experience-section mb-10"
         >
           <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Technologies &amp; Tools
@@ -228,7 +228,7 @@
 
         <!-- Back Navigation -->
         <div
-          class="experience-back-nav border-top mt-16 border-t border-slate-200 pt-8 dark:border-slate-800"
+          class="experience-back-nav border-top mt-12 border-t border-slate-200 pt-8 dark:border-slate-800"
         >
           <router-link
             to="/"
