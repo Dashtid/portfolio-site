@@ -16,7 +16,7 @@
 
         <div class="relative z-[2] mx-auto max-w-3xl px-6 text-center">
           <p
-            class="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400"
+            class="mb-6 font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
           >
             Portfolio — 2026
           </p>
@@ -592,7 +592,7 @@
                 />
               </picture>
             </div>
-            <div class="text-slate-600 dark:text-slate-300">
+            <div class="max-w-[65ch] text-slate-600 dark:text-slate-300">
               <p
                 class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >

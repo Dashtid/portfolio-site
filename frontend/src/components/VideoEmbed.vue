@@ -69,10 +69,15 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
    in S3. */
 
 .video-heading {
-  font-size: 1.5rem;
-  font-weight: 600;
+  /* Mono section-label recipe (matches the detail page's h2 labels) —
+     the old 1.5rem/600 caption out-shouted the page h1. */
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
   margin-bottom: 1rem;
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .ratio {
@@ -89,13 +94,6 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
   border: none;
   width: 100%;
   height: 100%;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .video-heading {
-    font-size: 1.25rem;
-  }
 }
 
 /* Fallback UI when video cannot be loaded. Uses semantic tokens that

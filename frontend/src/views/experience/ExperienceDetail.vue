@@ -48,36 +48,10 @@
 
       <!-- Company Details -->
       <article v-else-if="company" class="mx-auto max-w-4xl px-6 py-12">
-        <!-- Media Section: Video and Map (side-by-side on desktop) -->
-        <!-- Two columns only when BOTH embeds exist; a lone embed gets a
-             centered, capped width instead of half the grid sitting empty. -->
-        <div
-          v-if="company.video_url || company.map_url"
-          class="media-section mb-10 grid gap-6"
-          :class="
-            company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:mx-auto md:max-w-xl'
-          "
-        >
-          <!-- YouTube Video -->
-          <div v-if="company.video_url">
-            <VideoEmbed
-              :url="company.video_url"
-              :heading="company.video_title || `${company.name} Video`"
-              :title="company.video_title || `${company.name} Video`"
-            />
-          </div>
-
-          <!-- Google Maps -->
-          <div v-if="company.map_url">
-            <MapEmbed
-              :url="company.map_url"
-              :heading="company.map_title || `${company.name} Location`"
-              :title="company.map_title || `${company.name} Location Map`"
-            />
-          </div>
-        </div>
-
-        <!-- Company Information -->
+        <!-- Company Information — identity leads: logo, role, and dates
+             come before any third-party embed (the media grid used to sit
+             first, pushing the h1 below the fold on mobile and putting the
+             embed captions ahead of it in the document outline). -->
         <section class="experience-section mb-10">
           <header class="flex items-start gap-5">
             <img
@@ -89,7 +63,7 @@
             />
             <div class="min-w-0 flex-1">
               <p
-                class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
               >
                 {{ company.name }}
               </p>
@@ -167,24 +141,55 @@
           </div>
         </section>
 
+        <!-- Media: video and map (side-by-side on desktop). Two columns
+             only when BOTH embeds exist; a lone embed gets a centered,
+             capped width instead of half the grid sitting empty. -->
+        <div
+          v-if="company.video_url || company.map_url"
+          class="media-section mb-10 grid gap-6"
+          :class="
+            company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:mx-auto md:max-w-xl'
+          "
+        >
+          <div v-if="company.video_url">
+            <VideoEmbed
+              :url="company.video_url"
+              :heading="company.video_title || `${company.name} Video`"
+              :title="company.video_title || `${company.name} Video`"
+            />
+          </div>
+
+          <div v-if="company.map_url">
+            <MapEmbed
+              :url="company.map_url"
+              :heading="company.map_title || `${company.name} Location`"
+              :title="company.map_title || `${company.name} Location Map`"
+            />
+          </div>
+        </div>
+
         <!-- Description -->
         <section class="experience-section mb-10">
-          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+          >
             About {{ company.name }}
           </h2>
           <div
-            class="prose-content mt-4 space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
+            class="prose-content mt-4 max-w-prose space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
             v-html="formatDescription(company.description)"
           ></div>
         </section>
 
         <!-- Detailed Description -->
         <section v-if="company.detailed_description" class="experience-section mb-10">
-          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+          >
             Role &amp; Responsibilities
           </h2>
           <div
-            class="prose-content mt-4 space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
+            class="prose-content mt-4 max-w-prose space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
             v-html="formatDescription(company.detailed_description)"
           ></div>
         </section>
@@ -194,10 +199,12 @@
           v-if="company.responsibilities && company.responsibilities.length > 0"
           class="experience-section mb-10"
         >
-          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+          >
             Key Responsibilities
           </h2>
-          <ul class="mt-4 space-y-3">
+          <ul class="mt-4 max-w-prose space-y-3">
             <li
               v-for="(responsibility, index) in company.responsibilities"
               :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
@@ -217,7 +224,9 @@
           v-if="company.technologies && company.technologies.length > 0"
           class="experience-section mb-10"
         >
-          <h2 class="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+          >
             Technologies &amp; Tools
           </h2>
           <div class="mt-4 flex flex-wrap gap-2">

@@ -190,7 +190,10 @@
   --input-focus-border: #60a5fa;
 
   /* Component Specific - Dark Mode */
-  --navbar-bg: rgba(15, 23, 42, 0.95);
+  /* Deep enough to read as the same surface as slate-950 pages — the old
+     slate-900 value left the navbar as a permanently lighter band. The
+     scrolled border supplies separation. */
+  --navbar-bg: rgba(2, 6, 23, 0.85);
   --card-bg: #1e293b;
 
   /* Hover tint for global a:hover and button:hover. Light value (#2563eb)
