@@ -98,16 +98,21 @@ async def track_pageview(
         # See app/utils/ip_hash.py for the construction.
         session_id = f"anon_{hash_ip(client_ip)}"
 
-    # The UA header is attacker-sized (it bypasses body-size limits and the
-    # request schema); the column is unbounded Text, so cap it here — 512
-    # chars covers every legitimate browser/bot string.
+    # Truncate to storage width: the schema accepts up to 2048 for
+    # path/referrer (long UTM URLs are real traffic worth recording) but
+    # the columns are String(500), and Postgres raises 22001 on overflow —
+    # turning this unauthenticated beacon into a 500. The UA header is
+    # attacker-sized (it bypasses body-size limits and the request
+    # schema), so cap it before the unbounded Text column.
+    page_path = page_view.page_path[:500]
+    referrer = page_view.referrer[:500] if page_view.referrer else None
     user_agent = request.headers.get("User-Agent")
     if user_agent:
         user_agent = user_agent[:512]
 
     db_pageview = PageView(
-        page_path=page_view.page_path,
-        referrer=page_view.referrer,
+        page_path=page_path,
+        referrer=referrer,
         user_agent=user_agent,
         ip_address=hash_ip(client_ip),
         country=None,

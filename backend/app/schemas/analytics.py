@@ -10,13 +10,14 @@ from pydantic import BaseModel, Field
 class PageViewCreate(BaseModel):
     """Schema for creating a page view record."""
 
-    # max_length matches the String(500) columns on PageView — anything
-    # longer used to pass validation and then blow up at INSERT time on
-    # Postgres (value too long, error 22001) from an unauthenticated
-    # endpoint.
-    page_path: str = Field(..., max_length=500)
+    # Generous caps: campaign/UTM URLs legitimately exceed 500 chars, and
+    # rejecting the beacon would lose the visit entirely. Values are
+    # truncated to the String(500) PageView columns at insert (see
+    # track_pageview) — letting them through untruncated raises Postgres
+    # 22001 (value too long) from an unauthenticated endpoint.
+    page_path: str = Field(..., max_length=2048)
     page_title: str | None = Field(None, max_length=512)
-    referrer: str | None = Field(None, max_length=500)
+    referrer: str | None = Field(None, max_length=2048)
     visitor_id: str | None = Field(None, max_length=128)  # Session ID from frontend
 
 

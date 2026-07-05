@@ -52,6 +52,33 @@ class TestTrackPageviewEndpoint:
         assert "id" in data
         assert "timestamp" in data
 
+    def test_track_pageview_truncates_long_values_to_column_width(self, client: TestClient):
+        """Long UTM-style paths/referrers (501-2048 chars) are accepted and
+        stored truncated to the String(500) columns instead of 500-ing at
+        INSERT (Postgres 22001) or dropping the beacon with a 422. The UA
+        header is capped at 512 before the unbounded Text column.
+        """
+        long_path = "/campaign?" + "utm_content=" + "x" * 900
+        long_ref = "https://example.com/?ref=" + "y" * 900
+        response = client.post(
+            "/api/v1/analytics/track/pageview",
+            json={"page_path": long_path, "referrer": long_ref},
+            headers={"User-Agent": "A" * 2000},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["page_path"] == long_path[:500]
+        assert data["referrer"] == long_ref[:500]
+
+    def test_track_pageview_rejects_over_2048(self, client: TestClient):
+        """Beyond the generous 2048 cap the beacon is rejected outright —
+        nothing legitimate is that long."""
+        response = client.post(
+            "/api/v1/analytics/track/pageview",
+            json={"page_path": "/x" + "z" * 2100},
+        )
+        assert response.status_code == 422
+
     def test_track_pageview_without_referrer(self, client: TestClient):
         """Test tracking a page view without referrer."""
         response = client.post(

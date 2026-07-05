@@ -178,6 +178,7 @@ pyvenv.cfg
 # re-include both.
 !backend/scripts/
 !/scripts/
+!frontend/scripts/
 
 # Executables
 *.exe
