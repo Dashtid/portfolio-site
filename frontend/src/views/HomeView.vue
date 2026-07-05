@@ -755,10 +755,21 @@ const portfolioStore = usePortfolioStore()
 // Failures here MUST NOT throw — a throw would fail the entire SSG
 // build over a transient API blip. The static fallback content below
 // carries the page when the API is unreachable.
+//
+// One retry after a short pause: build infrastructure (GitHub runners,
+// Vercel) shares egress IPs and intermittently loses 1-4 of the parallel
+// fetches against the API — a Vercel build shipped with education and
+// skills baked empty while companies and projects succeeded. Since
+// hydrated clients trust the baked payload, a partial bake would
+// otherwise stick for every visitor until the next deploy.
 onServerPrefetch(async () => {
   if (portfolioStore.companies.length === 0) {
     try {
       await portfolioStore.fetchAllData()
+      if (portfolioStore.error) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        await portfolioStore.fetchAllData()
+      }
     } catch (error) {
       logger.error('Portfolio data fetch failed during SSG render:', error)
     }
@@ -849,7 +860,18 @@ useIntersectionAnimation('.about-block', { stagger: 0.12 })
 // Documents live here unconditionally because they're a component-local
 // ref that doesn't flow through __INITIAL_STATE__.
 onMounted(async () => {
-  if (portfolioStore.companies.length === 0) {
+  // Refetch when the baked payload looks incomplete — not just fully
+  // empty. Build-time fetches fail per-collection (a live deploy shipped
+  // education/skills empty next to populated companies/projects), and a
+  // hydrated client trusts whatever was baked, so a partial bake would
+  // otherwise stay partial for every visitor until the next deploy.
+  const bakePartial =
+    portfolioStore.error !== null ||
+    portfolioStore.companies.length === 0 ||
+    portfolioStore.skills.length === 0 ||
+    portfolioStore.projects.length === 0 ||
+    portfolioStore.education.length === 0
+  if (bakePartial) {
     // Fire-and-forget, deliberately not awaited: awaiting would serialize
     // it ahead of the documents fetch below for no benefit.
     Promise.resolve(portfolioStore.fetchAllData()).catch((error: unknown) => {
