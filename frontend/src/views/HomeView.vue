@@ -10,7 +10,7 @@
            replace this with a properly art-directed treatment. -->
       <section
         id="hero"
-        class="hero-section relative flex min-h-[45vh] items-center justify-center overflow-hidden bg-white md:min-h-[60vh] dark:bg-slate-950"
+        class="hero-section relative flex min-h-[45vh] items-center justify-center overflow-hidden bg-white pt-20 md:min-h-[60vh] dark:bg-slate-950"
       >
         <!-- The starfield renders zero visible pixels on the white
              light-mode hero — gate it to dark so light-mode visitors skip
