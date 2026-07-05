@@ -478,9 +478,9 @@ async def refresh_token_endpoint(
 async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> None:
     """Mark every non-revoked refresh-token row for this user as revoked.
 
-    Called from the reuse-detection path. We don't delete rows — keeping
-    them with revoked_at populated lets a future audit trail / sessions
-    admin surface what happened.
+    Called from the reuse-detection path and from logout. We don't delete
+    rows — keeping them with revoked_at populated lets a future audit
+    trail / sessions admin surface what happened.
     """
     if not user_id:
         return
@@ -512,28 +512,23 @@ async def get_current_user_info(request: Request, current_user: CurrentUser):
 @router.post("/logout")
 @limiter.limit(settings.RATE_LIMIT_API)
 async def logout(request: Request, response: Response, db: DbSession):
-    """Logout user by clearing authentication cookies and revoking the
-    server-side refresh-token record for the presented jti.
+    """Logout user by clearing authentication cookies and revoking every
+    live refresh-token record for the user.
 
     Clearing only the cookie would leave the JWT valid until expiry; a
     server-side revoke ensures a copy made before logout can't be replayed
-    back into /refresh.
+    back into /refresh. The revoke is per-USER, not per-jti: tabs share the
+    cookie jar, so the token presented here may already be superseded by a
+    rotation from another tab — revoking only the presented jti would leave
+    the freshly-rotated sibling valid and the user still logged in.
     """
-    # Server-side revoke: decode the presented refresh token (if any) and
-    # mark its jti revoked. Tolerate decode failure — logout should not be
-    # blockable by a malformed/missing cookie.
+    # Tolerate decode failure — logout should not be blockable by a
+    # malformed/missing cookie.
     refresh_token_value = request.cookies.get("refresh_token")
     if refresh_token_value:
         payload = decode_token(refresh_token_value)
         if payload and payload.get("type") == "refresh":
-            presented_jti = payload.get("jti")
-            if presented_jti:
-                stored = (
-                    await db.execute(select(RefreshToken).where(RefreshToken.jti == presented_jti))
-                ).scalar_one_or_none()
-                if stored and not stored.is_revoked():
-                    stored.revoked_at = datetime.now(UTC)
-                    await db.commit()
+            await _revoke_all_for_user(db, payload.get("sub"))
 
     cookie_attrs = _auth_cookie_kwargs()
 

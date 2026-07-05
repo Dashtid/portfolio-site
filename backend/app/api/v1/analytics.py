@@ -98,10 +98,17 @@ async def track_pageview(
         # See app/utils/ip_hash.py for the construction.
         session_id = f"anon_{hash_ip(client_ip)}"
 
+    # The UA header is attacker-sized (it bypasses body-size limits and the
+    # request schema); the column is unbounded Text, so cap it here — 512
+    # chars covers every legitimate browser/bot string.
+    user_agent = request.headers.get("User-Agent")
+    if user_agent:
+        user_agent = user_agent[:512]
+
     db_pageview = PageView(
         page_path=page_view.page_path,
         referrer=page_view.referrer,
-        user_agent=request.headers.get("User-Agent"),
+        user_agent=user_agent,
         ip_address=hash_ip(client_ip),
         country=None,
         session_id=session_id,

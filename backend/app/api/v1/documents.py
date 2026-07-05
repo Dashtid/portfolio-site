@@ -239,6 +239,16 @@ async def upload_document_file(
             detail=f"File exceeds {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB limit",
         )
 
+    # Content sniff: a real PDF starts with "%PDF-". The content-type and
+    # extension gates above are client-claimed and trivially forged; this
+    # is the only check bound to the bytes we actually persist and later
+    # serve back from /media.
+    if not contents.startswith(b"%PDF-"):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="File content is not a valid PDF",
+        )
+
     safe_name = _safe_filename(raw_name)
     # Always prefix with a short UUID so two uploads of the same filename
     # don't clobber each other, even if the admin doesn't notice.

@@ -259,9 +259,9 @@ class TestDocumentsAdminUpload:
     """ADMIN-04: PDF upload endpoint round-trip + rejection cases."""
 
     def _make_pdf_bytes(self, size: int = 64) -> bytes:
-        # Minimal PDF magic + filler. The endpoint accepts the file based
-        # on the MIME type the client claims, not magic-byte sniffing —
-        # tests just need a payload the right shape for size assertions.
+        # Minimal PDF magic + filler. The endpoint sniffs the %PDF- header
+        # (content-type and extension are client-claimed), so every accepted
+        # payload in these tests must carry real PDF magic bytes.
         return b"%PDF-1.4\n" + b"0" * size + b"\n%%EOF"
 
     def test_admin_upload_pdf_succeeds(self, client: TestClient, admin_user_in_db: dict, tmp_path):
@@ -319,6 +319,19 @@ class TestDocumentsAdminUpload:
             headers=admin_user_in_db["headers"],
         )
         assert response.status_code == 415
+
+    def test_upload_rejects_forged_pdf_content(self, client: TestClient, admin_user_in_db: dict):
+        """Right MIME type, right extension, wrong bytes: the magic-byte
+        sniff rejects content that is not actually a PDF, so an executable
+        can't be smuggled onto the /media mount behind a .pdf name.
+        """
+        response = client.post(
+            "/api/v1/documents/upload",
+            files={"file": ("paper.pdf", b"MZ not a pdf", "application/pdf")},
+            headers=admin_user_in_db["headers"],
+        )
+        assert response.status_code == 415
+        assert "not a valid pdf" in response.json()["detail"].lower()
 
     def test_upload_rejects_oversize_file(
         self, client: TestClient, admin_user_in_db: dict, tmp_path

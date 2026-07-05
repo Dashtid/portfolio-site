@@ -487,7 +487,36 @@ class TestRefreshTokenEdgeCases:
 
         replay = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
         assert replay.status_code == 401
-        assert "revoked" in replay.json()["detail"].lower()
+
+    def test_logout_with_stale_cookie_revokes_rotated_sibling(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        """Multi-tab logout: the cookie presented at logout may already be
+        superseded by a rotation from another tab. Logout revokes ALL live
+        tokens for the user, so the freshly-rotated sibling dies too —
+        under the old single-jti revoke it survived and the "logged-out"
+        user stayed authenticated in the other tab.
+        """
+        original = test_user_in_db["refresh_token"]
+
+        # Tab B rotates: original -> rotated.
+        first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert first.status_code == 200
+        rotated = first.cookies.get("refresh_token")
+        assert rotated
+
+        # Tab A logs out still holding the stale original cookie.
+        client.cookies.clear()
+        client.cookies.set("refresh_token", original)
+        logout_response = client.post("/api/v1/auth/logout")
+        assert logout_response.status_code == 200
+
+        # The rotated sibling must be dead as well. (The exact 401 detail
+        # depends on timing: a replay within the rotation grace window says
+        # "superseded", after it "revoked" — both mean the session is gone.)
+        client.cookies.clear()
+        replay = client.post("/api/v1/auth/refresh", json={"refresh_token": rotated})
+        assert replay.status_code == 401
 
 
 class TestGitHubCallbackMocked:

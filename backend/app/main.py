@@ -161,7 +161,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Core security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # "0" per current OWASP guidance: the legacy XSS auditor this header
+        # controlled is gone from modern browsers, and in old ones "1;
+        # mode=block" enabled side channels; CSP is the actual defense.
+        response.headers["X-XSS-Protection"] = "0"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         # Cross-origin isolation headers (OWASP 2025)

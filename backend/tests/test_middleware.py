@@ -706,7 +706,9 @@ class TestSecurityHeadersMiddleware:
 
         assert response.headers.get("X-Content-Type-Options") == "nosniff"
         assert response.headers.get("X-Frame-Options") == "DENY"
-        assert response.headers.get("X-XSS-Protection") == "1; mode=block"
+        # "0" disables the legacy XSS auditor per current OWASP guidance;
+        # CSP is the real defense.
+        assert response.headers.get("X-XSS-Protection") == "0"
         assert "strict-origin" in response.headers.get("Referrer-Policy", "")
 
     def test_permissions_policy_header(self, client: TestClient):

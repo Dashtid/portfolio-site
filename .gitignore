@@ -177,7 +177,7 @@ pyvenv.cfg
 # repo-root scripts/ too on Windows's case-insensitive filesystem —
 # re-include both.
 !backend/scripts/
-!scripts/
+!/scripts/
 
 # Executables
 *.exe

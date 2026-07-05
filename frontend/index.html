@@ -9,7 +9,13 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://dashti.se" />
 
-    <!-- Security (CSP, X-Frame-Options set via HTTP headers from backend) -->
+    <!-- Security headers (CSP, X-Frame-Options, HSTS, ...) come from the
+         Vercel edge — frontend/vercel.json "headers" — NOT the backend.
+         script-src/style-src keep 'unsafe-inline' deliberately: vite-ssg
+         injects a build-varying inline window.__INITIAL_STATE__ script, and
+         adding hashes for the static inline blocks would make browsers
+         ignore 'unsafe-inline' entirely and break hydration. Revisit if the
+         SSG state transfer ever moves out of an inline script. -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <!-- Open Graph / Facebook -->

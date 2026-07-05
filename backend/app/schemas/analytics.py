@@ -10,9 +10,13 @@ from pydantic import BaseModel, Field
 class PageViewCreate(BaseModel):
     """Schema for creating a page view record."""
 
-    page_path: str = Field(..., max_length=2048)
+    # max_length matches the String(500) columns on PageView — anything
+    # longer used to pass validation and then blow up at INSERT time on
+    # Postgres (value too long, error 22001) from an unauthenticated
+    # endpoint.
+    page_path: str = Field(..., max_length=500)
     page_title: str | None = Field(None, max_length=512)
-    referrer: str | None = Field(None, max_length=2048)
+    referrer: str | None = Field(None, max_length=500)
     visitor_id: str | None = Field(None, max_length=128)  # Session ID from frontend
 
 

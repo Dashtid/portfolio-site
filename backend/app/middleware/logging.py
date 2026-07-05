@@ -10,6 +10,7 @@ from collections.abc import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.core.ip_utils import get_client_ip
 from app.utils.logger import get_logger, request_id_var
 
 logger = get_logger(__name__)
@@ -71,7 +72,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "method": request.method,
                     "path": request.url.path,
                     "query_params": dict(request.query_params),
-                    "client_ip": request.client.host if request.client else None,
+                    "client_ip": get_client_ip(request),
                     "user_agent": request.headers.get("user-agent"),
                 },
             )

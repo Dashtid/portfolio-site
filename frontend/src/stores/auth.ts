@@ -70,7 +70,8 @@ export const useAuthStore = defineStore('auth', {
       window.location.href = `${config.apiUrl}/api/v1/auth/github`
     },
 
-    // Logout — backend clears the HTTP-only cookies
+    // Logout — backend clears the HTTP-only cookies and revokes the
+    // server-side refresh tokens
     async logout(): Promise<void> {
       try {
         await apiClient.post('/api/v1/auth/logout')
@@ -78,6 +79,15 @@ export const useAuthStore = defineStore('auth', {
         authLogger.error('Logout error:', error)
       } finally {
         this.user = null
+        // Defense-in-depth: the service worker's api-cache already excludes
+        // auth/admin/analytics/metrics, but if any private endpoint ever
+        // slips past that regex, nothing else would purge it — drop the
+        // whole cache on logout so no API response outlives the session.
+        if (typeof caches !== 'undefined') {
+          caches.delete('api-cache').catch(() => {
+            // CacheStorage unavailable (http, private mode) — nothing cached there anyway.
+          })
+        }
       }
     },
 
