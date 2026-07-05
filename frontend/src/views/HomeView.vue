@@ -698,7 +698,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onServerPrefetch, nextTick, defineAsyncComponent } from 'vue'
 import { usePortfolioStore } from '../stores/portfolio'
 import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
@@ -736,37 +736,34 @@ useHead({
 
 const portfolioStore = usePortfolioStore()
 
-// INFRA-002: fetch portfolio data in setup (BEFORE component renders) so
-// vite-ssg captures the populated Pinia state into __INITIAL_STATE__ and
-// clients see hydrated content immediately. The previous onMounted-based
-// fetch was fire-and-forget during SSG pre-render — vite-ssg serialized
-// the empty store before the fetch resolved, so the rendered HTML
-// shipped real content (from the static fallback) but the hydration
-// payload was empty.
+// INFRA-002: fetch portfolio data during the SSG render so vite-ssg
+// captures the populated Pinia state into __INITIAL_STATE__ and clients
+// see hydrated content immediately. onServerPrefetch is awaited by the
+// server renderer before the HTML is captured, and — unlike the previous
+// top-level `await` — it keeps setup() compiled as a synchronous
+// function.
 //
-// (Tried onServerPrefetch instead to keep setup sync — vite-ssg's
-// renderer doesn't await that hook, so it doesn't populate state.
-// Top-level await + the existing App.vue <Suspense> boundary works.)
+// That distinction is load-bearing: an async setup() under App.vue's
+// route <Transition> made Vue discard the entire prerendered DOM on
+// every page load and re-render it client-side through the transition
+// (a full leave/enter cycle at startup). With a populated
+// __INITIAL_STATE__ the swap was near-atomic; with an empty one (SSG
+// build couldn't reach the API, or e2e where the API is cross-origin)
+// the page went blank until the refetch settled — seconds on slow
+// machines, and the source of the CI-only `h1Count = 0` e2e failure.
 //
-// The guard skips the fetch when the store is already populated, which is
-// the normal client-side case after hydration: SSG ships state via
-// __INITIAL_STATE__, `main.ts` rehydrates it into Pinia before any
-// component runs, and this setup sees a populated store and short-circuits.
-//
-// Failures here MUST NOT throw, because:
-//   - During SSG build, a throw would fail the entire build over a
-//     transient API blip.
-//   - During client hydration, a throw would bubble to <Suspense> and
-//     blank the page rather than gracefully degrade.
-// The static fallback below + the documents fetcher in onMounted carry
-// the user-facing experience when the API is unreachable.
-if (portfolioStore.companies.length === 0) {
-  try {
-    await portfolioStore.fetchAllData()
-  } catch (error) {
-    logger.error('Portfolio data fetch failed in setup:', error)
+// Failures here MUST NOT throw — a throw would fail the entire SSG
+// build over a transient API blip. The static fallback content below
+// carries the page when the API is unreachable.
+onServerPrefetch(async () => {
+  if (portfolioStore.companies.length === 0) {
+    try {
+      await portfolioStore.fetchAllData()
+    } catch (error) {
+      logger.error('Portfolio data fetch failed during SSG render:', error)
+    }
   }
-}
+})
 
 // Computed properties for education from API - sorted by end_date (newest first)
 const education = computed(() => {
@@ -844,10 +841,22 @@ const documentCardAnimation = useIntersectionAnimation('.document-card', { stagg
 useIntersectionAnimation('.section-title', { stagger: 0 })
 useIntersectionAnimation('.about-block', { stagger: 0.12 })
 
-// Load data on mount. Portfolio data is fetched in setup() above
-// (INFRA-002); only the documents fetch lives here, because documents are a
-// component-local ref that doesn't need to flow through __INITIAL_STATE__.
+// Load data on mount. Portfolio data normally arrives via
+// __INITIAL_STATE__ (baked by the onServerPrefetch above); the fetch here
+// is the client-side fallback for an empty hydration payload — it fills
+// the store after mount without blocking hydration, so the prerendered
+// DOM (and its static fallback content) stays on screen while it runs.
+// Documents live here unconditionally because they're a component-local
+// ref that doesn't flow through __INITIAL_STATE__.
 onMounted(async () => {
+  if (portfolioStore.companies.length === 0) {
+    // Fire-and-forget, deliberately not awaited: awaiting would serialize
+    // it ahead of the documents fetch below for no benefit.
+    Promise.resolve(portfolioStore.fetchAllData()).catch((error: unknown) => {
+      logger.error('Portfolio data fetch failed after mount:', error)
+    })
+  }
+
   documentsLoading.value = true
 
   try {

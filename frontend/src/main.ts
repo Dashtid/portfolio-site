@@ -109,7 +109,18 @@ export const createApp = ViteSSG(
         }
       }
     }
-  }
+  },
+  // `hydration: true` is what makes the prerendered HTML real: without it
+  // vite-ssg mounts the client with plain createApp(), which WIPES the
+  // container and re-renders everything from scratch on every page load —
+  // the SSG output was serving as nothing more than a splash screen, and
+  // with an empty __INITIAL_STATE__ the rebuild blocked on the API
+  // refetch, blanking the page (the CI-only `h1Count = 0` e2e failure).
+  // Hydration requires every route component to keep setup() synchronous —
+  // SSR data fetching goes through onServerPrefetch (see
+  // HomeView/ExperienceDetail) — and the client render tree to match the
+  // server HTML exactly.
+  { hydration: true }
 )
 
 // Export includedRoutes so vite-ssg can enumerate routes to pre-render.

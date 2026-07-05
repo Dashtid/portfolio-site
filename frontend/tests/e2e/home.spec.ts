@@ -154,8 +154,33 @@ test.describe('Home Page', () => {
     })
   })
 
+  test.describe('Hydration', () => {
+    test('adopts the prerendered DOM instead of re-rendering it', async ({ page }) => {
+      // Tag the server-rendered h1 before any framework code runs.
+      // Hydration adopts existing elements, so the tag survives; a
+      // hydration bail — or a non-hydrating client mount, as before
+      // vite-ssg's `hydration: true` was set — discards the node and
+      // renders a fresh, untagged one. That teardown also blanked the
+      // page until data arrived whenever __INITIAL_STATE__ was empty
+      // (the CI-only `h1Count = 0` failure).
+      await page.addInitScript(() => {
+        document.addEventListener('DOMContentLoaded', () => {
+          document.querySelector('h1')?.setAttribute('data-ssr-node', 'true')
+        })
+      })
+      await page.goto('/')
+      // [data-anim] is applied by useIntersectionAnimation in onMounted —
+      // the earliest DOM-visible signal that the client app is up.
+      await page.locator('[data-anim]').first().waitFor({ state: 'attached' })
+      await expect(page.locator('h1[data-ssr-node="true"]')).toBeVisible()
+    })
+  })
+
   test.describe('Accessibility', () => {
     test('should have proper heading hierarchy', async ({ page }) => {
+      // Instant count, deliberately un-waited: the prerendered HTML must
+      // contain exactly one h1 from the first paint onward. This is what
+      // caught the hydration teardown in CI.
       const h1Count = await page.locator('h1').count()
       expect(h1Count).toBe(1) // Should have exactly one h1
 

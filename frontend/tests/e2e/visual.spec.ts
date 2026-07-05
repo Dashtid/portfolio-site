@@ -227,6 +227,20 @@ function useHermeticHome() {
           /* discard the SSG payload */
         }
       })
+      // Wipe the prerendered DOM too: it embeds the same build-time data,
+      // and with vite-ssg hydration enabled the app would try to hydrate
+      // it against a client render built from the fixtures below — a
+      // structural mismatch that can crash Vue's recovery ("null
+      // nextSibling") into the ErrorBoundary. An empty #app makes Vue
+      // fall back to a clean client mount, which is exactly what these
+      // hermetic baselines capture. readystatechange(interactive) fires
+      // after parsing but BEFORE deferred module scripts execute, so the
+      // wipe always beats the app mount.
+      document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'interactive') {
+          document.getElementById('app')?.replaceChildren()
+        }
+      })
     })
     await page.route('**/api/v1/**', route => route.abort())
     await page.route('**/api/v1/companies', route => route.fulfill({ json: FIXTURE_COMPANIES }))

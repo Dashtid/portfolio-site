@@ -272,7 +272,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onServerPrefetch, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import axios, { type AxiosError } from 'axios'
@@ -445,14 +445,20 @@ const loadCompany = async (id: string): Promise<void> => {
   }
 }
 
-// SSG: fetch the company synchronously during server-side render so the
-// useHead computed above resolves to the per-route title/description before
-// vite-ssg captures the rendered HTML and head tags. The store state is then
-// serialized into the page (see main.ts) and hydrated on the client. Branch is
-// tree-shaken from the client bundle when import.meta.env.SSR is statically false.
-if (import.meta.env.SSR && companyId.value) {
-  await loadCompany(companyId.value)
-}
+// SSG: fetch the company during server-side render so the useHead computed
+// above resolves to the per-route title/description before vite-ssg captures
+// the rendered HTML and head tags. The store state is then serialized into
+// the page (see main.ts) and hydrated on the client. onServerPrefetch (not a
+// top-level `await` in an SSR-only branch) is deliberate: any top-level
+// await compiles setup() to an async function even when the branch is dead
+// on the client, and an async setup() under App.vue's route <Transition>
+// makes Vue throw away the prerendered DOM on direct page loads and
+// re-render client-side — blanking the page until data arrives.
+onServerPrefetch(async () => {
+  if (companyId.value) {
+    await loadCompany(companyId.value)
+  }
+})
 
 // Watch for route changes
 watch(

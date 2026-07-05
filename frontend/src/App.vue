@@ -20,11 +20,17 @@ onMounted((): void => {
 <template>
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <ErrorBoundary>
+    <!-- No <Suspense> here, deliberately. Route components must keep
+         setup() synchronous (SSR data fetching goes through
+         onServerPrefetch — see HomeView/ExperienceDetail). A Suspense
+         boundary + async setup() made hydration discard the entire
+         prerendered DOM on every load and re-render it through this
+         Transition, blanking the page until data arrived. If a future
+         view adds a top-level await, Vue will warn that Suspense is
+         missing — the fix is to remove the await, not re-add Suspense. -->
     <router-view v-slot="{ Component, route }">
       <Transition name="page-fade" mode="out-in">
-        <Suspense>
-          <component :is="Component" :key="route.path" />
-        </Suspense>
+        <component :is="Component" :key="route.path" />
       </Transition>
     </router-view>
   </ErrorBoundary>
