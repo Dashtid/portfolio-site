@@ -305,20 +305,25 @@ const runEntranceAnimations = (): void => {
   }
 
   gsapContext = gsap.context(() => {
-    gsap.from('.media-section', {
-      opacity: 0,
-      y: 30,
-      duration: 0.5,
-      ease: 'power2.out'
-    })
-
+    // Top-down reveal matching the template order: company-identity
+    // header at t=0, the media grid below it at 0.1, then the remaining
+    // sections continue the 0.1-step cascade from 0.2. (The old
+    // media-first delays predate the D2 template reorder and revealed
+    // bottom-before-top.)
     gsap.from('.experience-section', {
       opacity: 0,
       y: 25,
       duration: 0.5,
-      stagger: 0.1,
       ease: 'power2.out',
-      delay: 0.15
+      stagger: (index: number) => (index === 0 ? 0 : 0.1 + index * 0.1)
+    })
+
+    gsap.from('.media-section', {
+      opacity: 0,
+      y: 30,
+      duration: 0.5,
+      ease: 'power2.out',
+      delay: 0.1
     })
 
     gsap.from('.list-group-item', {
