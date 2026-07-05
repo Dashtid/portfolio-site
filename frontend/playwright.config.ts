@@ -26,6 +26,10 @@ export default defineConfig({
   },
   use: {
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:4173',
+    // No e2e spec exercises the service worker; leaving it active made
+    // tests race its NetworkFirst timeouts and offline fallback under CI
+    // load.
+    serviceWorkers: 'block',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry'

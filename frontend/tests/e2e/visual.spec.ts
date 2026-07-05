@@ -16,8 +16,233 @@ async function waitForStableUI(page: import('@playwright/test').Page) {
   await page.waitForTimeout(500)
 }
 
+// ---- Hermetic home-page data ----------------------------------------------
+// The home page renders whatever /api/v1/* returns (falling back to static
+// markup when fetches fail), and the SSG build bakes ANOTHER copy of
+// build-time live data into window.__INITIAL_STATE__. Live data changes
+// whenever content is edited, and API reachability differs between the
+// local rebaseline container and CI — which made baselines
+// environment-dependent (CI rendered the 3-card fallback at 544px against
+// a 1513px live-data baseline). Fixtures pin the rendered content
+// everywhere. Detail-page tests intentionally do NOT use this: they cover
+// the SSG-prerendered pages, whose content is baked at build time.
+const FIXTURE_COMPANIES = [
+  {
+    id: 'fixture-hermes',
+    name: 'Hermes Medical Solutions',
+    title: 'QA/RA & Security Specialist',
+    description:
+      'Ensuring NIS2/ISO 27001 compliance, regulatory clearance, and V&V processes for nuclear medicine software solutions.',
+    detailed_description: null,
+    logo_url: null,
+    start_date: '2024-05-01T00:00:00Z',
+    end_date: null,
+    location: 'Stockholm, Sweden',
+    website: 'https://example.com',
+    video_url: null,
+    video_title: null,
+    map_url: null,
+    map_title: null,
+    technologies: ['ISO 27001', 'NIS2', 'DICOM'],
+    responsibilities: ['Regulatory compliance', 'Security assessments'],
+    order_index: 1
+  },
+  {
+    id: 'fixture-philips',
+    name: 'Philips Healthcare',
+    title: 'Incident Support Specialist, Nordics',
+    description:
+      'Level 1 support for Intellispace Portal and Cardiovascular in the Nordics and UK/Ireland, troubleshooting incidents and supporting deployments.',
+    detailed_description: null,
+    logo_url: null,
+    start_date: '2022-03-01T00:00:00Z',
+    end_date: '2024-05-01T00:00:00Z',
+    location: 'Stockholm, Sweden',
+    website: null,
+    video_url: null,
+    video_title: null,
+    map_url: null,
+    map_title: null,
+    technologies: ['PACS', 'HL7'],
+    responsibilities: [],
+    order_index: 2
+  },
+  {
+    id: 'fixture-karolinska',
+    name: 'Karolinska University Hospital',
+    title: 'Biomedical Engineer, Medical Imaging and Physiology',
+    description:
+      'First-line support for imaging equipment fleet, incident management for RIS/PACS systems, working with GE, Philips, and Siemens solutions.',
+    detailed_description: null,
+    logo_url: null,
+    start_date: '2021-06-01T00:00:00Z',
+    end_date: '2021-12-01T00:00:00Z',
+    location: 'Stockholm, Sweden',
+    website: null,
+    video_url: null,
+    video_title: null,
+    map_url: null,
+    map_title: null,
+    technologies: [],
+    responsibilities: [],
+    order_index: 3
+  }
+]
+
+const FIXTURE_EDUCATION = [
+  {
+    id: 'fixture-comptia',
+    institution: 'CompTIA',
+    degree: 'Security+ Certification',
+    field_of_study: 'Cybersecurity',
+    start_date: '2025-10-01T00:00:00Z',
+    end_date: '2026-01-01T00:00:00Z',
+    description:
+      'Industry-standard certification covering network security, threats, vulnerabilities, and risk management.',
+    location: null,
+    logo_url: null,
+    is_certification: true,
+    certificate_number: null,
+    certificate_url: 'https://example.com/cert',
+    order_index: 1
+  },
+  {
+    id: 'fixture-kth',
+    institution: 'KTH Royal Institute of Technology',
+    degree: 'M.Sc. Medical Engineering',
+    field_of_study: 'Medical Technology and Bioengineering',
+    start_date: '2017-08-01T00:00:00Z',
+    end_date: '2022-06-01T00:00:00Z',
+    description:
+      'Specialized in medical imaging, signal processing, and healthcare informatics. Thesis on AI-driven diagnostic systems.',
+    location: 'Stockholm, Sweden',
+    logo_url: null,
+    is_certification: false,
+    certificate_number: null,
+    certificate_url: null,
+    order_index: 2
+  },
+  {
+    id: 'fixture-lund',
+    institution: 'Lund University',
+    degree: 'B.Sc. Biomedical Engineering (Exchange)',
+    field_of_study: 'Biomedical Engineering',
+    start_date: '2020-01-01T00:00:00Z',
+    end_date: '2021-06-01T00:00:00Z',
+    description: 'Exchange program focusing on medical device development and regulatory affairs.',
+    location: 'Lund, Sweden',
+    logo_url: null,
+    is_certification: false,
+    certificate_number: null,
+    certificate_url: null,
+    order_index: 3
+  }
+]
+
+const FIXTURE_DOCUMENTS = [
+  {
+    id: 'fixture-thesis-msc',
+    title: 'Master Thesis: Improving Quality Assurance of Radiology Equipment',
+    description:
+      'Research conducted at KTH in collaboration with SoftPro Medical Solutions on QA processes for radiology equipment.',
+    document_type: 'thesis',
+    file_path: 'documents/fixture-msc.pdf',
+    file_size: 3900000,
+    file_url: '/media/fixture-msc.pdf',
+    published_date: '2020-06-01T00:00:00Z',
+    created_at: '2020-06-01T00:00:00Z',
+    order_index: 1
+  },
+  {
+    id: 'fixture-thesis-bsc',
+    title: 'Bachelor Thesis: Processing Data from Ergonomics Measurements',
+    description:
+      'Research project on user-friendly data processing methods for ergonomics measurements using inclinometer sensors.',
+    document_type: 'thesis',
+    file_path: 'documents/fixture-bsc.pdf',
+    file_size: 1230000,
+    file_url: '/media/fixture-bsc.pdf',
+    published_date: '2015-06-01T00:00:00Z',
+    created_at: '2015-06-01T00:00:00Z',
+    order_index: 2
+  }
+]
+
+const FIXTURE_GITHUB_STATS = {
+  username: 'Dashtid',
+  avatar_url: null,
+  bio: 'QA/RA & Security Specialist',
+  public_repos: 12,
+  followers: 5,
+  following: 7,
+  total_stars: 17,
+  total_forks: 3,
+  total_watchers: 0,
+  top_languages: [
+    { name: 'Python', percentage: 69.6 },
+    { name: 'PowerShell', percentage: 13 },
+    { name: 'TypeScript', percentage: 6.3 },
+    { name: 'Vue', percentage: 5.1 }
+  ],
+  featured_repos: [
+    {
+      name: 'offensive-toolkit',
+      description:
+        'Offensive security toolkit for authorized penetration testing and defensive research.',
+      html_url: 'https://github.com/Dashtid/offensive-toolkit',
+      language: 'Python',
+      stars: 12,
+      forks: 3
+    },
+    {
+      name: 'sysadmin-toolkit',
+      description: 'Automation scripts for Windows and Linux system administration.',
+      html_url: 'https://github.com/Dashtid/sysadmin-toolkit',
+      language: 'PowerShell',
+      stars: 5,
+      forks: 0
+    },
+    {
+      name: 'portfolio-site',
+      description: 'This site: Vue 3 + FastAPI portfolio with CI/CD on Fly.io and Vercel.',
+      html_url: 'https://github.com/Dashtid/portfolio-site',
+      language: 'Vue',
+      stars: 0,
+      forks: 0
+    }
+  ]
+}
+
+// Registered LAST-wins in Playwright: the catch-all abort goes first so
+// any unmocked /api/v1/* call fails fast (no NetworkFirst timeouts), then
+// the fixture fulfillments take precedence for the known endpoints.
+function useHermeticHome() {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      // Ignore the SSG-baked hydration payload — it embeds build-time
+      // live data that varies between environments and over time.
+      Object.defineProperty(window, '__INITIAL_STATE__', {
+        get: () => undefined,
+        set: () => undefined
+      })
+    })
+    await page.route('**/api/v1/**', route => route.abort())
+    await page.route('**/api/v1/companies', route => route.fulfill({ json: FIXTURE_COMPANIES }))
+    await page.route('**/api/v1/education', route => route.fulfill({ json: FIXTURE_EDUCATION }))
+    await page.route('**/api/v1/documents', route => route.fulfill({ json: FIXTURE_DOCUMENTS }))
+    await page.route('**/api/v1/skills', route => route.fulfill({ json: [] }))
+    await page.route('**/api/v1/projects', route => route.fulfill({ json: [] }))
+    await page.route('**/api/v1/github/stats/*', route =>
+      route.fulfill({ json: FIXTURE_GITHUB_STATS })
+    )
+    await page.route('**/api/v1/analytics/**', route => route.fulfill({ json: { status: 'ok' } }))
+  })
+}
+
 test.describe('Visual Regression Tests', () => {
   test.describe('Home Page Sections', () => {
+    useHermeticHome()
+
     test('hero section - light mode', async ({ page }) => {
       await page.goto('/')
       await waitForStableUI(page)
@@ -79,6 +304,8 @@ test.describe('Visual Regression Tests', () => {
   })
 
   test.describe('Responsive Breakpoints', () => {
+    useHermeticHome()
+
     test('mobile viewport (375px)', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 })
       await page.goto('/')
@@ -105,6 +332,8 @@ test.describe('Visual Regression Tests', () => {
   })
 
   test.describe('Component States', () => {
+    useHermeticHome()
+
     test('navigation bar', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
@@ -134,6 +363,8 @@ test.describe('Visual Regression Tests', () => {
   })
 
   test.describe('Interactive Elements', () => {
+    useHermeticHome()
+
     test('experience card hover state', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
@@ -242,6 +473,8 @@ test.describe('Visual Regression Tests', () => {
   })
 
   test.describe('Error States', () => {
+    useHermeticHome()
+
     test('404 page - invalid experience', async ({ page }) => {
       await page.goto('/experience/nonexistent-company')
       await waitForStableUI(page)
@@ -251,6 +484,8 @@ test.describe('Visual Regression Tests', () => {
   })
 
   test.describe('Print Styles', () => {
+    useHermeticHome()
+
     test('home page print view', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
@@ -261,6 +496,8 @@ test.describe('Visual Regression Tests', () => {
   })
 
   test.describe('Reduced Motion', () => {
+    useHermeticHome()
+
     test('home page with reduced motion', async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto('/')
