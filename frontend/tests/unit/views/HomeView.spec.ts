@@ -217,7 +217,7 @@ describe('HomeView', () => {
 
       const lead = wrapper.find('.custom-hero-lead')
       expect(lead.exists()).toBe(true)
-      expect(lead.text()).toContain('Stockholm, Sweden')
+      expect(lead.text()).toContain('NIS2, ISO 27001 and MDR')
     })
   })
 

@@ -10,15 +10,18 @@
            replace this with a properly art-directed treatment. -->
       <section
         id="hero"
-        class="hero-section relative flex min-h-[60vh] items-center justify-center overflow-hidden bg-white dark:bg-slate-950"
+        class="hero-section relative flex min-h-[45vh] items-center justify-center overflow-hidden bg-white md:min-h-[60vh] dark:bg-slate-950"
       >
-        <ThreeHeroBackground :key="isDark ? 'dark' : 'light'" :is-dark="isDark" />
+        <!-- The starfield renders zero visible pixels on the white
+             light-mode hero — gate it to dark so light-mode visitors skip
+             the ~172KB three.js chunk entirely. -->
+        <ThreeHeroBackground v-if="isDark" key="dark" :is-dark="true" />
 
         <div class="relative z-[2] mx-auto max-w-3xl px-6 text-center">
           <p
             class="mb-6 font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
           >
-            Portfolio — 2026
+            David Dashti — QA/RA &amp; Security Specialist
           </p>
 
           <h1
@@ -28,10 +31,30 @@
           </h1>
 
           <p
-            class="custom-hero-lead mx-auto mt-6 max-w-2xl text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
+            class="custom-hero-lead mx-auto mt-6 max-w-2xl text-balance text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
           >
-            Stockholm, Sweden
+            I help medical-device teams ship software that meets NIS2, ISO 27001 and MDR — at Hermes
+            Medical Solutions, Stockholm.
           </p>
+
+          <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="https://www.linkedin.com/in/david-dashti/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
+            >
+              Get in touch
+            </a>
+            <a
+              href="https://github.com/Dashtid"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+            >
+              GitHub
+            </a>
+          </div>
         </div>
       </section>
 
@@ -43,6 +66,114 @@
           Unable to load portfolio data. Showing static fallback content.
         </div>
       </div>
+
+      <!-- About Section -->
+      <section id="about" class="bg-slate-50 py-16 md:py-24 dark:bg-slate-900/40">
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+          <header class="mb-10 md:mb-12">
+            <h2
+              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
+            >
+              About Me
+            </h2>
+          </header>
+
+          <div
+            class="about-layout mx-auto grid max-w-5xl items-start gap-12 lg:grid-cols-[280px_1fr]"
+          >
+            <div class="about-block">
+              <picture>
+                <source srcset="/images/optimized/cropped.avif" type="image/avif" />
+                <source srcset="/images/optimized/cropped.webp" type="image/webp" />
+                <!-- FRONTEND-PERF-08: PNG fallback uses the already-optimised
+                     cropped.png (343 KB) instead of the unprocessed
+                     profile.png (854 KB). >97% of clients hit the AVIF/WebP
+                     branches above so the fallback path is rarely walked,
+                     but the saving still applies to Lighthouse's total-
+                     payload budget and to older browsers/screen readers
+                     that fall back. -->
+                <img
+                  src="/images/optimized/cropped.png"
+                  alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
+                  class="mx-auto h-auto w-[260px] rounded-2xl object-cover ring-1 ring-slate-200 lg:mx-0 lg:w-full dark:ring-slate-800"
+                  width="280"
+                  height="326"
+                  loading="lazy"
+                />
+              </picture>
+            </div>
+            <div class="about-block max-w-[65ch] text-slate-600 dark:text-slate-300">
+              <p
+                class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
+              >
+                Medical software security specialist focusing on cybersecurity governance,
+                regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
+                frameworks.
+              </p>
+              <p class="mt-10 leading-relaxed">
+                I am a biomedical engineer specializing in cybersecurity and regulatory compliance
+                for medical software and AI systems. As a QA/RA &amp; Security Specialist at Hermes
+                Medical Solutions, I ensure that our software and digital health solutions meet the
+                highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
+                EU AI Act).
+              </p>
+              <div class="mt-12">
+                <p
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                >
+                  Current focus areas
+                </p>
+                <ul class="mt-6 space-y-4">
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Cybersecurity governance in medical software development
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Ensuring compliance with NIS2 and ISO 27001
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Supporting market clearance for medical software (MDR, GDPR)
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Preparing frameworks for AI Act compliance in healthcare AI systems
+                  </li>
+                </ul>
+              </div>
+              <div class="mt-12">
+                <p
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                >
+                  Technical skills
+                </p>
+                <p class="mt-6 leading-relaxed">
+                  Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
+                  Git
+                </p>
+              </div>
+              <p class="mt-12 leading-relaxed">
+                I am passionate about making healthcare technology safer and more trustworthy by
+                protecting patient data, ensuring system integrity, and helping organizations
+                navigate the Cybersecurity &amp; AI regulatory landscape.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Experience Section -->
       <section id="experience" class="bg-white py-16 md:py-24 dark:bg-slate-950">
@@ -554,114 +685,6 @@
 
           <!-- GitHub Stats with Featured Projects -->
           <GitHubStats username="Dashtid" @loaded="projectCardAnimation.refresh()" />
-        </div>
-      </section>
-
-      <!-- About Section -->
-      <section id="about" class="bg-white py-16 md:py-24 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-10 md:mb-12">
-            <h2
-              class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
-            >
-              About Me
-            </h2>
-          </header>
-
-          <div
-            class="about-layout mx-auto grid max-w-5xl items-start gap-12 md:grid-cols-[280px_1fr]"
-          >
-            <div class="about-block">
-              <picture>
-                <source srcset="/images/optimized/cropped.avif" type="image/avif" />
-                <source srcset="/images/optimized/cropped.webp" type="image/webp" />
-                <!-- FRONTEND-PERF-08: PNG fallback uses the already-optimised
-                     cropped.png (343 KB) instead of the unprocessed
-                     profile.png (854 KB). >97% of clients hit the AVIF/WebP
-                     branches above so the fallback path is rarely walked,
-                     but the saving still applies to Lighthouse's total-
-                     payload budget and to older browsers/screen readers
-                     that fall back. -->
-                <img
-                  src="/images/optimized/cropped.png"
-                  alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
-                  class="mx-auto h-auto w-[260px] rounded-2xl object-cover ring-1 ring-slate-200 md:mx-0 md:w-full dark:ring-slate-800"
-                  width="280"
-                  height="326"
-                  loading="lazy"
-                />
-              </picture>
-            </div>
-            <div class="about-block max-w-[65ch] text-slate-600 dark:text-slate-300">
-              <p
-                class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
-              >
-                Medical software security specialist focusing on cybersecurity governance,
-                regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
-                frameworks.
-              </p>
-              <p class="mt-10 leading-relaxed">
-                I am a biomedical engineer specializing in cybersecurity and regulatory compliance
-                for medical software and AI systems. As a QA/RA &amp; Security Specialist at Hermes
-                Medical Solutions, I ensure that our software and digital health solutions meet the
-                highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
-                EU AI Act).
-              </p>
-              <div class="mt-12">
-                <p
-                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
-                >
-                  Current focus areas
-                </p>
-                <ul class="mt-6 space-y-4">
-                  <li class="flex gap-3 leading-relaxed">
-                    <span
-                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
-                      aria-hidden="true"
-                    ></span>
-                    Cybersecurity governance in medical software development
-                  </li>
-                  <li class="flex gap-3 leading-relaxed">
-                    <span
-                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
-                      aria-hidden="true"
-                    ></span>
-                    Ensuring compliance with NIS2 and ISO 27001
-                  </li>
-                  <li class="flex gap-3 leading-relaxed">
-                    <span
-                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
-                      aria-hidden="true"
-                    ></span>
-                    Supporting market clearance for medical software (MDR, GDPR)
-                  </li>
-                  <li class="flex gap-3 leading-relaxed">
-                    <span
-                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
-                      aria-hidden="true"
-                    ></span>
-                    Preparing frameworks for AI Act compliance in healthcare AI systems
-                  </li>
-                </ul>
-              </div>
-              <div class="mt-12">
-                <p
-                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
-                >
-                  Technical skills
-                </p>
-                <p class="mt-6 leading-relaxed">
-                  Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
-                  Git
-                </p>
-              </div>
-              <p class="mt-12 leading-relaxed">
-                I am passionate about making healthcare technology safer and more trustworthy by
-                protecting patient data, ensuring system integrity, and helping organizations
-                navigate the Cybersecurity &amp; AI regulatory landscape.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
     </main>

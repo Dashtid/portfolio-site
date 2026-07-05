@@ -121,10 +121,10 @@ const mobileMenuOpen = ref<boolean>(false)
 
 const navItems: NavItem[] = [
   { name: 'Home', href: 'hero' },
+  { name: 'About', href: 'about' },
   { name: 'Experience', href: 'experience' },
   { name: 'Education', href: 'education' },
-  { name: 'Projects', href: 'projects' },
-  { name: 'About', href: 'about' }
+  { name: 'Projects', href: 'projects' }
 ]
 
 // Cache for section elements (avoids repeated DOM queries)
@@ -132,7 +132,7 @@ const sectionElementsCache = ref<Map<string, HTMLElement>>(new Map())
 
 // Initialize section element cache
 const initSectionCache = (): void => {
-  const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
+  const sectionIds = ['hero', 'about', 'experience', 'education', 'projects']
   sectionIds.forEach(id => {
     const element = document.getElementById(id)
     if (element) {
@@ -224,7 +224,7 @@ const handleScroll = (): void => {
   if (!isHomeRoute.value) return
 
   const scrollPosition = window.scrollY + 100
-  const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
+  const sectionIds = ['hero', 'about', 'experience', 'education', 'projects']
 
   for (const sectionId of sectionIds) {
     const element = sectionElementsCache.value.get(sectionId)
