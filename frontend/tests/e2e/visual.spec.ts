@@ -1,4 +1,4 @@
-import { test, expect, request as playwrightRequest } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 /**
  * Visual regression tests for portfolio site
@@ -230,6 +230,12 @@ function useHermeticHome() {
     })
     await page.route('**/api/v1/**', route => route.abort())
     await page.route('**/api/v1/companies', route => route.fulfill({ json: FIXTURE_COMPANIES }))
+    await page.route('**/api/v1/companies/*', route => {
+      const id = new URL(route.request().url()).pathname.split('/').pop()
+      const company = FIXTURE_COMPANIES.find(c => c.id === id)
+      if (company) return route.fulfill({ json: company })
+      return route.fulfill({ status: 404, json: { detail: 'Company not found' } })
+    })
     await page.route('**/api/v1/education', route => route.fulfill({ json: FIXTURE_EDUCATION }))
     await page.route('**/api/v1/documents', route => route.fulfill({ json: FIXTURE_DOCUMENTS }))
     await page.route('**/api/v1/skills', route => route.fulfill({ json: [] }))
@@ -374,11 +380,10 @@ test.describe('Visual Regression Tests', () => {
       await page.waitForTimeout(800)
 
       const card = page.locator('.experience-card').first()
-      if (await card.isVisible()) {
-        await card.hover()
-        await page.waitForTimeout(300)
-        await expect(card).toHaveScreenshot('experience-card-hover.png')
-      }
+      await card.waitFor({ state: 'visible' })
+      await card.hover()
+      await page.waitForTimeout(300)
+      await expect(card).toHaveScreenshot('experience-card-hover.png')
     })
 
     test('project card hover state', async ({ page }) => {
@@ -388,53 +393,22 @@ test.describe('Visual Regression Tests', () => {
       await page.waitForTimeout(800)
 
       const card = page.locator('.project-card').first()
-      if (await card.isVisible()) {
-        await card.hover()
-        await page.waitForTimeout(300)
-        await expect(card).toHaveScreenshot('project-card-hover.png')
-      }
+      await card.waitFor({ state: 'visible' })
+      await card.hover()
+      await page.waitForTimeout(300)
+      await expect(card).toHaveScreenshot('project-card-hover.png')
     })
   })
 
   test.describe('Detail Pages', () => {
-    // Production URLs are /experience/<UUID>, but the SPA fallback happily
-    // serves *any* /experience/* slug. An earlier version of these tests went
-    // to /experience/scania (a non-existent slug) and snapshotted the resulting
-    // "Error Loading Experience" page — visual regression that protected
-    // nothing. Resolve real IDs once at suite startup so the screenshots cover
-    // the actual detail layout.
-    //
-    // No API mock needed: the SSG render bakes the company into the page and
-    // serializes it into the Pinia hydration payload, so the client renders it
-    // straight away without re-fetching. If hydration ever breaks, these
-    // screenshots regress to the error page — which is the correct signal.
-    let scaniaId = ''
-    let hermesId = ''
+    useHermeticHome()
 
-    test.beforeAll(async () => {
-      const apiUrl = process.env.VITE_API_URL || 'https://api.dashti.se'
-      const ctx = await playwrightRequest.newContext({ baseURL: apiUrl })
-      const res = await ctx.get('/api/v1/companies/')
-      if (!res.ok()) {
-        throw new Error(`Failed to fetch companies from ${apiUrl}: ${res.status()}`)
-      }
-      const companies: Array<{ id: string; name: string }> = await res.json()
-      const scania = companies.find(c => /scania/i.test(c.name))
-      const hermes = companies.find(c => /hermes/i.test(c.name))
-      if (!scania) {
-        throw new Error(
-          'No company matching /scania/i in API response — re-pick a company name and re-baseline'
-        )
-      }
-      if (!hermes) {
-        throw new Error(
-          'No company matching /hermes/i in API response — re-pick a company name and re-baseline'
-        )
-      }
-      scaniaId = scania.id
-      hermesId = hermes.id
-      await ctx.dispose()
-    })
+    // Fixture IDs resolve through the SPA fallback + the mocked
+    // /companies/:id endpoint — fully hermetic, unlike the previous
+    // live-API IDs whose SSG-baked content changed with every content
+    // edit and whose real network calls timed out on networkidle in CI.
+    const primaryId = 'fixture-hermes'
+    const secondaryId = 'fixture-philips'
 
     // Skip GSAP entrance animations — ExperienceDetail.vue checks
     // prefers-reduced-motion and bypasses the timeline entirely. Without
@@ -443,27 +417,27 @@ test.describe('Visual Regression Tests', () => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
     })
 
-    test('experience detail page - scania', async ({ page }) => {
-      await page.goto(`/experience/${scaniaId}`)
+    test('experience detail page - primary', async ({ page }) => {
+      await page.goto(`/experience/${primaryId}`)
       await waitForStableUI(page)
-      await expect(page).toHaveScreenshot('experience-detail-scania.png', { fullPage: true })
+      await expect(page).toHaveScreenshot('experience-detail-primary.png', { fullPage: true })
     })
 
-    test('experience detail page - hermes', async ({ page }) => {
-      await page.goto(`/experience/${hermesId}`)
+    test('experience detail page - secondary', async ({ page }) => {
+      await page.goto(`/experience/${secondaryId}`)
       await waitForStableUI(page)
-      await expect(page).toHaveScreenshot('experience-detail-hermes.png', { fullPage: true })
+      await expect(page).toHaveScreenshot('experience-detail-secondary.png', { fullPage: true })
     })
 
     test('experience detail page - mobile viewport', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 })
-      await page.goto(`/experience/${scaniaId}`)
+      await page.goto(`/experience/${primaryId}`)
       await waitForStableUI(page)
       await expect(page).toHaveScreenshot('experience-detail-mobile.png', { fullPage: true })
     })
 
     test('experience detail page - dark mode', async ({ page }) => {
-      await page.goto(`/experience/${scaniaId}`)
+      await page.goto(`/experience/${primaryId}`)
       await waitForStableUI(page)
       const themeToggle = page.locator('[data-testid="theme-toggle"]')
       if (await themeToggle.isVisible()) {

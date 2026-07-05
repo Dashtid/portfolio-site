@@ -130,7 +130,12 @@ test.describe('Admin CRUD round-trip (Companies, mocked backend)', () => {
 
     await page.goto('/admin/companies')
     // The companies admin page is titled "Manage Experience" in the UI.
-    await expect(page.locator('h2')).toContainText('Manage Experience')
+    // Role+name is strict-mode-safe and auto-waits: a direct /admin/*
+    // load serves the prerendered HOME html (SPA fallback) until Vue
+    // hydrates and the router swaps in the admin view — an instant bare
+    // locator('h2') assertion sees home's five section headings on slow
+    // CI runners and throws a strict-mode violation.
+    await expect(page.getByRole('heading', { name: 'Manage Experience' })).toBeVisible()
     // Seed row is rendered.
     await expect(page.getByText('Seed Company')).toBeVisible()
   })

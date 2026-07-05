@@ -88,6 +88,11 @@ playwright-report/
 frontend/.playwright-report/
 frontend/playwright-report/
 *-snapshots/
+# ...but visual-regression BASELINES are source-controlled by design —
+# without this re-include, newly added baselines silently never reach the
+# repo (existing ones stayed only because tracked files beat gitignore).
+!frontend/tests/e2e/__snapshots__/visual.spec.ts-snapshots/
+!frontend/tests/e2e/__snapshots__/visual.spec.ts-snapshots/**
 
 # CI artifacts
 .lighthouseci/
