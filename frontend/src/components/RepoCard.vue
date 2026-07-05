@@ -6,7 +6,7 @@
     :href="repo.html_url"
     target="_blank"
     rel="noopener noreferrer"
-    class="project-card group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 no-underline transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+    class="project-card group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 no-underline transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
     :aria-label="`${repo.name} repository on GitHub (opens in new tab)`"
   >
     <h3 class="text-lg font-semibold text-primary-600 dark:text-primary-400">
@@ -31,7 +31,9 @@
         {{ repo.language }}
       </span>
       <span class="flex gap-4">
-        <span class="flex items-center gap-1">
+        <!-- Zero-value counts are noise (and negative social proof) — the
+             language dot keeps the meta row populated when both hide. -->
+        <span v-if="repo.stars > 0" class="flex items-center gap-1">
           <svg
             class="h-3.5 w-3.5 opacity-70"
             xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +47,7 @@
           </svg>
           {{ repo.stars }}<span class="sr-only"> stars</span>
         </span>
-        <span class="flex items-center gap-1">
+        <span v-if="repo.forks > 0" class="flex items-center gap-1">
           <svg
             class="h-3.5 w-3.5 opacity-70"
             xmlns="http://www.w3.org/2000/svg"
@@ -63,9 +65,21 @@
     </div>
 
     <div
-      class="mt-auto pt-4 text-sm font-medium text-primary-600 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300"
+      class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-primary-600 transition-all group-hover:gap-2 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300"
     >
       View on GitHub
+      <svg
+        class="h-3.5 w-3.5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </svg>
     </div>
   </a>
 </template>

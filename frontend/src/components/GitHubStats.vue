@@ -22,13 +22,16 @@
         <p>No GitHub repositories found.</p>
       </div>
 
-      <div v-if="featuredRepos.length" class="featured-repos">
-        <div class="repos-grid">
+      <div v-if="featuredRepos.length" class="featured-repos mt-8">
+        <div class="repos-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           <RepoCard v-for="repo in featuredRepos" :key="repo.name" :repo="repo" />
         </div>
       </div>
 
-      <div v-if="topLanguages.length" class="languages-section">
+      <div
+        v-if="topLanguages.length"
+        class="languages-section mt-8 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/50"
+      >
         <h3>Top Languages</h3>
         <div class="language-bars">
           <LanguageBar
@@ -226,15 +229,6 @@ onUnmounted(() => {
   animation: fadeIn 0.5s ease-in;
 }
 
-.languages-section {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid var(--color-border);
-}
-
 .languages-section h3 {
   margin: 0 0 1.25rem 0;
   font-size: 1.1rem;
@@ -242,21 +236,11 @@ onUnmounted(() => {
   color: var(--text-primary);
 }
 
-.featured-repos {
-  margin-top: 2rem;
-}
-
 .featured-repos h3 {
   margin: 0 0 1.25rem 0;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
-}
-
-.repos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
 }
 
 @keyframes fadeIn {
@@ -268,14 +252,9 @@ onUnmounted(() => {
   }
 }
 
-/* Dark mode overrides. h3 / .loading-spinner / .spinner already use
-   semantic tokens that swap via variables.css; only genuinely different
-   dark-mode treatments remain — glass surface swap, brighter error tint,
-   higher-opacity empty-state border. */
-[data-theme='dark'] .languages-section {
-  background: var(--card-bg);
-  border-color: var(--border-primary);
-}
+/* Dark mode overrides. Most surfaces swap via semantic tokens or the
+   shared Tailwind card recipe; only the brighter error tint and the
+   higher-opacity empty-state border need explicit dark treatment. */
 
 [data-theme='dark'] .error-message {
   color: var(--color-error);
@@ -287,11 +266,5 @@ onUnmounted(() => {
   color: var(--text-tertiary);
   background: rgba(100, 116, 139, 0.1);
   border-color: var(--border-primary);
-}
-
-@media (max-width: 768px) {
-  .repos-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

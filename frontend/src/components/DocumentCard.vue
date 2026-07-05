@@ -1,6 +1,6 @@
 <template>
   <article
-    class="document-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+    class="document-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
   >
     <header class="flex items-start justify-between gap-4">
       <div class="min-w-0 flex-1">
@@ -59,7 +59,7 @@
       :href="document.file_url"
       target="_blank"
       rel="noopener noreferrer"
-      class="download-link mt-6 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+      class="download-link mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
     >
       Download PDF
       <svg

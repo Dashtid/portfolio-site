@@ -55,20 +55,20 @@
             </h2>
           </header>
 
-          <div class="experience-list grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="experience-list grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <!-- Dynamic content from backend or static fallback -->
             <template v-if="companies.length">
               <article
                 v-for="company in companiesByDate"
                 :key="company.id"
-                class="experience-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="experience-card group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header class="flex items-start gap-4">
                   <img
                     v-if="company.logo_url"
                     :src="company.logo_url"
                     :alt="`${company.name} Logo`"
-                    class="card-logo h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-700"
+                    class="card-logo h-16 w-auto min-w-16 max-w-32 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -86,7 +86,7 @@
                   </div>
                 </header>
                 <p
-                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
                   {{ company.title }}
                 </p>
@@ -101,7 +101,7 @@
 
                 <router-link
                   :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
-                  class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                  class="mt-auto inline-flex items-center gap-1 pt-8 text-sm font-medium text-primary-600 transition-all after:absolute after:inset-0 hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                 >
                   <!-- sr-only suffix: distinct link text per card, for screen
                        readers and the Lighthouse link-text audit alike -->
@@ -128,7 +128,7 @@
                    companies from the backend. Kept in sync with seed_data;
                    update both when roles change. -->
               <article
-                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
@@ -141,7 +141,7 @@
                   </p>
                 </header>
                 <p
-                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
                   QA/RA &amp; Security Specialist
                 </p>
@@ -157,7 +157,7 @@
                 </p>
               </article>
               <article
-                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
@@ -170,7 +170,7 @@
                   </p>
                 </header>
                 <p
-                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
                   Incident Support Specialist, Nordics
                 </p>
@@ -185,7 +185,7 @@
                 </p>
               </article>
               <article
-                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="experience-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3 class="company-name text-lg font-semibold text-slate-900 dark:text-white">
@@ -198,7 +198,7 @@
                   </p>
                 </header>
                 <p
-                  class="job-title mt-5 text-balance text-sm font-medium text-primary-600 dark:text-primary-400"
+                  class="job-title mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
                   Biomedical Engineer, Medical Imaging and Physiology
                 </p>
@@ -228,19 +228,19 @@
             </h2>
           </header>
 
-          <div class="education-grid grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="education-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <template v-if="education.length">
               <article
                 v-for="edu in education"
                 :key="edu.id"
-                class="education-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header class="flex items-start gap-4">
                   <img
                     v-if="edu.logo_url"
                     :src="edu.logo_url"
                     :alt="`${edu.institution} Logo`"
-                    class="card-logo h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-700"
+                    class="card-logo h-16 w-auto min-w-16 max-w-32 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-700"
                     width="64"
                     height="64"
                     loading="lazy"
@@ -252,15 +252,26 @@
                       {{ edu.institution }}
                     </h3>
                     <p
-                      class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                      class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                     >
-                      {{ edu.degree }}
+                      <template v-if="edu.is_certification && edu.end_date">
+                        {{ formatDate(edu.end_date) }}
+                      </template>
+                      <template v-else>
+                        {{ formatDate(edu.start_date) }} —
+                        {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
+                      </template>
                     </p>
                   </div>
                 </header>
                 <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  {{ edu.degree }}
+                </p>
+                <p
                   v-if="edu.field_of_study"
-                  class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400"
+                  class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400"
                 >
                   {{ edu.field_of_study }}
                 </p>
@@ -270,23 +281,12 @@
                 >
                   {{ edu.description }}
                 </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  <template v-if="edu.is_certification && edu.end_date">
-                    {{ formatDate(edu.end_date) }}
-                  </template>
-                  <template v-else>
-                    {{ formatDate(edu.start_date) }} —
-                    {{ edu.end_date ? formatDate(edu.end_date) : 'Present' }}
-                  </template>
-                </p>
                 <a
                   v-if="edu.certificate_url"
                   :href="edu.certificate_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                  class="certificate-link mt-auto pt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                   :aria-label="`View certificate for ${edu.degree} from ${edu.institution} (opens in new tab)`"
                 >
                   View certificate
@@ -309,7 +309,7 @@
               <!-- Static fallback — rendered when the SSG build fetched no
                    education rows. Kept in sync with seed_data. -->
               <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3
@@ -318,12 +318,17 @@
                     CompTIA
                   </h3>
                   <p
-                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Security+ Certification
+                    Jan 2026
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  Security+ Certification
+                </p>
+                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Cybersecurity
                 </p>
                 <p
@@ -332,16 +337,11 @@
                   Industry-standard certification covering network security, threats,
                   vulnerabilities, and risk management.
                 </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  Jan 2026
-                </p>
                 <a
                   href="https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="certificate-link mt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                  class="certificate-link mt-auto pt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                   aria-label="View Security+ certificate from CompTIA (opens in new tab)"
                 >
                   View certificate
@@ -360,7 +360,7 @@
                 </a>
               </article>
               <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3
@@ -369,12 +369,17 @@
                     Microsoft
                   </h3>
                   <p
-                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Azure Security Engineer Associate (AZ-500)
+                    Jun 2023
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  Azure Security Engineer Associate (AZ-500)
+                </p>
+                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Cloud Security
                 </p>
                 <p
@@ -382,14 +387,9 @@
                 >
                   Azure security services, identity management, and compliance features.
                 </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  Jun 2023
-                </p>
               </article>
               <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3
@@ -398,12 +398,17 @@
                     Företagsuniversitetet
                   </h3>
                   <p
-                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Certified ISO 27001 Lead Implementer
+                    Mar 2023
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  Certified ISO 27001 Lead Implementer
+                </p>
+                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Information Security Management
                 </p>
                 <p
@@ -411,14 +416,9 @@
                 >
                   Intensive certification program for implementing and managing ISO 27001 ISMS.
                 </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  Mar 2023
-                </p>
               </article>
               <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3
@@ -427,12 +427,17 @@
                     EC-Council
                   </h3>
                   <p
-                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Certified Ethical Hacker (CEH)
+                    Oct 2022
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  Certified Ethical Hacker (CEH)
+                </p>
+                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Cybersecurity
                 </p>
                 <p
@@ -440,14 +445,9 @@
                 >
                   Ethical hacking methodologies, penetration testing, and vulnerability assessment.
                 </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  Oct 2022
-                </p>
               </article>
               <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3
@@ -456,12 +456,17 @@
                     KTH Royal Institute of Technology
                   </h3>
                   <p
-                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    M.Sc. Medical Engineering
+                    Aug 2017 — Jun 2022
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  M.Sc. Medical Engineering
+                </p>
+                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Medical Technology and Bioengineering
                 </p>
                 <p
@@ -470,14 +475,9 @@
                   Specialized in medical imaging, signal processing, and healthcare informatics.
                   Thesis on AI-driven diagnostic systems.
                 </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  Aug 2017 — Jun 2022
-                </p>
               </article>
               <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40"
+                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
               >
                 <header>
                   <h3
@@ -486,23 +486,23 @@
                     Lund University (LTH)
                   </h3>
                   <p
-                    class="education-degree mt-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    B.Sc. Biomedical Engineering (Exchange)
+                    Jan 2020 — Jun 2021
                   </p>
                 </header>
-                <p class="education-field mt-3 text-sm text-slate-500 dark:text-slate-400">
+                <p
+                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
+                >
+                  B.Sc. Biomedical Engineering (Exchange)
+                </p>
+                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Biomedical Engineering
                 </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
                   Exchange program focusing on medical device development and regulatory affairs.
-                </p>
-                <p
-                  class="education-dates mt-4 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                  Jan 2020 — Jun 2021
                 </p>
               </article>
             </template>
@@ -571,7 +571,7 @@
           <div
             class="about-layout mx-auto grid max-w-5xl items-start gap-12 md:grid-cols-[280px_1fr]"
           >
-            <div>
+            <div class="about-block">
               <picture>
                 <source srcset="/images/optimized/cropped.avif" type="image/avif" />
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
@@ -592,7 +592,7 @@
                 />
               </picture>
             </div>
-            <div class="max-w-[65ch] text-slate-600 dark:text-slate-300">
+            <div class="about-block max-w-[65ch] text-slate-600 dark:text-slate-300">
               <p
                 class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >
@@ -819,6 +819,7 @@ useIntersectionAnimation('.education-card', { stagger: 0.12 })
 const projectCardAnimation = useIntersectionAnimation('.project-card', { stagger: 0.12 })
 const documentCardAnimation = useIntersectionAnimation('.document-card', { stagger: 0.12 })
 useIntersectionAnimation('.section-title', { stagger: 0 })
+useIntersectionAnimation('.about-block', { stagger: 0.12 })
 
 // Load data on mount. Portfolio data is fetched in setup() above
 // (INFRA-002); only the documents fetch lives here, because documents are a
@@ -868,6 +869,7 @@ onMounted(async () => {
   transition:
     opacity 0.5s ease-out,
     transform 0.5s ease-out,
+    box-shadow 0.2s ease,
     border-color 0.2s ease,
     background-color 0.2s ease,
     color 0.2s ease;
