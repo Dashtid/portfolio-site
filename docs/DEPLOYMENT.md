@@ -187,8 +187,6 @@ Supporting workflows:
 | --------------------------- | ------------------------------------ | --------- |
 | `/api/v1/health`            | Basic health (no DB check)           | 30s       |
 | `/api/v1/health/ready`      | Readiness with DB connectivity       | 60s       |
-| `/api/v1/health/live`       | Liveness (minimal check)             | 30s       |
-| `/api/v1/health/detailed`   | Full system info (memory, DB, uptime)| 5min      |
 
 ### External Uptime Monitoring
 

@@ -173,9 +173,11 @@ Lib/
 Scripts/
 Include/
 pyvenv.cfg
-# Scripts/ above targets venv bin dirs but matches backend/scripts/ too on
-# Windows's case-insensitive filesystem — re-include the release scripts.
+# Scripts/ above targets venv bin dirs but matches backend/scripts/ and the
+# repo-root scripts/ too on Windows's case-insensitive filesystem —
+# re-include both.
 !backend/scripts/
+!scripts/
 
 # Executables
 *.exe

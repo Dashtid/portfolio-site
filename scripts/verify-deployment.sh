@@ -112,9 +112,8 @@ echo "========================================"
 echo "1. Backend Health Checks"
 echo "========================================"
 
-check_health "$BACKEND_URL/api/v1/health" "Backend /health" || ((FAILURES++))
-check_health "$BACKEND_URL/api/v1/health/ready" "Backend /health/ready" || ((FAILURES++))
-check_health "$BACKEND_URL/api/v1/health/live" "Backend /health/live" || ((FAILURES++))
+check_health "$BACKEND_URL/api/v1/health" "Backend /health" || FAILURES=$((FAILURES + 1))
+check_health "$BACKEND_URL/api/v1/health/ready" "Backend /health/ready" || FAILURES=$((FAILURES + 1))
 
 # Check Frontend Health
 echo ""
@@ -122,7 +121,7 @@ echo "========================================"
 echo "2. Frontend Health Check"
 echo "========================================"
 
-check_health "$FRONTEND_URL" "Frontend" || ((FAILURES++))
+check_health "$FRONTEND_URL" "Frontend" || FAILURES=$((FAILURES + 1))
 
 # Check Backend Security Headers
 echo ""
@@ -130,7 +129,7 @@ echo "========================================"
 echo "3. Backend Security Headers"
 echo "========================================"
 
-verify_security_headers "$BACKEND_URL/api/v1/health" "Backend" || ((FAILURES++))
+verify_security_headers "$BACKEND_URL/api/v1/health" "Backend" || FAILURES=$((FAILURES + 1))
 
 # Check Frontend Security Headers
 echo ""
@@ -138,7 +137,7 @@ echo "========================================"
 echo "4. Frontend Security Headers"
 echo "========================================"
 
-verify_security_headers "$FRONTEND_URL" "Frontend" || ((FAILURES++))
+verify_security_headers "$FRONTEND_URL" "Frontend" || FAILURES=$((FAILURES + 1))
 
 # API Response Check
 echo ""
@@ -152,7 +151,7 @@ if echo "$api_response" | grep -q "Portfolio API"; then
     echo -e "  ${GREEN}[OK]${NC} API returns expected response"
 else
     echo -e "  ${RED}[FAIL]${NC} Unexpected API response"
-    ((FAILURES++))
+    FAILURES=$((FAILURES + 1))
 fi
 
 # SSL Certificate Check

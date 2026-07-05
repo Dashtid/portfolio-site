@@ -34,6 +34,6 @@ alembic upgrade head
 
 ## Health Checks
 
-`/api/v1/health/detailed` reports DB connectivity and the round-trip
+`/api/v1/health/ready` reports DB connectivity and the round-trip
 latency of a `SELECT 1` probe — used by both Fly's `[[http_service.checks]]`
 and the optional external uptime monitor.
