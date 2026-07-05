@@ -223,7 +223,9 @@ function useHermeticHome() {
       // live data that varies between environments and over time.
       Object.defineProperty(window, '__INITIAL_STATE__', {
         get: () => undefined,
-        set: () => undefined
+        set: () => {
+          /* discard the SSG payload */
+        }
       })
     })
     await page.route('**/api/v1/**', route => route.abort())
