@@ -188,9 +188,10 @@ const scrollToSection = (sectionId: string): void => {
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
     const offsetPosition = elementPosition - navHeight
 
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({
       top: offsetPosition,
-      behavior: 'smooth'
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
     })
 
     // Update active section
@@ -339,6 +340,11 @@ onUnmounted(() => {
 }
 
 .nav-link {
+  /* inline-block is load-bearing: as a plain inline box the absolutely
+     positioned ::after underline resolves against a collapsed line
+     fragment and paints as a detached ~8px dash below the navbar
+     (Bootstrap used to supply the block display here). */
+  display: inline-block;
   color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.875rem;
@@ -407,8 +413,10 @@ onUnmounted(() => {
 }
 
 /* Mobile: the center-growing underline doesn't make sense on full-width
-   stacked links — swap to a fill highlight instead. */
-@media (max-width: 991px) {
+   stacked links — swap to a fill highlight instead. 1023.98px matches the
+   template's Tailwind lg: breakpoint (the old 991px was Bootstrap's,
+   leaving a 992-1023px band with desktop CSS on the mobile template). */
+@media (max-width: 1023.98px) {
   .nav-link::after {
     display: none;
   }

@@ -892,9 +892,8 @@ onMounted(async () => {
   }
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* No html rule here: scoped selectors can't reach <html>, and the real
+   (reduced-motion-aware) scroll-behavior lives in style.css @layer base. */
 
 :deep(.navbar-custom) {
   z-index: 1000;

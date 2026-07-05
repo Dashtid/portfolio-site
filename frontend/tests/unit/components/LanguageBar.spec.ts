@@ -3,10 +3,12 @@ import { mount } from '@vue/test-utils'
 import LanguageBar from '@/components/LanguageBar.vue'
 
 describe('LanguageBar', () => {
-  it('renders the language name and percentage', () => {
+  it('renders the language name and one-decimal percentage', () => {
+    // Whole numbers render with a decimal ("60.0%") so mixed rows align
+    // with their one-decimal siblings ("69.6%").
     const wrapper = mount(LanguageBar, { props: { name: 'TypeScript', percentage: 60 } })
     expect(wrapper.find('.language-name').text()).toBe('TypeScript')
-    expect(wrapper.find('.language-percentage').text()).toBe('60%')
+    expect(wrapper.find('.language-percentage').text()).toBe('60.0%')
   })
 
   it('exposes the right ARIA progressbar attributes', () => {

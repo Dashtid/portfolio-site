@@ -2,7 +2,9 @@
   <div class="language-bar">
     <div class="language-info">
       <span class="language-name">{{ name }}</span>
-      <span class="language-percentage">{{ percentage }}%</span>
+      <!-- toFixed(1) so whole numbers ("13") match their one-decimal
+           siblings ("69.6") in the right-aligned column. -->
+      <span class="language-percentage">{{ percentage.toFixed(1) }}%</span>
     </div>
     <div
       class="progress-bar"

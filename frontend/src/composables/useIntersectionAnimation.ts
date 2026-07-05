@@ -48,17 +48,29 @@ export function useIntersectionAnimation(
     if (observer) return observer
     observer = new IntersectionObserver(
       entries => {
+        // Stagger by position within THIS callback's intersecting batch:
+        // cards revealing together cascade, while an element entering the
+        // viewport alone animates immediately. (Indexing across the whole
+        // tracked set left late stragglers invisible for up to
+        // (n-1) x stagger seconds before their entrance even started.)
+        let batchIdx = 0
         for (const entry of entries) {
           if (!entry.isIntersecting) continue
           const target = entry.target as HTMLElement
-          // Each element of the batch receives its index-based delay
-          // exactly once. Reading it back from `dataset.animIndex` keeps
-          // the delay deterministic even if the observer fires elements
-          // out of order (which it does when the user scrolls fast).
-          const idxStr = target.dataset.animIndex ?? '0'
-          const idx = Number.parseInt(idxStr, 10) || 0
-          target.style.transitionDelay = `${idx * stagger}s`
+          target.style.transitionDelay = `${batchIdx * stagger}s`
+          batchIdx += 1
           target.dataset.anim = 'visible'
+          // The inline delay must not outlive the entrance: [data-anim]
+          // shares one transition list, so a stale delay would also lag
+          // every later border/background/color transition (hover tints,
+          // theme switches) by the same amount.
+          const clearDelay = () => {
+            target.style.transitionDelay = ''
+            target.removeEventListener('transitionend', clearDelay)
+            target.removeEventListener('transitioncancel', clearDelay)
+          }
+          target.addEventListener('transitionend', clearDelay, { once: true })
+          target.addEventListener('transitioncancel', clearDelay, { once: true })
           observer?.unobserve(target)
           revealedCount += 1
           if (revealedCount >= trackedCount) {
@@ -79,6 +91,8 @@ export function useIntersectionAnimation(
     // SSG pre-render guard: window is undefined during the build pass.
     if (typeof window === 'undefined') return
 
+    // dataset.animIndex is purely an "already tracked" marker (the reveal
+    // delay is batch-local, assigned in the observer callback).
     const elements = Array.from(document.querySelectorAll(selector)).filter(
       el => (el as HTMLElement).dataset.animIndex === undefined
     )

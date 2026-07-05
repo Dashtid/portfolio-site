@@ -49,9 +49,14 @@
       <!-- Company Details -->
       <article v-else-if="company" class="mx-auto max-w-4xl px-6 py-12">
         <!-- Media Section: Video and Map (side-by-side on desktop) -->
+        <!-- Two columns only when BOTH embeds exist; a lone embed gets a
+             centered, capped width instead of half the grid sitting empty. -->
         <div
           v-if="company.video_url || company.map_url"
-          class="media-section mb-10 grid gap-6 md:grid-cols-2"
+          class="media-section mb-10 grid gap-6"
+          :class="
+            company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:mx-auto md:max-w-xl'
+          "
         >
           <!-- YouTube Video -->
           <div v-if="company.video_url">
@@ -79,7 +84,7 @@
               v-if="company.logo_url && !logoError"
               :src="company.logo_url"
               :alt="`${company.name} logo`"
-              class="h-16 w-16 shrink-0 rounded-xl object-contain ring-1 ring-slate-200 dark:ring-slate-800"
+              class="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-800"
               @error="logoError = true"
             />
             <div class="min-w-0 flex-1">
@@ -252,6 +257,8 @@
         </div>
       </article>
     </main>
+
+    <FooterSection />
   </div>
 </template>
 
@@ -267,6 +274,7 @@ import { useExperienceDetailStore } from '../../stores/experienceDetail'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
 import NavBar from '@/components/NavBar.vue'
+import FooterSection from '@/components/FooterSection.vue'
 import { formatDescription } from '@/utils/markdown'
 
 // AbortController for cancelling pending requests on route change

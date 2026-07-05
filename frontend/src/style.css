@@ -34,8 +34,15 @@
 
   html {
     font-size: 16px;
-    scroll-behavior: smooth;
     scroll-padding-top: var(--navbar-height, 72px);
+  }
+
+  /* Smooth scrolling is motion: vestibular-disorder users who set
+     prefers-reduced-motion get instant jumps instead. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   /* Custom Selection Color */

@@ -110,6 +110,13 @@ const getScrollOffset = (): number => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 72
 }
 
+// Smooth scrolling is motion — honor prefers-reduced-motion here too
+// (SSG guard: matchMedia is absent during the build pass).
+const scrollMotion = (): ScrollBehavior =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 'auto'
+    : 'smooth'
+
 export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
   if (savedPosition) return savedPosition
   if (to.hash) {
@@ -122,15 +129,15 @@ export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) =
       const start = Date.now()
       const tryResolve = (): void => {
         if (typeof document !== 'undefined' && document.querySelector(to.hash)) {
-          resolve({ el: to.hash, behavior: 'smooth' as ScrollBehavior, top: getScrollOffset() })
+          resolve({ el: to.hash, behavior: scrollMotion(), top: getScrollOffset() })
         } else if (Date.now() - start < 800) {
           setTimeout(tryResolve, 50)
         } else {
-          resolve({ top: 0, behavior: 'smooth' as ScrollBehavior })
+          resolve({ top: 0, behavior: scrollMotion() })
         }
       }
       tryResolve()
     })
   }
-  return { top: 0, behavior: 'smooth' as ScrollBehavior }
+  return { top: 0, behavior: scrollMotion() }
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="video-embed">
     <h2 v-if="heading" class="video-heading">{{ heading }}</h2>
-    <div v-if="safeUrl" class="ratio ratio-16x9">
+    <div v-if="safeUrl" class="ratio">
       <iframe
         :src="safeUrl"
         :title="title"
@@ -76,6 +76,10 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
 }
 
 .ratio {
+  /* Bootstrap's .ratio-16x9 is gone from the bundle — without an explicit
+     aspect ratio the iframe collapses to a 150px letterbox strip. */
+  aspect-ratio: 16 / 9;
+  width: 100%;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: var(--elevation-md);
