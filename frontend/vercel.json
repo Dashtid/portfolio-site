@@ -21,7 +21,7 @@
   "rewrites": [
     {
       "source": "/:path((?!images|assets|static|.*\\..*).*)",
-      "destination": "/index.html"
+      "destination": "/"
     }
   ],
   "headers": [
