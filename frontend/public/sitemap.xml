@@ -42,10 +42,10 @@
     </url>
 
     <!--
-      Experience detail pages (/experience/:id) use database UUIDs as IDs
-      and cannot be hardcoded here. Google discovers them from homepage links.
-      When CI-020 (backend service in CI) is implemented, vite-ssg will
-      pre-render these pages and a dynamic sitemap can be generated at build time.
+      Experience detail routes are appended below at build time by the
+      ssgOptions.onFinished hook in vite.config.ts, derived from the pages
+      vite-ssg actually pre-rendered (dist/experience/*.html). Do not add
+      them here by hand — this static file holds only the stable routes.
     -->
 
 </urlset>

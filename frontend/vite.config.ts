@@ -4,12 +4,58 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import os from 'os'
+import fs from 'fs'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
   // Use temp directory to avoid OneDrive path issues with spaces
   cacheDir: path.join(os.tmpdir(), 'vite-cache-portfolio'),
+  // vite-ssg reads `ssgOptions` from the resolved config (Object.assign of
+  // config.ssgOptions then CLI args). onFinished runs once after every
+  // route is prerendered.
+  ssgOptions: {
+    // Inject the experience detail pages into the sitemap. They're derived
+    // from the actual prerendered output (dist/experience/*.html) — the same
+    // route set includedRoutes builds from the live company list — so the
+    // sitemap never drifts from what's deployed and no company UUID is
+    // hardcoded. The static base (home + section anchors) lives in
+    // public/sitemap.xml and is copied into dist before this hook runs.
+    onFinished() {
+      const distDir = path.resolve(__dirname, 'dist')
+      const sitemapPath = path.join(distDir, 'sitemap.xml')
+      const experienceDir = path.join(distDir, 'experience')
+      if (!fs.existsSync(sitemapPath) || !fs.existsSync(experienceDir)) return
+
+      const ids = fs
+        .readdirSync(experienceDir)
+        .filter(f => f.endsWith('.html'))
+        .map(f => f.replace(/\.html$/, ''))
+        .sort()
+      if (ids.length === 0) return
+
+      let xml = fs.readFileSync(sitemapPath, 'utf-8')
+      // Idempotent: key off the generated marker, not '/experience/' — the
+      // static base contains that substring in a comment.
+      if (xml.includes('auto-generated from prerendered routes')) return
+
+      const lastmod = new Date().toISOString().slice(0, 10)
+      const entries = ids
+        .map(
+          id =>
+            `    <url>\n        <loc>https://dashti.se/experience/${id}</loc>\n        <lastmod>${lastmod}</lastmod>\n        <changefreq>monthly</changefreq>\n        <priority>0.7</priority>\n    </url>`
+        )
+        .join('\n')
+
+      xml = xml.replace(
+        '</urlset>',
+        `\n    <!-- Experience detail pages (auto-generated from prerendered routes) -->\n${entries}\n</urlset>`
+      )
+      fs.writeFileSync(sitemapPath, xml)
+      // eslint-disable-next-line no-console
+      console.log(`[sitemap] injected ${ids.length} experience detail routes`)
+    }
+  },
   plugins: [
     vue(),
     tailwindcss(),
