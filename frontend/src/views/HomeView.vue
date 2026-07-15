@@ -10,7 +10,7 @@
            replace this with a properly art-directed treatment. -->
       <section
         id="hero"
-        class="hero-section relative flex min-h-[45vh] items-center justify-center overflow-hidden bg-white pt-20 md:min-h-[60vh] dark:bg-slate-950"
+        class="hero-section relative flex min-h-screen items-center justify-center overflow-hidden bg-white pt-20 dark:bg-slate-950"
       >
         <!-- The starfield renders zero visible pixels on the white
              light-mode hero — gate it to dark so light-mode visitors skip
@@ -21,7 +21,7 @@
           <p
             class="mb-6 font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
           >
-            David Dashti — QA/RA &amp; Security Specialist
+            David Dashti — Product Security · QA/RA
           </p>
 
           <h1
@@ -33,8 +33,8 @@
           <p
             class="custom-hero-lead mx-auto mt-6 max-w-2xl text-balance text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
           >
-            I help medical-device teams ship software that meets NIS2, ISO 27001 and MDR — at Hermes
-            Medical Solutions, Stockholm.
+            Securing medical software from design through market clearance — and, increasingly, the
+            AI moving into the devices themselves — at Hermes Medical Solutions, Stockholm.
           </p>
 
           <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -68,9 +68,9 @@
       </div>
 
       <!-- Experience Section -->
-      <section id="experience" class="bg-slate-50 py-16 md:py-24 dark:bg-slate-900/40">
+      <section id="experience" class="bg-slate-50 py-16 md:py-20 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-10 md:mb-12">
+          <header class="mb-6 md:mb-8">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -174,9 +174,9 @@
                 <p
                   class="company-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  QA/RA &amp; Security Specialist at Hermes Medical Solutions, ensuring NIS2/ISO
-                  27001 compliance, regulatory clearance, and V&amp;V processes for nuclear medicine
-                  software solutions.
+                  QA/RA &amp; Security Specialist at Hermes Medical Solutions, leading product
+                  security and premarket cybersecurity — threat modeling, security risk management,
+                  and regulatory clearance — for nuclear-medicine imaging software.
                 </p>
               </article>
               <article
@@ -241,9 +241,9 @@
       </section>
 
       <!-- Education Section -->
-      <section id="education" class="bg-white py-16 md:py-24 dark:bg-slate-950">
+      <section id="education" class="bg-white py-16 md:py-20 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-10 md:mb-12">
+          <header class="mb-6 md:mb-8">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -534,9 +534,9 @@
       </section>
 
       <!-- Publications/Research Section -->
-      <section id="publications" class="bg-slate-50 py-16 md:py-24 dark:bg-slate-900/40">
+      <section id="publications" class="bg-slate-50 py-16 md:py-20 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-10 md:mb-12">
+          <header class="mb-6 md:mb-8">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -565,9 +565,9 @@
       </section>
 
       <!-- Projects Section -->
-      <section id="projects" class="bg-white py-16 md:py-24 dark:bg-slate-950">
+      <section id="projects" class="bg-white py-16 md:py-20 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-10 md:mb-12">
+          <header class="mb-6 md:mb-8">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -580,9 +580,9 @@
         </div>
       </section>
       <!-- About Section -->
-      <section id="about" class="bg-slate-50 py-16 md:py-24 dark:bg-slate-900/40">
+      <section id="about" class="bg-slate-50 py-16 md:py-20 dark:bg-slate-900/40">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-          <header class="mb-10 md:mb-12">
+          <header class="mb-6 md:mb-8">
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
@@ -590,7 +590,7 @@
             </h2>
           </header>
 
-          <div class="about-layout grid max-w-5xl items-start gap-12 lg:grid-cols-[280px_1fr]">
+          <div class="about-layout grid max-w-6xl items-start gap-10 lg:grid-cols-[280px_1fr]">
             <div class="about-block">
               <picture>
                 <source srcset="/images/optimized/cropped.avif" type="image/avif" />
@@ -604,7 +604,7 @@
                      that fall back. -->
                 <img
                   src="/images/optimized/cropped.png"
-                  alt="David Dashti - Biomedical Engineer and Cybersecurity Specialist"
+                  alt="David Dashti - product security specialist for medical software"
                   class="mx-auto h-auto w-[260px] rounded-2xl object-cover ring-1 ring-slate-200 lg:mx-0 lg:w-full dark:ring-slate-800"
                   width="280"
                   height="326"
@@ -616,69 +616,72 @@
               <p
                 class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >
-                Medical software security specialist focusing on cybersecurity governance,
-                regulatory compliance, and healthcare AI systems. Expert in ISO 27001, NIS2, and MDR
-                frameworks.
+                Product security specialist for medical software. I build security into medical
+                devices from design through premarket submission.
               </p>
-              <p class="mt-6 leading-relaxed">
-                I am a biomedical engineer specializing in cybersecurity and regulatory compliance
-                for medical software and AI systems. As a QA/RA &amp; Security Specialist at Hermes
-                Medical Solutions, I ensure that our software and digital health solutions meet the
-                highest standards of security, privacy, and regulatory alignment (NIS2, ISO 27001,
-                EU AI Act).
+              <p class="mt-5 leading-relaxed">
+                I'm a biomedical engineer working as a QA/RA &amp; Security Specialist at Hermes
+                Medical Solutions, where I secure nuclear-medicine imaging software and help clear
+                it for market — premarket cybersecurity, threat modeling, and security risk
+                management, grounded in FDA premarket guidance and IEC 81001-5-1. As AI moves into
+                these devices, I've started an early gap analysis against the EU AI Act to
+                understand what it will ask of us. I also build my own tools — an internal RAG
+                system over company data, still a work in progress, and in-house security tooling
+                and tests.
               </p>
-              <div class="mt-8">
+              <div class="mt-6">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
                   Current focus areas
                 </p>
-                <ul class="mt-6 space-y-4">
+                <ul class="mt-4 space-y-3">
                   <li class="flex gap-3 leading-relaxed">
                     <span
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Cybersecurity governance in medical software development
+                    Premarket cybersecurity for medical software (FDA, IEC 81001-5-1)
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Ensuring compliance with NIS2 and ISO 27001
+                    Security risk management and threat modeling across the product lifecycle
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Supporting market clearance for medical software (MDR, GDPR)
+                    Supporting market clearance for medical devices (FDA 510(k), EU MDR)
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Preparing frameworks for AI Act compliance in healthcare AI systems
+                    Securing the AI now entering medical devices — an early EU AI Act gap analysis,
+                    underway
                   </li>
                 </ul>
               </div>
-              <div class="mt-8">
+              <div class="mt-6">
                 <p
                   class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                 >
                   Technical skills
                 </p>
-                <p class="mt-6 leading-relaxed">
+                <p class="mt-4 leading-relaxed">
                   Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
                   Git
                 </p>
               </div>
-              <p class="mt-8 leading-relaxed">
-                I am passionate about making healthcare technology safer and more trustworthy by
-                protecting patient data, ensuring system integrity, and helping organizations
-                navigate the Cybersecurity &amp; AI regulatory landscape.
+              <p class="mt-6 leading-relaxed">
+                I care about making healthcare technology safer and more trustworthy — protecting
+                patients by making sure the software, and increasingly the AI, inside their care is
+                secure by design.
               </p>
             </div>
           </div>
@@ -725,7 +728,7 @@ useHead({
     {
       name: 'description',
       content:
-        'Biomedical Engineer and Cybersecurity Specialist specializing in regulatory compliance for medical software and AI systems.'
+        'Product security specialist for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI.'
     }
   ],
   link: [{ rel: 'canonical', href: 'https://dashti.se/' }]

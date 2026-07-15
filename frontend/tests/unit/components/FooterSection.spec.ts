@@ -15,9 +15,7 @@ describe('FooterSection', () => {
 
   it('displays the tagline', () => {
     const wrapper = mount(FooterSection)
-    expect(wrapper.find('.footer-tagline').text()).toBe(
-      'Cybersecurity Engineer & Medical Software Specialist'
-    )
+    expect(wrapper.find('.footer-tagline').text()).toBe('Product security for medical software')
   })
 
   it('displays the current year in copyright', () => {

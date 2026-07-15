@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="footer-section border-t border-slate-200 bg-white pt-32 pb-16 text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+    class="footer-section border-t border-slate-200 bg-white py-16 text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
   >
     <div
       class="mx-auto flex max-w-7xl flex-col items-center gap-5 px-6 text-center sm:px-8 lg:px-12"
@@ -10,7 +10,7 @@
       >
         David Dashti
       </span>
-      <p class="footer-tagline text-sm">Cybersecurity Engineer &amp; Medical Software Specialist</p>
+      <p class="footer-tagline text-sm">Product security for medical software</p>
 
       <div class="flex items-center gap-3">
         <a

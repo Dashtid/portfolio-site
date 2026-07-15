@@ -73,7 +73,7 @@ export default defineConfig({
         name: 'David Dashti',
         short_name: 'David Dashti',
         description:
-          'Biomedical Engineer and Cybersecurity Specialist focused on securing healthcare technology and patient data',
+          'Product security for medical software — securing medical devices and the AI moving into healthcare',
         theme_color: '#2563eb',
         background_color: '#f8fafc',
         display: 'standalone',
