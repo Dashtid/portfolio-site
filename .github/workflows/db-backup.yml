@@ -5,6 +5,15 @@
 # Before this workflow existed there was NO durable backup of the DB at
 # all — a finding from the 2026-07 full-stack review.
 #
+# Dumps are age-encrypted before upload (D3-SEC-01, 2026-07-16): this repo
+# is PUBLIC, and public-repo artifacts are downloadable by any logged-in
+# GitHub account, so plaintext dumps were an open data exposure. The age
+# recipient below is a public key — safe to commit; the runner never holds
+# decryption capability. The private key lives OFFLINE with the owner
+# (password manager). Restore:
+#   unzip artifact && age -d -i age-backup-key.txt portfolio-YYYYMMDD.dump.age \
+#     > portfolio.dump && pg_restore ...
+#
 # Required repository secrets:
 #   FLY_DB_TOKEN - deploy token: flyctl tokens create deploy -a dashti-portfolio-db
 #                  (NOT FLY_API_TOKEN — that one is scoped to the backend
@@ -29,7 +38,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Set up flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # 1.5
 
       - name: Install postgresql client
         # pg_dump must be >= the server's major version (17). The runner
@@ -41,7 +50,7 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
             | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
+          sudo apt-get install -y -qq postgresql-client-17 age
 
       - name: Open proxy to Postgres
         env:
@@ -73,10 +82,18 @@ jobs:
             --file "portfolio-$(date -u +%Y%m%d).dump"
           ls -la portfolio-*.dump
 
+      - name: Encrypt dump (age, public-key recipient)
+        # Plaintext must never reach upload-artifact on this public repo.
+        run: |
+          age -r age137axkhhga6awtmmpv7lqzkt7fdmlm7pgucqh3rspwysg33whud5skcnkun \
+            -o "$(ls portfolio-*.dump).age" "$(ls portfolio-*.dump)"
+          shred -u portfolio-*.dump
+          ls -la portfolio-*.dump.age
+
       - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: pg-backup-${{ github.run_id }}
-          path: portfolio-*.dump
+          path: portfolio-*.dump.age
           retention-days: 30
           if-no-files-found: error
