@@ -5,6 +5,7 @@
     data-testid="navbar"
     role="navigation"
     aria-label="Main navigation"
+    @keydown.escape="closeMobileMenu"
   >
     <div class="mx-auto grid max-w-7xl grid-cols-3 items-center gap-4 px-6 sm:px-8 lg:px-12">
       <a
@@ -38,6 +39,7 @@
       <div class="flex items-center justify-self-end gap-2">
         <ThemeToggle />
         <button
+          ref="mobileMenuToggle"
           class="navbar-toggler inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800"
           type="button"
           data-testid="mobile-menu-toggle"
@@ -66,12 +68,16 @@
 
     <!-- Mobile menu. Uses .navbar-collapse + .show classes to keep test
          selectors stable and so the existing data-anim/transition CSS
-         continues to apply. v-show keeps the DOM mounted so the scroll
-         logic can hide the menu after a link click. -->
+         continues to apply. The DOM stays mounted (max-height collapse)
+         so the scroll logic can hide the menu after a link click; `inert`
+         while closed removes the five visually-hidden links from the tab
+         order and accessibility tree (D3-A11Y-02, WCAG 2.4.3/2.4.7) —
+         max-h-0 + overflow-hidden alone left them keyboard-activatable. -->
     <div
       id="navbarNav"
       class="navbar-collapse mx-6 mt-2 overflow-hidden border-t border-slate-200 transition-[max-height] duration-300 ease-out lg:hidden dark:border-slate-800"
       :class="mobileMenuOpen ? 'show max-h-96' : 'max-h-0 border-transparent'"
+      :inert="!mobileMenuOpen"
     >
       <ul class="flex flex-col gap-1 py-2">
         <li v-for="item in navItems" :key="item.href">
@@ -118,6 +124,16 @@ interface NavItem {
 const scrolled = ref<boolean>(false)
 const activeSection = ref<string>('hero')
 const mobileMenuOpen = ref<boolean>(false)
+const mobileMenuToggle = ref<HTMLButtonElement | null>(null)
+
+// Escape closes the open mobile menu and returns focus to the toggle
+// (D3-A11Y-02). Bound on the <nav> root, so it only fires while focus is
+// inside the navbar — no global key listener needed.
+const closeMobileMenu = (): void => {
+  if (!mobileMenuOpen.value) return
+  mobileMenuOpen.value = false
+  mobileMenuToggle.value?.focus()
+}
 
 const navItems: NavItem[] = [
   { name: 'Home', href: 'hero' },

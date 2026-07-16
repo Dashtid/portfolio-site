@@ -1,11 +1,26 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ToastContainer.vue'
 import ErrorBoundary from './components/ErrorBoundary.vue'
 
 // Store
 const authStore = useAuthStore()
+const route = useRoute()
+
+// Move focus to the incoming page's <main> so screen readers announce the
+// new page. Runs on the Transition's after-enter — the earliest moment the
+// INCOMING view is actually in the DOM (router.afterEach + nextTick fired
+// while the out-in transition still showed the outgoing view, so focus
+// landed on a dying node and dropped to <body> — D3-A11Y-01). No `appear`
+// on the Transition means this never fires on initial page load, only on
+// SPA navigations. Skipped for hash navigations: scrollBehavior owns those,
+// and focusing #main-content would yank the viewport back to the top.
+const focusMainContent = (): void => {
+  if (route.hash) return
+  document.getElementById('main-content')?.focus({ preventScroll: false })
+}
 
 // On mount, just remove the loading skeleton. Auth is initialized lazily
 // by the route guard for admin routes only — calling checkAuth here would
@@ -28,9 +43,9 @@ onMounted((): void => {
          Transition, blanking the page until data arrived. If a future
          view adds a top-level await, Vue will warn that Suspense is
          missing — the fix is to remove the await, not re-add Suspense. -->
-    <router-view v-slot="{ Component, route }">
-      <Transition name="page-fade" mode="out-in">
-        <component :is="Component" :key="route.path" />
+    <router-view v-slot="{ Component, route: viewRoute }">
+      <Transition name="page-fade" mode="out-in" @after-enter="focusMainContent">
+        <component :is="Component" :key="viewRoute.path" />
       </Transition>
     </router-view>
   </ErrorBoundary>
@@ -65,6 +80,15 @@ onMounted((): void => {
   top: 0;
   outline: 3px solid var(--primary-300, #93c5fd);
   outline-offset: 2px;
+}
+
+/* #main-content receives PROGRAMMATIC focus after route changes (the
+   Transition's after-enter above) and from the skip link. tabindex="-1"
+   keeps it out of the tab order, so a visible ring is pure noise — and
+   Chromium's UA ring on a full-page <main> painted a 2px white hairline
+   above the footer in every dark visual baseline (D3-A11Y-01). */
+#main-content:focus {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

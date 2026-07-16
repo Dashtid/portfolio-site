@@ -80,6 +80,9 @@ jobs:
 
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
+        # Reporting nicety must never block the gate (D3-CI-01): a missing
+        # summary file killed every frontend PR before Codecov/SSG/artifact.
+        continue-on-error: true
         uses: davelosert/vitest-coverage-report-action@3c50566c523e04813df28de8f7c48dd97d663f1c # v2
         with:
           working-directory: ./frontend

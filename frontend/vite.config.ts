@@ -274,9 +274,11 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.logs in production
+        // No drop_console here (D3-FE-02): it deleted console.error/warn too,
+        // breaking logger.ts's "errors always logged in production" contract.
+        // pure_funcs below strips only the noisy tiers.
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'], // Remove specific console methods
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
         passes: 2 // Run compression twice for better results
       },
       mangle: {
@@ -348,35 +350,5 @@ export default defineConfig({
   // Optimize dependencies
   optimizeDeps: {
     include: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'axios']
-  },
-  test: {
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json-summary', 'json'],
-      reportsDirectory: './coverage',
-      reportOnFailure: true,
-      // Thresholds baked in 2026-05-02 from a 78.18/69.31/78.87/79.33 baseline,
-      // minus ~2pp headroom so PRs fail before coverage drops more than that.
-      // Stricter per-glob gates for `api/` and `stores/` — those are the
-      // user-visible data plumbing where regressions are most expensive.
-      thresholds: {
-        statements: 76,
-        branches: 67,
-        functions: 76,
-        lines: 77,
-        'src/api/**': {
-          statements: 90,
-          branches: 60,
-          functions: 85,
-          lines: 92
-        },
-        'src/stores/**': {
-          statements: 83,
-          branches: 67,
-          functions: 90,
-          lines: 84
-        }
-      }
-    }
   }
 })

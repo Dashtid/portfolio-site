@@ -698,7 +698,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onServerPrefetch, nextTick, defineAsyncComponent } from 'vue'
+import {
+  ref,
+  computed,
+  onMounted,
+  onServerPrefetch,
+  nextTick,
+  defineAsyncComponent,
+  defineComponent,
+  type Component
+} from 'vue'
 import { usePortfolioStore } from '../stores/portfolio'
 import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
@@ -711,8 +720,21 @@ import { useTheme } from '../composables/useTheme'
 const { isDark } = useTheme()
 
 // Lazy load Three.js hero background to reduce initial bundle size (~172KB gzipped)
+// Decoration must never take down content (D3-FE-01): the three-* chunk is
+// excluded from the SW precache, so an offline dark-mode revisit (or a load
+// stalled past the timeout) rejects here — and an unhandled rejection would
+// bubble into App.vue's ErrorBoundary and swap the ENTIRE working page for
+// "Something went wrong". Render nothing instead.
+const NoopBackground = defineComponent({ name: 'NoopBackground', render: () => null })
 const ThreeHeroBackground = defineAsyncComponent({
-  loader: () => import('../components/ThreeHeroBackground.vue'),
+  loader: async (): Promise<Component> => {
+    try {
+      return (await import('../components/ThreeHeroBackground.vue')).default
+    } catch {
+      return NoopBackground
+    }
+  },
+  errorComponent: NoopBackground, // covers the timeout path (not routed through loader rejection)
   delay: 0,
   timeout: 10000
 })

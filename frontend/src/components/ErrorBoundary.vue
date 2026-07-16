@@ -38,6 +38,8 @@
 import { ref, onErrorCaptured, type ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
 import { errorLogger } from '@/utils/logger'
+import { errorTracker } from '@/utils/errorTracking'
+import { captureException, isSentryInitialized } from '@/utils/sentry'
 
 interface Props {
   title?: string
@@ -52,17 +54,6 @@ const props = withDefaults(defineProps<Props>(), {
   showDetails: false,
   onRetry: null
 })
-
-// Extend Window interface for analytics
-/* eslint-disable no-unused-vars */
-declare global {
-  interface Window {
-    analytics?: {
-      trackEvent: (category: string, action: string, label: string) => void
-    }
-  }
-}
-/* eslint-enable no-unused-vars */
 
 const router = useRouter()
 const hasError = ref<boolean>(false)
@@ -85,18 +76,26 @@ const handleGoHome = (): void => {
   router.push('/')
 }
 
-onErrorCaptured((err: Error, _instance: ComponentPublicInstance | null, info: string) => {
+onErrorCaptured((err: Error, instance: ComponentPublicInstance | null, info: string) => {
   errorLogger.error('Error caught in boundary:', err)
   hasError.value = true
   errorDetails.value = import.meta.env.DEV ? `${err.message}\n\nComponent: ${info}` : null
 
-  // Log to analytics if available (wrapped to prevent escape)
+  // Report here, NOT via propagation: `return false` below stops the error
+  // from reaching main.ts's app.config.errorHandler (the only other Sentry
+  // wiring), so without these calls every boundary-caught production error
+  // was invisible (D3-FE-02). Wrapped so reporting failures can't recurse
+  // into the boundary.
   try {
-    if (window.analytics) {
-      window.analytics.trackEvent('Error', 'Boundary', err.message)
+    errorTracker.handleVueError(err, instance, info)
+    if (isSentryInitialized()) {
+      captureException(err, {
+        componentName: (instance as { $options?: { name?: string } })?.$options?.name,
+        errorInfo: info
+      })
     }
   } catch {
-    // Silently ignore analytics failures
+    // Reporting must never take down the fallback UI
   }
 
   // Prevent the error from propagating

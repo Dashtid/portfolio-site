@@ -1,6 +1,5 @@
 import { ViteSSG } from 'vite-ssg'
 import { createPinia } from 'pinia'
-import { nextTick } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
 import { routes, scrollBehavior, DEFAULT_TITLE } from './router'
@@ -52,19 +51,17 @@ export const createApp = ViteSSG(
         })
       )
 
-      // Update document title and track page views after navigation
+      // Update document title and track page views after navigation.
+      // NOTE: route-change focus management lives in App.vue's Transition
+      // @after-enter hook, NOT here (D3-A11Y-01) — at afterEach+nextTick the
+      // out-in transition still shows the OUTGOING view, so focusing
+      // #main-content grabbed a node about to be unmounted and focus fell
+      // back to <body>, silently breaking screen-reader announcements.
       router.afterEach((to: RouteLocationNormalized) => {
         const title = to.meta.title as string | undefined
         document.title = title || DEFAULT_TITLE
 
         analyticsService.trackPageView(to.path, to.name as string | undefined)
-
-        // Move focus to main content after route change so screen readers announce new page.
-        // tabindex="-1" on each <main id="main-content"> makes it focusable without tab order.
-        nextTick(() => {
-          const target = document.getElementById('main-content') as HTMLElement | null
-          target?.focus({ preventScroll: false })
-        })
       })
 
       // Initialize Sentry lazily (only loads ~100KB bundle if DSN is configured)
