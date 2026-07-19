@@ -386,9 +386,15 @@ jobs:
         # real release tag (was 0.0.0 on every event). The SENTRY_* trio powers
         # sourcemap upload; while those secrets are unset the empty values
         # simply leave the upload plugin disabled (vite.config.ts gates on it).
+        # VITE_SENTRY_DSN: discovered 2026-07-17 that the DSN was never set in
+        # Vercel's build env — the DSN guard in sentry.ts dead-codes the ENTIRE
+        # Sentry init at build, so frontend Sentry has never been active in
+        # production. Set the VITE_SENTRY_DSN secret to activate it (a DSN is
+        # client-visible by design; secret storage is just tidier than inline).
         run: |
           vercel deploy --prod --yes \
             --build-env VITE_APP_VERSION="${GITHUB_SHA:0:12}" \
+            --build-env VITE_SENTRY_DSN="$VITE_SENTRY_DSN" \
             --build-env SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \
             --build-env SENTRY_ORG="$SENTRY_ORG" \
             --build-env SENTRY_PROJECT="$SENTRY_PROJECT" \
@@ -397,6 +403,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
