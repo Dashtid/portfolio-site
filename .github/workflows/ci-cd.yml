@@ -380,11 +380,26 @@ jobs:
         # its own ("No existing credentials found ... pass --token") — the token
         # has to be passed explicitly. VERCEL_ORG_ID/PROJECT_ID are still read
         # from the environment to select the project without a linked .vercel dir.
-        run: vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+        #
+        # --build-env (D3-INF-03): the build runs on Vercel's infra, so CI env
+        # vars don't reach it unless forwarded. VITE_APP_VERSION gives Sentry a
+        # real release tag (was 0.0.0 on every event). The SENTRY_* trio powers
+        # sourcemap upload; while those secrets are unset the empty values
+        # simply leave the upload plugin disabled (vite.config.ts gates on it).
+        run: |
+          vercel deploy --prod --yes \
+            --build-env VITE_APP_VERSION="${GITHUB_SHA:0:12}" \
+            --build-env SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \
+            --build-env SENTRY_ORG="$SENTRY_ORG" \
+            --build-env SENTRY_PROJECT="$SENTRY_PROJECT" \
+            --token "$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
 
   # Deploy backend to Fly.io — gated on backend-quality. Fly's remote builder
   # produces the image from the Dockerfile on each deploy; we just invoke the

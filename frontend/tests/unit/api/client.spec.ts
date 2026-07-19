@@ -15,7 +15,9 @@ describe('API client', () => {
     vi.resetModules()
 
     delete (window as any).location
-    window.location = { href: '' } as any
+    // pathname matters since D3-FE-04: the 401 redirect is gated on being
+    // on an admin surface. Default to a public page.
+    window.location = { href: '', pathname: '/' } as any
 
     // Mock axios.create to return a mock instance.
     // The instance must be callable (like a function) because apiClient(config) is used.
@@ -87,7 +89,31 @@ describe('API client', () => {
       )
     })
 
-    it('redirects to login when refresh fails', async () => {
+    it('does NOT redirect public visitors to login when refresh fails (D3-FE-04)', async () => {
+      window.location.pathname = '/'
+      vi.mocked(axios.post).mockRejectedValue(new Error('Refresh failed'))
+
+      const error: Partial<AxiosError> = {
+        response: { status: 401 } as any,
+        config: { headers: {} as any, url: '/test' } as InternalAxiosRequestConfig
+      }
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+
+      try {
+        await errorInterceptor(error)
+      } catch {
+        /* expected */
+      }
+
+      // Public callers get the rejection and fall back to static content —
+      // an auth regression on a public endpoint must not bounce visitors
+      // into the admin login page.
+      expect(window.location.href).toBe('')
+    })
+
+    it('redirects to login when refresh fails on an admin surface', async () => {
+      window.location.pathname = '/admin/companies'
       vi.mocked(axios.post).mockRejectedValue(new Error('Refresh failed'))
 
       const error: Partial<AxiosError> = {
@@ -206,7 +232,8 @@ describe('API client', () => {
       expect(apiClient).toHaveBeenCalled()
     })
 
-    it('redirects to login on refresh failure', async () => {
+    it('redirects to login on refresh failure (admin surface)', async () => {
+      window.location.pathname = '/admin/metrics'
       vi.mocked(axios.post).mockRejectedValue(new Error('Refresh failed'))
 
       const error: Partial<AxiosError> = {

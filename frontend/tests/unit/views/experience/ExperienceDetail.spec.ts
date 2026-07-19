@@ -146,19 +146,25 @@ describe('ExperienceDetail', () => {
       expect(wrapper.find('.alert-danger').exists()).toBe(false)
     })
 
-    it('renders 404-specific error when API returns 404', async () => {
+    it('renders the 404 state (not an error banner) when API returns 404 (D3-UX-01)', async () => {
       mockedApiClient.get.mockRejectedValue({ response: { status: 404 } })
       const { wrapper } = await createWrapper()
 
-      expect(wrapper.find('.alert-danger').exists()).toBe(true)
-      expect(wrapper.text()).toContain('Company not found')
+      // Definitive not-found is a designed 404, distinct from a transient
+      // failure: mono "404" heading + recovery links, no alert styling.
+      expect(wrapper.text()).toContain('experience not found')
+      expect(wrapper.find('h1').text()).toBe('404')
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
     })
 
-    it('renders generic error message on non-404 failure', async () => {
+    it('renders retry copy with a Try again button on non-404 failure (D3-UX-01)', async () => {
       mockedApiClient.get.mockRejectedValue({ response: { status: 500 } })
       const { wrapper } = await createWrapper()
 
-      expect(wrapper.text()).toContain('Failed to load company details')
+      expect(wrapper.text()).toContain("The server couldn't be reached")
+      const alert = wrapper.find('[role="alert"]')
+      expect(alert.exists()).toBe(true)
+      expect(alert.text()).toContain('Try again')
     })
 
     it('does not surface error when axios.isCancel returns true', async () => {

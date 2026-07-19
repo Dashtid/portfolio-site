@@ -38,6 +38,34 @@ export const createApp = ViteSSG(
     }
 
     if (isClient) {
+      // D3-FE-03: a tab left open across a deploy holds references to old
+      // content-hashed chunks that 404 on the new deployment (the SW's
+      // skipWaiting/cleanupOutdatedCaches drops them too) — every lazy
+      // navigation just died until a manual refresh. Reload once to pick up
+      // the fresh manifest; the sessionStorage stamp stops a reload loop if
+      // the failure is something else (offline, corporate proxy).
+      const RELOAD_STAMP = 'chunk-reload-at'
+      const reloadOnStaleChunk = (targetPath?: string): void => {
+        const last = Number(sessionStorage.getItem(RELOAD_STAMP) || 0)
+        if (Date.now() - last < 60_000) return
+        sessionStorage.setItem(RELOAD_STAMP, String(Date.now()))
+        window.location.assign(targetPath ?? window.location.pathname)
+      }
+      window.addEventListener('vite:preloadError', event => {
+        event.preventDefault()
+        reloadOnStaleChunk()
+      })
+      router.onError((error, to) => {
+        if (
+          error instanceof Error &&
+          /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i.test(
+            error.message
+          )
+        ) {
+          reloadOnStaleChunk(to.fullPath)
+        }
+      })
+
       // Navigation guards — client-only (localStorage / window not available
       // during SSG). The guard body is extracted to `router/authGuard.ts`
       // so it can be unit-tested without spinning up the full app
@@ -124,7 +152,10 @@ export const createApp = ViteSSG(
 // Excludes admin paths (auth-gated, must remain SPA).
 // Dynamically fetches experience IDs from the API for /experience/:id routes.
 export async function includedRoutes(paths: string[]) {
-  const publicPaths = paths.filter(p => !p.startsWith('/admin'))
+  // Drop admin (auth-gated SPA) and every parameterised template path —
+  // including the '/:pathMatch(.*)*' catch-all, which would otherwise be
+  // "prerendered" as a literal directory name.
+  const publicPaths = paths.filter(p => !p.startsWith('/admin') && !p.includes(':'))
 
   const apiUrl = import.meta.env.VITE_API_URL || 'https://api.dashti.se'
 
@@ -133,11 +164,7 @@ export async function includedRoutes(paths: string[]) {
     if (res.ok) {
       const companies: Array<{ id: string }> = await res.json()
       const experiencePaths = companies.map(c => `/experience/${c.id}`)
-      // Replace the parameterised template paths with real paths
-      return [
-        ...publicPaths.filter(p => p !== '/experience/:id' && p !== '/company/:id'),
-        ...experiencePaths
-      ]
+      return [...publicPaths, ...experiencePaths]
     }
   } catch {
     // API not reachable at build time — skip dynamic routes, pre-render static pages only
@@ -146,5 +173,5 @@ export async function includedRoutes(paths: string[]) {
     }
   }
 
-  return publicPaths.filter(p => p !== '/experience/:id' && p !== '/company/:id')
+  return publicPaths
 }

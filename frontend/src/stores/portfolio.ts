@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
-import type { Company, Skill, Project, Education } from '@/types'
+import type { Company, Skill, Project, Education, Document } from '@/types'
 import { apiLogger } from '../utils/logger'
 import { getErrorMessage } from '../utils/typeGuards'
 
@@ -9,6 +9,7 @@ interface PortfolioState {
   skills: Skill[]
   projects: Project[]
   education: Education[]
+  documents: Document[]
   loading: boolean
   error: string | null
   // Track active requests to handle parallel fetches correctly
@@ -25,6 +26,7 @@ export const usePortfolioStore = defineStore('portfolio', {
     skills: [],
     projects: [],
     education: [],
+    documents: [],
     loading: false,
     error: null,
     _activeRequests: 0
@@ -136,12 +138,31 @@ export const usePortfolioStore = defineStore('portfolio', {
       }
     },
 
+    // D3-UX-02: documents live here (not a component-local ref) so the SSG
+    // render bakes them into __INITIAL_STATE__ like every other collection —
+    // publications are static in practice, and the baked copy means an API
+    // hiccup can no longer blank the Academic Work section with a raw
+    // axios error string.
+    async fetchDocuments(): Promise<void> {
+      this._startRequest()
+      try {
+        const response = await apiClient.get<Document[]>('/api/v1/documents')
+        this.documents = response.data
+      } catch (error) {
+        this.error = getErrorMessage(error)
+        apiLogger.error('Error fetching documents:', error)
+      } finally {
+        this._endRequest()
+      }
+    },
+
     async fetchAllData(): Promise<void> {
       await Promise.all([
         this.fetchCompanies(),
         this.fetchSkills(),
         this.fetchProjects(),
-        this.fetchEducation()
+        this.fetchEducation(),
+        this.fetchDocuments()
       ])
     }
   }

@@ -17,32 +17,76 @@
         <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Loading experience details...</p>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="mx-auto max-w-3xl px-6 py-20">
-        <div
-          class="alert-danger rounded-2xl border border-rose-200 bg-rose-50 p-6 dark:border-rose-500/30 dark:bg-rose-500/10"
-          role="alert"
+      <!-- Not-found State (D3-UX-01): a real 404, distinct from a transient
+           API failure — mirrors NotFoundView's treatment, noindex via the
+           reactive useHead below. -->
+      <div v-else-if="notFound" class="mx-auto max-w-3xl px-6 py-20 text-center">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+          HTTP 404 — experience not found
+        </p>
+        <h1
+          class="mt-6 font-mono text-8xl font-semibold tracking-tight text-slate-900 dark:text-white"
         >
-          <h4 class="text-lg font-semibold text-rose-800 dark:text-rose-200">
-            Error Loading Experience
-          </h4>
-          <p class="mt-2 text-sm text-rose-700 dark:text-rose-300">{{ error }}</p>
+          404
+        </h1>
+        <p
+          class="mx-auto mt-6 max-w-md text-balance text-base font-light leading-relaxed text-slate-500 sm:text-lg dark:text-slate-400"
+        >
+          This experience doesn't exist — it may have been removed, or the link is stale.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
           <router-link
             to="/"
-            class="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
           >
-            Return to Home
-            <svg
-              class="h-3.5 w-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+            Back to home
           </router-link>
+          <router-link
+            to="/#experience"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+          >
+            View experience
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Transient error state: the API was unreachable — retry copy, not a
+           dead end (and not a red wall; amber = degraded, matching HomeView's
+           API banner). -->
+      <div v-else-if="error" class="mx-auto max-w-3xl px-6 py-20">
+        <div
+          class="rounded-2xl border border-amber-300/50 bg-amber-50 p-6 dark:border-amber-500/20 dark:bg-amber-500/10"
+          role="alert"
+        >
+          <h1 class="text-lg font-semibold text-amber-900 dark:text-amber-200">
+            Couldn't load this experience
+          </h1>
+          <p class="mt-2 text-sm text-amber-800 dark:text-amber-300">{{ error }}</p>
+          <div class="mt-5 flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
+              @click="retry"
+            >
+              Try again
+            </button>
+            <router-link
+              to="/"
+              class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+            >
+              Return to Home
+              <svg
+                class="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </router-link>
+          </div>
         </div>
       </div>
 
@@ -370,19 +414,28 @@ const company = computed<Company | null>(() => experienceStore.byId[companyId.va
 // render identical to the server's — no hydration mismatch, no spinner flash.
 const loading = ref<boolean>(!company.value)
 const error = ref<string | null>(null)
+const notFound = ref<boolean>(false)
 const logoError = ref<boolean>(false)
 
 // Per-route head tags — reactive so SSG renders the correct title/canonical for each page
 useHead({
   title: computed(() =>
-    company.value
-      ? `${company.value.name} | Experience | David Dashti`
-      : 'Experience | David Dashti'
+    notFound.value
+      ? '404 — Experience Not Found | David Dashti'
+      : company.value
+        ? `${company.value.name} | Experience | David Dashti`
+        : 'Experience | David Dashti'
   ),
   meta: [
     {
       name: 'description',
       content: computed(() => company.value?.description || 'Experience details')
+    },
+    // Unknown IDs are served 200 by the SPA rewrite — noindex is the honest
+    // crawler signal for the not-found state (D3-UX-01).
+    {
+      name: 'robots',
+      content: computed(() => (notFound.value ? 'noindex' : 'index, follow'))
     }
   ],
   link: [
@@ -411,6 +464,7 @@ const loadCompany = async (id: string): Promise<void> => {
   fetchAbortController = new AbortController()
 
   error.value = null
+  notFound.value = false
   logoError.value = false // Reset logo error state for new company
 
   if (experienceStore.byId[id]) {
@@ -430,9 +484,10 @@ const loadCompany = async (id: string): Promise<void> => {
     apiLogger.error('Error fetching company:', err)
     const axiosError = err as AxiosError
     if (axiosError.response?.status === 404) {
-      error.value = 'Company not found. It may have been removed or the link is incorrect.'
+      // Definitive: the ID doesn't exist — a 404 state, not an error banner
+      notFound.value = true
     } else {
-      error.value = 'Failed to load company details. Please try again later.'
+      error.value = "The server couldn't be reached. Check your connection and try again."
     }
   } finally {
     loading.value = false
@@ -442,6 +497,13 @@ const loadCompany = async (id: string): Promise<void> => {
         runEntranceAnimations()
       })
     }
+  }
+}
+
+// Retry after a transient failure (the "Try again" button in the error state)
+const retry = (): void => {
+  if (companyId.value) {
+    void loadCompany(companyId.value)
   }
 }
 

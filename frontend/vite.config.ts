@@ -6,6 +6,15 @@ import path from 'path'
 import os from 'os'
 import fs from 'fs'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
+
+// D3-INF-03: sourcemap upload is gated on a build-time SENTRY_AUTH_TOKEN
+// (passed via `vercel deploy --build-env` from the SENTRY_AUTH_TOKEN GitHub
+// secret). Without it the plugin is absent and sourcemap stays off — exactly
+// the pre-change behavior — so maps can never ship to the CDN unprotected:
+// with the token, 'hidden' maps are generated, uploaded to Sentry, then
+// deleted before deploy by filesToDeleteAfterUpload.
+const SENTRY_UPLOAD_ENABLED = Boolean(process.env.SENTRY_AUTH_TOKEN)
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -249,6 +258,19 @@ export default defineConfig({
         filename: 'dist/stats.html',
         gzipSize: true,
         brotliSize: true
+      }),
+    // Sentry sourcemap upload — only when a token is present at build time
+    // (D3-INF-03; see SENTRY_UPLOAD_ENABLED above). Must come after all
+    // code-emitting plugins so it sees the final chunks.
+    SENTRY_UPLOAD_ENABLED &&
+      sentryVitePlugin({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        telemetry: false,
+        sourcemaps: {
+          filesToDeleteAfterUpload: ['dist/**/*.map']
+        }
       })
   ],
   resolve: {
@@ -270,7 +292,9 @@ export default defineConfig({
     target: 'es2015',
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false,
+    // 'hidden': maps generated without sourceMappingURL comments; uploaded
+    // to Sentry then deleted (see SENTRY_UPLOAD_ENABLED above)
+    sourcemap: SENTRY_UPLOAD_ENABLED ? 'hidden' : false,
     minify: 'terser',
     terserOptions: {
       compress: {

@@ -106,10 +106,16 @@ apiClient.interceptors.response.use(
         onTokenRefreshFailed(
           refreshError instanceof Error ? refreshError : new Error('Token refresh failed')
         )
-        // Skip the redirect if we're already on /admin/login: the auth-guard's
-        // requiresGuest branch also fires fetchUser on that page, so re-redirecting
-        // from /admin/login to /admin/login spins the browser into a reload loop.
-        if (window.location.pathname !== '/admin/login') {
+        // Redirect ONLY on admin surfaces (D3-FE-04): this interceptor wraps
+        // every request — public GETs and analytics included — so an auth
+        // regression on any public endpoint used to teleport ordinary
+        // visitors into the login page. Public callers just get the
+        // rejection and fall back to their static content.
+        // /admin/login itself stays excluded: the auth-guard's requiresGuest
+        // branch also fires fetchUser there, and re-redirecting
+        // /admin/login -> /admin/login spins the browser into a reload loop.
+        const onAdminSurface = window.location.pathname.startsWith('/admin')
+        if (onAdminSurface && window.location.pathname !== '/admin/login') {
           window.location.href = '/admin/login'
         }
         return Promise.reject(refreshError)

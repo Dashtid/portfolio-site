@@ -552,15 +552,17 @@
             Loading publications...
           </div>
           <div
-            v-else-if="documentsError"
-            class="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
-            role="alert"
+            v-else-if="documents.length"
+            class="documents-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3"
           >
-            {{ documentsError }}
-          </div>
-          <div v-else class="documents-grid grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <DocumentCard v-for="document in documents" :key="document.id" :document="document" />
           </div>
+          <!-- Quiet degradation (D3-UX-02): documents are baked at SSG time,
+               so this renders only when the bake AND the client refetch both
+               failed — a one-line note, not a raw axios string in a red wall. -->
+          <p v-else class="text-sm text-slate-500 dark:text-slate-400">
+            Publications are unavailable right now.
+          </p>
         </div>
       </section>
 
@@ -699,11 +701,11 @@
 
 <script setup lang="ts">
 import {
-  ref,
   computed,
   onMounted,
   onServerPrefetch,
   nextTick,
+  watch,
   defineAsyncComponent,
   defineComponent,
   type Component
@@ -739,10 +741,7 @@ const ThreeHeroBackground = defineAsyncComponent({
   timeout: 10000
 })
 import { useHead } from '@unhead/vue'
-import apiClient from '../api/client'
-import type { Document } from '@/types'
 import { logger } from '../utils/logger'
-import { getUserMessage } from '../utils/errorHandler'
 
 useHead({
   title: 'David Dashti | Cybersecurity in Healthcare',
@@ -808,10 +807,11 @@ const education = computed(() => {
   })
 })
 
-// Documents state
-const documents = ref<Document[]>([])
-const documentsLoading = ref(false)
-const documentsError = ref<string | null>(null)
+// Documents come from the store (baked into __INITIAL_STATE__ at SSG time,
+// D3-UX-02); the skeleton shows only while a live fetch is actually pending
+// with nothing baked to show.
+const documents = computed(() => portfolioStore.documents || [])
+const documentsLoading = computed(() => portfolioStore.loading && documents.value.length === 0)
 
 // Computed properties
 const companies = computed(() => portfolioStore.companies || [])
@@ -874,14 +874,13 @@ const documentCardAnimation = useIntersectionAnimation('.document-card', { stagg
 useIntersectionAnimation('.section-title', { stagger: 0 })
 useIntersectionAnimation('.about-block', { stagger: 0.12 })
 
-// Load data on mount. Portfolio data normally arrives via
-// __INITIAL_STATE__ (baked by the onServerPrefetch above); the fetch here
-// is the client-side fallback for an empty hydration payload — it fills
-// the store after mount without blocking hydration, so the prerendered
-// DOM (and its static fallback content) stays on screen while it runs.
-// Documents live here unconditionally because they're a component-local
-// ref that doesn't flow through __INITIAL_STATE__.
-onMounted(async () => {
+// Load data on mount. Portfolio data (documents included, D3-UX-02)
+// normally arrives via __INITIAL_STATE__ (baked by the onServerPrefetch
+// above); the fetch here is the client-side fallback for an empty
+// hydration payload — it fills the store after mount without blocking
+// hydration, so the prerendered DOM (and its static fallback content)
+// stays on screen while it runs.
+onMounted(() => {
   // Refetch when the baked payload looks incomplete — not just fully
   // empty. Build-time fetches fail per-collection (a live deploy shipped
   // education/skills empty next to populated companies/projects), and a
@@ -892,32 +891,24 @@ onMounted(async () => {
     portfolioStore.companies.length === 0 ||
     portfolioStore.skills.length === 0 ||
     portfolioStore.projects.length === 0 ||
-    portfolioStore.education.length === 0
+    portfolioStore.education.length === 0 ||
+    portfolioStore.documents.length === 0
   if (bakePartial) {
-    // Fire-and-forget, deliberately not awaited: awaiting would serialize
-    // it ahead of the documents fetch below for no benefit.
     Promise.resolve(portfolioStore.fetchAllData()).catch((error: unknown) => {
       logger.error('Portfolio data fetch failed after mount:', error)
     })
   }
-
-  documentsLoading.value = true
-
-  try {
-    const response = await apiClient.get<Document[]>('/api/v1/documents')
-    documents.value = response.data
-  } catch (error) {
-    logger.error('Error loading documents:', error)
-    documentsError.value = getUserMessage(error as Error)
-  } finally {
-    documentsLoading.value = false
-  }
-
-  // Document cards exist only now that the fetch resolved — wait for the
-  // DOM update, then hand the new elements to the observer.
-  await nextTick()
-  documentCardAnimation.refresh()
 })
+
+// Document cards render whenever the store fills (baked payload or the
+// fallback refetch above) — hand the new elements to the observer then.
+watch(
+  () => documents.value.length,
+  async () => {
+    await nextTick()
+    documentCardAnimation.refresh()
+  }
+)
 </script>
 
 <style scoped>

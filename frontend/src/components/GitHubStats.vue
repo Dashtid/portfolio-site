@@ -1,12 +1,25 @@
 <template>
   <div ref="sectionRef" class="github-stats">
-    <div v-if="loading" class="loading-spinner">
+    <div v-if="loading" class="loading-spinner" role="status" aria-live="polite">
       <div class="spinner"></div>
       <p>Loading GitHub stats...</p>
     </div>
 
-    <div v-else-if="error" class="error-message">
-      <p>Failed to load GitHub stats</p>
+    <!-- Quiet degradation (D3-UX-02): a hiring manager should never meet a
+         red alert wall over a stats widget — one muted line, a direct link
+         to the real profile, and a retry. (.error-message class kept for
+         the spec's state assertions; styles below are now neutral.) -->
+    <div v-else-if="error" class="error-message" role="alert">
+      <p>
+        GitHub stats are unavailable right now —
+        <a
+          href="https://github.com/Dashtid"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+          >see the profile on GitHub</a
+        >.
+      </p>
       <button
         class="retry-button"
         :disabled="loading"
@@ -180,13 +193,14 @@ onUnmounted(() => {
   }
 }
 
+/* Neutral, not alarm-red (D3-UX-02): degraded decoration, not an incident */
 .error-message {
   text-align: center;
-  color: var(--color-error, #ef4444);
-  padding: 2rem;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--text-secondary, #64748b);
+  padding: 1.5rem;
+  background: transparent;
   border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px dashed var(--border-primary, #e2e8f0);
 }
 
 .empty-state {
@@ -257,9 +271,9 @@ onUnmounted(() => {
    higher-opacity empty-state border need explicit dark treatment. */
 
 [data-theme='dark'] .error-message {
-  color: var(--color-error);
-  background: rgba(252, 165, 165, 0.15);
-  border-color: rgba(252, 165, 165, 0.25);
+  color: var(--text-secondary);
+  background: transparent;
+  border-color: var(--border-primary);
 }
 
 [data-theme='dark'] .empty-state {

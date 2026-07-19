@@ -5,6 +5,7 @@ import HomeView from '../views/HomeView.vue'
 
 // Detail views - lazy loaded for better performance
 const ExperienceDetail = () => import('../views/experience/ExperienceDetail.vue')
+const NotFoundView = () => import('../views/NotFoundView.vue')
 
 // Admin views - lazy loaded (less frequently accessed)
 const AdminDashboard = () => import('../views/admin/AdminDashboard.vue')
@@ -34,6 +35,14 @@ export const routes: RouteRecordRaw[] = [
     component: ExperienceDetail,
     props: true,
     meta: { title: 'Experience | David Dashti' }
+  },
+  {
+    // Static path so vite-ssg prerenders a real dist/404.html; the
+    // catch-all below renders the same view client-side (D3-UX-01).
+    path: '/404',
+    name: 'not-found',
+    component: NotFoundView,
+    meta: { title: '404 — Page Not Found | David Dashti' }
   },
   {
     path: '/admin/login',
@@ -96,6 +105,15 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'OSS Contributions | David Dashti' }
       }
     ]
+  },
+  {
+    // Catch-all LAST: unmatched URLs used to hydrate to a completely blank
+    // page (no route matched, App.vue renders no chrome outside views) while
+    // Vercel's SPA rewrite served them as 200s (D3-UX-01).
+    path: '/:pathMatch(.*)*',
+    name: 'not-found-catchall',
+    component: NotFoundView,
+    meta: { title: '404 — Page Not Found | David Dashti' }
   }
 ]
 

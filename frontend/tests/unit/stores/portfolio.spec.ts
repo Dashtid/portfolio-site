@@ -342,20 +342,24 @@ describe('Portfolio Store', () => {
 
     describe('fetchAllData', () => {
       it('should fetch all data in parallel', async () => {
+        const mockDocuments = [{ id: 'doc-1', title: 'Thesis' }]
         vi.mocked(apiClient.get)
           .mockResolvedValueOnce({ data: mockCompanies })
           .mockResolvedValueOnce({ data: mockSkills })
           .mockResolvedValueOnce({ data: mockProjects })
           .mockResolvedValueOnce({ data: mockEducation })
+          .mockResolvedValueOnce({ data: mockDocuments })
 
         const store = usePortfolioStore()
         await store.fetchAllData()
 
-        expect(apiClient.get).toHaveBeenCalledTimes(4)
+        // 5 collections since D3-UX-02 moved documents into the store
+        expect(apiClient.get).toHaveBeenCalledTimes(5)
         expect(store.companies).toEqual(mockCompanies)
         expect(store.skills).toEqual(mockSkills)
         expect(store.projects).toEqual(mockProjects)
         expect(store.education).toEqual(mockEducation)
+        expect(store.documents).toEqual(mockDocuments)
       })
 
       it('should handle partial failures', async () => {

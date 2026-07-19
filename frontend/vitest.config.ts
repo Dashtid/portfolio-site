@@ -38,6 +38,10 @@ export default defineConfig({
       // Report even when thresholds fail, so the PR comment shows WHAT
       // dropped instead of the job dying silent.
       reportOnFailure: true,
+      // Honest denominator (D3-TEST-02): without include, files never
+      // imported by any spec are invisible to the gate — AdminDocuments'
+      // entire upload UI was both untested and unmeasured.
+      include: ['src/**/*.{ts,vue}'],
       exclude: [
         'node_modules/',
         'tests/',
@@ -52,16 +56,19 @@ export default defineConfig({
       ],
       // Single source of truth for coverage floors (D3-TEST-01): the curated
       // thresholds below previously lived in vite.config.ts's test block,
-      // which Vitest never reads when vitest.config.ts exists — leaving these
-      // floors ~10pp below reality. Re-derived 2026-07-16 from actuals
-      // (80.6/73.9/81.3/82.1) minus ~2pp headroom.
+      // which Vitest never reads when vitest.config.ts exists.
+      // Recalibrated 2026-07-16 for the HONEST denominator (D3-TEST-02):
+      // coverage.include above now counts never-imported files, dropping the
+      // headline from ~80% to the true 64.5/59.7/64.1/66.7 — floors are those
+      // actuals minus ~2pp. The gap to the old number IS the untested code
+      // (mostly admin views); raise these as specs land, never lower them.
       // Stricter per-glob gates for `api/` and `stores/` — the user-visible
       // data plumbing where regressions are most expensive.
       thresholds: {
-        statements: 78,
-        branches: 71,
-        functions: 79,
-        lines: 80,
+        statements: 62,
+        branches: 57,
+        functions: 62,
+        lines: 64,
         // Recalibrated 2026-07-16 from actuals 82.5/70(funcs)/84.2 — the
         // May-2026 gates (90/85/92) described a fileset Sprint 6 deleted
         // half of, and being dead config nobody noticed the drift.
