@@ -20,7 +20,26 @@ class Settings(BaseSettings):
     APP_NAME: str = "Portfolio API"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = False  # Must explicitly enable in development
-    ENVIRONMENT: str = "development"  # development, production
+    ENVIRONMENT: str = "development"  # development, testing, production
+
+    @field_validator("ENVIRONMENT")
+    @classmethod
+    def validate_environment(cls, v: str) -> str:
+        """Reject unknown environment names instead of failing open.
+
+        Every hardening control (strict CSP, HSTS, Secure cookies, docs
+        exposure, SECRET_KEY strength) keys on ENVIRONMENT == "production".
+        A typo like "prod" or "Production" would silently disable all of
+        it — validate against the closed set so misconfiguration is a boot
+        failure, not a quiet downgrade (D3-BE-05).
+        """
+        allowed = {"development", "testing", "production"}
+        if v not in allowed:
+            raise ValueError(
+                f"ENVIRONMENT must be one of {sorted(allowed)}, got {v!r}. "
+                "Security hardening keys on the exact string 'production'."
+            )
+        return v
 
     # Server
     HOST: str = "0.0.0.0"
@@ -229,6 +248,31 @@ class Settings(BaseSettings):
                 str(e),
             )
 
+        return self
+
+    @model_validator(mode="after")
+    def refuse_fail_open_boot_on_fly(self):
+        """Refuse to serve on Fly with a non-production environment.
+
+        fly.toml pins ENVIRONMENT=production, but one deleted line there
+        would boot the app in "development" — dev CSP, no HSTS, docs
+        exposed, weak-key tolerance — while looking perfectly healthy.
+        FLY_APP_NAME is injected by the Fly runtime on every machine, so
+        its presence is the reliable "we are in production infra" signal
+        (D3-BE-05). Override hatch: FLY_ALLOW_NONPROD=1 for a deliberate
+        staging app on Fly, so the guard can't be mistaken for a bug.
+        """
+        if (
+            os.getenv("FLY_APP_NAME")
+            and self.ENVIRONMENT != "production"
+            and os.getenv("FLY_ALLOW_NONPROD") != "1"
+        ):
+            raise ValueError(
+                f"Running on Fly (FLY_APP_NAME={os.getenv('FLY_APP_NAME')!r}) but "
+                f"ENVIRONMENT={self.ENVIRONMENT!r}. Refusing to boot with development "
+                "hardening in production infrastructure. Set ENVIRONMENT=production "
+                "in fly.toml [env], or FLY_ALLOW_NONPROD=1 for a deliberate staging app."
+            )
         return self
 
     # Admin

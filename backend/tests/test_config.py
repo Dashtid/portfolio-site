@@ -2,6 +2,9 @@
 Tests for configuration module
 """
 
+import pytest
+from pydantic import ValidationError
+
 from app.config import Settings
 
 
@@ -144,3 +147,44 @@ class TestGitHubOAuthConfig:
         """Test admin GitHub ID is string or None."""
         settings = Settings()
         assert settings.ADMIN_GITHUB_ID is None or isinstance(settings.ADMIN_GITHUB_ID, str)
+
+
+class TestEnvironmentGuards:
+    """D3-BE-05: misconfigured ENVIRONMENT must fail loudly, not fail open."""
+
+    def test_unknown_environment_rejected(self, monkeypatch):
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+        with pytest.raises(ValidationError, match="ENVIRONMENT must be one of"):
+            Settings(ENVIRONMENT="prod")  # the classic typo
+
+    def test_case_matters(self, monkeypatch):
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+        with pytest.raises(ValidationError, match="ENVIRONMENT must be one of"):
+            Settings(ENVIRONMENT="Production")
+
+    def test_known_environments_accepted(self, monkeypatch):
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+        for env in ("development", "testing"):
+            assert env == Settings(ENVIRONMENT=env).ENVIRONMENT
+
+    def test_fly_with_nonprod_environment_refuses_boot(self, monkeypatch):
+        monkeypatch.setenv("FLY_APP_NAME", "dashti-portfolio-backend")
+        monkeypatch.delenv("FLY_ALLOW_NONPROD", raising=False)
+        with pytest.raises(ValidationError, match="Refusing to boot"):
+            Settings(ENVIRONMENT="development")
+
+    def test_fly_with_explicit_staging_override_boots(self, monkeypatch):
+        monkeypatch.setenv("FLY_APP_NAME", "dashti-portfolio-staging")
+        monkeypatch.setenv("FLY_ALLOW_NONPROD", "1")
+        assert Settings(ENVIRONMENT="development").ENVIRONMENT == "development"
+
+    def test_fly_with_production_boots(self, monkeypatch):
+        monkeypatch.setenv("FLY_APP_NAME", "dashti-portfolio-backend")
+        settings = Settings(
+            ENVIRONMENT="production",
+            SECRET_KEY="x" * 40,
+            DATABASE_URL="postgresql://u:p@host:5432/db",
+            GITHUB_REDIRECT_URI="https://api.dashti.se/api/v1/auth/github/callback",
+            FRONTEND_URL="https://dashti.se",
+        )
+        assert settings.ENVIRONMENT == "production"

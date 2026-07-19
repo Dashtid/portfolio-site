@@ -72,8 +72,16 @@ def _drop_index_if_present(name: str, table: str) -> None:
 # ---- upgrade / downgrade ----------------------------------------------------
 
 
-def upgrade() -> None:
+def upgrade() -> None:  # noqa: PLR0912 (per-object guards + fresh-DB early-out)
     """Upgrade schema."""
+
+    # Fresh database: skip. The per-object guards below tolerate PARTIAL
+    # state but read "table missing" as "index missing" and then try to
+    # create the index anyway. The baseline revision at the head of the
+    # chain creates the full schema at current model spec instead.
+    bind = op.get_bind()
+    if not inspect(bind).has_table("users"):
+        return
 
     # PERF-02: index oauth_states.expires_at (used by the periodic
     # cleanup_oauth_states_periodically() task every 5 minutes).

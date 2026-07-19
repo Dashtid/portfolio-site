@@ -1497,3 +1497,50 @@ class TestCacheControlAuthenticationBypass:
         response = client.get("/api/v1/projects/")
         assert response.status_code == 200
         assert response.headers.get("cache-control") == "private, no-store"
+
+
+class TestQueryParamRedaction:
+    """D3-BE-02: OAuth code/state must never reach the log stream.
+
+    LoggingMiddleware logs query params for every request; the GitHub
+    callback carries a live authorization code and the CSRF state token
+    in the query string, and SensitiveDataFilter only masks msg/args --
+    so the redaction has to happen before the extra dict is built.
+    """
+
+    @staticmethod
+    def _request_with_query(query: str) -> Request:
+        return Request({"type": "http", "query_string": query.encode(), "headers": []})
+
+    def test_secret_params_redacted_case_insensitively(self):
+        from app.middleware.logging import _loggable_query_params
+
+        request = self._request_with_query("code=gho_livecode&state=csrf123&CODE=upper&next=/admin")
+        params = _loggable_query_params(request)
+        assert params["code"] == "[REDACTED]"
+        assert params["state"] == "[REDACTED]"
+        assert params["CODE"] == "[REDACTED]"
+        # Non-secret params pass through untouched.
+        assert params["next"] == "/admin"
+
+    def test_non_secret_params_unchanged(self):
+        from app.middleware.logging import _loggable_query_params
+
+        request = self._request_with_query("skip=0&limit=50")
+        assert _loggable_query_params(request) == {"skip": "0", "limit": "50"}
+
+    def test_incoming_request_log_line_contains_no_code_value(self, client: TestClient):
+        with patch("app.middleware.logging.logger") as mock_logger:
+            client.get(
+                "/api/v1/auth/github/callback",
+                params={"code": "gho_secretcode", "state": "secretstate"},
+            )
+
+        incoming = [
+            c for c in mock_logger.info.call_args_list if c.args and c.args[0] == "Incoming request"
+        ]
+        assert incoming, "expected an 'Incoming request' log line"
+        logged_params = incoming[0].kwargs["extra"]["query_params"]
+        assert logged_params["code"] == "[REDACTED]"
+        assert logged_params["state"] == "[REDACTED]"
+        assert "gho_secretcode" not in str(mock_logger.info.call_args_list)

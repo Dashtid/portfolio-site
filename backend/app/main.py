@@ -18,6 +18,7 @@ from sentry_sdk.integrations.httpx import HttpxIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse
 
@@ -37,6 +38,7 @@ from app.api.v1 import (
     skills,
 )
 from app.config import settings
+from app.core.security import decode_token
 from app.database import Base, engine
 from app.middleware import (
     CacheControlMiddleware,
@@ -87,9 +89,33 @@ MAX_BODY_SIZE = 5 * 1024 * 1024  # 5 MB
 # middleware allowance adds multipart-framing headroom on top so the
 # handler's check stays the effective limit. Without this override the
 # global 5 MB cap made the documented 25 MB upload limit unreachable.
+# D3-BE-01: the override is only honoured for requests bearing a
+# signature-valid JWT (see _bears_valid_token) — the upload endpoint is
+# admin-only, but FastAPI parses the multipart body BEFORE the auth
+# dependency runs, so without this gate an anonymous client could stream
+# 26 MB per request at a route that would only reject it afterwards.
 BODY_SIZE_OVERRIDES = {
     "/api/v1/documents/upload": 26 * 1024 * 1024,
 }
+
+
+def _bears_valid_token(request: Request) -> bool:
+    """True when the request carries a JWT that passes signature+expiry.
+
+    This is NOT the route's authorization check (no DB, no admin flag) —
+    it is a cheap HMAC verification that a fabricated cookie cannot
+    pass. Real authz still happens in the route dependencies; this gate
+    only decides whether the large-body allowance applies, so the 26 MB
+    parse budget is reserved for holders of a genuinely issued token.
+    """
+    token: str | None = None
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.removeprefix("Bearer ").strip()
+    else:
+        token = request.cookies.get("access_token")
+
+    return bool(token and decode_token(token))
 
 
 # Body Size Limit Middleware
@@ -113,7 +139,9 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         )
 
     async def dispatch(self, request: Request, call_next):
-        max_body_size = BODY_SIZE_OVERRIDES.get(request.url.path, MAX_BODY_SIZE)
+        max_body_size = MAX_BODY_SIZE
+        if request.url.path in BODY_SIZE_OVERRIDES and _bears_valid_token(request):
+            max_body_size = BODY_SIZE_OVERRIDES[request.url.path]
         content_length = request.headers.get("content-length")
         if content_length:
             try:
@@ -301,9 +329,16 @@ async def lifespan(app: FastAPI):
     # which is mounted by the time lifespan runs.
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created/verified")
+    # D3-BE-04: schema creation on boot is a dev/test convenience only. In
+    # production the schema is owned exclusively by Alembic via fly.toml's
+    # release_command — create_all here both masked missing migrations
+    # (new TABLES appeared silently while new COLUMNS on existing tables
+    # did not, which is exactly how page_views.city drifted) and raced the
+    # release migration on deploys.
+    if settings.ENVIRONMENT != "production":
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created/verified (non-production convenience)")
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
@@ -362,12 +397,27 @@ if settings.RATE_LIMIT_ENABLED:
 # headers, so frontend JS could not read the error. Layers below are added
 # innermost-first; effective order outermost -> innermost:
 #   CORS -> Logging -> ErrorTracking -> Performance -> SecurityHeaders
-#   -> CacheControl -> Compression -> BodySizeLimit -> routes
-# BodySizeLimit sits just outside the routes: nothing between it and the
-# handlers reads request bodies, so DoS protection is preserved while its
-# 413s pass through every header/logging layer on the way out.
+#   -> CacheControl -> Compression -> BodySizeLimit -> SlowAPI -> routes
+# BodySizeLimit sits just outside SlowAPI and the routes: nothing between
+# it and the handlers reads request bodies, so DoS protection is preserved
+# while its 413s pass through every header/logging layer on the way out.
+# SlowAPI innermost means an oversized request costs a 413 without also
+# consuming rate budget, while every request that reaches a handler has
+# passed the limit check first.
 
-# Body size limit (DoS protection) — innermost, just outside the routes
+# Rate limiting (D3-BE-01) — innermost. Without this middleware, slowapi's
+# default_limits were dead config: only the ~15 decorated routes were
+# limited and every undecorated one (admin mutations, /documents/upload,
+# health) was unlimited, while startup logged "Rate limiting enabled".
+# The ASGI variant (not SlowAPIMiddleware) is deliberate: the BaseHTTP
+# variant silently swaps our async 429 handler for slowapi's default
+# (sync_check_limits can't await), losing the Retry-After contract and
+# the OBS-09 metrics counter. Decorator-limited routes are exempted by
+# the middleware itself, so nothing is double-counted.
+if settings.RATE_LIMIT_ENABLED:
+    app.add_middleware(SlowAPIASGIMiddleware)
+
+# Body size limit (DoS protection) — just outside the rate limiter
 app.add_middleware(BodySizeLimitMiddleware)
 
 # Compression (compress final response)

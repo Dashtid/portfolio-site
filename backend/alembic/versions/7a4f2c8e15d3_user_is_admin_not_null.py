@@ -26,6 +26,13 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    # Fresh database (no legacy schema): skip. The baseline revision at
+    # the head of the chain creates every table at current model spec —
+    # replaying this historical delta against nothing just crashes. Same
+    # early-out pattern as the root revision.
+    if not sa.inspect(op.get_bind()).has_table("users"):
+        return
+
     # Backfill any pre-existing NULL rows before tightening the constraint.
     op.execute("UPDATE users SET is_admin = 0 WHERE is_admin IS NULL")
     with op.batch_alter_table("users") as batch_op:

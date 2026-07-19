@@ -69,6 +69,21 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, Any, None]:
     loop.close()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter() -> Generator[None, Any, None]:
+    """Reset limiter storage before EVERY test, not just `client` users.
+
+    With SlowAPIASGIMiddleware installed (D3-BE-01), default limits apply
+    to all undecorated routes. The limiter's fixed windows live in
+    process-global storage keyed by client IP — "testclient" for every
+    TestClient — so without an unconditional reset, tests that build
+    their own TestClient would accumulate into a shared window and 429
+    an unrelated test later in the run.
+    """
+    limiter.reset()
+    yield
+
+
 @pytest.fixture(scope="function")
 def client() -> Generator[TestClient, Any, None]:
     """Create a test client with fresh database tables for each test."""
@@ -96,9 +111,6 @@ def client() -> Generator[TestClient, Any, None]:
 
     # Override the database dependency
     app.dependency_overrides[get_db] = get_test_db
-
-    # Reset rate limiter storage before each test to prevent rate limit interference
-    limiter.reset()
 
     with TestClient(app) as test_client:
         yield test_client

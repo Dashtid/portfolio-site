@@ -1,4 +1,5 @@
 import asyncio
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -21,7 +22,13 @@ config = context.config
 # Use async_database_url so deprecated postgres:// is normalised to
 # postgresql+asyncpg:// (SQLAlchemy 2.0 drops the bare postgres dialect, and
 # Fly Postgres' DATABASE_URL secret is set with the legacy scheme).
-if settings.async_database_url:
+# ALEMBIC_DATABASE_URL wins when set: it lets the drift-check test (and any
+# operator running alembic against a proxied database) target a specific URL
+# without monkeypatching the already-imported settings singleton.
+_url_override = os.environ.get("ALEMBIC_DATABASE_URL")
+if _url_override:
+    config.set_main_option("sqlalchemy.url", _url_override)
+elif settings.async_database_url:
     config.set_main_option("sqlalchemy.url", settings.async_database_url)
 
 # Interpret the config file for Python logging.

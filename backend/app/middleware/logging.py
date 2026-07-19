@@ -29,6 +29,28 @@ _UPSTREAM_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 # (CORS, security headers, performance metrics) — only the log lines drop.
 _SILENT_LOG_PREFIXES = ("/api/v1/health", "/api/health")
 
+# D3-BE-02: query-param keys whose values are secrets. The GitHub OAuth
+# callback arrives as GET /api/v1/auth/github/callback?code=...&state=...,
+# so logging query params verbatim put a live authorization code and the
+# CSRF state token into Fly's log stream on every login. SensitiveDataFilter
+# only masks msg/args, not `extra` dicts — redaction has to happen here,
+# before the dict reaches the logger. Matched case-insensitively.
+_REDACTED_QUERY_PARAMS = frozenset(
+    {"code", "state", "token", "access_token", "refresh_token", "client_secret"}
+)
+
+
+def _loggable_query_params(request: Request) -> dict[str, str]:
+    """Query params with secret-bearing values replaced by a marker.
+
+    Keeps the key visible (so log queries can still see *that* a code was
+    presented) while dropping the value.
+    """
+    return {
+        key: "[REDACTED]" if key.lower() in _REDACTED_QUERY_PARAMS else value
+        for key, value in request.query_params.items()
+    }
+
 
 def _resolve_request_id(request: Request) -> str:
     """Reuse an upstream X-Request-ID if one is supplied and well-formed.
@@ -71,7 +93,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "method": request.method,
                     "path": request.url.path,
-                    "query_params": dict(request.query_params),
+                    "query_params": _loggable_query_params(request),
                     "client_ip": get_client_ip(request),
                     "user_agent": request.headers.get("user-agent"),
                 },

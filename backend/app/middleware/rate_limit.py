@@ -146,3 +146,11 @@ rate_limit_public = limiter.limit(
     getattr(settings, "RATE_LIMIT_PUBLIC", "120/minute"),
     error_message="Too many requests. Please try again later.",
 )
+
+# NOTE (D3-BE-01): there is deliberately no decorator tier for
+# /documents/upload. Decorated routes are exempted from the middleware's
+# default limits, and the decorator only fires after auth dependencies
+# pass — but FastAPI parses the multipart body BEFORE auth runs, so a
+# decorator would exempt exactly the unauthenticated parse-flood traffic
+# it was meant to throttle. The middleware default limit counts upload
+# requests before any body parsing instead.

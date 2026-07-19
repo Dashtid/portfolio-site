@@ -213,6 +213,15 @@ async def upload_document_file(
     The two-step flow (upload → create row) keeps file storage and
     catalogue concerns separate; the same upload can be referenced by
     a brand-new row or by an existing row whose file is being replaced.
+
+    Rate limiting (D3-BE-01): deliberately NOT decorated. FastAPI parses
+    the multipart body before auth dependencies run, and slowapi's
+    middleware exempts decorator-limited routes while the decorator only
+    counts requests that survive auth — so a decorator here would exempt
+    unauthenticated parse-flood traffic from any limit. Undecorated, the
+    SlowAPIASGIMiddleware default limit counts every request BEFORE the
+    body is parsed. The 26 MB body allowance additionally requires a
+    signature-valid token (see BodySizeLimitMiddleware in main.py).
     """
     _ = current_user
 

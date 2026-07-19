@@ -6,9 +6,13 @@ well under our traffic). Results are cached in-process for 24h so repeat
 visits from the same IP don't re-call upstream. Failures (timeout, rate
 limit, network) return None — country stays NULL on the PageView row.
 
-Privacy: only the ISO-3166 alpha-2 country code is returned. The caller is
-responsible for not persisting the raw IP (we already pseudonymise it via
-SHA-256 hash before insert).
+Privacy (D3-BE-03 / SEC-005B): the visitor IP is truncated BEFORE it goes
+upstream — IPv4 keeps the /24, IPv6 the /48 — so ipapi.co never sees a
+full address it could correlate. Country resolution is unaffected: geo
+databases assign country at coarser granularity than these prefixes. The
+stored PageView row was already pseudonymised (keyed SHA-256 in
+app/utils/ip_hash.py); the third-party disclosure was the remaining raw-IP
+sink. Only the ISO-3166 alpha-2 country code comes back.
 """
 
 import ipaddress
@@ -39,6 +43,21 @@ def _is_private_or_local(ip: str) -> bool:
     return addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_unspecified
 
 
+def _truncate_ip(ip: str) -> str | None:
+    """Zero the host bits so the upstream lookup never sees a full address.
+
+    IPv4 keeps the /24 (last octet zeroed), IPv6 the /48 (last 80 bits
+    zeroed — a /48 is one site under standard allocation, coarser than a
+    single subscriber). Returns None for unparseable input.
+    """
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return None
+    prefix = 24 if addr.version == 4 else 48
+    return str(ipaddress.ip_network(f"{addr}/{prefix}", strict=False).network_address)
+
+
 def _cache_get(ip: str) -> tuple[bool, str | None]:
     """Return (hit, value). value may be None even on a cache hit
     when the upstream previously failed for this IP."""
@@ -67,34 +86,39 @@ async def get_country_code(ip: str) -> str | None:
     Resolve an IP to an ISO-3166 alpha-2 country code, or None on failure.
 
     - Private/loopback IPs short-circuit to None without an upstream call.
-    - Successful and failed lookups are both cached for 24h.
+    - The address is truncated (IPv4 /24, IPv6 /48) before the upstream
+      call AND before caching — the full IP never leaves this function.
+    - Successful and failed lookups are both cached for 24h; keying the
+      cache on the truncated address also collapses visitors sharing a
+      /24 into one upstream lookup.
     - Any exception (timeout, network, non-2xx, malformed body) returns None.
     """
-    if not ip or _is_private_or_local(ip):
+    lookup_ip = _truncate_ip(ip) if ip and not _is_private_or_local(ip) else None
+    if lookup_ip is None:
         return None
 
-    hit, cached = _cache_get(ip)
+    hit, cached = _cache_get(lookup_ip)
     if hit:
         return cached
 
     try:
         async with httpx.AsyncClient(timeout=LOOKUP_TIMEOUT_SECONDS) as client:
-            resp = await client.get(UPSTREAM_URL_TEMPLATE.format(ip=ip))
+            resp = await client.get(UPSTREAM_URL_TEMPLATE.format(ip=lookup_ip))
         if resp.status_code != 200:
-            logger.debug("geo-ip lookup non-200 for %s: %s", ip, resp.status_code)
-            _cache_put(ip, None)
+            logger.debug("geo-ip lookup non-200 for %s: %s", lookup_ip, resp.status_code)
+            _cache_put(lookup_ip, None)
             return None
         body = resp.text.strip().upper()
         # ipapi.co returns a 2-letter code like "SE". Anything else is junk.
         if len(body) == 2 and body.isalpha():
-            _cache_put(ip, body)
+            _cache_put(lookup_ip, body)
             return body
-        logger.debug("geo-ip lookup unexpected body for %s: %r", ip, body[:40])
-        _cache_put(ip, None)
+        logger.debug("geo-ip lookup unexpected body for %s: %r", lookup_ip, body[:40])
+        _cache_put(lookup_ip, None)
         return None
     except (httpx.HTTPError, httpx.TimeoutException) as exc:
-        logger.debug("geo-ip lookup error for %s: %s", ip, exc)
-        _cache_put(ip, None)
+        logger.debug("geo-ip lookup error for %s: %s", lookup_ip, exc)
+        _cache_put(lookup_ip, None)
         return None
 
 

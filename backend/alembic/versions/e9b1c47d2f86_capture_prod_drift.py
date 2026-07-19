@@ -53,6 +53,13 @@ def _index_names(table: str) -> set[str]:
 def upgrade() -> None:
     """Upgrade schema."""
 
+    # Fresh database: skip the whole drift capture — the baseline revision
+    # at the head of the chain creates everything at current model spec.
+    # Creating refresh_tokens/oss_contributions here first would freeze
+    # them at this revision's snapshot instead of the current one.
+    if not _table_exists("users"):
+        return
+
     if "client_ip" not in _column_names("oauth_states"):
         op.add_column("oauth_states", sa.Column("client_ip", sa.String(length=45), nullable=True))
 

@@ -24,6 +24,12 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    # Fresh database: skip — no users table for the FK to target, and the
+    # baseline revision at the head of the chain creates refresh_tokens
+    # at current model spec anyway.
+    if not sa.inspect(op.get_bind()).has_table("users"):
+        return
+
     op.create_table(
         "refresh_tokens",
         sa.Column("jti", sa.String(length=64), primary_key=True),

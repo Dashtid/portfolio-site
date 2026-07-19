@@ -163,3 +163,52 @@ async def test_country_code_normalised_to_uppercase():
         result = await geo_ip.get_country_code("8.8.8.8")
 
     assert result == "SE"
+
+
+# ---- D3-BE-03: IP truncation before the third-party lookup -----------------
+
+
+def test_truncate_ipv4_zeroes_last_octet():
+    assert geo_ip._truncate_ip("8.8.8.77") == "8.8.8.0"
+
+
+def test_truncate_ipv6_keeps_the_48():
+    assert geo_ip._truncate_ip("2001:db8:abcd:12:34:56:78:9a") == "2001:db8:abcd::"
+
+
+def test_truncate_unparseable_returns_none():
+    assert geo_ip._truncate_ip("not-an-ip") is None
+
+
+@pytest.mark.asyncio
+async def test_upstream_never_sees_the_full_ip():
+    """The URL sent to ipapi.co must carry the truncated address only."""
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        client.get.return_value = _mock_response(200, "SE")
+        client_cls.return_value = client
+
+        result = await geo_ip.get_country_code("8.8.8.77")
+
+    assert result == "SE"
+    (called_url,) = client.get.await_args.args
+    assert "8.8.8.0" in called_url
+    assert "8.8.8.77" not in called_url
+
+
+@pytest.mark.asyncio
+async def test_cache_collapses_a_shared_slash_24():
+    """Two visitors in the same /24 should cost one upstream lookup."""
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        client.get.return_value = _mock_response(200, "SE")
+        client_cls.return_value = client
+
+        first = await geo_ip.get_country_code("8.8.8.10")
+        second = await geo_ip.get_country_code("8.8.8.200")
+
+    assert first == "SE"
+    assert second == "SE"
+    assert client.get.await_count == 1

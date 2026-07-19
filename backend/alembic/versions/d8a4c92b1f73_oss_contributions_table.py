@@ -26,6 +26,11 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    # Fresh database: skip — the baseline revision at the head of the
+    # chain creates oss_contributions at current model spec.
+    if not sa.inspect(op.get_bind()).has_table("users"):
+        return
+
     op.create_table(
         "oss_contributions",
         sa.Column("id", sa.String(), primary_key=True),
