@@ -61,7 +61,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-w8Kloobg+AN9UxKwmQV+IY7fsUuz3dLCakE9UjzmqSU=' 'sha256-31g5IvHCjZOceRHvcqgtqgn+2qC9E1UKY8nvEJB98+M='; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self' https://api.dashti.se https://*.ingest.sentry.io; frame-src 'self' https://www.youtube.com/embed/ https://www.youtube-nocookie.com/embed/ https://www.google.com/maps/embed; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'sha256-ZWtUHOmRccEi5Ze8OmuZwZ1s+9dPt5kS0ph9W0DnOYM=' 'sha256-31g5IvHCjZOceRHvcqgtqgn+2qC9E1UKY8nvEJB98+M='; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self' https://api.dashti.se https://*.ingest.sentry.io; frame-src 'self' https://www.youtube.com/embed/ https://www.youtube-nocookie.com/embed/ https://www.google.com/maps/embed; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         },
         {
           "key": "X-DNS-Prefetch-Control",
