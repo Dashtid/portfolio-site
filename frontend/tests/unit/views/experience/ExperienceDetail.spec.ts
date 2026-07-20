@@ -266,7 +266,8 @@ describe('ExperienceDetail', () => {
       }
 
       expect(headArg.title.value).toContain('Initech')
-      expect(headArg.title.value).toContain('Experience | David Dashti')
+      // D3-CNT-02: position + start year in the title (de-dupes the Scania pair)
+      expect(headArg.title.value).toBe('Senior Engineer at Initech (2020) | David Dashti')
 
       const desc = headArg.meta.find(m => m.name === 'description')
       expect(desc?.content.value).toBe('Made widgets.')

@@ -44,7 +44,7 @@
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
             >
-              Get in touch
+              Connect on LinkedIn
             </a>
             <a
               href="https://github.com/Dashtid"
@@ -55,7 +55,31 @@
               GitHub
             </a>
           </div>
+
+          <!-- D3-CNT-03: interim proof row — survives into Sprint 7's HERO-01 -->
+          <p
+            class="mt-10 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500"
+          >
+            FDA Premarket &middot; IEC 81001-5-1 &middot; EU MDR &middot; Security+
+          </p>
         </div>
+
+        <a
+          href="#experience"
+          class="absolute bottom-8 left-1/2 z-[2] -translate-x-1/2 text-slate-400 transition-colors hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-slate-500 dark:hover:text-primary-400"
+          aria-label="Scroll to experience"
+        >
+          <svg
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </a>
       </section>
 
       <!-- API Error Banner -->
@@ -123,7 +147,7 @@
                 </p>
 
                 <router-link
-                  :to="{ name: 'experience-detail', params: { id: getDetailLinkId(company) } }"
+                  :to="{ name: 'experience-detail', params: { id: company.id } }"
                   class="mt-auto inline-flex items-center gap-1 pt-8 text-sm font-medium text-primary-600 transition-all after:absolute after:inset-0 hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                 >
                   <!-- sr-only suffix: distinct link text per card, for screen
@@ -573,7 +597,7 @@
             <h2
               class="section-title text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
             >
-              GitHub
+              Projects
             </h2>
           </header>
 
@@ -744,7 +768,7 @@ import { useHead } from '@unhead/vue'
 import { logger } from '../utils/logger'
 
 useHead({
-  title: 'David Dashti | Cybersecurity in Healthcare',
+  title: 'David Dashti | Product Security for Medical Software',
   meta: [
     {
       name: 'description',
@@ -831,25 +855,6 @@ const formatDate = (dateString: string | null | undefined): string => {
     year: 'numeric',
     month: 'short'
   })
-}
-
-// Get the correct company ID for detail links
-// For Scania 2012 entry, link to the 2016 entry's detail page
-const getDetailLinkId = (company: { id: string; name: string; start_date: string }): string => {
-  if (company.name === 'Scania Group' && company.start_date) {
-    const startYear = new Date(company.start_date).getFullYear()
-    if (startYear === 2012) {
-      // Find the 2016 Scania entry and return its ID
-      const scania2016 = companies.value.find(
-        c =>
-          c.name === 'Scania Group' && c.start_date && new Date(c.start_date).getFullYear() === 2016
-      )
-      if (scania2016) {
-        return scania2016.id
-      }
-    }
-  }
-  return company.id
 }
 
 // PERF-03: IntersectionObserver-driven entrance animations replace the

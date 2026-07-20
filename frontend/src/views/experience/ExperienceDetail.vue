@@ -271,7 +271,7 @@
           <h2
             class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
           >
-            Technologies &amp; Tools
+            {{ techHeading }}
           </h2>
           <div class="mt-4 flex flex-wrap gap-2">
             <span
@@ -417,20 +417,62 @@ const error = ref<string | null>(null)
 const notFound = ref<boolean>(false)
 const logoError = ref<boolean>(false)
 
-// Per-route head tags — reactive so SSG renders the correct title/canonical for each page
+// Per-route head tags — reactive so SSG renders the correct title/canonical
+// for each page. D3-CNT-02: titles carry the position + start year (the year
+// also de-dupes the two Scania stints), and every detail page gets its own
+// og/twitter tags — before this, shares of any detail URL scraped the
+// homepage's card and og:url pointed the share back at dashti.se.
+const truncateAtWord = (text: string, max = 155): string => {
+  if (text.length <= max) return text
+  const cut = text.slice(0, max)
+  return `${cut.slice(0, cut.lastIndexOf(' '))}…`
+}
+
+const pageTitle = computed(() =>
+  notFound.value
+    ? '404 — Experience Not Found | David Dashti'
+    : company.value
+      ? `${company.value.title} at ${company.value.name} (${new Date(
+          company.value.start_date
+        ).getFullYear()}) | David Dashti`
+      : 'Experience | David Dashti'
+)
+const metaDescription = computed(() =>
+  truncateAtWord(company.value?.description || 'Experience details')
+)
+const SOFT_SKILL_CHIPS = new Set([
+  'leadership',
+  'strategic planning',
+  'team management',
+  'crisis management',
+  'training development',
+  'communication',
+  'mentoring'
+])
+// D3-CNT-01: non-technical roles (FDF) list soft skills under a heading
+// that used to claim they were technologies. Data-aware: the heading
+// flips when every chip is a known soft skill.
+const techHeading = computed(() => {
+  const techs = company.value?.technologies ?? []
+  const allSoft = techs.length > 0 && techs.every(t => SOFT_SKILL_CHIPS.has(t.toLowerCase()))
+  return allSoft ? 'Skills applied' : 'Technologies & Tools'
+})
+
+const canonicalUrl = computed(() => `https://dashti.se/experience/${companyId.value}`)
+
 useHead({
-  title: computed(() =>
-    notFound.value
-      ? '404 — Experience Not Found | David Dashti'
-      : company.value
-        ? `${company.value.name} | Experience | David Dashti`
-        : 'Experience | David Dashti'
-  ),
+  title: pageTitle,
   meta: [
     {
       name: 'description',
-      content: computed(() => company.value?.description || 'Experience details')
+      content: metaDescription
     },
+    { property: 'og:title', content: pageTitle },
+    { property: 'og:description', content: metaDescription },
+    { property: 'og:url', content: canonicalUrl },
+    { property: 'og:type', content: 'article' },
+    { name: 'twitter:title', content: pageTitle },
+    { name: 'twitter:description', content: metaDescription },
     // Unknown IDs are served 200 by the SPA rewrite — noindex is the honest
     // crawler signal for the not-found state (D3-UX-01).
     {
@@ -441,7 +483,7 @@ useHead({
   link: [
     {
       rel: 'canonical',
-      href: computed(() => `https://dashti.se/experience/${companyId.value}`)
+      href: canonicalUrl
     }
   ]
 })

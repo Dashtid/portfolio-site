@@ -19,7 +19,7 @@ const AdminMetrics = () => import('../views/admin/AdminMetrics.vue')
 const AdminDocuments = () => import('../views/admin/AdminDocuments.vue')
 const AdminOss = () => import('../views/admin/AdminOss.vue')
 
-export const DEFAULT_TITLE = 'David Dashti | Cybersecurity in Healthcare'
+export const DEFAULT_TITLE = 'David Dashti | Product Security for Medical Software'
 
 export const routes: RouteRecordRaw[] = [
   {

@@ -139,6 +139,7 @@ const navItems: NavItem[] = [
   { name: 'Home', href: 'hero' },
   { name: 'Experience', href: 'experience' },
   { name: 'Education', href: 'education' },
+  { name: 'Publications', href: 'publications' },
   { name: 'Projects', href: 'projects' },
   { name: 'About', href: 'about' }
 ]
@@ -148,7 +149,7 @@ const sectionElementsCache = ref<Map<string, HTMLElement>>(new Map())
 
 // Initialize section element cache
 const initSectionCache = (): void => {
-  const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
+  const sectionIds = ['hero', 'experience', 'education', 'publications', 'projects', 'about']
   sectionIds.forEach(id => {
     const element = document.getElementById(id)
     if (element) {
@@ -240,7 +241,7 @@ const handleScroll = (): void => {
   if (!isHomeRoute.value) return
 
   const scrollPosition = window.scrollY + 100
-  const sectionIds = ['hero', 'experience', 'education', 'projects', 'about']
+  const sectionIds = ['hero', 'experience', 'education', 'publications', 'projects', 'about']
 
   for (const sectionId of sectionIds) {
     const element = sectionElementsCache.value.get(sectionId)
