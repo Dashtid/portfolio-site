@@ -8,13 +8,7 @@
         :aria-label="'YouTube video: ' + title"
         role="application"
         tabindex="0"
-        allow="
-          autoplay;
-          clipboard-write;
-          encrypted-media;
-          picture-in-picture;
-          web-share;
-        "
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
         referrerpolicy="strict-origin-when-cross-origin"
         allowfullscreen
         loading="lazy"
