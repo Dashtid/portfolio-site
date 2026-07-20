@@ -55,11 +55,25 @@
         </a>
       </div>
 
-      <div
-        class="my-1 h-px w-16 bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-slate-700"
-        aria-hidden="true"
-      ></div>
+      <!-- D3-CNT-03: text links close the page usefully; the full-width
+           border-t below replaces the orphaned 64px hairline gradient -->
+      <nav aria-label="Footer">
+        <ul class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
+          <li v-for="link in footerLinks" :key="link.href">
+            <a
+              :href="link.href"
+              class="transition-colors hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:hover:text-primary-400"
+            >
+              {{ link.name }}
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
 
+    <div
+      class="mx-auto mt-10 max-w-7xl border-t border-slate-200 px-6 pt-6 text-center sm:px-8 lg:px-12 dark:border-slate-800"
+    >
       <!-- dark:text-slate-400 — slate-500 on slate-950 fails WCAG AA at this size -->
       <p class="footer-copyright text-xs text-slate-500 dark:text-slate-400">
         &copy; {{ currentYear }} David Dashti. All rights reserved.
@@ -72,4 +86,12 @@
 import { computed } from 'vue'
 
 const currentYear = computed<number>(() => new Date().getFullYear())
+
+const footerLinks = [
+  { name: 'Experience', href: '/#experience' },
+  { name: 'Education', href: '/#education' },
+  { name: 'Publications', href: '/#publications' },
+  { name: 'Projects', href: '/#projects' },
+  { name: 'About', href: '/#about' }
+]
 </script>
