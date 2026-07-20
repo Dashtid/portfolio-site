@@ -26,13 +26,13 @@ interface RecordingCtx {
 }
 
 const makeCtx = (): RecordingCtx => {
-  const ctx: RecordingCtx = {
+  const ctx = {
     calls: {},
     arcs: [],
     strokeStyle: '',
     fillStyle: '',
     lineWidth: 0
-  } as RecordingCtx
+  } as unknown as RecordingCtx
   for (const m of [
     'setTransform',
     'clearRect',
