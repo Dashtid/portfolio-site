@@ -1,25 +1,7 @@
-# Robots.txt for dashti.se
-
-# Allow all crawlers
-User-agent: *
-Allow: /
-
-# Disallow admin areas
+# dashti.se — one group, no conflicting directives (D3-SEO-02).
+# Allow is implicit; admin and API surfaces are the only exclusions.
 User-agent: *
 Disallow: /admin/
 Disallow: /api/
 
-# Sitemap location
 Sitemap: https://dashti.se/sitemap.xml
-
-# Crawl delay (be respectful)
-Crawl-delay: 1
-
-# Allow specific search engines priority
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 0

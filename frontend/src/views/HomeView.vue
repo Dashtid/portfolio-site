@@ -791,6 +791,24 @@ import { logger } from '../utils/logger'
 
 useHead({
   title: 'David Dashti | Product Security for Medical Software',
+  script: [
+    {
+      type: 'application/ld+json',
+      // D3-SEO-02: ProfilePage lives on the home route only — in the shared
+      // index.html template it claimed every experience page WAS the profile
+      // page, with dateModified frozen at 2026-04-09. Stamped at SSG time.
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        '@id': 'https://dashti.se/#profilepage',
+        name: 'David Dashti - Professional Profile',
+        url: 'https://dashti.se',
+        mainEntity: { '@id': 'https://dashti.se/#person' },
+        dateModified: new Date().toISOString().slice(0, 10),
+        isPartOf: { '@id': 'https://dashti.se/#website' }
+      })
+    }
+  ],
   meta: [
     {
       name: 'description',

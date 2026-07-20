@@ -85,11 +85,28 @@ export default defineConfig({
       // static base contains that substring in a comment.
       if (xml.includes('auto-generated from prerendered routes')) return
 
-      const lastmod = new Date().toISOString().slice(0, 10)
+      // D3-SEO-02: derive lastmod from the company's updated_at baked into
+      // the page's __INITIAL_STATE__ — a fresh build no longer claims every
+      // page changed today, so Google keeps trusting the sitemap.
+      const buildDate = new Date().toISOString().slice(0, 10)
+      const lastmodFor = (id: string): string => {
+        try {
+          const html = fs.readFileSync(path.join(experienceDir, `${id}.html`), 'utf-8')
+          const m = html.match(
+            /<script type="application\/json" id="__INITIAL_STATE__">(".*?")<\/script>/s
+          )
+          if (!m) return buildDate
+          const state = JSON.parse(JSON.parse(m[1]))
+          const updated = state?.pinia?.experienceDetail?.byId?.[id]?.updated_at
+          return typeof updated === 'string' ? updated.slice(0, 10) : buildDate
+        } catch {
+          return buildDate
+        }
+      }
       const entries = ids
         .map(
           id =>
-            `    <url>\n        <loc>https://dashti.se/experience/${id}</loc>\n        <lastmod>${lastmod}</lastmod>\n        <changefreq>monthly</changefreq>\n        <priority>0.7</priority>\n    </url>`
+            `    <url>\n        <loc>https://dashti.se/experience/${id}</loc>\n        <lastmod>${lastmodFor(id)}</lastmod>\n        <changefreq>monthly</changefreq>\n        <priority>0.7</priority>\n    </url>`
         )
         .join('\n')
 

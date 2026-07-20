@@ -485,6 +485,33 @@ useHead({
       rel: 'canonical',
       href: canonicalUrl
     }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      // D3-SEO-02: breadcrumb trail for the detail pages (SERP context)
+      innerHTML: computed(() =>
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://dashti.se/' },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Experience',
+              item: 'https://dashti.se/#experience'
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: company.value?.name ?? 'Experience detail',
+              item: canonicalUrl.value
+            }
+          ]
+        })
+      )
+    }
   ]
 })
 

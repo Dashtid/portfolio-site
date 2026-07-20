@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>David Dashti | Product Security for Medical Software</title>
-    <meta name="description" content="Product security for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI." />
+    <meta
+      name="description"
+      content="Product security for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI."
+    />
     <meta name="author" content="David Dashti" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://dashti.se" />
@@ -20,10 +23,13 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="David Dashti | Product Security for Medical Software" />
-    <meta property="og:description" content="Product security for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI." />
+    <meta
+      property="og:description"
+      content="Product security for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI."
+    />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dashti.se" />
-    <meta property="og:image" content="https://dashti.se/images/preview.png" />
+    <meta property="og:image" content="https://dashti.se/images/share-card.png" />
     <meta property="og:image:alt" content="David Dashti — Product Security for Medical Software" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -31,8 +37,11 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="David Dashti | Product Security for Medical Software" />
-    <meta name="twitter:description" content="Product security for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI." />
-    <meta name="twitter:image" content="https://dashti.se/images/preview.png" />
+    <meta
+      name="twitter:description"
+      content="Product security for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI."
+    />
+    <meta name="twitter:image" content="https://dashti.se/images/share-card.png" />
 
     <!-- PWA & Mobile (manifest added by vite-plugin-pwa) -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -58,7 +67,7 @@
          matches no CSS selector, so anything that isn't exactly
          'dark'/'light' must resolve to the system preference here. -->
     <script>
-      (function () {
+      ;(function () {
         try {
           var stored = localStorage.getItem('portfolio-theme')
           var prefersDark =
@@ -83,85 +92,82 @@
 
     <!-- Structured Data (JSON-LD) for SEO - Using @graph for connected entities -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Person",
-          "@id": "https://dashti.se/#person",
-          "name": "David Dashti",
-          "url": "https://dashti.se",
-          "image": "https://dashti.se/images/icon-512.png",
-          "sameAs": [
-            "https://www.linkedin.com/in/david-dashti/",
-            "https://github.com/Dashtid"
-          ],
-          "jobTitle": "Product Security & QA/RA Specialist",
-          "worksFor": {
-            "@type": "Organization",
-            "name": "Hermes Medical Solutions",
-            "url": "https://hermesmedical.com"
-          },
-          "alumniOf": [
-            {
-              "@type": "CollegeOrUniversity",
-              "name": "KTH Royal Institute of Technology"
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://dashti.se/#person",
+            "name": "David Dashti",
+            "url": "https://dashti.se",
+            "image": "https://dashti.se/images/icon-512.png",
+            "sameAs": ["https://www.linkedin.com/in/david-dashti/", "https://github.com/Dashtid"],
+            "jobTitle": "Product Security & QA/RA Specialist",
+            "worksFor": {
+              "@type": "Organization",
+              "name": "Hermes Medical Solutions",
+              "url": "https://hermesmedical.com"
             },
-            {
-              "@type": "CollegeOrUniversity",
-              "name": "Lund University"
-            }
-          ],
-          "knowsAbout": [
-            "Product Security",
-            "Medical Device Cybersecurity",
-            "Premarket Cybersecurity",
-            "IEC 81001-5-1",
-            "Security Risk Management",
-            "Threat Modeling",
-            "Medical Software",
-            "Medical Device Regulation",
-            "EU AI Act"
-          ],
-          "description": "Product security specialist for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI"
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://dashti.se/#website",
-          "name": "David Dashti Portfolio",
-          "url": "https://dashti.se",
-          "description": "Professional portfolio — product security for medical software and healthcare AI",
-          "author": { "@id": "https://dashti.se/#person" },
-          "inLanguage": "en"
-        },
-        {
-          "@type": "ProfilePage",
-          "@id": "https://dashti.se/#profilepage",
-          "name": "David Dashti - Professional Profile",
-          "url": "https://dashti.se",
-          "mainEntity": { "@id": "https://dashti.se/#person" },
-          "dateModified": "2026-04-09",
-          "isPartOf": { "@id": "https://dashti.se/#website" }
-        }
-      ]
-    }
+            "alumniOf": [
+              {
+                "@type": "CollegeOrUniversity",
+                "name": "KTH Royal Institute of Technology"
+              },
+              {
+                "@type": "CollegeOrUniversity",
+                "name": "Lund University"
+              }
+            ],
+            "knowsAbout": [
+              "Product Security",
+              "Medical Device Cybersecurity",
+              "Premarket Cybersecurity",
+              "IEC 81001-5-1",
+              "Security Risk Management",
+              "Threat Modeling",
+              "Medical Software",
+              "Medical Device Regulation",
+              "EU AI Act"
+            ],
+            "description": "Product security specialist for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://dashti.se/#website",
+            "name": "David Dashti Portfolio",
+            "url": "https://dashti.se",
+            "description": "Professional portfolio — product security for medical software and healthcare AI",
+            "author": { "@id": "https://dashti.se/#person" },
+            "inLanguage": "en"
+          }
+        ]
+      }
     </script>
   </head>
   <body>
     <div id="app">
       <!-- Loading skeleton - replaced when Vue mounts -->
-      <div id="app-loading" style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: #fff;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      ">
-        <h1 style="font-size: 2rem; margin-bottom: 1rem; font-weight: 600;">David Dashti</h1>
-        <p style="opacity: 0.7; font-size: 1rem;">Loading portfolio...</p>
+      <div
+        id="app-loading"
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          color: #fff;
+          font-family:
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            Roboto,
+            sans-serif;
+        "
+      >
+        <h1 style="font-size: 2rem; margin-bottom: 1rem; font-weight: 600">David Dashti</h1>
+        <p style="opacity: 0.7; font-size: 1rem">Loading portfolio...</p>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
