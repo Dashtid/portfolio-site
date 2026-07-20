@@ -137,7 +137,7 @@ export default defineConfig({
         short_name: 'David Dashti',
         description:
           'Product security for medical software — securing medical devices and the AI moving into healthcare',
-        theme_color: '#2563eb',
+        theme_color: '#2f88e8',
         background_color: '#f8fafc',
         display: 'standalone',
         start_url: '/',
@@ -212,12 +212,12 @@ export default defineConfig({
         globIgnores: [
           '**/images/stockholm*',
           '**/images/optimized/*',
-          // Admin bundle (one user needs it) and the ~500KB three.js chunk
-          // (lazy-loaded by the hero) stay out of the install-time
-          // precache; the asset-cache runtime rule below picks them up on
-          // first use so offline revisits still work.
+          // Admin bundle stays out of the install-time precache (one user
+          // needs it); the asset-cache runtime rule below picks it up on
+          // first use so offline revisits still work. (The three-* ignore
+          // died with the starfield in S7 — the Canvas2D field ships in
+          // the app chunk.)
           '**/Admin*',
-          '**/three-*',
           // D3-PERF-02: the 8 prerendered experience pages were ~248KB of
           // precache whose revision hashes churn every deploy — returning
           // visitors re-downloaded all of them each time. Deliberate
@@ -228,11 +228,14 @@ export default defineConfig({
           // precache — without it an offline navigation dead-ends in
           // main.ts's stale-chunk reload loop instead of the retry UI.
           '**/experience/*.html',
-          // Non-Latin Geist subsets (~31KB) the browser never requests on
-          // an English-only site; the font-cache runtime rule would still
-          // pick them up if unicode-range ever matched.
-          '**/fonts/geist-cyrillic*',
-          '**/fonts/geist-vietnamese*'
+          // Non-Latin Geist/Geist Mono subsets the browser never requests
+          // on an English-only site; the font-cache runtime rule would
+          // still pick them up if unicode-range ever matched. The globs
+          // cover both families (geist-cyrillic-* and geist-mono-cyrillic-*).
+          '**/fonts/geist*cyrillic*',
+          '**/fonts/geist*vietnamese*',
+          // Symbols subsets: decorative codepoints nothing on the site uses.
+          '**/fonts/geist*symbols*'
         ],
         // Backstop against a single chunk bloating the precache
         maximumFileSizeToCacheInBytes: 1024 * 1024,
@@ -371,10 +374,6 @@ export default defineConfig({
       output: {
         // Manual chunk splitting for better caching and performance
         manualChunks: (id: string) => {
-          // Three.js - isolated for lazy loading (~172KB gzipped)
-          if (id.includes('node_modules/three')) {
-            return 'three'
-          }
           // Vue ecosystem — note 'node_modules/@vue' also matches @vueuse,
           // so VueUse deliberately rides in vue-vendor (a separate branch
           // for it below this one was unreachable dead config, D3-PERF-02).

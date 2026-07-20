@@ -27,6 +27,22 @@
    tokens is queued for the S4 pruning sprint. */
 @import './styles/variables.css';
 
+/* D3-PERF-03: metrics-adjusted local fallback so the Geist swap is
+   layout-neutral (the hero h1 is the LCP element; an unadjusted Arial
+   swap reflowed the headline mid-viewport). Overrides computed from the
+   shipped geist-latin woff2 vs Arial with a frequency-weighted average
+   advance (the variable font's OS/2 xAvgCharWidth is unreliable —
+   naive use gives a bogus 131% size-adjust). @font-face is unlayered by
+   spec; it declares a face, it can't override utilities. */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial');
+  size-adjust: 105.89%;
+  ascent-override: 94.91%;
+  descent-override: 27.86%;
+  line-gap-override: 0%;
+}
+
 @layer base {
   /* No universal margin/padding reset here: Tailwind preflight (also in
      @layer base, emitted later) already zeroes margins/paddings and sets

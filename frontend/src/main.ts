@@ -5,6 +5,7 @@ import type { RouteLocationNormalized } from 'vue-router'
 import { routes, scrollBehavior, DEFAULT_TITLE } from './router'
 import { createAdminAuthGuard } from './router/authGuard'
 import '@fontsource-variable/geist'
+import '@fontsource-variable/geist-mono'
 // Order matters: tailwind.css MUST come first. style.css's element
 // defaults share @layer base with Tailwind preflight, and within a layer
 // later source order wins ties — imported the other way round, preflight

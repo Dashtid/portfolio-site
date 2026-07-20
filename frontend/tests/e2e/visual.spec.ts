@@ -92,6 +92,28 @@ const FIXTURE_COMPANIES = [
     technologies: [],
     responsibilities: [],
     order_index: 3
+  },
+  {
+    // Pre-2020: exercises the D3-DSN-04 'Earlier' collapse in every home
+    // baseline — without one, a regression dropping the Earlier list would
+    // produce zero-pixel visual diffs forever.
+    id: 'fixture-scania',
+    name: 'Scania Group',
+    title: 'Technician, Engine Analysis',
+    description: 'Engine troubleshooting from case intake to resolution.',
+    detailed_description: null,
+    logo_url: null,
+    start_date: '2016-06-01T00:00:00Z',
+    end_date: '2016-08-01T00:00:00Z',
+    location: 'Södertälje, Sweden',
+    website: null,
+    video_url: null,
+    video_title: null,
+    map_url: null,
+    map_title: null,
+    technologies: [],
+    responsibilities: [],
+    order_index: 4
   }
 ]
 
@@ -271,13 +293,19 @@ test.describe('Visual Regression Tests', () => {
   test.describe('Home Page Sections', () => {
     useHermeticHome()
 
+    // D3-TEST-04: hero tests emulate reduced motion so the baselines are
+    // deterministic end states — the light trace renders fully drawn and
+    // the dark Canvas2D field renders its seeded static t=0 frame,
+    // instead of the diff budget absorbing animation timing.
     test('hero section - light mode', async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto('/')
       await waitForStableUI(page)
       await expect(page.locator('#hero')).toHaveScreenshot('hero-light.png')
     })
 
     test('hero section - dark mode', async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto('/')
       await waitForStableUI(page)
       // Toggle to dark mode
@@ -286,6 +314,10 @@ test.describe('Visual Regression Tests', () => {
         await themeToggle.click()
         await page.waitForTimeout(300)
       }
+      // Non-snapshot smoke (D3-TEST-04): the dark motif canvas must be
+      // mounted — a regression that silently dropped the field would
+      // otherwise just look like a "cleaner" baseline.
+      await expect(page.locator('[data-testid="hero-field"]')).toBeAttached()
       await expect(page.locator('#hero')).toHaveScreenshot('hero-dark.png')
     })
 

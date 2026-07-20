@@ -1,9 +1,27 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useHead } from '@unhead/vue'
 import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ToastContainer.vue'
 import ErrorBoundary from './components/ErrorBoundary.vue'
+// D3-PERF-03: the hero h1 is the LCP element, but Geist's latin woff2 was
+// only discovered after the vendor CSS parsed. The ?url import resolves
+// the hashed build filename; preloading it starts the fetch alongside the
+// CSS. Rendered on every prerendered page via SSG head capture.
+import geistLatinUrl from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url'
+
+useHead({
+  link: [
+    {
+      rel: 'preload',
+      href: geistLatinUrl,
+      as: 'font',
+      type: 'font/woff2',
+      crossorigin: ''
+    }
+  ]
+})
 
 // Store
 const authStore = useAuthStore()

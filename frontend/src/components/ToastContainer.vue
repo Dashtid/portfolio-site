@@ -69,9 +69,16 @@ const { toasts, remove } = useToast()
   background: linear-gradient(to right, rgba(16, 185, 129, 0.1), var(--bg-secondary, #fff));
 }
 
+/* D3-DSN-02: explicit error tokens, uniform tint + full border — the old
+   red-over-surface gradient composited to a muddy violet in dark mode. */
 .toast--error {
-  border-left-color: #ef4444;
-  background: linear-gradient(to right, rgba(239, 68, 68, 0.1), var(--bg-secondary, #fff));
+  border: 1px solid var(--error-border, #fecaca);
+  border-left: 4px solid var(--color-error, #dc2626);
+  background: var(--error-bg, #fef2f2);
+}
+
+.toast--error .toast__message {
+  color: var(--error-text, #b91c1c);
 }
 
 .toast--warning {
@@ -94,7 +101,7 @@ const { toasts, remove } = useToast()
 }
 
 .toast--error .toast__icon {
-  color: #ef4444;
+  color: var(--color-error, #dc2626);
 }
 
 .toast--warning .toast__icon {
@@ -177,7 +184,12 @@ const { toasts, remove } = useToast()
 }
 
 [data-theme='dark'] .toast--error {
-  background: linear-gradient(to right, rgba(239, 68, 68, 0.15), var(--bg-secondary));
+  /* --error-bg/-border/-text swap via variables.css; the alpha tint sits
+     over --bg-secondary (the toast base), which is the prescribed
+     red-500/10-over-surface treatment */
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  border-left-color: var(--color-error);
 }
 
 [data-theme='dark'] .toast--warning {

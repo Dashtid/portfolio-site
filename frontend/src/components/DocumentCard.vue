@@ -1,6 +1,6 @@
 <template>
   <article
-    class="document-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
+    class="document-card group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-surface-2 dark:hover:border-primary-400/40 dark:hover:bg-surface-3"
   >
     <header class="flex items-start justify-between gap-4">
       <div class="min-w-0 flex-1">

@@ -127,11 +127,9 @@ describe('HomeView', () => {
           },
           BackToTop: true,
           DocumentCard: true,
-          // ThreeHeroBackground is a defineAsyncComponent; without a stub
-          // the dynamic import fails under happy-dom and the surrounding
-          // tree renders partially. Stub it to a placeholder so the hero
-          // section's siblings render reliably.
-          ThreeHeroBackground: true
+          // Canvas2D isn't implemented in happy-dom — stub the field so
+          // the hero renders without a real rendering context.
+          CanvasHeroField: true
         },
         ...(globalOverrides ?? {})
       },
@@ -202,13 +200,66 @@ describe('HomeView', () => {
     })
   })
 
+  describe('Earlier roles collapse (D3-DSN-04)', () => {
+    const splitCompanies = [
+      { id: 'c-new', name: 'Hermes', title: 'Specialist', start_date: '2024-05-01' },
+      { id: 'c-edge', name: 'EdgeCo', title: 'Engineer', start_date: '2020-01-01' },
+      {
+        id: 'c-old',
+        name: 'Scania Group',
+        title: 'Technician',
+        start_date: '2016-06-01',
+        end_date: '2016-08-31'
+      },
+      {
+        id: 'c-fdf',
+        name: 'Finnish Defence Forces',
+        title: 'Platoon Leader',
+        start_date: '2014-01-01',
+        end_date: '2015-01-31'
+      }
+    ]
+
+    it('splits pre-2020 roles into the Earlier list and keeps 2020+ in the grid', async () => {
+      const wrapper = await createWrapper({ initialPortfolio: { companies: splitCompanies } })
+
+      const cards = wrapper.findAll('.experience-card')
+      expect(cards.length).toBe(2)
+      expect(wrapper.text()).toContain('Earlier')
+
+      // Every pre-2020 role keeps a real link to its detail page
+      const links = wrapper.findAll('a[href^="/experience/"]').map(a => a.attributes('href'))
+      expect(links).toContain('/experience/c-old')
+      expect(links).toContain('/experience/c-fdf')
+    })
+
+    it('renders UTC-safe year ranges (Jan-1 dates must not roll back a year)', async () => {
+      const wrapper = await createWrapper({ initialPortfolio: { companies: splitCompanies } })
+
+      // FDF starts 2014-01-01: getFullYear() in UTC-negative timezones
+      // would render 2013 — yearRange must use getUTCFullYear()
+      expect(wrapper.text()).toContain('2014–2015')
+      expect(wrapper.text()).toContain('2016')
+      expect(wrapper.text()).not.toContain('2013')
+    })
+
+    it('omits the Earlier block when every role is 2020+', async () => {
+      const wrapper = await createWrapper({
+        initialPortfolio: { companies: [splitCompanies[0]] }
+      })
+      expect(wrapper.text()).not.toContain('Earlier')
+    })
+  })
+
   describe('Hero Section Content', () => {
     it('should display the hero title', async () => {
       const wrapper = await createWrapper()
 
       const title = wrapper.find('.custom-hero-title')
       expect(title.exists()).toBe(true)
-      expect(title.text()).toContain('Cybersecurity')
+      // D3-DSN-03: the statement matches the positioning everywhere else
+      // (title tag, og tags, footer tagline)
+      expect(title.text()).toContain('Product security')
       expect(title.text()).toContain('medical software')
     })
 
