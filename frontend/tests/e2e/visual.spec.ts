@@ -359,7 +359,7 @@ test.describe('Visual Regression Tests', () => {
     test('navigation bar', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
-      await expect(page.locator('nav')).toHaveScreenshot('nav-default.png')
+      await expect(page.locator('nav.navbar-custom')).toHaveScreenshot('nav-default.png')
     })
 
     test('navigation bar - scrolled', async ({ page }) => {
@@ -368,7 +368,7 @@ test.describe('Visual Regression Tests', () => {
       // Scroll down to trigger navbar style change
       await page.evaluate(() => window.scrollTo(0, 200))
       await page.waitForTimeout(300)
-      await expect(page.locator('nav')).toHaveScreenshot('nav-scrolled.png')
+      await expect(page.locator('nav.navbar-custom')).toHaveScreenshot('nav-scrolled.png')
     })
 
     test('theme toggle states', async ({ page }) => {

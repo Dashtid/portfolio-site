@@ -36,8 +36,8 @@ export class HomePage extends BasePage {
     super(page)
 
     // Navigation
-    this.navbar = page.locator('nav')
-    this.navLinks = page.locator('nav a')
+    this.navbar = page.locator('nav.navbar-custom')
+    this.navLinks = page.locator('nav.navbar-custom a')
     this.themeToggle = page.locator('[data-testid="theme-toggle"]')
     this.backToTop = page.locator('[data-testid="back-to-top"]')
 
