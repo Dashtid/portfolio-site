@@ -12,6 +12,12 @@ updates:
         update-types: ["minor", "patch"]
     commit-message:
       prefix: "chore(deps)"
+    # D3-CI-02: 7-day cooldown before adopting fresh releases — the window
+    # in which hijacked-package incidents are typically caught and yanked.
+    # Dependabot security updates bypass cooldown automatically, so known
+    # CVE fixes still arrive immediately.
+    cooldown:
+      default-days: 7
 
   # npm dependencies
   - package-ecosystem: "npm"
@@ -25,6 +31,8 @@ updates:
         update-types: ["minor", "patch"]
     commit-message:
       prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -34,3 +42,15 @@ updates:
       day: "monday"
     commit-message:
       prefix: "chore(ci)"
+
+  # Docker base image (D3-CI-02): backend/Dockerfile digest-pins
+  # python:3.13-slim, but nothing bumped the digest — trivy fs never scans
+  # the image OS layer, so base-image CVEs accumulated silently. Dependabot
+  # keeps the digest current; Fly rebuilds from it on each deploy.
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"

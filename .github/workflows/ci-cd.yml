@@ -217,7 +217,11 @@ jobs:
         # see the update-docker script (on Windows run it from Git Bash with
         # a node_modules shadow volume — npm's cmd.exe shell can't expand
         # $(pwd)).
-        run: npx playwright test --project=chromium --grep-invert "Bundle Size|defer non-critical"
+        #
+        # D3-CI-03: the --grep-invert "Bundle Size|defer non-critical"
+        # exclusion is gone — those tests were deleted outright (Lighthouse
+        # owns the budgets as hard errors), so the full suite runs.
+        run: npx playwright test --project=chromium
         env:
           HOME: /root
 
@@ -407,6 +411,40 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      # D3-CI-03: the ONLY automated check of the security headers this
+      # portfolio advertises — the E2E header suite skips off-production
+      # and CI runs against a local preview. `vercel deploy --prod` is
+      # synchronous (returns after build + alias), so the curl hits the
+      # freshly promoted deployment. Also locks D3-SEC-03 in place: fails
+      # if script-src ever regresses to 'unsafe-inline'.
+      - name: Post-deploy security-header smoke
+        run: |
+          for i in 1 2 3; do
+            HEADERS=$(curl -sI --max-time 15 https://dashti.se/) && break
+            echo "curl attempt $i failed; retrying in 10s"; sleep 10
+          done
+          echo "$HEADERS" | tr -d '\r' > /tmp/headers.txt
+          fail=0
+          require() {
+            if grep -qi "$1" /tmp/headers.txt; then
+              echo "[+] $2"
+            else
+              echo "[-] MISSING: $2"; fail=1
+            fi
+          }
+          require "^content-security-policy:" "Content-Security-Policy present"
+          require "^x-content-type-options: *nosniff" "X-Content-Type-Options: nosniff"
+          require "^x-frame-options: *deny" "X-Frame-Options: DENY"
+          require "^strict-transport-security:" "HSTS present"
+          CSP=$(grep -i "^content-security-policy:" /tmp/headers.txt || true)
+          SCRIPT_SRC=$(printf '%s' "$CSP" | grep -o "script-src [^;]*" || true)
+          if printf '%s' "$SCRIPT_SRC" | grep -q "unsafe-inline"; then
+            echo "[-] script-src contains 'unsafe-inline' — D3-SEC-03 regressed"; fail=1
+          else
+            echo "[+] script-src free of 'unsafe-inline'"
+          fi
+          exit $fail
 
   # Deploy backend to Fly.io — gated on backend-quality. Fly's remote builder
   # produces the image from the Dockerfile on each deploy; we just invoke the

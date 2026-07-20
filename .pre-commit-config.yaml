@@ -2,6 +2,18 @@
 # See https://pre-commit.com for more information
 
 repos:
+  # Block committing environment files outright (D3-SEC-05). Ported from
+  # the never-installed .githooks/pre-commit; its grep-based secret-pattern
+  # warn is deliberately NOT ported — TruffleHog in CI (security-scan job)
+  # owns secret detection with far fewer false positives.
+  - repo: local
+    hooks:
+      - id: forbid-env-files
+        name: forbid committing .env files
+        entry: '.env files must never be committed (use .env.example)'
+        language: fail
+        files: '(^|/)\.env(\.production)?$'
+
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

@@ -60,38 +60,57 @@ test.describe('Security Headers', () => {
     }
   })
 
-  test('should have proper CSP meta tag', async ({ page }) => {
-    await page.goto('/')
-
-    const cspMeta = page.locator('meta[http-equiv="Content-Security-Policy"]')
-    if ((await cspMeta.count()) > 0) {
-      const content = await cspMeta.getAttribute('content')
-      expect(content).toBeTruthy()
-      expect(content).toContain('default-src')
-    }
-  })
+  // The former 'proper CSP meta tag' test was deleted (D3-CI-03): the
+  // site sets CSP via Vercel headers, no meta tag exists, and the test
+  // wrapped all assertions in `if (count > 0)` — it asserted nothing.
+  // The post-deploy smoke step in ci-cd.yml owns CSP verification.
 })
 
+// D3-CI-03: these tests previously passed vacuously — the script payload
+// called alert(1) but the assertion checked a window.__xss_triggered
+// sentinel nothing ever set, and the raw-HTML check grepped page.content()
+// for an unquoted literal that DOM re-serialization would never emit even
+// when injected. Payloads now set the sentinel themselves and the DOM is
+// queried structurally, so execution/injection actually fails the test.
 test.describe('XSS Prevention', () => {
-  test('should sanitize URL parameters', async ({ page }) => {
-    // Try injecting script via URL
-    await page.goto('/?test=<script>alert(1)</script>')
-    // Wait for page to fully load and any scripts to execute
+  test('should not execute scripts injected via URL parameters', async ({ page }) => {
+    let dialogOpened = false
+    page.on('dialog', async dialog => {
+      dialogOpened = true
+      await dialog.dismiss()
+    })
+
+    // Payload sets the exact sentinel the assertion reads — if this ever
+    // executes, the test fails.
+    await page.goto('/?test=<script>window.__xss_triggered=true</script>')
     await page.waitForLoadState('networkidle')
 
-    // The script should not be executed
-    const alertTriggered = await page.evaluate(() => {
-      return (window as unknown as { __xss_triggered?: boolean }).__xss_triggered || false
+    const sentinelSet = await page.evaluate(() => {
+      return (window as unknown as { __xss_triggered?: boolean }).__xss_triggered === true
     })
-    expect(alertTriggered).toBe(false)
+    expect(sentinelSet).toBe(false)
+    expect(dialogOpened).toBe(false)
   })
 
-  test('should not render raw HTML from URL parameters', async ({ page }) => {
-    await page.goto('/?name=<img src=x onerror=alert(1)>')
-    const html = await page.content()
+  test('should not render injected HTML elements from URL parameters', async ({ page }) => {
+    let dialogOpened = false
+    page.on('dialog', async dialog => {
+      dialogOpened = true
+      await dialog.dismiss()
+    })
 
-    // Raw HTML should be escaped
-    expect(html).not.toContain('<img src=x onerror=alert(1)>')
+    await page.goto('/?name=<img id=xss-probe src=x onerror=window.__xss_triggered=true>')
+    await page.waitForLoadState('networkidle')
+
+    // Structural check: the element must not exist in the DOM at all —
+    // immune to the attribute-quoting that defeated the old string grep.
+    await expect(page.locator('#xss-probe')).toHaveCount(0)
+
+    const sentinelSet = await page.evaluate(() => {
+      return (window as unknown as { __xss_triggered?: boolean }).__xss_triggered === true
+    })
+    expect(sentinelSet).toBe(false)
+    expect(dialogOpened).toBe(false)
   })
 })
 
@@ -136,30 +155,8 @@ test.describe('CORS and External Resources', () => {
   })
 })
 
-test.describe('Form Security', () => {
-  test('should have CSRF protection on forms', async ({ page }) => {
-    await page.goto('/')
-
-    const forms = page.locator('form')
-    const formCount = await forms.count()
-
-    for (let i = 0; i < formCount; i++) {
-      const form = forms.nth(i)
-
-      // Forms should have action attribute
-      const action = await form.getAttribute('action')
-      if (action && !action.startsWith('#')) {
-        // Forms with external actions should have CSRF token
-        const csrfInput = form.locator('input[name*="csrf"], input[name*="token"]')
-        // This is a soft check - not all forms need CSRF
-        if (action.startsWith('http')) {
-          const count = await csrfInput.count()
-          // Log but don't fail for informational purposes
-          if (count === 0) {
-            console.log(`Form ${i + 1} has external action but no CSRF token detected`)
-          }
-        }
-      }
-    }
-  })
-})
+// The former 'Form Security' CSRF describe was deleted (D3-CI-03): it
+// contained zero expect() calls — its only output was a console.log — so
+// it could never fail. CSRF protection is a backend contract (OAuth state
+// + SameSite cookies) covered by backend tests, not something a public
+// SSG page with no cross-origin forms can meaningfully assert.

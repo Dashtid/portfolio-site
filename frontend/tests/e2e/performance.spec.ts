@@ -119,31 +119,10 @@ test.describe('Performance', () => {
       expect(loadTime).toBeLessThan(3000)
     })
 
-    test('should defer non-critical JavaScript', async ({ page }) => {
-      await page.goto('/')
-
-      // Check that scripts are deferred or async
-      const scripts = await page.locator('script[src]').all()
-      const scriptAttributes: string[] = []
-
-      for (const script of scripts) {
-        const defer = await script.getAttribute('defer')
-        const async = await script.getAttribute('async')
-        const type = await script.getAttribute('type')
-
-        // Scripts should be deferred, async, or modules (which are deferred by default)
-        const isOptimized = defer !== null || async !== null || type === 'module'
-        if (isOptimized) {
-          scriptAttributes.push('optimized')
-        }
-      }
-
-      // All scripts with src should be optimized (defer, async, or module)
-      // If there are scripts, they should all be optimized
-      if (scripts.length > 0) {
-        expect(scriptAttributes.length).toBe(scripts.length)
-      }
-    })
+    // The 'defer non-critical JavaScript' test was deleted (D3-CI-03): CI
+    // permanently excluded it via --grep-invert, so it enforced nothing,
+    // and Lighthouse's best-practices/perf categories already flag
+    // render-blocking scripts on the real built output.
 
     test('should use efficient image formats', async ({ page }) => {
       await page.goto('/')
@@ -187,48 +166,11 @@ test.describe('Performance', () => {
     })
   })
 
-  test.describe('Bundle Size', () => {
-    test('should have reasonable JavaScript bundle size', async ({ page }) => {
-      let totalJsSize = 0
-
-      page.on('response', async response => {
-        const url = response.url()
-        if (url.includes('.js') && !url.includes('hot-update')) {
-          const body = await response.body().catch(() => new Uint8Array(0))
-          totalJsSize += body.length
-        }
-      })
-
-      await page.goto('/')
-      // Wait for all network requests to complete
-      await page.waitForLoadState('networkidle')
-
-      // Total JS should be under 500KB (reasonable for Vue app)
-      const totalJsKB = totalJsSize / 1024
-      expect(totalJsKB).toBeLessThan(500)
-    })
-
-    test('should have reasonable CSS bundle size', async ({ page }) => {
-      let totalCssSize = 0
-
-      page.on('response', async response => {
-        const url = response.url()
-        // Only count main app CSS, not all CSS requests
-        if (url.includes('.css') && url.includes('assets')) {
-          const body = await response.body().catch(() => new Uint8Array(0))
-          totalCssSize += body.length
-        }
-      })
-
-      await page.goto('/')
-      // Wait for all network requests to complete
-      await page.waitForLoadState('networkidle')
-
-      // Total CSS should be under 150KB (reasonable for a Vue app)
-      const totalCssKB = totalCssSize / 1024
-      expect(totalCssKB).toBeLessThan(150)
-    })
-  })
+  // The 'Bundle Size' describe was deleted (D3-CI-03): CI permanently
+  // excluded it via --grep-invert, so its 500KB/150KB assertions never
+  // ran — while lighthouserc.json enforces the real budgets as hard
+  // errors (resource-summary script:size 325KB, total:size 1MB) against
+  // the built dist. One budget system, actually enforced.
 
   test.describe('Network Performance', () => {
     test('should minimize number of requests', async ({ page }) => {
