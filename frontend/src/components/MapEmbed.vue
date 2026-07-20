@@ -43,7 +43,10 @@ const props = withDefaults(defineProps<Props>(), {
   heading: null
 })
 
-const ALLOWED_MAP_HOSTS = ['www.google.com', 'google.com', 'maps.google.com']
+// D3-SEC-04: www.google.com only — bare google.com passed validation but
+// CSP frame-src blocked the iframe (blank box), and maps.google.com was
+// allowed by CSP yet used by no live content. Allowlist and CSP now match.
+const ALLOWED_MAP_HOSTS = ['www.google.com']
 
 const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_MAP_HOSTS, '/maps/embed', 'MapEmbed')
 </script>

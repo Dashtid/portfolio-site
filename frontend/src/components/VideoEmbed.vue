@@ -9,11 +9,9 @@
         role="application"
         tabindex="0"
         allow="
-          accelerometer;
           autoplay;
           clipboard-write;
           encrypted-media;
-          gyroscope;
           picture-in-picture;
           web-share;
         "
@@ -52,12 +50,14 @@ const props = withDefaults(defineProps<Props>(), {
   heading: null
 })
 
-const ALLOWED_VIDEO_HOSTS = [
-  'www.youtube.com',
-  'youtube.com',
-  'www.youtube-nocookie.com',
-  'youtube-nocookie.com'
-]
+// D3-SEC-04: www hosts only — the bare-domain entries used to pass this
+// validator while the CSP frame-src (www hosts only) blocked the iframe,
+// rendering a blank box instead of failing validation. Allowlist and CSP
+// now describe the same set. (accelerometer/gyroscope were dropped from
+// the iframe allow attr above: Permissions-Policy denies them site-wide,
+// so the grants were dead and Chrome logged violations when the player
+// probed sensors.)
+const ALLOWED_VIDEO_HOSTS = ['www.youtube.com', 'www.youtube-nocookie.com']
 
 const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/embed/', 'VideoEmbed')
 </script>

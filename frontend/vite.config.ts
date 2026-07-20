@@ -32,6 +32,43 @@ export default defineConfig({
     // public/sitemap.xml and is copied into dist before this hook runs.
     onFinished() {
       const distDir = path.resolve(__dirname, 'dist')
+
+      // D3-SEC-03: convert vite-ssg's executable state script into a
+      // non-executing JSON data block so script-src needs no per-build
+      // hashes. The captured group is the double-encoded JSON string
+      // literal serializeState emits (with <, >, / escaped, so a literal
+      // </script> can never appear inside and the lazy match is safe);
+      // it is kept verbatim as the block's content, and the shim at the
+      // top of src/main.ts feeds it back to vite-ssg's deserializeState
+      // unchanged. Every prerendered page (including 404.html) carries
+      // the script, so walk the whole tree.
+      const htmlFiles: string[] = []
+      const walk = (dir: string): void => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name)
+          if (entry.isDirectory()) walk(full)
+          else if (entry.name.endsWith('.html')) htmlFiles.push(full)
+        }
+      }
+      walk(distDir)
+
+      const stateScript = /<script>window\.__INITIAL_STATE__=(".*?")<\/script>/s
+      let rewritten = 0
+      for (const file of htmlFiles) {
+        const html = fs.readFileSync(file, 'utf-8')
+        if (!stateScript.test(html)) continue
+        fs.writeFileSync(
+          file,
+          html.replace(
+            stateScript,
+            '<script type="application/json" id="__INITIAL_STATE__">$1</script>'
+          )
+        )
+        rewritten++
+      }
+      // eslint-disable-next-line no-console
+      console.log(`[csp] state script -> JSON data block in ${rewritten} pages`)
+
       const sitemapPath = path.join(distDir, 'sitemap.xml')
       const experienceDir = path.join(distDir, 'experience')
       if (!fs.existsSync(sitemapPath) || !fs.existsSync(experienceDir)) return

@@ -28,8 +28,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts",
     "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "format": "prettier --write \"src/**/*.{js,ts,vue,json,css,scss,md}\"",
-    "format:check": "prettier --check \"src/**/*.{js,ts,vue,json,css,scss,md}\"",
-    "images:avif": "node scripts/convert-to-avif.mjs"
+    "format:check": "prettier --check \"src/**/*.{js,ts,vue,json,css,scss,md}\""
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
@@ -75,7 +74,6 @@
     "postcss": "^8.5.15",
     "prettier": "^3.8.1",
     "rollup-plugin-visualizer": "^6.0.5",
-    "sharp": "^0.34.5",
     "terser": "^5.48.0",
     "typescript": "^5.9.3",
     "vite": "^7.2.4",

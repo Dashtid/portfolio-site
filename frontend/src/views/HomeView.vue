@@ -597,13 +597,13 @@
               <picture>
                 <source srcset="/images/optimized/cropped.avif" type="image/avif" />
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
-                <!-- FRONTEND-PERF-08: PNG fallback uses the already-optimised
-                     cropped.png (343 KB) instead of the unprocessed
-                     profile.png (854 KB). >97% of clients hit the AVIF/WebP
-                     branches above so the fallback path is rarely walked,
-                     but the saving still applies to Lighthouse's total-
-                     payload budget and to older browsers/screen readers
-                     that fall back. -->
+                <!-- FRONTEND-PERF-08 / D3-PRUNE-01: PNG fallback is a
+                     640px-wide palette PNG (180 KB, resized from the 851px
+                     master in Sprint 4 — the element renders <=500px wide).
+                     >97% of clients hit the AVIF/WebP branches above so the
+                     fallback path is rarely walked, but the saving still
+                     applies to Lighthouse's total-payload budget and to
+                     older browsers/screen readers that fall back. -->
                 <img
                   src="/images/optimized/cropped.png"
                   alt="David Dashti - product security specialist for medical software"

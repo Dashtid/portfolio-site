@@ -19,6 +19,25 @@ import analyticsService from './services/analytics'
 import { errorTracker } from './utils/errorTracking'
 import { initSentry, captureException, isSentryInitialized } from './utils/sentry'
 
+// D3-SEC-03: vite-ssg hardcodes its state transport as an EXECUTABLE
+// inline script (`<script>window.__INITIAL_STATE__="..."</script>`) whose
+// content changes every build — incompatible with a hash-based CSP. The
+// onFinished hook in vite.config.ts rewrites that tag into a non-executing
+// <script type="application/json"> data block; this shim reads the block
+// back into window.__INITIAL_STATE__ before vite-ssg's client bootstrap
+// (which runs inside the ViteSSG() call below) looks for it. The block's
+// content is the same double-encoded JSON string the executable form
+// carried, so deserializeState sees an identical value. No element (dev
+// server, tests) means no baked state — exactly as before.
+if (!import.meta.env.SSR) {
+  const bakedState = document.getElementById('__INITIAL_STATE__')
+  if (bakedState?.textContent) {
+    ;(window as unknown as { __INITIAL_STATE__?: unknown }).__INITIAL_STATE__ = JSON.parse(
+      bakedState.textContent
+    )
+  }
+}
+
 export const createApp = ViteSSG(
   App,
   { routes, base: import.meta.env.BASE_URL, scrollBehavior },
