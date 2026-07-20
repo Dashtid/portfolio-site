@@ -21,6 +21,12 @@ since there are no third-party API consumers.
 | `/api/v1/auth/me` | GET | Required |
 | `/api/v1/auth/refresh` | POST | Refresh-token cookie |
 | `/api/v1/auth/logout` | POST | Clears auth cookies |
+| `/api/v1/documents/upload` | POST | Admin (26 MB cap gated on valid JWT) |
+| `/api/v1/admin/*` | GET | Admin (dashboard summary, Sentry panel) |
+| `/api/v1/admin/oss/*` | GET, POST | Admin (OSS contribution dashboard) |
+| `/api/v1/metrics/*` | GET | Admin (performance counters) |
+| `/api/v1/errors` | POST | Public (frontend error reports, rate-limited) |
+| `/api/v1/health`, `/api/v1/health/ready` | GET | Public (readiness probes the DB) |
 | `/api/v1/health` | GET | Public |
 | `/api/v1/health/{ready,live,detailed}` | GET | Public |
 

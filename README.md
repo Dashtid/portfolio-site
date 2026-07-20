@@ -39,7 +39,7 @@ A few decisions in the build that aren't obvious from the dependency list:
 - **HMAC-keyed IP pseudonymisation.** Visitor IPs are hashed with HMAC-SHA256 keyed off `SECRET_KEY` before storage — rainbow-table resistant across the IPv4 space without a second secret to manage.
 - **Strict production posture.** Locked-down CSP; `/api/docs` / `/api/redoc` / `/openapi.json` all disabled in production (the API has no third-party consumers); CSP `script-src` is `'self'` only.
 - **Tree-shaken three.js for the hero animation.** Switching from `import * as THREE` to named imports let Rollup tree-shake the chunk by 32% (732KB → 496KB raw; 181KB → 120KB gzip; −61KB on the home page). Dynamic namespace access can't be tree-shaken; named imports can.
-- **CI as a real gate.** Frontend lint + type-check + 617 vitest unit tests + 5-browser Playwright e2e. Backend ruff + 667 pytest tests with an enforced 83% coverage floor (currently 86%). Lighthouse runs every push against assertion-level budgets that fail CI on regressions. Deploy jobs gated on quality jobs — no broken commits ship.
+- **CI as a real gate.** Frontend lint + type-check + ~500 vitest unit tests + Playwright e2e and visual regression. Backend ruff + ~850 pytest tests with an enforced 83% coverage floor. Lighthouse runs every push against assertion-level budgets that fail CI on regressions (performance is a hard error), and a post-deploy smoke asserts the production security headers — including the hash-based CSP — after every deploy. Deploy jobs gated on quality jobs — no broken commits ship.
 - **SHA-pinned actions, checksum-verified Trivy.** All GitHub Action references are SHA-pinned (not version tags) after the March 2025 `tj-actions/changed-files` supply-chain incident; Trivy is downloaded directly with a checksum check rather than via the (also-compromised) `aquasecurity/trivy-action`.
 
 ## Run locally
@@ -53,7 +53,7 @@ uv pip install -r requirements.txt && uvicorn app.main:app --reload
 cd frontend && npm install && npm run dev
 ```
 
-Frontend: `http://localhost:5173` — API: `http://localhost:8000/api/docs`
+Frontend: `http://localhost:3000` — API: `http://localhost:8000/api/docs`
 
 ## Deeper reading
 
@@ -62,7 +62,6 @@ Frontend: `http://localhost:5173` — API: `http://localhost:8000/api/docs`
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — production deployment notes
 - [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md) — DB configuration
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — local dev workflow
-- [CHANGELOG.md](CHANGELOG.md) — version history
 - [BACKLOG.md](BACKLOG.md) — tracked work items
 
 ## License
