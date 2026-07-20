@@ -54,7 +54,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Hermes Medical Solutions",
             "title": "QA/RA & Security Specialist",
-            "description": "QA/RA & Security Specialist at Hermes Medical Solutions, ensuring NIS2/ISO 27001 compliance, regulatory clearance, and V&V processes for nuclear medicine software solutions.",
+            "description": "Product security for regulated nuclear-medicine software: threat modeling, FDA premarket security documentation, IEC 81001-5-1 secure-lifecycle work, SBOM and vulnerability management — alongside QA/RA responsibility for V&V and market clearance.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2024, 5, 1),
             "end_date": None,
@@ -68,7 +68,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Philips Healthcare",
             "title": "Incident Support Specialist, Nordics",
-            "description": "Remote Service Engineer providing Level 1 support for Intellispace Portal (ISP) and Intellispace Cardiovascular (ISCV) systems across the Nordics.",
+            "description": "Level 1 support for Intellispace Portal and Cardiovascular across the Nordics and UK/Ireland — full incident lifecycle, upgrade assessment, and cross-regional knowledge sharing for enterprise imaging informatics.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2022, 3, 1),
             "end_date": datetime(2024, 5, 31),
@@ -82,7 +82,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Karolinska University Hospital",
             "title": "Biomedical Engineer, Medical Imaging and Physiology",
-            "description": "First-line support for imaging equipment fleet, incident management for RIS/PACS systems, working with GE, Philips, and Siemens solutions.",
+            "description": "First-line support for one of Europe's largest imaging-equipment fleets: RIS/PACS incident management, DICOM/HL7 integration work, and multi-vendor coordination across GE, Philips, and Siemens systems.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2021, 6, 1),
             "end_date": datetime(2021, 12, 31),
@@ -96,7 +96,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "SoftPro Medical Solutions",
             "title": "Master Thesis Student",
-            "description": "Collaborated on thesis project to improve Quality Assurance system at radiology department by integrating inventory system with equipment workflow.",
+            "description": "Thesis research integrating the Medusa inventory system with radiology equipment workflows — process modeling and multi-actor analysis to improve quality assurance in a radiology department.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2020, 10, 1),
             "end_date": datetime(2021, 6, 30),
@@ -106,7 +106,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Södersjukhuset - SÖS",
             "title": "Biomedical Engineer, Radiology Department",
-            "description": "Managed IT systems at radiology department, evaluating supplier contracts, leading workgroups, and streamlining workflows.",
+            "description": "Radiology IT systems management at one of Stockholm's largest emergency hospitals: PACS/DICOM operations, supplier contract evaluations, workflow optimization, and system documentation.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2020, 6, 1),
             "end_date": datetime(2021, 6, 30),
@@ -118,7 +118,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Scania Group",
             "title": "Technician, Engine Analysis",
-            "description": "Autonomous role managing troubleshooting processes, communicating across production chain, and creating documentation and work routines.",
+            "description": "Owned the engine troubleshooting process end-to-end — case intake to resolution — coordinating across the production chain and establishing documentation and work routines.",
             "location": "Södertälje, Sweden",
             "start_date": datetime(2016, 6, 1),
             "end_date": datetime(2016, 8, 31),
@@ -132,7 +132,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Finnish Defence Forces",
             "title": "Platoon Leader, 2nd Lieutenant",
-            "description": "Marine commando platoon leader with day-to-day command of 150 soldiers and field operation command of 30 soldiers.",
+            "description": "Day-to-day command of 150 marine commandos and field command of a 30-soldier unit — leadership, decision-making under pressure, and personnel development in a coastal defense brigade.",
             "location": "Dragsvik, Finland",
             "start_date": datetime(2014, 1, 1),
             "end_date": datetime(2015, 1, 31),
@@ -148,7 +148,7 @@ async def seed_companies(session: AsyncSession):
             # rather than name alone — see the seeding loop below.
             "name": "Scania Group",
             "title": "Technician, Engine Analysis",
-            "description": "Junior role working in a team of engineers and technicians as part of second-line support, acquiring troubleshooting skills.",
+            "description": "First industry role, on the second-line engine support team — building troubleshooting fundamentals alongside experienced engineers and learning how a heavy-vehicle production organization works.",
             "location": "Södertälje, Sweden",
             "start_date": datetime(2012, 6, 1),
             "end_date": datetime(2012, 8, 31),
