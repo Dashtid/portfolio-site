@@ -26,6 +26,7 @@ class CompanyBase(BaseModel):
     map_title: str | None = None
     responsibilities: list[str] | None = Field(None, max_length=50)  # Max 50 items
     technologies: list[str] | None = Field(None, max_length=100)  # Max 100 items
+    outcomes: list[str] | None = Field(None, max_length=50)  # Max 50 items
 
     @field_validator("logo_url", "website", "video_url", "map_url", mode="before")
     @classmethod
@@ -33,7 +34,7 @@ class CompanyBase(BaseModel):
         """Validate all URL fields are safe."""
         return validate_safe_url(v, "URL")
 
-    @field_validator("responsibilities", "technologies", mode="before")
+    @field_validator("responsibilities", "technologies", "outcomes", mode="before")
     @classmethod
     def validate_list_items(cls, v: list[str] | None) -> list[str] | None:
         """Validate list items have reasonable length."""
@@ -66,6 +67,7 @@ class CompanyUpdate(BaseModel):
     map_title: str | None = None
     responsibilities: list[str] | None = Field(None, max_length=50)  # Max 50 items
     technologies: list[str] | None = Field(None, max_length=100)  # Max 100 items
+    outcomes: list[str] | None = Field(None, max_length=50)  # Max 50 items
 
     @field_validator("logo_url", "website", "video_url", "map_url", mode="before")
     @classmethod
@@ -73,7 +75,7 @@ class CompanyUpdate(BaseModel):
         """Validate all URL fields are safe."""
         return validate_safe_url(v, "URL")
 
-    @field_validator("responsibilities", "technologies", mode="before")
+    @field_validator("responsibilities", "technologies", "outcomes", mode="before")
     @classmethod
     def validate_list_items(cls, v: list[str] | None) -> list[str] | None:
         """Validate list items have reasonable length."""

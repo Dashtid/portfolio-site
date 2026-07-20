@@ -325,6 +325,7 @@ class TestCompanyEdgeCases:
             "order_index": 5,
             "responsibilities": ["Task 1", "Task 2"],
             "technologies": ["Python", "FastAPI"],
+            "outcomes": ["Shipped the thing", "Stood up the process"],
         }
         response = client.post(
             "/api/v1/companies/", json=company_data, headers=admin_user_in_db["headers"]
@@ -336,6 +337,26 @@ class TestCompanyEdgeCases:
         assert data["website"] == "https://example.com"
         assert "responsibilities" in data
         assert "technologies" in data
+        assert data["outcomes"] == ["Shipped the thing", "Stood up the process"]
+
+    def test_update_company_outcomes(self, client: TestClient, admin_user_in_db: dict[str, Any]):
+        """Partial PUT of outcomes round-trips through the update allowlist (D3-UX-03)."""
+        create_response = client.post(
+            "/api/v1/companies/",
+            json={"name": "Outcomes Co", "title": "Role"},
+            headers=admin_user_in_db["headers"],
+        )
+        assert create_response.status_code == 201
+        company_id = create_response.json()["id"]
+        assert create_response.json()["outcomes"] is None
+
+        update_response = client.put(
+            f"/api/v1/companies/{company_id}",
+            json={"outcomes": ["Delivered premarket security documentation"]},
+            headers=admin_user_in_db["headers"],
+        )
+        assert update_response.status_code == 200
+        assert update_response.json()["outcomes"] == ["Delivered premarket security documentation"]
 
     def test_create_company_minimal_fields(
         self, client: TestClient, admin_user_in_db: dict[str, Any]

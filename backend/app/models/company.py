@@ -34,6 +34,7 @@ class Company(Base):
     # Structured data for detail page
     responsibilities = Column(JSON, nullable=True)  # List of responsibilities
     technologies = Column(JSON, nullable=True)  # List of technologies used
+    outcomes = Column(JSON, nullable=True)  # List of quantified outcome bullets (D3-UX-03)
 
     # Timestamps — DB-01: server_default on updated_at so INSERTs populate
     # the column instead of leaving it NULL until first UPDATE.

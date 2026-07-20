@@ -45,6 +45,12 @@ const FIXTURE_COMPANIES = [
     map_title: null,
     technologies: ['ISO 27001', 'NIS2', 'DICOM'],
     responsibilities: ['Regulatory compliance', 'Security assessments'],
+    // Primary fixture carries outcomes so the baselines cover the D3-UX-03
+    // panel; the other fixtures omit the field to pin the absent state.
+    outcomes: [
+      'Delivered premarket security documentation for regulatory submissions',
+      'Stood up secure development lifecycle processes'
+    ],
     order_index: 1
   },
   {
@@ -424,9 +430,9 @@ test.describe('Visual Regression Tests', () => {
     const primaryId = 'fixture-hermes'
     const secondaryId = 'fixture-philips'
 
-    // Skip GSAP entrance animations — ExperienceDetail.vue checks
-    // prefers-reduced-motion and bypasses the timeline entirely. Without
-    // this the screenshots race the 0.5s–1.1s animation tail and flake.
+    // Skip entrance animations — useIntersectionAnimation jumps elements
+    // straight to visible under prefers-reduced-motion. Without this the
+    // screenshots race the staggered reveal transitions and flake.
     test.beforeEach(async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
     })
@@ -459,6 +465,34 @@ test.describe('Visual Regression Tests', () => {
         await page.waitForTimeout(300)
       }
       await expect(page).toHaveScreenshot('experience-detail-dark.png', { fullPage: true })
+    })
+  })
+
+  // Functional (non-snapshot) guard: the ONLY test that exercises the real
+  // IntersectionObserver reveal on the detail page. Every other detail test
+  // emulates reduced motion, which makes useIntersectionAnimation jump
+  // straight to visible without ever constructing an observer — so a broken
+  // observer path (selector typo, threshold change, [data-anim] CSS drift)
+  // would blank the page for default-motion visitors while all suites
+  // stayed green. Asserts the data-anim attribute (not toBeVisible():
+  // Playwright treats opacity:0 as visible).
+  test.describe('Detail Page Reveal', () => {
+    useHermeticHome()
+
+    test('entrance animation reveals sections without reduced motion', async ({ page }) => {
+      await page.goto('/experience/fixture-hermes')
+      await page.waitForSelector('[data-anim]', { state: 'attached' })
+
+      // Above-the-fold header section reveals on its own
+      await expect(page.locator('header.experience-section')).toHaveAttribute(
+        'data-anim',
+        'visible'
+      )
+
+      // A below-the-fold section reveals once scrolled into view
+      const lastSection = page.locator('section.experience-section').last()
+      await lastSection.scrollIntoViewIfNeeded()
+      await expect(lastSection).toHaveAttribute('data-anim', 'visible')
     })
   })
 

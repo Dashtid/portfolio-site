@@ -90,223 +90,261 @@
         </div>
       </div>
 
-      <!-- Company Details -->
-      <article v-else-if="company" class="mx-auto max-w-4xl px-6 py-12">
-        <!-- Company Information — identity leads: logo, role, and dates
-             come before any third-party embed (the media grid used to sit
-             first, pushing the h1 below the fold on mobile and putting the
-             embed captions ahead of it in the document outline). -->
-        <section class="experience-section mb-10">
-          <header class="flex items-start gap-5">
-            <img
-              v-if="company.logo_url && !logoError"
-              :src="company.logo_url"
-              :alt="`${company.name} logo`"
-              class="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-800"
-              @error="logoError = true"
-            />
-            <div class="min-w-0 flex-1">
-              <p
-                class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+      <!-- Company Details — case-study layout (D3-FE-05): a main content
+           column plus a sticky meta rail on lg. The rail (dates, location,
+           website, tags, back-link) fills what used to be a dead right
+           third; on mobile it renders as a details card directly under the
+           header (source order drives the stack). -->
+      <article
+        v-else-if="company"
+        class="mx-auto max-w-6xl px-6 py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-x-12"
+      >
+        <!-- Identity header: kicker + h1. Dates/location/website moved to
+             the meta rail — the h1 block stays lean. -->
+        <header class="experience-section flex items-start gap-5 lg:col-start-1">
+          <img
+            v-if="company.logo_url && !logoError"
+            :src="company.logo_url"
+            :alt="`${company.name} logo`"
+            class="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-800"
+            @error="logoError = true"
+          />
+          <div class="min-w-0 flex-1">
+            <p
+              class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+            >
+              {{ company.name }}
+            </p>
+            <h1
+              class="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
+            >
+              {{ company.title }}
+            </h1>
+          </div>
+        </header>
+
+        <!-- Meta rail: sticky on lg, a details card under the header on
+             mobile. Interactive elements (links) keep primary blue; the
+             tag chips are deliberately neutral sentence-case slate. -->
+        <aside class="mt-10 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0">
+          <div
+            class="rounded-2xl border border-slate-200 p-6 lg:sticky lg:top-24 dark:border-slate-800"
+          >
+            <dl class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-1">
+              <div v-if="company.start_date">
+                <dt
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                >
+                  Period
+                </dt>
+                <dd class="mt-1.5 text-sm text-slate-700 dark:text-slate-300">
+                  {{ formatDate(company.start_date) }} —
+                  {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
+                </dd>
+              </div>
+              <div v-if="company.location">
+                <dt
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                >
+                  Location
+                </dt>
+                <dd class="mt-1.5 text-sm text-slate-700 dark:text-slate-300">
+                  {{ company.location }}
+                </dd>
+              </div>
+              <div v-if="company.website">
+                <dt
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                >
+                  Website
+                </dt>
+                <dd class="mt-1.5 text-sm">
+                  <a
+                    :href="company.website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 font-medium text-primary-600 transition-colors hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                  >
+                    {{ websiteHost }}
+                    <svg
+                      class="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                      />
+                    </svg>
+                  </a>
+                </dd>
+              </div>
+              <div v-if="company.technologies && company.technologies.length > 0">
+                <dt
+                  class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                >
+                  {{ techHeading }}
+                </dt>
+                <dd class="mt-2.5 flex flex-wrap gap-2">
+                  <span
+                    v-for="tech in company.technologies"
+                    :key="tech"
+                    class="badge inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+                  >
+                    {{ tech }}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+            <div class="mt-6 border-t border-slate-200 pt-5 dark:border-slate-800">
+              <router-link
+                to="/#experience"
+                class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
               >
-                {{ company.name }}
-              </p>
-              <h1
-                class="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white"
-              >
-                {{ company.title }}
-              </h1>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"
+                  />
+                </svg>
+                Back to portfolio
+              </router-link>
             </div>
-          </header>
+          </div>
+        </aside>
 
-          <p
-            class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400"
+        <!-- Main content column. Outcomes lead (the recruiter-facing
+             evidence, D3-UX-03); employer marketing media is demoted to the
+             bottom, below all role content. -->
+        <div class="mt-12 lg:col-start-1 lg:row-start-2 lg:mt-14">
+          <!-- Outcomes -->
+          <section
+            v-if="company.outcomes && company.outcomes.length > 0"
+            class="experience-section mb-12"
           >
-            <!-- FRONTEND-PERF-07: Bootstrap Icons are not bundled in this app
-                 (no `bootstrap-icons` import / link in the codebase), so the
-                 `<i class="bi bi-*">` tags previously rendered as empty
-                 boxes. Inlining the SVG paths fixes the visible bug and
-                 removes the need to ever ship the ~120 KB icon font. -->
-            <span class="inline-flex items-center gap-1.5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
+            <div
+              class="rounded-2xl border border-slate-200 bg-slate-50/80 p-6 sm:p-7 dark:border-slate-800 dark:bg-slate-900/60"
+            >
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                Outcomes
+              </h2>
+              <ul class="mt-4 space-y-3">
+                <li
+                  v-for="(outcome, index) in company.outcomes"
+                  :key="`outcome-${index}-${outcome.slice(0, 20)}`"
+                  class="flex gap-3 leading-relaxed text-slate-700 dark:text-slate-300"
+                >
+                  <span
+                    class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
+                    aria-hidden="true"
+                  ></span>
+                  {{ outcome }}
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Description -->
+          <section class="experience-section mb-12">
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              About {{ company.name }}
+            </h2>
+            <div
+              class="prose-content mt-4 max-w-prose space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
+              v-html="formatDescription(company.description)"
+            ></div>
+          </section>
+
+          <!-- Detailed Description -->
+          <section v-if="company.detailed_description" class="experience-section mb-12">
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              The role
+            </h2>
+            <div
+              class="prose-content mt-4 max-w-prose space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
+              v-html="formatDescription(company.detailed_description)"
+            ></div>
+          </section>
+
+          <!-- Responsibilities List — two-column card list on sm+ -->
+          <section
+            v-if="company.responsibilities && company.responsibilities.length > 0"
+            class="experience-section mb-12"
+          >
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              Key responsibilities
+            </h2>
+            <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+              <li
+                v-for="(responsibility, index) in company.responsibilities"
+                :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
+                class="list-group-item rounded-xl border border-slate-200 p-4 text-sm leading-relaxed text-slate-700 dark:border-slate-800 dark:text-slate-300"
               >
-                <path
-                  d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"
-                />
-                <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-              </svg>
-              {{ company.location }}
-            </span>
-            <span v-if="company.start_date" class="inline-flex items-center gap-1.5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-              >
-                <path
-                  d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"
-                />
-              </svg>
-              {{ formatDate(company.start_date) }} —
-              {{ company.end_date ? formatDate(company.end_date) : 'Present' }}
-            </span>
-          </p>
+                {{ responsibility }}
+              </li>
+            </ul>
+          </section>
 
-          <div v-if="company.website" class="mt-6">
-            <a
-              :href="company.website"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+          <!-- Media — demoted below all role content (D3-UX-03): employer
+               marketing video and office map are context, not evidence. -->
+          <section v-if="company.video_url || company.map_url" class="experience-section mb-12">
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              Media
+            </h2>
+            <div
+              class="mt-4 grid gap-6"
+              :class="company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:max-w-xl'"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5V1.077zM4.09 4a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4H4.09zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.958 6.958 0 0 0-.656 2.5h2.49zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5H4.847zM8.5 5v2.5h2.99a12.495 12.495 0 0 0-.337-2.5H8.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5H4.51zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5H8.5zM5.145 12c.138.386.295.744.468 1.068.552 1.035 1.218 1.65 1.887 1.855V12H5.145zm.182 2.472a6.696 6.696 0 0 1-.597-.933A9.268 9.268 0 0 1 4.09 12H2.255a7.024 7.024 0 0 0 3.072 2.472zM3.82 11a13.652 13.652 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5H3.82zm6.853 3.472A7.024 7.024 0 0 0 13.745 12H11.91a9.27 9.27 0 0 1-.64 1.539 6.688 6.688 0 0 1-.597.933zM8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855.173-.324.33-.682.468-1.068H8.5zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.65 13.65 0 0 1-.312 2.5zm2.802-3.5a6.959 6.959 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5h2.49zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.024 7.024 0 0 0-3.072-2.472c.218.284.418.598.597.933zM10.855 4a7.966 7.966 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4h2.355z"
-                />
-              </svg>
-              Visit Website
-            </a>
-          </div>
-        </section>
-
-        <!-- Media: video and map (side-by-side on desktop). Two columns
-             only when BOTH embeds exist; a lone embed gets a centered,
-             capped width instead of half the grid sitting empty. -->
-        <div
-          v-if="company.video_url || company.map_url"
-          class="media-section mb-10 grid gap-6"
-          :class="
-            company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:mx-auto md:max-w-xl'
-          "
-        >
-          <div v-if="company.video_url">
-            <VideoEmbed
-              :url="company.video_url"
-              :heading="company.video_title || `${company.name} Video`"
-              :title="company.video_title || `${company.name} Video`"
-            />
-          </div>
-
-          <div v-if="company.map_url">
-            <MapEmbed
-              :url="company.map_url"
-              :heading="company.map_title || `${company.name} Location`"
-              :title="company.map_title || `${company.name} Location Map`"
-            />
-          </div>
-        </div>
-
-        <!-- Description -->
-        <section class="experience-section mb-10">
-          <h2
-            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
-          >
-            About {{ company.name }}
-          </h2>
-          <div
-            class="prose-content mt-4 max-w-prose space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
-            v-html="formatDescription(company.description)"
-          ></div>
-        </section>
-
-        <!-- Detailed Description -->
-        <section v-if="company.detailed_description" class="experience-section mb-10">
-          <h2
-            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
-          >
-            Role &amp; Responsibilities
-          </h2>
-          <div
-            class="prose-content mt-4 max-w-prose space-y-4 leading-relaxed text-slate-700 dark:text-slate-300"
-            v-html="formatDescription(company.detailed_description)"
-          ></div>
-        </section>
-
-        <!-- Responsibilities List -->
-        <section
-          v-if="company.responsibilities && company.responsibilities.length > 0"
-          class="experience-section mb-10"
-        >
-          <h2
-            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
-          >
-            Key Responsibilities
-          </h2>
-          <ul class="mt-4 max-w-prose space-y-3">
-            <li
-              v-for="(responsibility, index) in company.responsibilities"
-              :key="`responsibility-${index}-${responsibility.slice(0, 20)}`"
-              class="list-group-item flex gap-3 leading-relaxed text-slate-700 dark:text-slate-300"
-            >
-              <span
-                class="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary-500"
-                aria-hidden="true"
-              ></span>
-              {{ responsibility }}
-            </li>
-          </ul>
-        </section>
-
-        <!-- Technologies -->
-        <section
-          v-if="company.technologies && company.technologies.length > 0"
-          class="experience-section mb-10"
-        >
-          <h2
-            class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
-          >
-            {{ techHeading }}
-          </h2>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <span
-              v-for="tech in company.technologies"
-              :key="tech"
-              class="badge inline-flex items-center rounded-full bg-primary-50 px-3 py-1 font-mono text-xs uppercase tracking-wider text-primary-700 dark:bg-primary-500/10 dark:text-primary-300"
-            >
-              {{ tech }}
-            </span>
-          </div>
-        </section>
-
-        <!-- Back Navigation -->
-        <div
-          class="experience-back-nav border-top mt-12 border-t border-slate-200 pt-8 dark:border-slate-800"
-        >
-          <router-link
-            to="/"
-            class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"
+              <VideoEmbed
+                v-if="company.video_url"
+                :url="company.video_url"
+                :heading="company.video_title || `${company.name} Video`"
+                :title="company.video_title || `${company.name} Video`"
               />
-            </svg>
-            Back to Portfolio
-          </router-link>
+              <MapEmbed
+                v-if="company.map_url"
+                :url="company.map_url"
+                :heading="company.map_title || `${company.name} Location`"
+                :title="company.map_title || `${company.name} Location Map`"
+              />
+            </div>
+          </section>
+
+          <!-- Back Navigation -->
+          <div
+            class="experience-back-nav border-top mt-12 border-t border-slate-200 pt-8 dark:border-slate-800"
+          >
+            <router-link
+              to="/"
+              class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"
+                />
+              </svg>
+              Back to Portfolio
+            </router-link>
+          </div>
         </div>
       </article>
     </main>
@@ -320,10 +358,10 @@ import { ref, computed, onMounted, onServerPrefetch, onUnmounted, watch, nextTic
 import { useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import axios, { type AxiosError } from 'axios'
-import { gsap } from 'gsap'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { useExperienceDetailStore } from '../../stores/experienceDetail'
+import { useIntersectionAnimation } from '@/composables/useIntersectionAnimation'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
 import NavBar from '@/components/NavBar.vue'
@@ -333,69 +371,21 @@ import { formatDescription } from '@/utils/markdown'
 // AbortController for cancelling pending requests on route change
 let fetchAbortController: AbortController | null = null
 
-// GSAP animation context for cleanup
-let gsapContext: gsap.Context | null = null
+// D3-PERF-01: entrance animations are the same IntersectionObserver +
+// CSS-transition pattern as HomeView (PERF-03 there) — this page was the
+// last gsap consumer, and 27KB gzip for five fade-ups on the site's SEO
+// entry pages wasn't paying rent. Must be called in synchronous setup:
+// the composable registers its own lifecycle hooks (see its NOTE).
+const sectionAnimation = useIntersectionAnimation('.experience-section', { stagger: 0.1 })
+const itemAnimation = useIntersectionAnimation('.list-group-item', { stagger: 0.06 })
 
-// Run entrance animations after content loads
-const runEntranceAnimations = (): void => {
-  // Skip during SSR (no window) and when user prefers reduced motion
-  if (typeof window === 'undefined') return
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (prefersReducedMotion) return
-
-  // Clean up previous animations
-  if (gsapContext) {
-    gsapContext.revert()
-  }
-
-  gsapContext = gsap.context(() => {
-    // Top-down reveal matching the template order: company-identity
-    // header at t=0, the media grid below it at 0.1, then the remaining
-    // sections continue the 0.1-step cascade from 0.2. (The old
-    // media-first delays predate the D2 template reorder and revealed
-    // bottom-before-top.)
-    gsap.from('.experience-section', {
-      opacity: 0,
-      y: 25,
-      duration: 0.5,
-      ease: 'power2.out',
-      stagger: (index: number) => (index === 0 ? 0 : 0.1 + index * 0.1)
-    })
-
-    gsap.from('.media-section', {
-      opacity: 0,
-      y: 30,
-      duration: 0.5,
-      ease: 'power2.out',
-      delay: 0.1
-    })
-
-    gsap.from('.list-group-item', {
-      opacity: 0,
-      x: -20,
-      duration: 0.4,
-      stagger: 0.08,
-      ease: 'power2.out',
-      delay: 0.4
-    })
-
-    gsap.from('.badge', {
-      opacity: 0,
-      y: 15,
-      scale: 0.9,
-      duration: 0.3,
-      stagger: 0.05,
-      ease: 'power2.out',
-      delay: 0.5
-    })
-
-    gsap.from('.experience-back-nav', {
-      opacity: 0,
-      y: 20,
-      duration: 0.5,
-      ease: 'power2.out',
-      delay: 0.6
-    })
+// Hand freshly rendered sections to the observer after content settles
+// (route change or async load — mount-time content is caught by the
+// composables' own onMounted scan).
+const refreshAnimations = (): void => {
+  void nextTick(() => {
+    sectionAnimation.refresh()
+    itemAnimation.refresh()
   })
 }
 
@@ -455,7 +445,18 @@ const SOFT_SKILL_CHIPS = new Set([
 const techHeading = computed(() => {
   const techs = company.value?.technologies ?? []
   const allSoft = techs.length > 0 && techs.every(t => SOFT_SKILL_CHIPS.has(t.toLowerCase()))
-  return allSoft ? 'Skills applied' : 'Technologies & Tools'
+  return allSoft ? 'Skills applied' : 'Technologies'
+})
+
+// Rail website link shows the bare host — "hermesmedical.com" reads better
+// in a 300px column than a generic "Visit Website" button.
+const websiteHost = computed(() => {
+  if (!company.value?.website) return null
+  try {
+    return new URL(company.value.website).hostname.replace(/^www\./, '')
+  } catch {
+    return 'Website'
+  }
 })
 
 const canonicalUrl = computed(() => `https://dashti.se/experience/${companyId.value}`)
@@ -538,9 +539,7 @@ const loadCompany = async (id: string): Promise<void> => {
 
   if (experienceStore.byId[id]) {
     loading.value = false
-    nextTick(() => {
-      runEntranceAnimations()
-    })
+    refreshAnimations()
     return
   }
 
@@ -560,11 +559,9 @@ const loadCompany = async (id: string): Promise<void> => {
     }
   } finally {
     loading.value = false
-    // Run entrance animations after DOM updates
+    // Observe the freshly rendered sections after DOM updates
     if (!error.value && experienceStore.byId[id]) {
-      nextTick(() => {
-        runEntranceAnimations()
-      })
+      refreshAnimations()
     }
   }
 }
@@ -608,14 +605,12 @@ onMounted(async (): Promise<void> => {
   }
 })
 
-// Cleanup: cancel pending requests and animations on unmount
+// Cleanup: cancel pending requests on unmount (the animation composables
+// disconnect their own observers in onBeforeUnmount)
 onUnmounted(() => {
   if (fetchAbortController) {
     fetchAbortController.abort()
     fetchAbortController = null
-  }
-  if (gsapContext) {
-    gsapContext.revert()
   }
 })
 </script>
@@ -635,5 +630,42 @@ onUnmounted(() => {
 }
 .prose-content :deep(em) {
   font-style: italic;
+}
+
+/*
+ * D3-PERF-01: entrance animations driven by useIntersectionAnimation —
+ * same recipe as HomeView's PERF-03 block. `[data-anim="hidden"]` is set
+ * on mount; the observer flips elements to `[data-anim="visible"]` as
+ * they enter the viewport. Transition lives on [data-anim] (both states)
+ * so the reveal doesn't snap, and border/bg/color are included so cards
+ * whose transition-colors utility this rule overrides keep hover
+ * feedback.
+ */
+[data-anim] {
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+[data-anim='hidden'] {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  will-change: opacity, transform;
+}
+
+[data-anim='visible'] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim] {
+    transition: none !important;
+    transform: none !important;
+  }
 }
 </style>

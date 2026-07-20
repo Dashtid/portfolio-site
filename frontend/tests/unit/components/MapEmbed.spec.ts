@@ -28,21 +28,48 @@ describe('MapEmbed', () => {
     expect(wrapper.find('iframe').exists()).toBe(false)
   })
 
-  it('renders heading when provided', () => {
+  it('renders the heading as a figcaption when provided', () => {
     const wrapper = mount(MapEmbed, {
       props: {
         url: 'https://www.google.com/maps/embed?pb=abc',
         heading: 'Office Location'
       }
     })
-    expect(wrapper.find('.map-heading').text()).toBe('Office Location')
+    expect(wrapper.find('figcaption.embed-caption').text()).toBe('Office Location')
+    // D3-FE-05: captions are no longer h2s — the page owns its heading levels
+    expect(wrapper.find('h2').exists()).toBe(false)
   })
 
-  it('omits heading element when heading is null', () => {
+  it('omits the caption element when heading is null', () => {
     const wrapper = mount(MapEmbed, {
       props: { url: 'https://www.google.com/maps/embed?pb=abc' }
     })
-    expect(wrapper.find('.map-heading').exists()).toBe(false)
+    expect(wrapper.find('.embed-caption').exists()).toBe(false)
+  })
+
+  it('appends hl=en to the embed URL without duplicating an existing hl param (D3-FE-05)', () => {
+    const withQuery = mount(MapEmbed, {
+      props: { url: 'https://www.google.com/maps/embed?pb=abc' }
+    })
+    expect(withQuery.find('iframe').attributes('src')).toBe(
+      'https://www.google.com/maps/embed?pb=abc&hl=en'
+    )
+
+    const alreadyLocalized = mount(MapEmbed, {
+      props: { url: 'https://www.google.com/maps/embed?pb=abc&hl=de' }
+    })
+    expect(alreadyLocalized.find('iframe').attributes('src')).toBe(
+      'https://www.google.com/maps/embed?pb=abc&hl=de'
+    )
+  })
+
+  it('does not force application mode or an extra tab stop on the iframe (D3-FE-05)', () => {
+    const wrapper = mount(MapEmbed, {
+      props: { url: 'https://www.google.com/maps/embed?pb=abc' }
+    })
+    const iframe = wrapper.find('iframe')
+    expect(iframe.attributes('role')).toBeUndefined()
+    expect(iframe.attributes('tabindex')).toBeUndefined()
   })
 
   it('iframe has lazy loading and no-referrer policy', () => {

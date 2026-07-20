@@ -14,8 +14,15 @@
       >
         <!-- The starfield renders zero visible pixels on the white
              light-mode hero — gate it to dark so light-mode visitors skip
-             the ~172KB three.js chunk entirely. -->
-        <ThreeHeroBackground v-if="isDark" key="dark" :is-dark="true" />
+             the ~172KB three.js chunk entirely. D3-PERF-02: the same gate
+             covers prefers-reduced-motion — that cohort used to download
+             the full chunk only for a media query inside the component to
+             hide its output. -->
+        <ThreeHeroBackground
+          v-if="isDark && reducedMotion !== 'reduce'"
+          key="dark"
+          :is-dark="true"
+        />
 
         <div class="relative z-[2] mx-auto max-w-3xl px-6 text-center">
           <p
@@ -762,10 +769,13 @@ import FooterSection from '../components/FooterSection.vue'
 import BackToTop from '../components/BackToTop.vue'
 import DocumentCard from '../components/DocumentCard.vue'
 import GitHubStats from '../components/GitHubStats.vue'
+import { usePreferredReducedMotion } from '@vueuse/core'
 import { useIntersectionAnimation } from '../composables/useIntersectionAnimation'
 import { useTheme } from '../composables/useTheme'
 
 const { isDark } = useTheme()
+// SSR-safe: resolves 'no-preference' during SSG, re-evaluates on the client
+const reducedMotion = usePreferredReducedMotion()
 
 // Lazy load Three.js hero background to reduce initial bundle size (~172KB gzipped)
 // Decoration must never take down content (D3-FE-01): the three-* chunk is

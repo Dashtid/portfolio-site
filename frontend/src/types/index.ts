@@ -23,6 +23,7 @@ export interface Company {
   map_title?: string | null
   technologies?: string[] | null
   responsibilities?: string[] | null
+  outcomes?: string[] | null
   order_index?: number
 }
 

@@ -217,7 +217,22 @@ export default defineConfig({
           // precache; the asset-cache runtime rule below picks them up on
           // first use so offline revisits still work.
           '**/Admin*',
-          '**/three-*'
+          '**/three-*',
+          // D3-PERF-02: the 8 prerendered experience pages were ~248KB of
+          // precache whose revision hashes churn every deploy — returning
+          // visitors re-downloaded all of them each time. Deliberate
+          // offline trade: navigations now fall back to the precached
+          // index.html shell, where the (still-precached) ExperienceDetail
+          // chunk renders either api-cache data (<=5 min old) or the
+          // designed amber retry state. The chunk MUST stay in the
+          // precache — without it an offline navigation dead-ends in
+          // main.ts's stale-chunk reload loop instead of the retry UI.
+          '**/experience/*.html',
+          // Non-Latin Geist subsets (~31KB) the browser never requests on
+          // an English-only site; the font-cache runtime rule would still
+          // pick them up if unicode-range ever matched.
+          '**/fonts/geist-cyrillic*',
+          '**/fonts/geist-vietnamese*'
         ],
         // Backstop against a single chunk bloating the precache
         maximumFileSizeToCacheInBytes: 1024 * 1024,
@@ -269,7 +284,10 @@ export default defineConfig({
             }
           },
           {
-            // Cache fonts (cache-first)
+            // Cache fonts (cache-first). Fonts are self-hosted (fontsource
+            // woff2 in the bundle) — the old google-fonts route matched
+            // nothing and CSP connect/font-src would have blocked it anyway
+            // (D3-PERF-02: deleted as dead config).
             urlPattern: /\.(?:woff|woff2|ttf|eot)$/i,
             handler: 'CacheFirst',
             options: {
@@ -277,20 +295,6 @@ export default defineConfig({
               expiration: {
                 maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
-            }
-          },
-          {
-            // Cache Google Fonts CSS + font files (stale-while-revalidate).
-            // 30-day TTL: font CSS rarely changes but can; long TTL risks
-            // stale @font-face URLs for up to a year otherwise.
-            urlPattern: /^https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com)\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
           }
@@ -371,11 +375,9 @@ export default defineConfig({
           if (id.includes('node_modules/three')) {
             return 'three'
           }
-          // GSAP - isolated for potential lazy loading (~60KB gzipped)
-          if (id.includes('node_modules/gsap')) {
-            return 'gsap'
-          }
-          // Vue ecosystem
+          // Vue ecosystem — note 'node_modules/@vue' also matches @vueuse,
+          // so VueUse deliberately rides in vue-vendor (a separate branch
+          // for it below this one was unreachable dead config, D3-PERF-02).
           if (id.includes('node_modules/vue') || id.includes('node_modules/@vue')) {
             return 'vue-vendor'
           }
@@ -386,10 +388,6 @@ export default defineConfig({
           // Pinia
           if (id.includes('node_modules/pinia')) {
             return 'vue-vendor'
-          }
-          // VueUse
-          if (id.includes('node_modules/@vueuse')) {
-            return 'vueuse'
           }
           // Axios
           if (id.includes('node_modules/axios')) {

@@ -14,15 +14,6 @@ import type { Company } from '@/types'
 // which the component uses to recognise aborted requests.
 vi.mock('@/api/client', () => ({ default: { get: vi.fn() } }))
 vi.mock('axios')
-vi.mock('gsap', () => ({
-  gsap: {
-    context: vi.fn((cb: () => void) => {
-      cb()
-      return { revert: vi.fn() }
-    }),
-    from: vi.fn()
-  }
-}))
 vi.mock('@/utils/logger', async importOriginal => {
   const actual = await importOriginal<typeof import('@/utils/logger')>()
   return {
@@ -357,13 +348,13 @@ describe('ExperienceDetail', () => {
       expect(scripts.length).toBe(0)
     })
 
-    it('renders detailed_description in a separate Role & Responsibilities block', async () => {
+    it('renders detailed_description in a separate "The role" block', async () => {
       mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, detailed_description: 'Led the **secure** rollout.' }
       })
       const { wrapper } = await createWrapper()
 
-      expect(wrapper.text()).toContain('Role & Responsibilities')
+      expect(wrapper.text()).toContain('The role')
       expect(wrapper.html()).toContain('<strong>secure</strong>')
     })
 
@@ -373,7 +364,32 @@ describe('ExperienceDetail', () => {
       })
       const { wrapper } = await createWrapper()
 
-      expect(wrapper.text()).not.toContain('Role & Responsibilities')
+      expect(wrapper.text()).not.toContain('The role')
+    })
+  })
+
+  describe('Outcomes (D3-UX-03)', () => {
+    it('renders the Outcomes block above the description when outcomes exist', async () => {
+      mockedApiClient.get.mockResolvedValue({
+        data: { ...baseCompany, outcomes: ['Shipped the thing', 'Stood up the process'] }
+      })
+      const { wrapper } = await createWrapper()
+
+      expect(wrapper.text()).toContain('Outcomes')
+      expect(wrapper.text()).toContain('Shipped the thing')
+      // Outcomes lead the content column: their section precedes the
+      // About section in document order.
+      const html = wrapper.html()
+      expect(html.indexOf('Outcomes')).toBeLessThan(html.indexOf('About Acme Corp'))
+    })
+
+    it('omits the Outcomes block when the field is absent or empty', async () => {
+      mockedApiClient.get.mockResolvedValue({
+        data: { ...baseCompany, outcomes: [] }
+      })
+      const { wrapper } = await createWrapper()
+
+      expect(wrapper.text()).not.toContain('Outcomes')
     })
   })
 

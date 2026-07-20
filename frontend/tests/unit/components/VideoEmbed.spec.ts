@@ -35,14 +35,25 @@ describe('VideoEmbed', () => {
     expect(wrapper.find('iframe').exists()).toBe(false)
   })
 
-  it('renders heading when provided', () => {
+  it('renders the heading as a figcaption when provided', () => {
     const wrapper = mount(VideoEmbed, {
       props: {
         url: 'https://www.youtube.com/embed/abc',
         heading: 'Demo Video'
       }
     })
-    expect(wrapper.find('.video-heading').text()).toBe('Demo Video')
+    expect(wrapper.find('figcaption.embed-caption').text()).toBe('Demo Video')
+    // D3-FE-05: captions are no longer h2s — the page owns its heading levels
+    expect(wrapper.find('h2').exists()).toBe(false)
+  })
+
+  it('does not force application mode or an extra tab stop on the iframe (D3-FE-05)', () => {
+    const wrapper = mount(VideoEmbed, {
+      props: { url: 'https://www.youtube.com/embed/abc' }
+    })
+    const iframe = wrapper.find('iframe')
+    expect(iframe.attributes('role')).toBeUndefined()
+    expect(iframe.attributes('tabindex')).toBeUndefined()
   })
 
   it('sets iframe title from props', () => {

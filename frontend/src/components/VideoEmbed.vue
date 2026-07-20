@@ -1,13 +1,9 @@
 <template>
-  <div class="video-embed">
-    <h2 v-if="heading" class="video-heading">{{ heading }}</h2>
+  <figure class="video-embed">
     <div v-if="safeUrl" class="ratio">
       <iframe
         :src="safeUrl"
         :title="title"
-        :aria-label="'YouTube video: ' + title"
-        role="application"
-        tabindex="0"
         allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
         referrerpolicy="strict-origin-when-cross-origin"
         allowfullscreen
@@ -19,7 +15,8 @@
       <span class="fallback-icon" aria-hidden="true">🎬</span>
       <p class="fallback-text">Video could not be loaded</p>
     </div>
-  </div>
+    <figcaption v-if="heading" class="embed-caption">{{ heading }}</figcaption>
+  </figure>
 </template>
 
 <script setup lang="ts">
@@ -29,8 +26,13 @@ import { useEmbedValidator } from '@/composables/useEmbedValidator'
 /**
  * VideoEmbed Component
  *
- * Responsive YouTube video embed with lazy loading and accessibility features.
- * Uses 16:9 aspect ratio and Bootstrap styling.
+ * Responsive YouTube video embed with lazy loading. The iframe carries no
+ * role/tabindex overrides (D3-FE-05): role="application" forced screen
+ * readers into application mode and tabindex="0" double-stopped keyboard
+ * focus — the iframe is already focusable and YouTube's player manages
+ * its own keyboard interaction. The heading renders as a figcaption below
+ * the media, so it no longer outranks the page's section headings in the
+ * document outline.
  */
 
 interface Props {
@@ -57,37 +59,36 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
 </script>
 
 <style scoped>
-/* No margin here: the parent media-section grid owns spacing (mb-12 +
-   gap-6). A scoped margin-bottom cannot collapse out of a grid cell and
-   double-spaced the section while spacing utilities were rediscovered
-   in S3. */
-
-.video-heading {
-  /* Mono section-label recipe (matches the detail page's h2 labels) —
-     the old 1.5rem/600 caption out-shouted the page h1. */
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
-  font-size: 0.75rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  margin-bottom: 1rem;
-  color: var(--text-secondary);
-}
+/* No margin here: the parent media grid owns spacing (gap-6). A scoped
+   margin-bottom cannot collapse out of a grid cell and double-spaced the
+   section while spacing utilities were rediscovered in S3. */
 
 .ratio {
-  /* Bootstrap's .ratio-16x9 is gone from the bundle — without an explicit
-     aspect ratio the iframe collapses to a 150px letterbox strip. */
+  /* Identical treatment to MapEmbed (D3-FE-05): aspect-video + a 1px
+     ring, no shadow — the case-study layout keeps media quiet. */
   aspect-ratio: 16 / 9;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: var(--elevation-md);
+  border: 1px solid var(--border-primary);
 }
 
 .video-iframe {
   border: none;
   width: 100%;
   height: 100%;
+  display: block;
+}
+
+.embed-caption {
+  /* Mono caption below the media — matches the rail's dt labels. */
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
 }
 
 /* Fallback UI when video cannot be loaded. Uses semantic tokens that
@@ -99,7 +100,7 @@ const safeUrl = useEmbedValidator(toRef(props, 'url'), ALLOWED_VIDEO_HOSTS, '/em
   justify-content: center;
   padding: 2rem;
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px dashed var(--border-primary);
   min-height: 200px;
   text-align: center;

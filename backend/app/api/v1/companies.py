@@ -109,6 +109,7 @@ async def update_company(
             "map_title",
             "responsibilities",
             "technologies",
+            "outcomes",
         }
     )
 
