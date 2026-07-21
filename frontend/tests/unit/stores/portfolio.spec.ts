@@ -343,23 +343,45 @@ describe('Portfolio Store', () => {
     describe('fetchAllData', () => {
       it('should fetch all data in parallel', async () => {
         const mockDocuments = [{ id: 'doc-1', title: 'Thesis' }]
+        const mockOss = [
+          {
+            repoNameWithOwner: 'anchore/syft',
+            number: 4963,
+            title: 'fix',
+            url: 'https://github.com/anchore/syft/pull/4963',
+            mergedAt: '2026-06-15T20:15:32Z'
+          }
+        ]
         vi.mocked(apiClient.get)
           .mockResolvedValueOnce({ data: mockCompanies })
           .mockResolvedValueOnce({ data: mockSkills })
           .mockResolvedValueOnce({ data: mockProjects })
           .mockResolvedValueOnce({ data: mockEducation })
           .mockResolvedValueOnce({ data: mockDocuments })
+          .mockResolvedValueOnce({ data: mockOss })
 
         const store = usePortfolioStore()
         await store.fetchAllData()
 
-        // 5 collections since D3-UX-02 moved documents into the store
-        expect(apiClient.get).toHaveBeenCalledTimes(5)
+        // 6 collections: documents joined in D3-UX-02, OSS contributions
+        // in D3-FEAT-01
+        expect(apiClient.get).toHaveBeenCalledTimes(6)
         expect(store.companies).toEqual(mockCompanies)
         expect(store.skills).toEqual(mockSkills)
         expect(store.projects).toEqual(mockProjects)
         expect(store.education).toEqual(mockEducation)
         expect(store.documents).toEqual(mockDocuments)
+        expect(store.ossContributions).toEqual(mockOss)
+      })
+
+      it('a failed OSS fetch never sets the shared error (optional evidence)', async () => {
+        vi.mocked(apiClient.get).mockRejectedValue(new Error('down'))
+
+        const store = usePortfolioStore()
+        await store.fetchOssContributions()
+
+        expect(store.ossContributions).toEqual([])
+        expect(store.error).toBeNull()
       })
 
       it('should handle partial failures', async () => {

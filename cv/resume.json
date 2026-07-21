@@ -4,7 +4,7 @@
     "name": "David Dashti",
     "label": "Product Security Engineer - Regulated Medical Software",
     "image": "",
-    "email": "dashtid@pm.me",
+    "email": "",
     "phone": "",
     "url": "https://dashti.se",
     "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
@@ -166,7 +166,14 @@
     },
     {
       "name": "Programming & Tooling",
-      "keywords": ["Python", "PowerShell", "Bash", "Git", "Docker", "Linux (Ubuntu Server)"]
+      "keywords": [
+        "Python",
+        "PowerShell",
+        "Bash",
+        "Git",
+        "Docker",
+        "Linux (Ubuntu Server)"
+      ]
     },
     {
       "name": "Standards & Regulations",
@@ -183,8 +190,14 @@
     }
   ],
   "languages": [
-    { "language": "Swedish", "fluency": "Native" },
-    { "language": "English", "fluency": "Fluent" }
+    {
+      "language": "Swedish",
+      "fluency": "Native"
+    },
+    {
+      "language": "English",
+      "fluency": "Fluent"
+    }
   ],
   "projects": [
     {
@@ -197,6 +210,6 @@
   "meta": {
     "canonical": "https://dashti.se",
     "version": "v1.0.0",
-    "note": "FEAT-001 seed. Transcribed from cv-david-dashti.pdf (Jun 2026). 'projects' trimmed Jul 2026: dicom-fuzzer/sbom-sentinel/medtech-ai-security removed (employer-IP guardrail; repos now private) - add oidc-reach when v0.1 ships. 'phone' intentionally left blank for the public repo."
+    "note": "FEAT-001 source of truth for the public /cv route and cv.json. Contact is LinkedIn-only by design; private CV variants and contact details live outside this repo."
   }
 }

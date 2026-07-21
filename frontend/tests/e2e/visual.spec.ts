@@ -282,6 +282,29 @@ function useHermeticHome() {
     await page.route('**/api/v1/documents', route => route.fulfill({ json: FIXTURE_DOCUMENTS }))
     await page.route('**/api/v1/skills', route => route.fulfill({ json: [] }))
     await page.route('**/api/v1/projects', route => route.fulfill({ json: [] }))
+    // D3-FEAT-01: two fixture PRs so the Open Source strip renders in
+    // every home baseline (S7 lesson: never leave a new section with
+    // zero visual coverage).
+    await page.route('**/api/v1/oss/contributions', route =>
+      route.fulfill({
+        json: [
+          {
+            repoNameWithOwner: 'anchore/syft',
+            number: 4963,
+            title: 'fix(dpkg): extract License field for opkg/ipkg entries',
+            url: 'https://github.com/anchore/syft/pull/4963',
+            mergedAt: '2026-06-15T20:15:32Z'
+          },
+          {
+            repoNameWithOwner: 'DefectDojo/django-DefectDojo',
+            number: 15013,
+            title: 'Add Garak (NVIDIA LLM vulnerability scanner) parser',
+            url: 'https://github.com/DefectDojo/django-DefectDojo/pull/15013',
+            mergedAt: '2026-06-23T00:00:00Z'
+          }
+        ]
+      })
+    )
     await page.route('**/api/v1/github/stats/*', route =>
       route.fulfill({ json: FIXTURE_GITHUB_STATS })
     )
@@ -497,6 +520,58 @@ test.describe('Visual Regression Tests', () => {
         await page.waitForTimeout(300)
       }
       await expect(page).toHaveScreenshot('experience-detail-dark.png', { fullPage: true })
+    })
+  })
+
+  // D3-FEAT-02: /cv renders entirely from the repo-committed resume.json —
+  // deterministic without fixtures. One baseline per theme.
+  test.describe('CV Page', () => {
+    useHermeticHome()
+
+    test.beforeEach(async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+    })
+
+    test('cv page - light mode', async ({ page }) => {
+      await page.goto('/cv')
+      await waitForStableUI(page)
+      await expect(page).toHaveScreenshot('cv-light.png', { fullPage: true })
+    })
+
+    test('cv page - dark mode', async ({ page }) => {
+      await page.goto('/cv')
+      await waitForStableUI(page)
+      const themeToggle = page.locator('[data-testid="theme-toggle"]')
+      if (await themeToggle.isVisible()) {
+        await themeToggle.click()
+        await page.waitForTimeout(300)
+      }
+      await expect(page).toHaveScreenshot('cv-dark.png', { fullPage: true })
+    })
+
+    // Non-snapshot guard: the scrub contract — the public page must never
+    // carry the contact fields present in the repo source.
+    test('cv page carries no scrubbed contact fields', async ({ page }) => {
+      await page.goto('/cv')
+      await waitForStableUI(page)
+      const html = await page.content()
+      expect(html).not.toContain('dashtid@pm.me')
+      expect(html).not.toContain('mailto:')
+    })
+
+    // The machine-readable artifact has the same contract — and the scrub
+    // lives in an otherwise-untested vite.config onFinished block, so this
+    // is its only guard.
+    test('cv.json is served scrubbed', async ({ request }) => {
+      const response = await request.get('/cv.json')
+      expect(response.ok()).toBe(true)
+      const body = await response.text()
+      expect(body).not.toContain('dashtid@pm.me')
+      const resume = JSON.parse(body)
+      expect(resume.basics.email).toBeUndefined()
+      expect(resume.basics.phone).toBeUndefined()
+      expect(resume.meta?.note).toBeUndefined()
+      expect(resume.basics.name).toBe('David Dashti')
     })
   })
 

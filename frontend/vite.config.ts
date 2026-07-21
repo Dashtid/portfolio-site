@@ -69,6 +69,79 @@ export default defineConfig({
       // eslint-disable-next-line no-console
       console.log(`[csp] state script -> JSON data block in ${rewritten} pages`)
 
+      // D3-FEAT-02: machine-readable /cv.json (JSON Resume schema) from
+      // the repo-root source of truth, with person-contact fields
+      // scrubbed — the public site is LinkedIn-contact-only.
+      const resumeSrc = path.resolve(__dirname, '../cv/resume.json')
+      if (fs.existsSync(resumeSrc)) {
+        const resume = JSON.parse(fs.readFileSync(resumeSrc, 'utf-8'))
+        // Defense-in-depth: the source file is already contact-scrubbed
+        // (LinkedIn-only contact), but the public artifact re-scrubs so a
+        // future source edit can't silently republish contact details or
+        // internal notes.
+        if (resume.basics) {
+          delete resume.basics.email
+          delete resume.basics.phone
+          delete resume.basics.image
+        }
+        if (resume.meta) {
+          delete resume.meta.note
+        }
+        fs.writeFileSync(path.join(distDir, 'cv.json'), JSON.stringify(resume, null, 2))
+        // eslint-disable-next-line no-console
+        console.log('[cv] scrubbed cv.json emitted')
+      }
+
+      // D3-FEAT-03: RSS for /writing from the same markdown content the
+      // app builds from. The frontmatter parse here is a deliberate tiny
+      // duplicate of src/data/writing.ts (this hook runs in node, the
+      // data module builds for the app) — keep the two in sync.
+      const writingDir = path.resolve(__dirname, 'content/writing')
+      if (fs.existsSync(writingDir)) {
+        const escapeXml = (s: string): string =>
+          s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+        const posts = fs
+          .readdirSync(writingDir)
+          .filter(f => f.endsWith('.md') && f !== 'README.md')
+          .map(f => {
+            const text = fs.readFileSync(path.join(writingDir, f), 'utf-8').replace(/\r\n/g, '\n')
+            const meta: Record<string, string> = {}
+            if (text.startsWith('---\n')) {
+              const end = text.indexOf('\n---', 4)
+              if (end !== -1) {
+                for (const line of text.slice(4, end).split('\n')) {
+                  const sep = line.indexOf(':')
+                  if (sep === -1) continue
+                  meta[line.slice(0, sep).trim()] = line
+                    .slice(sep + 1)
+                    .trim()
+                    .replace(/^['"]|['"]$/g, '')
+                }
+              }
+            }
+            return { file: f, meta }
+          })
+          .filter(p => p.meta.title && p.meta.date && p.meta.draft !== 'true')
+          .sort((a, b) => (b.meta.date ?? '').localeCompare(a.meta.date ?? ''))
+
+        const items = posts
+          .map(p => {
+            const slug = p.meta.slug || p.file.replace(/\.md$/, '')
+            const url = `https://dashti.se/writing/${slug}`
+            return `    <item>\n      <title>${escapeXml(p.meta.title)}</title>\n      <link>${url}</link>\n      <guid>${url}</guid>\n      <pubDate>${new Date(`${p.meta.date}T00:00:00Z`).toUTCString()}</pubDate>\n      <description>${escapeXml(p.meta.description ?? '')}</description>\n    </item>`
+          })
+          .join('\n')
+        const rss = `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n  <channel>\n    <title>David Dashti — Writing</title>\n    <link>https://dashti.se/writing</link>\n    <description>Writing on premarket cybersecurity and the security of medical software.</description>\n    <language>en</language>\n${items}\n  </channel>\n</rss>\n`
+        fs.mkdirSync(path.join(distDir, 'writing'), { recursive: true })
+        fs.writeFileSync(path.join(distDir, 'writing', 'rss.xml'), rss)
+        // eslint-disable-next-line no-console
+        console.log(`[rss] writing feed emitted (${posts.length} items)`)
+      }
+
       const sitemapPath = path.join(distDir, 'sitemap.xml')
       const experienceDir = path.join(distDir, 'experience')
       if (!fs.existsSync(sitemapPath) || !fs.existsSync(experienceDir)) return
@@ -239,6 +312,11 @@ export default defineConfig({
         ],
         // Backstop against a single chunk bloating the precache
         maximumFileSizeToCacheInBytes: 1024 * 1024,
+        // Navigations to real files (cv.json, writing/rss.xml, images)
+        // must hit the network, not the SPA shell — without this denylist
+        // an offline-capable SW answers a click on the /cv.json link with
+        // index.html. Extension-suffixed paths are never SPA routes here.
+        navigateFallbackDenylist: [/\/[^/]+\.[a-z0-9]+$/i],
         // Runtime caching strategies
         runtimeCaching: [
           {

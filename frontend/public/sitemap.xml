@@ -14,7 +14,18 @@
 
     <!-- Main sections (hash anchors on the homepage) -->
 
+    <!-- CV (D3-FEAT-02) -->
+    <url>
+        <loc>https://dashti.se/cv</loc>
+        <lastmod>2026-07-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
     <!--
+      /writing is deliberately absent while it is empty + noindex; add it
+      (and per-article entries) when the first article launches.
+
       Experience detail routes are appended below at build time by the
       ssgOptions.onFinished hook in vite.config.ts, derived from the pages
       vite-ssg actually pre-rendered (dist/experience/*.html). Do not add

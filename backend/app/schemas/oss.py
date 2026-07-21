@@ -321,3 +321,18 @@ class OssRefreshResult(OssApiBase):
     rate_limit_cost: int = Field(serialization_alias="rateLimitCost")
     rate_limit_remaining: int = Field(serialization_alias="rateLimitRemaining")
     finished_at: datetime = Field(serialization_alias="finishedAt")
+
+
+class PublicOssContribution(OssApiBase):
+    """One merged upstream PR as the public Open Source section renders it.
+
+    Deliberately minimal (D3-FEAT-01): no author/maintainer logins, no
+    bucket/workflow state, no draft or in-flight items — only what is
+    already public on the upstream PR page itself.
+    """
+
+    repo_name_with_owner: str = Field(serialization_alias="repoNameWithOwner")
+    number: int
+    title: str
+    url: str
+    merged_at: datetime = Field(serialization_alias="mergedAt")

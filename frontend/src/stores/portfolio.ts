@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '../api/client'
-import type { Company, Skill, Project, Education, Document } from '@/types'
+import type { Company, Skill, Project, Education, Document, OssContribution } from '@/types'
 import { apiLogger } from '../utils/logger'
 import { getErrorMessage } from '../utils/typeGuards'
 
@@ -10,6 +10,7 @@ interface PortfolioState {
   projects: Project[]
   education: Education[]
   documents: Document[]
+  ossContributions: OssContribution[]
   loading: boolean
   error: string | null
   // Track active requests to handle parallel fetches correctly
@@ -27,6 +28,7 @@ export const usePortfolioStore = defineStore('portfolio', {
     projects: [],
     education: [],
     documents: [],
+    ossContributions: [],
     loading: false,
     error: null,
     _activeRequests: 0
@@ -156,13 +158,28 @@ export const usePortfolioStore = defineStore('portfolio', {
       }
     },
 
+    // D3-FEAT-01: merged upstream PRs for the public Open Source strip.
+    // Deliberately outside the shared error/loading accounting: the strip
+    // is optional evidence, and a failed fetch here must never trip the
+    // "showing static fallback" banner or the bakePartial refetch that
+    // `error` drives — the section simply doesn't render.
+    async fetchOssContributions(): Promise<void> {
+      try {
+        const response = await apiClient.get<OssContribution[]>('/api/v1/oss/contributions')
+        this.ossContributions = response.data
+      } catch (error) {
+        apiLogger.error('Error fetching OSS contributions:', error)
+      }
+    },
+
     async fetchAllData(): Promise<void> {
       await Promise.all([
         this.fetchCompanies(),
         this.fetchSkills(),
         this.fetchProjects(),
         this.fetchEducation(),
-        this.fetchDocuments()
+        this.fetchDocuments(),
+        this.fetchOssContributions()
       ])
     }
   }

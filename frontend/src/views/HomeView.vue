@@ -717,8 +717,80 @@
           <GitHubStats username="Dashtid" @loaded="projectCardAnimation.refresh()" />
         </div>
       </section>
+
+      <!-- Open Source Section (D3-FEAT-01): merged upstream PRs from the
+           public OSS endpoint — third-party-verifiable evidence. Every
+           link goes to the upstream PR itself. Renders nothing when the
+           fetch fails (optional evidence, not core content). -->
+      <section
+        v-if="ossContributions.length"
+        id="oss"
+        class="bg-slate-50 py-16 md:py-20 dark:bg-surface-1"
+      >
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+          <header class="mb-6 md:mb-8">
+            <h2 class="section-title text-title font-semibold text-slate-900 dark:text-white">
+              Open Source
+            </h2>
+            <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">
+              Merged upstream contributions — supply-chain tooling, DICOM infrastructure, and
+              LLM-security scanning. Each entry links to the pull request itself.
+            </p>
+          </header>
+
+          <ul
+            class="oss-list divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-surface-2"
+          >
+            <li v-for="pr in ossContributions" :key="`${pr.repoNameWithOwner}#${pr.number}`">
+              <a
+                :href="pr.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-start gap-4 px-5 py-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500 dark:hover:bg-surface-3"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="font-mono text-xs text-slate-500 dark:text-slate-400">
+                    {{ pr.repoNameWithOwner }}#{{ pr.number }}
+                  </span>
+                  <span
+                    class="mt-0.5 block font-medium text-slate-900 group-hover:text-primary-700 dark:text-white dark:group-hover:text-primary-300"
+                  >
+                    {{ pr.title }}
+                  </span>
+                  <span
+                    v-if="ossBlurb(pr)"
+                    class="mt-1 block text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                  >
+                    {{ ossBlurb(pr) }}
+                  </span>
+                </span>
+                <span
+                  class="flex shrink-0 items-center gap-2 font-mono text-xs text-slate-500 dark:text-slate-400"
+                >
+                  {{ formatDate(pr.mergedAt) }}
+                  <svg
+                    class="h-3.5 w-3.5 text-slate-400 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 dark:text-slate-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                    />
+                  </svg>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <!-- About Section -->
-      <section id="about" class="bg-slate-50 py-16 md:py-20 dark:bg-surface-1">
+      <section id="about" class="bg-white py-16 md:py-20 dark:bg-slate-950">
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-6 md:mb-8">
             <h2 class="section-title text-title font-semibold text-slate-900 dark:text-white">
@@ -819,13 +891,74 @@
                 patients by making sure the software, and increasingly the AI, inside their care is
                 secure by design.
               </p>
+              <!-- D3-FEAT-02: the one artifact every hiring workflow forwards -->
+              <router-link
+                to="/cv"
+                class="mt-6 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+              >
+                View CV
+                <svg
+                  class="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </router-link>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- Words block (D3-FEAT-03): latest writing, filippo.io-style.
+           Hidden until the first article is approved and committed —
+           re-check the band alternation around About/CTA at launch. -->
+      <section
+        v-if="writingPosts.length"
+        id="writing-latest"
+        class="bg-white py-16 md:py-20 dark:bg-slate-950"
+      >
+        <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+          <header class="mb-6 md:mb-8">
+            <h2 class="section-title text-title font-semibold text-slate-900 dark:text-white">
+              Writing
+            </h2>
+          </header>
+          <ul class="max-w-2xl space-y-4">
+            <li v-for="post in writingPosts.slice(0, 3)" :key="post.slug">
+              <router-link
+                :to="`/writing/${post.slug}`"
+                class="group flex items-baseline justify-between gap-6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500"
+              >
+                <span
+                  class="font-medium text-slate-900 group-hover:text-primary-700 dark:text-white dark:group-hover:text-primary-300"
+                >
+                  {{ post.title }}
+                </span>
+                <span class="shrink-0 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  {{ formatDate(post.date) }}
+                </span>
+              </router-link>
+            </li>
+          </ul>
+          <router-link
+            to="/writing"
+            class="mt-6 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+          >
+            All writing
+          </router-link>
+        </div>
+      </section>
+
       <!-- D3-CNT-03: closing CTA band — the page ended on About with no ask -->
-      <section class="bg-white py-16 dark:bg-slate-950">
+      <section class="bg-slate-50 py-16 dark:bg-surface-1">
         <div class="mx-auto max-w-3xl px-6 text-center">
           <h2
             class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
@@ -872,8 +1005,15 @@ import GitHubStats from '../components/GitHubStats.vue'
 import CanvasHeroField from '../components/CanvasHeroField.vue'
 import { useIntersectionAnimation } from '../composables/useIntersectionAnimation'
 import { useTheme } from '../composables/useTheme'
+import { OSS_BLURBS } from '../data/ossBlurbs'
+import { writingPosts } from '../data/writing'
+import type { OssContribution } from '../types'
 
 const { isDark } = useTheme()
+
+// D3-FEAT-01: curated one-liner per merged PR; missing blurb -> title only
+const ossBlurb = (pr: OssContribution): string | undefined =>
+  OSS_BLURBS[`${pr.repoNameWithOwner}#${pr.number}`]
 import { useHead } from '@unhead/vue'
 import { logger } from '../utils/logger'
 
@@ -963,6 +1103,7 @@ const education = computed(() => {
 // D3-UX-02); the skeleton shows only while a live fetch is actually pending
 // with nothing baked to show.
 const documents = computed(() => portfolioStore.documents || [])
+const ossContributions = computed(() => portfolioStore.ossContributions || [])
 const documentsLoading = computed(() => portfolioStore.loading && documents.value.length === 0)
 
 // Computed properties
@@ -1006,9 +1147,13 @@ const yearRange = (company: Company): string => {
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
+  // timeZone UTC: date-only strings parse as UTC midnight, so local
+  // formatting shifts them a day (and at month edges a month) backward
+  // for UTC-negative visitors — and diverges from the UTC-baked SSG HTML.
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short'
+    month: 'short',
+    timeZone: 'UTC'
   })
 }
 
@@ -1057,6 +1202,12 @@ onMounted(() => {
     Promise.resolve(portfolioStore.fetchAllData()).catch((error: unknown) => {
       logger.error('Portfolio data fetch failed after mount:', error)
     })
+  } else if (portfolioStore.ossContributions.length === 0) {
+    // OSS is deliberately OUTSIDE bakePartial (a failed optional fetch
+    // must not trigger the full refetch or the fallback banner), but an
+    // empty bake should still self-heal quietly — otherwise a build that
+    // ran while the endpoint was down hides the strip until next deploy.
+    void portfolioStore.fetchOssContributions()
   }
 })
 

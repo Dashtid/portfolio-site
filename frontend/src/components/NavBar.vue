@@ -141,6 +141,9 @@ const navItems: NavItem[] = [
   { name: 'Education', href: 'education' },
   { name: 'Publications', href: 'publications' },
   { name: 'Projects', href: 'projects' },
+  // 'OSS' not 'Open Source': the 2-word label is the only nav item that
+  // soft-wraps inside the navbar grid's center track at every lg+ width
+  { name: 'OSS', href: 'oss' },
   { name: 'About', href: 'about' }
 ]
 
@@ -149,7 +152,7 @@ const sectionElementsCache = ref<Map<string, HTMLElement>>(new Map())
 
 // Initialize section element cache
 const initSectionCache = (): void => {
-  const sectionIds = ['hero', 'experience', 'education', 'publications', 'projects', 'about']
+  const sectionIds = ['hero', 'experience', 'education', 'publications', 'projects', 'oss', 'about']
   sectionIds.forEach(id => {
     const element = document.getElementById(id)
     if (element) {
@@ -241,10 +244,24 @@ const handleScroll = (): void => {
   if (!isHomeRoute.value) return
 
   const scrollPosition = window.scrollY + 100
-  const sectionIds = ['hero', 'experience', 'education', 'publications', 'projects', 'about']
+  const sectionIds = ['hero', 'experience', 'education', 'publications', 'projects', 'oss', 'about']
 
   for (const sectionId of sectionIds) {
-    const element = sectionElementsCache.value.get(sectionId)
+    // Lazy cache fill: v-if sections (#oss renders only once its data
+    // arrives — possibly AFTER the mount-time initSectionCache pass, e.g.
+    // via the self-heal refetch) would otherwise never be tracked, and a
+    // detached element from a re-render would go stale. Re-query on miss
+    // or disconnect.
+    let element = sectionElementsCache.value.get(sectionId)
+    if (!element || !element.isConnected) {
+      const fresh = document.getElementById(sectionId)
+      if (fresh) {
+        sectionElementsCache.value.set(sectionId, fresh)
+        element = fresh
+      } else {
+        element = undefined
+      }
+    }
     if (element) {
       const { offsetTop, offsetHeight } = element
       // Validate values are finite numbers to prevent comparison issues

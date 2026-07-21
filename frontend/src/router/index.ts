@@ -6,6 +6,9 @@ import HomeView from '../views/HomeView.vue'
 // Detail views - lazy loaded for better performance
 const ExperienceDetail = () => import('../views/experience/ExperienceDetail.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
+const CvView = () => import('../views/CvView.vue')
+const WritingIndexView = () => import('../views/writing/WritingIndexView.vue')
+const WritingArticleView = () => import('../views/writing/WritingArticleView.vue')
 
 // Admin views - lazy loaded (less frequently accessed)
 const AdminDashboard = () => import('../views/admin/AdminDashboard.vue')
@@ -35,6 +38,28 @@ export const routes: RouteRecordRaw[] = [
     component: ExperienceDetail,
     props: true,
     meta: { title: 'Experience | David Dashti' }
+  },
+  {
+    // D3-FEAT-02: prerendered CV from cv/resume.json (medtech variant)
+    path: '/cv',
+    name: 'cv',
+    component: CvView,
+    meta: { title: 'CV — David Dashti | Product Security for Medical Software' }
+  },
+  {
+    // D3-FEAT-03: writing surface — index + per-article routes. Unlinked
+    // from the nav until the first article is owner-approved; the index
+    // carries noindex while empty.
+    path: '/writing',
+    name: 'writing',
+    component: WritingIndexView,
+    meta: { title: 'Writing | David Dashti' }
+  },
+  {
+    path: '/writing/:slug',
+    name: 'writing-article',
+    component: WritingArticleView,
+    meta: { title: 'Writing | David Dashti' }
   },
   {
     // Static path so vite-ssg prerenders a real dist/404.html; the

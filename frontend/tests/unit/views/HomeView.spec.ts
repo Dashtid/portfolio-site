@@ -4,6 +4,7 @@ import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
+import { usePortfolioStore } from '@/stores/portfolio'
 
 // Mock API client to prevent network calls when stubActions: false
 vi.mock('@/api/client', () => ({
@@ -197,6 +198,65 @@ describe('HomeView', () => {
 
       expect(wrapper.find('#about').exists()).toBe(true)
       expect(wrapper.find('.about-layout').exists()).toBe(true)
+    })
+  })
+
+  describe('Open Source strip (D3-FEAT-01)', () => {
+    const fixturePrs = [
+      {
+        repoNameWithOwner: 'anchore/syft',
+        number: 4963,
+        title: 'fix(dpkg): extract License field for opkg/ipkg entries',
+        url: 'https://github.com/anchore/syft/pull/4963',
+        mergedAt: '2026-06-15T20:15:32Z'
+      },
+      {
+        repoNameWithOwner: 'DefectDojo/django-DefectDojo',
+        number: 15013,
+        title: 'Add Garak (NVIDIA LLM vulnerability scanner) parser',
+        url: 'https://github.com/DefectDojo/django-DefectDojo/pull/15013',
+        mergedAt: '2026-06-23T00:00:00Z'
+      }
+    ]
+
+    it('renders merged PRs with curated blurbs and upstream links', async () => {
+      const wrapper = await createWrapper({
+        initialPortfolio: { ossContributions: fixturePrs }
+      })
+
+      expect(wrapper.find('#oss').exists()).toBe(true)
+      expect(wrapper.text()).toContain('anchore/syft#4963')
+      // Curated blurb from data/ossBlurbs.ts
+      expect(wrapper.text()).toContain('SBOM completeness')
+
+      const links = wrapper.findAll('#oss a').map(a => a.attributes('href'))
+      expect(links).toContain('https://github.com/anchore/syft/pull/4963')
+      expect(links).toContain('https://github.com/DefectDojo/django-DefectDojo/pull/15013')
+    })
+
+    it('renders nothing when the fetch returned no rows (optional evidence)', async () => {
+      const wrapper = await createWrapper({ initialPortfolio: { ossContributions: [] } })
+      expect(wrapper.find('#oss').exists()).toBe(false)
+    })
+
+    it('self-heals an empty OSS bake without triggering the full refetch', async () => {
+      // Full bake (every core collection populated) but OSS empty — the
+      // exact live state between a frontend deploy and the backend
+      // endpoint existing. Only fetchOssContributions may fire.
+      await createWrapper({
+        initialPortfolio: {
+          companies: [{ id: 'c1', name: 'A', title: 'T', start_date: '2024-01-01' }],
+          skills: [{ id: 's1', name: 'S' }],
+          projects: [{ id: 'p1', name: 'P' }],
+          education: [{ id: 'e1', institution: 'E' }],
+          documents: [{ id: 'd1', title: 'D' }],
+          ossContributions: []
+        }
+      })
+
+      const store = usePortfolioStore()
+      expect(store.fetchOssContributions).toHaveBeenCalledTimes(1)
+      expect(store.fetchAllData).not.toHaveBeenCalled()
     })
   })
 

@@ -27,6 +27,15 @@ export interface Company {
   order_index?: number
 }
 
+/** One merged upstream PR from the public OSS endpoint (D3-FEAT-01). */
+export interface OssContribution {
+  repoNameWithOwner: string
+  number: number
+  title: string
+  url: string
+  mergedAt: string
+}
+
 export interface Education {
   id: string
   institution: string

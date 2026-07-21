@@ -520,7 +520,8 @@ useHead({
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  // timeZone UTC: date-only strings parse as UTC midnight (see HomeView)
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 }
 
 // Load a company into the store, then settle local UI state. Short-circuits

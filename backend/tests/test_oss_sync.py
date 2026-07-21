@@ -204,3 +204,74 @@ class TestRefreshIntegration:
             assert "NOW" in buckets
             assert "WAITING" in buckets
             assert "DONE" in buckets
+
+    @pytest.mark.asyncio
+    async def test_refresh_preserves_merged_history_outside_window(
+        self,
+        client,
+        monkeypatch,
+        parsed_fixture: OssDashboardResponse,
+    ):
+        """Merged self-authored PRs are permanent public evidence (the
+        homepage Open Source strip reads them) — a refresh whose 30-day
+        GraphQL window no longer returns them must NOT delete them.
+        Non-merged rows and other-author rows are still replaced wholesale.
+        """
+        _ = client
+
+        old_merged = OssContribution(
+            id="old-merged-id",
+            github_node_id="OLD_MERGED_NODE",
+            kind="pr",
+            repo_name_with_owner="anchore/syft",
+            number=4791,
+            title="fix(cyclonedx): exclude distro group from package name",
+            url="https://github.com/anchore/syft/pull/4791",
+            state="MERGED",
+            is_draft=False,
+            author_login="Dashtid",
+            bucket="DONE",
+            created_at=parsed_fixture.authored_open_prs.nodes[0].created_at,
+            last_activity_at=parsed_fixture.authored_open_prs.nodes[0].updated_at,
+            closed_at=parsed_fixture.authored_open_prs.nodes[0].created_at,
+            merged_at=parsed_fixture.authored_open_prs.nodes[0].created_at,
+        )
+        other_author_merged = OssContribution(
+            id="other-author-id",
+            github_node_id="OTHER_AUTHOR_NODE",
+            kind="pr",
+            repo_name_with_owner="anchore/grype",
+            number=9999,
+            title="someone else's merged PR",
+            url="https://github.com/anchore/grype/pull/9999",
+            state="MERGED",
+            is_draft=False,
+            author_login="someone-else",
+            bucket="DONE",
+            created_at=parsed_fixture.authored_open_prs.nodes[0].created_at,
+            last_activity_at=parsed_fixture.authored_open_prs.nodes[0].updated_at,
+            closed_at=parsed_fixture.authored_open_prs.nodes[0].created_at,
+            merged_at=parsed_fixture.authored_open_prs.nodes[0].created_at,
+        )
+        async with TestSessionLocal() as setup_session:
+            setup_session.add_all([old_merged, other_author_merged])
+            await setup_session.commit()
+
+        async def fake_fetch(self):
+            return parsed_fixture.model_dump(by_alias=True)
+
+        monkeypatch.setattr(OssSyncService, "_fetch_payload", fake_fetch)
+
+        service = OssSyncService()
+        async with TestSessionLocal() as session:
+            result = await service.refresh(session)
+
+        async with TestSessionLocal() as verify_session:
+            rows = (await verify_session.execute(select(OssContribution))).scalars().all()
+            ids = {r.id for r in rows}
+            # Self-authored merged history survives the refresh...
+            assert "old-merged-id" in ids
+            # ...other-author rows are replaced like everything else...
+            assert "other-author-id" not in ids
+            # ...and the fresh classification set landed alongside it.
+            assert len(rows) == result.contributions_count + 1

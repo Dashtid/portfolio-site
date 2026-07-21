@@ -34,6 +34,7 @@ from app.api.v1 import (
     health,
     metrics,
     oss,
+    oss_public,
     projects,
     skills,
 )
@@ -463,6 +464,7 @@ app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
 app.include_router(admin_panel.router, prefix="/api/v1/admin", tags=["Admin"])
 app.include_router(oss.router, prefix="/api/v1/admin", tags=["Admin OSS"])
+app.include_router(oss_public.router, prefix="/api/v1/oss", tags=["OSS"])
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")

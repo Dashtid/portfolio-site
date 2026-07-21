@@ -177,6 +177,11 @@ export async function includedRoutes(paths: string[]) {
   // "prerendered" as a literal directory name.
   const publicPaths = paths.filter(p => !p.startsWith('/admin') && !p.includes(':'))
 
+  // D3-FEAT-03: article routes come from the build-time content glob —
+  // no network involved, so they prerender even when the API is down.
+  const { writingPosts } = await import('./data/writing')
+  const articlePaths = writingPosts.map(p => `/writing/${p.slug}`)
+
   const apiUrl = import.meta.env.VITE_API_URL || 'https://api.dashti.se'
 
   try {
@@ -184,7 +189,7 @@ export async function includedRoutes(paths: string[]) {
     if (res.ok) {
       const companies: Array<{ id: string }> = await res.json()
       const experiencePaths = companies.map(c => `/experience/${c.id}`)
-      return [...publicPaths, ...experiencePaths]
+      return [...publicPaths, ...articlePaths, ...experiencePaths]
     }
   } catch {
     // API not reachable at build time — skip dynamic routes, pre-render static pages only
@@ -193,5 +198,5 @@ export async function includedRoutes(paths: string[]) {
     }
   }
 
-  return publicPaths
+  return [...publicPaths, ...articlePaths]
 }

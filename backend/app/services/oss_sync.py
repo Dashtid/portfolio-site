@@ -30,7 +30,7 @@ from datetime import UTC, datetime
 from typing import Any, cast
 
 from githubkit import GitHub
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -168,12 +168,48 @@ class OssSyncService:
 
             rows = list(self._classify_response(response))
 
-            # Replace-all transaction: delete every existing row then
-            # insert the new classification set. Cheaper to reason about
-            # than per-row upsert + stale-row reaping at this scale
-            # (steady state is <50 rows).
-            await session.execute(delete(OssContribution))
-            session.add_all(rows)
+            # Replace-with-history transaction (D3-FEAT-01): the operational
+            # buckets are replaced wholesale, but merged self-authored PRs
+            # are PERMANENT public evidence — the homepage Open Source strip
+            # reads them via /api/v1/oss/contributions, and the GraphQL
+            # searches only cover a 30-day closed window, so a plain
+            # delete-all would silently erase every older merged PR from
+            # the public surface on the first refresh. Keep merged history;
+            # upsert incoming rows over it by github_node_id.
+            merged_history = (
+                (OssContribution.kind == "pr")
+                & (OssContribution.state == "MERGED")
+                & (OssContribution.author_login == GITHUB_USERNAME)
+            )
+            await session.execute(delete(OssContribution).where(~merged_history))
+
+            preserved = {
+                row.github_node_id: row
+                for row in ((await session.execute(select(OssContribution))).scalars().all())
+            }
+            for row in rows:
+                existing = preserved.get(row.github_node_id)
+                if existing is None:
+                    session.add(row)
+                    continue
+                # Refresh the preserved row in place with the fresh fetch
+                for field in (
+                    "kind",
+                    "repo_name_with_owner",
+                    "number",
+                    "title",
+                    "url",
+                    "state",
+                    "is_draft",
+                    "author_login",
+                    "bucket",
+                    "created_at",
+                    "last_activity_at",
+                    "closed_at",
+                    "merged_at",
+                    "synced_at",
+                ):
+                    setattr(existing, field, getattr(row, field))
             await session.commit()
 
             return OssRefreshResult(

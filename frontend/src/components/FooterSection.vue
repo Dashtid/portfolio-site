@@ -92,6 +92,8 @@ const footerLinks = [
   { name: 'Education', href: '/#education' },
   { name: 'Publications', href: '/#publications' },
   { name: 'Projects', href: '/#projects' },
-  { name: 'About', href: '/#about' }
+  { name: 'Open Source', href: '/#oss' },
+  { name: 'About', href: '/#about' },
+  { name: 'CV', href: '/cv' }
 ]
 </script>
