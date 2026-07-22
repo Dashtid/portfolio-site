@@ -93,7 +93,6 @@ const footerLinks = [
   { name: 'Publications', href: '/#publications' },
   { name: 'Projects', href: '/#projects' },
   { name: 'Open Source', href: '/#oss' },
-  { name: 'About', href: '/#about' },
-  { name: 'CV', href: '/cv' }
+  { name: 'About', href: '/#about' }
 ]
 </script>

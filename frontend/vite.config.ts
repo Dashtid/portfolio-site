@@ -69,29 +69,6 @@ export default defineConfig({
       // eslint-disable-next-line no-console
       console.log(`[csp] state script -> JSON data block in ${rewritten} pages`)
 
-      // D3-FEAT-02: machine-readable /cv.json (JSON Resume schema) from
-      // the repo-root source of truth, with person-contact fields
-      // scrubbed — the public site is LinkedIn-contact-only.
-      const resumeSrc = path.resolve(__dirname, '../cv/resume.json')
-      if (fs.existsSync(resumeSrc)) {
-        const resume = JSON.parse(fs.readFileSync(resumeSrc, 'utf-8'))
-        // Defense-in-depth: the source file is already contact-scrubbed
-        // (LinkedIn-only contact), but the public artifact re-scrubs so a
-        // future source edit can't silently republish contact details or
-        // internal notes.
-        if (resume.basics) {
-          delete resume.basics.email
-          delete resume.basics.phone
-          delete resume.basics.image
-        }
-        if (resume.meta) {
-          delete resume.meta.note
-        }
-        fs.writeFileSync(path.join(distDir, 'cv.json'), JSON.stringify(resume, null, 2))
-        // eslint-disable-next-line no-console
-        console.log('[cv] scrubbed cv.json emitted')
-      }
-
       // D3-FEAT-03: RSS for /writing from the same markdown content the
       // app builds from. The frontmatter parse here is a deliberate tiny
       // duplicate of src/data/writing.ts (this hook runs in node, the
@@ -312,11 +289,15 @@ export default defineConfig({
         ],
         // Backstop against a single chunk bloating the precache
         maximumFileSizeToCacheInBytes: 1024 * 1024,
-        // Navigations to real files (cv.json, writing/rss.xml, images)
-        // must hit the network, not the SPA shell — without this denylist
-        // an offline-capable SW answers a click on the /cv.json link with
+        // Navigations to real files (writing/rss.xml, images) must hit the
+        // network, not the SPA shell — without this denylist an
+        // offline-capable SW could answer a click on such a link with
         // index.html. Extension-suffixed paths are never SPA routes here.
-        navigateFallbackDenylist: [/\/[^/]+\.[a-z0-9]+$/i],
+        // /cv is denylisted too: the public page was retired (Campaign
+        // 2026-08 Sprint 2), so a returning visitor's SW must let /cv reach
+        // the Vercel edge 301 (-> home) instead of serving the cached shell,
+        // which would client-side 404 on the now-removed route.
+        navigateFallbackDenylist: [/\/[^/]+\.[a-z0-9]+$/i, /^\/cv$/],
         // Runtime caching strategies
         runtimeCaching: [
           {

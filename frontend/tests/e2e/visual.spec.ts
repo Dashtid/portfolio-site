@@ -523,58 +523,6 @@ test.describe('Visual Regression Tests', () => {
     })
   })
 
-  // D3-FEAT-02: /cv renders entirely from the repo-committed resume.json —
-  // deterministic without fixtures. One baseline per theme.
-  test.describe('CV Page', () => {
-    useHermeticHome()
-
-    test.beforeEach(async ({ page }) => {
-      await page.emulateMedia({ reducedMotion: 'reduce' })
-    })
-
-    test('cv page - light mode', async ({ page }) => {
-      await page.goto('/cv')
-      await waitForStableUI(page)
-      await expect(page).toHaveScreenshot('cv-light.png', { fullPage: true })
-    })
-
-    test('cv page - dark mode', async ({ page }) => {
-      await page.goto('/cv')
-      await waitForStableUI(page)
-      const themeToggle = page.locator('[data-testid="theme-toggle"]')
-      if (await themeToggle.isVisible()) {
-        await themeToggle.click()
-        await page.waitForTimeout(300)
-      }
-      await expect(page).toHaveScreenshot('cv-dark.png', { fullPage: true })
-    })
-
-    // Non-snapshot guard: the scrub contract — the public page must never
-    // carry the contact fields present in the repo source.
-    test('cv page carries no scrubbed contact fields', async ({ page }) => {
-      await page.goto('/cv')
-      await waitForStableUI(page)
-      const html = await page.content()
-      expect(html).not.toContain('dashtid@pm.me')
-      expect(html).not.toContain('mailto:')
-    })
-
-    // The machine-readable artifact has the same contract — and the scrub
-    // lives in an otherwise-untested vite.config onFinished block, so this
-    // is its only guard.
-    test('cv.json is served scrubbed', async ({ request }) => {
-      const response = await request.get('/cv.json')
-      expect(response.ok()).toBe(true)
-      const body = await response.text()
-      expect(body).not.toContain('dashtid@pm.me')
-      const resume = JSON.parse(body)
-      expect(resume.basics.email).toBeUndefined()
-      expect(resume.basics.phone).toBeUndefined()
-      expect(resume.meta?.note).toBeUndefined()
-      expect(resume.basics.name).toBe('David Dashti')
-    })
-  })
-
   // Functional (non-snapshot) guard: the ONLY test that exercises the real
   // IntersectionObserver reveal on the detail page. Every other detail test
   // emulates reduced motion, which makes useIntersectionAnimation jump

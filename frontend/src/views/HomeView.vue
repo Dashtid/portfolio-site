@@ -75,12 +75,6 @@
               >
                 GitHub
               </a>
-              <router-link
-                to="/cv"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
-              >
-                View CV
-              </router-link>
             </div>
 
             <!-- D3-CNT-03 proof row, retyped into the HERO-01 layout -->
@@ -847,27 +841,6 @@
                 patients by making sure the software, and increasingly the AI, inside their care is
                 secure by design.
               </p>
-              <!-- D3-FEAT-02: the one artifact every hiring workflow forwards -->
-              <router-link
-                to="/cv"
-                class="mt-6 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
-              >
-                View CV
-                <svg
-                  class="h-3.5 w-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="2"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </router-link>
             </div>
           </div>
         </div>

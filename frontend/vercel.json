@@ -19,6 +19,11 @@
       ],
       "destination": "https://dashti.se/:path*",
       "permanent": true
+    },
+    {
+      "source": "/cv",
+      "destination": "/",
+      "permanent": true
     }
   ],
   "rewrites": [

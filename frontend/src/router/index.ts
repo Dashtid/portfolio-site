@@ -6,7 +6,6 @@ import HomeView from '../views/HomeView.vue'
 // Detail views - lazy loaded for better performance
 const ExperienceDetail = () => import('../views/experience/ExperienceDetail.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
-const CvView = () => import('../views/CvView.vue')
 const WritingIndexView = () => import('../views/writing/WritingIndexView.vue')
 const WritingArticleView = () => import('../views/writing/WritingArticleView.vue')
 
@@ -21,6 +20,7 @@ const AdminAnalytics = () => import('../views/admin/AdminAnalytics.vue')
 const AdminMetrics = () => import('../views/admin/AdminMetrics.vue')
 const AdminDocuments = () => import('../views/admin/AdminDocuments.vue')
 const AdminOss = () => import('../views/admin/AdminOss.vue')
+const AdminCv = () => import('../views/admin/AdminCv.vue')
 
 export const DEFAULT_TITLE = 'David Dashti — Product & Application Security | Medical Devices'
 
@@ -38,13 +38,6 @@ export const routes: RouteRecordRaw[] = [
     component: ExperienceDetail,
     props: true,
     meta: { title: 'Experience | David Dashti' }
-  },
-  {
-    // D3-FEAT-02: prerendered CV from cv/resume.json (medtech variant)
-    path: '/cv',
-    name: 'cv',
-    component: CvView,
-    meta: { title: 'CV — David Dashti | Product & Application Security' }
   },
   {
     // D3-FEAT-03: writing surface — index + per-article routes. Unlinked
@@ -128,6 +121,14 @@ export const routes: RouteRecordRaw[] = [
         name: 'admin-oss',
         component: AdminOss,
         meta: { title: 'OSS Contributions | David Dashti' }
+      },
+      {
+        // Admin-only CV export: edit profile prose + private contact and
+        // download a CV assembled from the DB (Campaign 2026-08 Sprint 2).
+        path: 'cv',
+        name: 'admin-cv',
+        component: AdminCv,
+        meta: { title: 'CV Export | David Dashti' }
       }
     ]
   },

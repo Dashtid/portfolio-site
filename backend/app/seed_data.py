@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base, engine
 from app.models.company import Company
+from app.models.cv_profile import CvProfile
 from app.models.education import Education
 from app.models.project import Project
 from app.models.skill import Skill
@@ -476,6 +477,49 @@ async def seed_education(session: AsyncSession):
     logger.info("Seeded %d education items", len(education_items))
 
 
+async def seed_cv_profile(session: AsyncSession):
+    """Seed the singleton CV profile with the curated prose + public links.
+
+    Prose mirrors the accurate cv/resume.json basics (the hand-curated
+    source). Private contact (email / phone / personnummer) is intentionally
+    left blank — the owner fills those through the admin CV form after deploy,
+    so the real values are never committed to the repo. The admin-only CV
+    export assembles experience / education / skills from their own tables.
+    """
+    if await _already_seeded(session, CvProfile, "cv_profile"):
+        return
+
+    profile = CvProfile(
+        name="David Dashti",
+        label="Product & Application Security Engineer — Regulated Medical Software",
+        summary=(
+            "Biomedical Engineer focused on product cybersecurity for regulated medical "
+            "software. Experienced extending STRIDE-based threat models into concrete, "
+            "product-specific security requirements and supporting vulnerability evaluation "
+            "using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity "
+            "guidance (Section 524B) and IEC 81001-5-1 expectations into structured security "
+            "evidence and SDLC improvements."
+        ),
+        focus=(
+            "Cloud & CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC for "
+            "regulated software"
+        ),
+        location_city="Stockholm",
+        location_region="Stockholm",
+        location_country="SE",
+        url="https://dashti.se",
+        linkedin_url="https://www.linkedin.com/in/david-dashti/",
+        github_url="https://github.com/Dashtid",
+        languages=[
+            {"language": "Swedish", "fluency": "Native"},
+            {"language": "English", "fluency": "Fluent"},
+        ],
+    )
+    session.add(profile)
+    await session.commit()
+    logger.info("Seeded CV profile singleton")
+
+
 async def main():
     """Main seeding function"""
     logger.info("Starting database seeding...")
@@ -492,6 +536,7 @@ async def main():
             await seed_projects(session)
             await seed_skills(session)
             await seed_education(session)
+            await seed_cv_profile(session)
 
             logger.info("Database seeding completed successfully")
 

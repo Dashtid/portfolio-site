@@ -4,6 +4,7 @@ Database models
 
 from app.models.analytics import PageView
 from app.models.company import Company
+from app.models.cv_profile import CvProfile
 from app.models.document import Document
 from app.models.education import Education
 from app.models.oauth_state import OAuthState
@@ -15,6 +16,7 @@ from app.models.user import User
 
 __all__ = [
     "Company",
+    "CvProfile",
     "Document",
     "Education",
     "OAuthState",

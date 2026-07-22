@@ -27,6 +27,7 @@ from app.api.v1 import (
     analytics,
     auth,
     companies,
+    cv,
     documents,
     education,
     errors,
@@ -463,6 +464,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
 app.include_router(admin_panel.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(cv.router, prefix="/api/v1/admin/cv", tags=["Admin CV"])
 app.include_router(oss.router, prefix="/api/v1/admin", tags=["Admin OSS"])
 app.include_router(oss_public.router, prefix="/api/v1/oss", tags=["OSS"])
 app.include_router(auth.router, prefix="/api/v1")

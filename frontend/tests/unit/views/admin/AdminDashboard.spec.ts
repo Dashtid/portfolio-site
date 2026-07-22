@@ -176,7 +176,8 @@ describe('AdminDashboard', () => {
       // Sprint 5: Skills + Education + Metrics joined the nav (ADMIN-01/02/03).
       // Sprint 6: Documents joined (ADMIN-04).
       // OSS dashboard Phase 3: OSS joined.
-      expect(navLinks.length).toBe(9)
+      // Campaign 2026-08 Sprint 2: CV (admin-only CV export) joined.
+      expect(navLinks.length).toBe(10)
 
       const linkTexts = navLinks.map(link => link.text())
       expect(linkTexts).toContain('Dashboard')
@@ -188,6 +189,7 @@ describe('AdminDashboard', () => {
       expect(linkTexts).toContain('Analytics')
       expect(linkTexts).toContain('Metrics')
       expect(linkTexts).toContain('OSS')
+      expect(linkTexts).toContain('CV')
     })
 
     it('should have correct navigation hrefs', async () => {

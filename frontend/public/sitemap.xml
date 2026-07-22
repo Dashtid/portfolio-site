@@ -12,16 +12,6 @@
         <priority>1.0</priority>
     </url>
 
-    <!-- Main sections (hash anchors on the homepage) -->
-
-    <!-- CV (D3-FEAT-02) -->
-    <url>
-        <loc>https://dashti.se/cv</loc>
-        <lastmod>2026-07-21</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
     <!--
       /writing is deliberately absent while it is empty + noindex; add it
       (and per-article entries) when the first article launches.

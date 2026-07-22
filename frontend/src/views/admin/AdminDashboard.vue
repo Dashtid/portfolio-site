@@ -1,7 +1,7 @@
 <template>
   <div class="admin-dashboard">
     <!-- Admin Header -->
-    <header class="admin-header">
+    <header class="admin-header print:hidden">
       <div class="header-content">
         <div class="header-left">
           <h1 class="dashboard-title">Portfolio Admin</h1>
@@ -24,7 +24,7 @@
     </header>
 
     <!-- Admin Navigation -->
-    <nav class="admin-nav" role="navigation" aria-label="Admin navigation">
+    <nav class="admin-nav print:hidden" role="navigation" aria-label="Admin navigation">
       <router-link to="/admin" class="nav-link" :class="{ active: $route.path === '/admin' }">
         Dashboard
       </router-link>
@@ -83,6 +83,9 @@
         :class="{ active: $route.path === '/admin/oss' }"
       >
         OSS
+      </router-link>
+      <router-link to="/admin/cv" class="nav-link" :class="{ active: $route.path === '/admin/cv' }">
+        CV
       </router-link>
     </nav>
 
