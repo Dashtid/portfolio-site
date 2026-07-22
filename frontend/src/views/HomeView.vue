@@ -64,6 +64,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
+                @click="trackOutbound('linkedin', 'hero')"
               >
                 Connect on LinkedIn
               </a>
@@ -72,6 +73,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+                @click="trackOutbound('github', 'hero')"
               >
                 GitHub
               </a>
@@ -689,6 +691,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="group flex items-start gap-4 px-5 py-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500 dark:hover:bg-surface-3"
+                @click="trackOutbound('oss', pr.repoNameWithOwner)"
               >
                 <span class="min-w-0 flex-1">
                   <span class="font-mono text-xs text-slate-500 dark:text-slate-400">
@@ -902,6 +905,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
+            @click="trackOutbound('linkedin', 'cta')"
           >
             Connect on LinkedIn
           </a>
@@ -934,11 +938,13 @@ import GitHubStats from '../components/GitHubStats.vue'
 import CanvasHeroField from '../components/CanvasHeroField.vue'
 import { useIntersectionAnimation } from '../composables/useIntersectionAnimation'
 import { useTheme } from '../composables/useTheme'
+import { useOutboundTracking } from '../composables/useOutboundTracking'
 import { OSS_BLURBS } from '../data/ossBlurbs'
 import { writingPosts } from '../data/writing'
 import type { OssContribution } from '../types'
 
 const { isDark } = useTheme()
+const { trackOutbound } = useOutboundTracking()
 
 // D3-FEAT-01: curated one-liner per merged PR; missing blurb -> title only
 const ossBlurb = (pr: OssContribution): string | undefined =>

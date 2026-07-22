@@ -28,6 +28,11 @@ export interface DailyView {
   views: number
 }
 
+export interface OutboundClick {
+  destination: string
+  count: number
+}
+
 export interface AnalyticsSummary {
   total_views: number
   unique_visitors: number
@@ -35,6 +40,9 @@ export interface AnalyticsSummary {
   top_pages: TopPage[]
   daily_views: DailyView[]
   period_days: number
+  // Optional: older backends omit it. Aggregated outbound-link clicks, kept
+  // separate from the page-view metrics above (D3-M-01).
+  outbound_clicks?: OutboundClick[]
 }
 
 export interface TopCountry {

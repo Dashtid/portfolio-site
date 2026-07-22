@@ -128,6 +128,21 @@
           </div>
         </section>
       </div>
+
+      <section class="card" aria-label="Outbound clicks">
+        <div class="card-header">
+          <h3 class="card-title">Outbound clicks</h3>
+        </div>
+        <ol v-if="summary.outbound_clicks && summary.outbound_clicks.length" class="top-list">
+          <li v-for="c in summary.outbound_clicks" :key="c.destination" class="top-list-item">
+            <div class="top-list-text">
+              <div class="top-list-primary">{{ c.destination }}</div>
+            </div>
+            <div class="top-list-value">{{ c.count.toLocaleString() }}</div>
+          </li>
+        </ol>
+        <div v-else class="empty-state">No outbound clicks tracked yet.</div>
+      </section>
     </template>
   </div>
 </template>

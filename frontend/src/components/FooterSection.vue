@@ -19,6 +19,7 @@
           rel="noopener noreferrer"
           class="social-link inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-300 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
           aria-label="LinkedIn Profile (opens in new tab)"
+          @click="trackOutbound('linkedin', 'footer')"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -39,6 +40,7 @@
           rel="noopener noreferrer"
           class="social-link inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-300 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
           aria-label="GitHub Profile (opens in new tab)"
+          @click="trackOutbound('github', 'footer')"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -84,6 +86,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useOutboundTracking } from '@/composables/useOutboundTracking'
+
+const { trackOutbound } = useOutboundTracking()
 
 const currentYear = computed<number>(() => new Date().getFullYear())
 

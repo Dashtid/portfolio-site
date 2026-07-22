@@ -28,8 +28,12 @@
   ],
   "rewrites": [
     {
-      "source": "/:path((?!images|assets|static|.*\\..*).*)",
+      "source": "/admin/:path*",
       "destination": "/"
+    },
+    {
+      "source": "/:path((?!images|assets|static|.*\\..*).*)",
+      "destination": "/404.html"
     }
   ],
   "headers": [

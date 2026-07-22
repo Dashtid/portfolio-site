@@ -27,6 +27,10 @@ const makeSummary = (overrides: Partial<AnalyticsSummary> = {}): AnalyticsSummar
     { date: '2026-06-03', views: 175 }
   ],
   period_days: 30,
+  outbound_clicks: [
+    { destination: 'linkedin/hero', count: 12 },
+    { destination: 'github/footer', count: 4 }
+  ],
   ...overrides
 })
 
@@ -123,6 +127,22 @@ describe('AdminAnalytics', () => {
       expect(text).toContain('SE')
       expect(text).toContain('US')
       expect(normalized).toContain('200')
+    })
+
+    it('renders the outbound-clicks card, separate from page views', async () => {
+      const wrapper = await createWrapper()
+      const text = wrapper.text()
+      expect(text).toContain('Outbound clicks')
+      expect(text).toContain('linkedin/hero')
+      expect(text).toContain('github/footer')
+    })
+
+    it('shows an empty state when there are no outbound clicks', async () => {
+      vi.mocked(analyticsService.getAnalyticsSummary).mockResolvedValue(
+        makeSummary({ outbound_clicks: [] })
+      )
+      const wrapper = await createWrapper()
+      expect(wrapper.text()).toContain('No outbound clicks tracked yet.')
     })
   })
 

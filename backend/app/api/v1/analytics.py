@@ -24,6 +24,7 @@ from app.models.user import User
 from app.schemas.analytics import (
     AnalyticsStats,
     DailyView,
+    OutboundClick,
     PageViewCreate,
     PageViewResponse,
     TopCountry,
@@ -151,22 +152,29 @@ async def get_analytics_summary(
 
     cutoff = datetime.now(UTC) - timedelta(days=days)
 
-    # Total page views
+    # D3-M-01 (honest signals): outbound clicks are recorded as synthetic
+    # '/event/outbound/...' page views (trackEvent). Keep them OUT of the
+    # real page-view metrics so total_views / top_pages / daily_views reflect
+    # actual pages, then aggregate them separately below.
+    is_real_page = PageView.page_path.not_like("/event/%")
+
+    # Total page views (real pages only)
     total_result = await db.execute(
-        select(func.count(PageView.id)).where(PageView.created_at >= cutoff)
+        select(func.count(PageView.id)).where(PageView.created_at >= cutoff, is_real_page)
     )
     total_views = total_result.scalar() or 0
 
-    # Unique visitors (by session_id)
+    # Unique visitors (by session_id) — a session with an event also has real
+    # views, so the distinct-session count is unaffected by the event rows.
     unique_result = await db.execute(
         select(func.count(func.distinct(PageView.session_id))).where(PageView.created_at >= cutoff)
     )
     unique_visitors = unique_result.scalar() or 0
 
-    # Top pages
+    # Top pages (real pages only)
     top_pages_result = await db.execute(
         select(PageView.page_path, func.count(PageView.id).label("views"))
-        .where(PageView.created_at >= cutoff)
+        .where(PageView.created_at >= cutoff, is_real_page)
         .group_by(PageView.page_path)
         .order_by(func.count(PageView.id).desc())
         .limit(10)
@@ -175,18 +183,35 @@ async def get_analytics_summary(
         TopPage(path=row.page_path, title=None, views=row.views) for row in top_pages_result.all()
     ]
 
-    # Daily views (last N days)
+    # Daily views (real pages only)
     daily_views_result = await db.execute(
         select(
             func.date(PageView.created_at).label("date"),
             func.count(PageView.id).label("views"),
         )
-        .where(PageView.created_at >= cutoff)
+        .where(PageView.created_at >= cutoff, is_real_page)
         .group_by(func.date(PageView.created_at))
         .order_by(func.date(PageView.created_at))
     )
     daily_views = [
         DailyView(date=str(row.date), views=row.views) for row in daily_views_result.all()
+    ]
+
+    # Outbound clicks: aggregate the '/event/outbound/<dest>/<label>' rows,
+    # stripping the prefix so the dashboard shows e.g. 'linkedin/hero'.
+    outbound_result = await db.execute(
+        select(PageView.page_path, func.count(PageView.id).label("count"))
+        .where(PageView.created_at >= cutoff, PageView.page_path.like("/event/outbound/%"))
+        .group_by(PageView.page_path)
+        .order_by(func.count(PageView.id).desc())
+        .limit(10)
+    )
+    outbound_clicks = [
+        OutboundClick(
+            destination=row.page_path.removeprefix("/event/outbound/"),
+            count=row.count,
+        )
+        for row in outbound_result.all()
     ]
 
     return AnalyticsStats(
@@ -196,6 +221,7 @@ async def get_analytics_summary(
         top_pages=top_pages,
         daily_views=daily_views,
         period_days=days,
+        outbound_clicks=outbound_clicks,
     )
 
 

@@ -49,6 +49,18 @@ class DailyView(BaseModel):
     views: int
 
 
+class OutboundClick(BaseModel):
+    """Aggregated outbound-link clicks.
+
+    Sourced from the synthetic '/event/outbound/<dest>/<label>' page views the
+    frontend records via trackEvent, aggregated separately so they stay OUT of
+    the real page-view metrics (D3-M-01: honest signals).
+    """
+
+    destination: str
+    count: int
+
+
 class AnalyticsStats(BaseModel):
     """Schema for analytics summary stats."""
 
@@ -58,6 +70,9 @@ class AnalyticsStats(BaseModel):
     top_pages: list[TopPage]
     daily_views: list[DailyView]
     period_days: int
+    # Optional + defaulted so older clients keep working; page-view metrics
+    # above deliberately exclude these synthetic '/event/' rows.
+    outbound_clicks: list[OutboundClick] = Field(default_factory=list)
 
 
 class VisitorInfo(BaseModel):

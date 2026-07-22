@@ -183,6 +183,37 @@ class TestAnalyticsSummaryEndpoint:
         assert "top_pages" in data
         assert "daily_views" in data
         assert "period_days" in data
+        assert "outbound_clicks" in data
+
+    def test_summary_excludes_event_rows_and_aggregates_outbound(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """D3-M-01: synthetic /event/ rows stay OUT of page metrics and are
+        surfaced separately as aggregated outbound_clicks."""
+        for path in ["/", "/experience/hermes"]:
+            client.post("/api/v1/analytics/track/pageview", json={"page_path": path})
+        for path in [
+            "/event/outbound/linkedin/hero",
+            "/event/outbound/linkedin/hero",
+            "/event/outbound/github/footer",
+        ]:
+            client.post("/api/v1/analytics/track/pageview", json={"page_path": path})
+
+        data = client.get(
+            "/api/v1/analytics/stats/summary",
+            headers=admin_user_in_db["headers"],
+        ).json()
+
+        # Page-view metrics count the 2 real views only, never the 3 events.
+        assert data["total_views"] == 2
+        page_paths = {p["path"] for p in data["top_pages"]}
+        assert page_paths == {"/", "/experience/hermes"}
+        assert not any(p.startswith("/event/") for p in page_paths)
+        assert sum(d["views"] for d in data["daily_views"]) == 2
+
+        # Outbound clicks aggregated with the '/event/outbound/' prefix stripped.
+        clicks = {c["destination"]: c["count"] for c in data["outbound_clicks"]}
+        assert clicks == {"linkedin/hero": 2, "github/footer": 1}
 
     def test_summary_default_period(self, client: TestClient, admin_user_in_db: dict[str, Any]):
         """Test analytics summary uses 30-day default period."""

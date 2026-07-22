@@ -1,7 +1,7 @@
 # dashti.se — one group, no conflicting directives (D3-SEO-02).
 # Allow is implicit; admin and API surfaces are the only exclusions.
 User-agent: *
-Disallow: /admin/
+Disallow: /admin
 Disallow: /api/
 
 Sitemap: https://dashti.se/sitemap.xml
