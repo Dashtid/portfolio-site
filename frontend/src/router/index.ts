@@ -22,7 +22,7 @@ const AdminMetrics = () => import('../views/admin/AdminMetrics.vue')
 const AdminDocuments = () => import('../views/admin/AdminDocuments.vue')
 const AdminOss = () => import('../views/admin/AdminOss.vue')
 
-export const DEFAULT_TITLE = 'David Dashti | Product Security for Medical Software'
+export const DEFAULT_TITLE = 'David Dashti — Product & Application Security | Medical Devices'
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -44,7 +44,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/cv',
     name: 'cv',
     component: CvView,
-    meta: { title: 'CV — David Dashti | Product Security for Medical Software' }
+    meta: { title: 'CV — David Dashti | Product & Application Security' }
   },
   {
     // D3-FEAT-03: writing surface — index + per-article routes. Unlinked

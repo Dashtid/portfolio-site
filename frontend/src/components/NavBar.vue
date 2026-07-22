@@ -33,6 +33,11 @@
             {{ item.name }}
           </a>
         </li>
+        <li>
+          <router-link class="nav-link" to="/cv" data-testid="nav-link-cv" aria-label="View CV"
+            >CV</router-link
+          >
+        </li>
       </ul>
 
       <!-- Right cluster: theme toggle + mobile menu button -->
@@ -91,6 +96,17 @@
           >
             {{ item.name }}
           </a>
+        </li>
+        <li>
+          <router-link
+            class="nav-link block w-full rounded-lg px-4 py-2.5 text-center"
+            to="/cv"
+            data-testid="nav-link-cv-mobile"
+            aria-label="View CV"
+            @click="closeMobileMenu"
+          >
+            CV
+          </router-link>
         </li>
       </ul>
     </div>

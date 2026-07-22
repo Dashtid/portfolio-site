@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
     "name": "David Dashti",
-    "label": "Product Security Engineer - Regulated Medical Software",
+    "label": "Product & Application Security Engineer — Regulated Medical Software",
     "image": "",
     "email": "",
     "phone": "",
     "url": "https://dashti.se",
-    "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
+    "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance (Section 524B) and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
     "focus": "Cloud & CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC for regulated software",
     "location": {
       "city": "Stockholm",
@@ -156,13 +156,24 @@
     {
       "name": "Security Engineering",
       "keywords": [
+        "Application Security (AppSec)",
         "Secure SDLC / DevSecOps",
         "Threat Modeling (STRIDE)",
         "Security Requirements (traceability)",
         "SBOM (SOUP-based) / SCA (Grype)",
         "Vulnerability Evaluation / Triage",
-        "Static Analysis Enablement",
-        "Fuzzing / Dynamic Security Testing"
+        "Static Analysis Enablement (SAST)",
+        "Fuzzing / Dynamic Security Testing (DAST)"
+      ]
+    },
+    {
+      "name": "Cloud & CI/CD Security",
+      "keywords": [
+        "AWS",
+        "Terraform",
+        "GitHub Actions CI/CD",
+        "OIDC / IAM",
+        "Container Security"
       ]
     },
     {
@@ -180,6 +191,7 @@
       "name": "Standards & Regulations",
       "keywords": [
         "IEC 81001-5-1",
+        "FDA 524B (premarket cybersecurity)",
         "FDA Premarket Cybersecurity Guidance",
         "ISO 27001 (alignment)",
         "NIS2 (alignment)"

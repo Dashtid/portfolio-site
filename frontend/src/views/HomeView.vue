@@ -75,6 +75,12 @@
               >
                 GitHub
               </a>
+              <router-link
+                to="/cv"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+              >
+                View CV
+              </router-link>
             </div>
 
             <!-- D3-CNT-03 proof row, retyped into the HERO-01 layout -->
@@ -620,7 +626,7 @@
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-6 md:mb-8">
             <h2 class="section-title text-title font-semibold text-slate-900 dark:text-white">
-              Academic Work
+              Research &amp; Publications
             </h2>
           </header>
           <div
@@ -651,7 +657,7 @@
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-6 md:mb-8">
             <h2 class="section-title text-title font-semibold text-slate-900 dark:text-white">
-              Projects
+              Security Tooling &amp; Projects
             </h2>
           </header>
 
@@ -672,7 +678,7 @@
         <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           <header class="mb-6 md:mb-8">
             <h2 class="section-title text-title font-semibold text-slate-900 dark:text-white">
-              Open Source
+              Open-Source Security Contributions
             </h2>
             <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">
               Merged upstream contributions — supply-chain tooling, DICOM infrastructure, and
@@ -766,8 +772,8 @@
               <p
                 class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >
-                Product security specialist for medical software. I build security into medical
-                devices from design through premarket submission.
+                Product and application security for regulated medical software. I build security
+                into medical devices from design through premarket submission.
               </p>
               <p class="mt-5 leading-relaxed">
                 I'm a biomedical engineer working as a QA/RA &amp; Security Specialist at Hermes
@@ -791,7 +797,7 @@
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Premarket cybersecurity for medical software (FDA, IEC 81001-5-1)
+                    Premarket cybersecurity for medical software (FDA 524B, IEC 81001-5-1)
                   </li>
                   <li class="flex gap-3 leading-relaxed">
                     <span
@@ -820,8 +826,8 @@
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Deepening cloud &amp; CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC
-                    for regulated software
+                    Application and cloud security — secure SDLC, SAST/SCA and CI/CD hardening
+                    (OIDC/IAM, AWS/Terraform) for regulated software
                   </li>
                 </ul>
               </div>
@@ -968,7 +974,7 @@ import { useHead } from '@unhead/vue'
 import { logger } from '../utils/logger'
 
 useHead({
-  title: 'David Dashti | Product Security for Medical Software',
+  title: 'David Dashti — Product & Application Security | Medical Devices',
   script: [
     {
       type: 'application/ld+json',
@@ -991,7 +997,7 @@ useHead({
     {
       name: 'description',
       content:
-        'Product security specialist for medical software — premarket cybersecurity, security risk management, and regulatory clearance for medical devices and healthcare AI.'
+        'Medical device cybersecurity, application and cloud security in Stockholm — FDA 524B premarket, threat modeling and secure SDLC for regulated medical software.'
     }
   ],
   link: [{ rel: 'canonical', href: 'https://dashti.se/' }]

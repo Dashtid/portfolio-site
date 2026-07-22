@@ -43,16 +43,15 @@ describe('CvView (D3-FEAT-02)', () => {
     expect(html).not.toContain('mailto:')
   })
 
-  it('offers the print-to-PDF path and the machine-readable JSON', async () => {
+  it('offers the machine-readable JSON and no redundant PDF-download button', async () => {
     const wrapper = await createWrapper()
-    // happy-dom ships no window.print — install a fake to observe the call
-    const printSpy = vi.fn()
-    window.print = printSpy
 
-    const button = wrapper.findAll('button').find(b => b.text().includes('Download PDF'))
-    expect(button).toBeDefined()
-    await button?.trigger('click')
-    expect(printSpy).toHaveBeenCalledTimes(1)
+    // Owner decision (Campaign 2026-08): the /cv page IS the full CV, so a
+    // "Download PDF" button is redundant — and no downloadable file is offered
+    // that could carry the personal contact kept off the public variant. The
+    // print stylesheet still handles Ctrl+P for anyone who wants a paper copy.
+    const downloadBtn = wrapper.findAll('button').find(b => b.text().includes('Download'))
+    expect(downloadBtn).toBeUndefined()
 
     const jsonLink = wrapper.findAll('a').find(a => a.attributes('href') === '/cv.json')
     expect(jsonLink).toBeDefined()

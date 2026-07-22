@@ -39,13 +39,6 @@
               </p>
             </div>
             <div class="flex gap-2 print:hidden">
-              <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
-                @click="printCv"
-              >
-                Download PDF
-              </button>
               <a
                 href="/cv.json"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
@@ -268,10 +261,10 @@ const visibleWork = computed(() =>
 )
 
 const CV_DESCRIPTION =
-  'CV of David Dashti — product security for regulated medical software: threat modeling, FDA premarket cybersecurity, IEC 81001-5-1, SBOM and vulnerability management.'
+  'CV of David Dashti — product, application and cloud security for medical devices, Stockholm: FDA 524B premarket, threat modeling, SBOM and secure SDLC.'
 
 useHead({
-  title: 'CV — David Dashti | Product Security for Medical Software',
+  title: 'CV — David Dashti | Product & Application Security',
   meta: [
     { name: 'description', content: CV_DESCRIPTION },
     // Full og/twitter override set: any key left unset here keeps the
@@ -313,10 +306,6 @@ onUnmounted(() => {
   window.removeEventListener('beforeprint', forceLightForPrint)
   window.removeEventListener('afterprint', restoreThemeAfterPrint)
 })
-
-const printCv = (): void => {
-  window.print()
-}
 
 const formatYm = (ym: string): string => {
   const [year, month] = ym.split('-')
