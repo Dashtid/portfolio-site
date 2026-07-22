@@ -57,6 +57,19 @@
           <p class="mt-6 max-w-2xl leading-relaxed text-slate-600 dark:text-slate-300">
             {{ resume.basics.summary }}
           </p>
+          <!-- Forward-looking defensive-first framing (no offensive-cert
+               target): Security+ is the earned credential in Certificates;
+               this line states the direction. -->
+          <div v-if="resume.basics.focus" class="mt-4">
+            <p
+              class="font-mono text-xs uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400"
+            >
+              Current focus
+            </p>
+            <p class="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {{ resume.basics.focus }}
+            </p>
+          </div>
         </header>
 
         <!-- Experience -->
@@ -225,6 +238,7 @@ interface Resume {
     name: string
     label: string
     summary: string
+    focus?: string
     location: { city: string; countryCode: string }
   }
   work: WorkEntry[]

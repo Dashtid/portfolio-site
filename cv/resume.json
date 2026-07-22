@@ -8,6 +8,7 @@
     "phone": "",
     "url": "https://dashti.se",
     "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
+    "focus": "Cloud & CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC for regulated software",
     "location": {
       "city": "Stockholm",
       "countryCode": "SE",
@@ -148,7 +149,7 @@
       "name": "Cybersecurity Fundamentals (Course)",
       "date": "2024-12",
       "issuer": "Företagsuniversitetet",
-      "url": "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourseselect-title-4436/"
+      "url": "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/"
     }
   ],
   "skills": [

@@ -115,14 +115,6 @@ async def cleanup_database():
                     "id": 7,  # Foretagsuniversitetet cert
                     "logo_url": "/images/foretagsuniversitet.png",
                 },
-                {
-                    "id": 8,  # Microsoft AZ-500
-                    "logo_url": "/images/microsoft.png",
-                },
-                {
-                    "id": 9,  # EC-Council CEH
-                    "logo_url": "/images/ec-council.png",
-                },
             ]
 
             for update_data in education_updates:
@@ -161,7 +153,6 @@ async def cleanup_database():
                 "594eb414-c835-491b-9adc-88335918d3cd",  # Biomedical AI
                 "71526f9f-feb6-49de-8769-1e9ed188127c",  # Sysadmin Toolkit
                 "4b8a8c04-6c9a-4d83-9656-f5c8e2eca90c",  # Defensive Toolkit
-                "c7ed2cc5-40a3-4f15-9609-cd8f3ce31e9f",  # Offensive Toolkit
                 "9730820d-4c11-4ca6-bc66-6991f8e516c0",  # Portfolio Site
             ]
             for project_id in project_image_fixes:

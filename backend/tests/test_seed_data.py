@@ -156,12 +156,15 @@ class TestSeedEducation:
 
     @pytest.mark.asyncio
     async def test_seed_education_creates_correct_count(self, db_session):
-        """Test that seed_education creates exactly 6 education records."""
+        """Test that seed_education creates exactly 4 education records."""
         await seed_education(db_session)
 
         result = await db_session.execute(select(Education))
         education_items = result.scalars().all()
-        assert len(education_items) == 6
+        # Two degrees (KTH, Lund) + one course + the one earned cert
+        # (Security+). No unearned/offensive certs (CEH, AZ-500, ISO 27001
+        # Lead Implementer) are seeded — defensive-first public brand.
+        assert len(education_items) == 4
 
     @pytest.mark.asyncio
     async def test_seed_education_has_required_fields(self, db_session):
@@ -245,7 +248,7 @@ class TestSeedDataIntegration:
         assert len(companies) == 8
         assert len(projects) == 5
         assert len(skills) == 20
-        assert len(education) == 6
+        assert len(education) == 4
 
     @pytest.mark.asyncio
     async def test_reseed_after_clear(self, db_session):
@@ -304,7 +307,7 @@ class TestSeedDataMain:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
             assert len((await session.execute(select(Project))).scalars().all()) == 5
             assert len((await session.execute(select(Skill))).scalars().all()) == 20
-            assert len((await session.execute(select(Education))).scalars().all()) == 6
+            assert len((await session.execute(select(Education))).scalars().all()) == 4
 
     @pytest.mark.asyncio
     async def test_main_rolls_back_on_seed_failure(self, monkeypatch):

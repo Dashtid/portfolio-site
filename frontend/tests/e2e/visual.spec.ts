@@ -214,10 +214,10 @@ const FIXTURE_GITHUB_STATS = {
   ],
   featured_repos: [
     {
-      name: 'offensive-toolkit',
+      name: 'subvectors',
       description:
-        'Offensive security toolkit for authorized penetration testing and defensive research.',
-      html_url: 'https://github.com/Dashtid/offensive-toolkit',
+        'GitHub Actions → AWS OIDC trust-policy scanner: catches over-broad CI/CD cloud access in a pull request.',
+      html_url: 'https://github.com/Dashtid/subvectors',
       language: 'Python',
       stars: 12,
       forks: 3

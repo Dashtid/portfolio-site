@@ -437,39 +437,24 @@ async def seed_education(session: AsyncSession):
             "order_index": 2,
         },
         {
+            # Honestly labelled as a course (is_certification=False): a
+            # completed short course, not a professional certification.
             "institution": "Företagsuniversitetet",
-            "degree": "Certified ISO 27001 Lead Implementer",
-            "field_of_study": "Information Security Management",
-            "start_date": datetime(2023, 3, 1),
-            "end_date": datetime(2023, 3, 5),
+            "degree": "Cybersecurity Fundamentals (Course)",
+            "field_of_study": "Information Security",
+            "start_date": datetime(2024, 10, 1),
+            "end_date": datetime(2024, 12, 31),
             "location": "Stockholm, Sweden",
-            "description": "Intensive certification program for implementing and managing ISO 27001 ISMS.",
-            "is_certification": True,
+            "description": "Course covering core information-security concepts and defensive practices.",
+            "is_certification": False,
+            "certificate_url": "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&lang=en",
             "order_index": 3,
         },
         {
-            "institution": "Microsoft",
-            "degree": "Azure Security Engineer Associate (AZ-500)",
-            "field_of_study": "Cloud Security",
-            "start_date": datetime(2023, 6, 1),
-            "end_date": datetime(2023, 6, 30),
-            "location": "Online",
-            "description": "Azure security services, identity management, and compliance features.",
-            "is_certification": True,
-            "order_index": 4,
-        },
-        {
-            "institution": "EC-Council",
-            "degree": "Certified Ethical Hacker (CEH)",
-            "field_of_study": "Cybersecurity",
-            "start_date": datetime(2022, 10, 1),
-            "end_date": datetime(2022, 10, 31),
-            "location": "Online",
-            "description": "Ethical hacking methodologies, penetration testing, and vulnerability assessment.",
-            "is_certification": True,
-            "order_index": 5,
-        },
-        {
+            # The one earned professional certification. Everything else on
+            # this list is a degree or a course — no unearned or offensive
+            # (CEH/pentest) certs are advertised; the public brand is
+            # defensive-first product security for regulated medtech.
             "institution": "CompTIA",
             "degree": "Security+ Certification",
             "field_of_study": "Cybersecurity",
@@ -479,7 +464,7 @@ async def seed_education(session: AsyncSession):
             "description": "Industry-standard certification covering network security, threats, vulnerabilities, and risk management.",
             "is_certification": True,
             "certificate_url": "https://www.credly.com/badges/450d4dcd-e24c-4906-98b9-2ebb792f9462/public_url",
-            "order_index": 6,
+            "order_index": 4,
         },
     ]
 

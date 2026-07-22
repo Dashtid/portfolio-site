@@ -529,84 +529,26 @@
                   <h3
                     class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
                   >
-                    Microsoft
-                  </h3>
-                  <p
-                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                  >
-                    Jun 2023
-                  </p>
-                </header>
-                <p
-                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
-                >
-                  Azure Security Engineer Associate (AZ-500)
-                </p>
-                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                  Cloud Security
-                </p>
-                <p
-                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
-                >
-                  Azure security services, identity management, and compliance features.
-                </p>
-              </article>
-              <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-surface-1 dark:hover:border-primary-400/40 dark:hover:bg-surface-2"
-              >
-                <header>
-                  <h3
-                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
-                  >
                     Företagsuniversitetet
                   </h3>
                   <p
                     class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Mar 2023
+                    Dec 2024
                   </p>
                 </header>
                 <p
                   class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
-                  Certified ISO 27001 Lead Implementer
+                  Cybersecurity Fundamentals (Course)
                 </p>
                 <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                  Information Security Management
+                  Information Security
                 </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Intensive certification program for implementing and managing ISO 27001 ISMS.
-                </p>
-              </article>
-              <article
-                class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-surface-1 dark:hover:border-primary-400/40 dark:hover:bg-surface-2"
-              >
-                <header>
-                  <h3
-                    class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
-                  >
-                    EC-Council
-                  </h3>
-                  <p
-                    class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                  >
-                    Oct 2022
-                  </p>
-                </header>
-                <p
-                  class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
-                >
-                  Certified Ethical Hacker (CEH)
-                </p>
-                <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                  Cybersecurity
-                </p>
-                <p
-                  class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
-                >
-                  Ethical hacking methodologies, penetration testing, and vulnerability assessment.
+                  Course covering core information-security concepts and defensive practices.
                 </p>
               </article>
               <article
@@ -872,6 +814,14 @@
                     ></span>
                     Securing the AI now entering medical devices — an early EU AI Act gap analysis,
                     underway
+                  </li>
+                  <li class="flex gap-3 leading-relaxed">
+                    <span
+                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
+                      aria-hidden="true"
+                    ></span>
+                    Deepening cloud &amp; CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC
+                    for regulated software
                   </li>
                 </ul>
               </div>
