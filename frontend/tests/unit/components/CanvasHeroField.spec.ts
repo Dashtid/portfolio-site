@@ -86,6 +86,7 @@ describe('CanvasHeroField', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('renders a decorative canvas (aria-hidden, pointer-events handled in CSS)', () => {
@@ -124,20 +125,34 @@ describe('CanvasHeroField', () => {
     w2.unmount()
   })
 
-  it('starts the animation loop in motion mode and cancels it on unmount', () => {
+  it('defers the loop to browser idle, then starts it and cancels on unmount', () => {
     setReducedMotion(false)
-    let scheduled = 0
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => {
-      scheduled += 1
-      return scheduled
+    // D4-PERF: the loop is gated behind requestIdleCallback so it never
+    // competes with hydration on first load. Drive idle synchronously to
+    // keep the assertion deterministic.
+    const idleCallbacks: Array<() => void> = []
+    vi.stubGlobal('requestIdleCallback', (cb: () => void): number => {
+      idleCallbacks.push(cb)
+      return idleCallbacks.length
     })
+    const cancelIdleSpy = vi.fn()
+    vi.stubGlobal('cancelIdleCallback', cancelIdleSpy)
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 1)
     const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame')
 
     const wrapper = mount(CanvasHeroField)
+    // Nothing scheduled yet — still waiting for the browser to go idle.
+    expect(rafSpy).not.toHaveBeenCalled()
+    expect(idleCallbacks).toHaveLength(1)
+
+    // Browser goes idle → the loop starts.
+    idleCallbacks.forEach(cb => cb())
     expect(rafSpy).toHaveBeenCalled()
 
     wrapper.unmount()
     expect(cancelSpy).toHaveBeenCalled()
+    // The idle handle is released on teardown too.
+    expect(cancelIdleSpy).toHaveBeenCalled()
   })
 
   it('survives a null 2D context without throwing', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseFrontmatter, writingPosts, findPost } from '@/data/writing'
+import { parseFrontmatter, writingPosts, findPost, findPostBody } from '@/data/writing'
 
 describe('writing content pipeline (D3-FEAT-03)', () => {
   describe('parseFrontmatter', () => {
@@ -46,6 +46,28 @@ describe('writing content pipeline (D3-FEAT-03)', () => {
 
     it('findPost returns undefined for unknown slugs', () => {
       expect(findPost('does-not-exist')).toBeUndefined()
+    })
+
+    it('keeps article bodies as raw markdown, not pre-rendered HTML (D4-PERF split)', () => {
+      // The homepage and /writing index import writingPosts (metadata only);
+      // bodies stay RAW markdown and are rendered lazily in the article view
+      // via renderMarkdown — that separation is what keeps `marked` off the
+      // eager homepage chunk. writingPosts is empty until the first article
+      // ships, so a value check on the list is vacuous; this pins the split at
+      // the parse layer (the same buildPosts path) instead.
+      const { meta, body } = parseFrontmatter(
+        '---\ntitle: T\ndate: 2026-01-01\n---\n\n## Heading\n\n**bold** body.'
+      )
+      expect(meta.title).toBe('T')
+      // The body the data module carries is unrendered markdown syntax, with
+      // no HTML tags — rendering happens only in renderMarkdown().
+      expect(body).toContain('## Heading')
+      expect(body).toContain('**bold**')
+      expect(body).not.toMatch(/<[a-z]/i)
+    })
+
+    it('findPostBody returns undefined for unknown slugs', () => {
+      expect(findPostBody('does-not-exist')).toBeUndefined()
     })
   })
 })

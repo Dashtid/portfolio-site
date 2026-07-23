@@ -451,6 +451,16 @@ export default defineConfig({
           if (id.includes('node_modules/axios')) {
             return 'axios'
           }
+          // marked (markdown renderer) — its own chunk so it does NOT glue
+          // into the eager `vendor` chunk below. Its only importer is
+          // data/renderMarkdown.ts, pulled in by the lazy WritingArticleView
+          // route, so this chunk loads with an article page instead of on
+          // the homepage (D4-PERF). Without this branch the node_modules
+          // catch-all sends marked to `vendor`, which App.vue makes eager
+          // via its synchronous @unhead/vue import.
+          if (id.includes('node_modules/marked')) {
+            return 'marked'
+          }
           // Other node_modules
           if (id.includes('node_modules')) {
             return 'vendor'

@@ -44,6 +44,11 @@ let rafId = 0
 let running = false
 let inViewport = true
 let reducedMotion = false
+// D4-PERF: the animation loop stays gated until the browser goes idle after
+// mount, so requestAnimationFrame never competes with hydration on first
+// load (the static t=0 frame is already painted synchronously in resize()).
+let ready = false
+let cancelDeferredStart: (() => void) | null = null
 let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 
@@ -135,7 +140,7 @@ const frame = (t: number): void => {
 }
 
 const startLoop = (): void => {
-  if (running || reducedMotion) return
+  if (running || reducedMotion || !ready) return
   running = true
   rafId = requestAnimationFrame(frame)
 }
@@ -186,11 +191,27 @@ onMounted(() => {
       })
       intersectionObserver.observe(canvasRef.value)
     }
-    startLoop()
+    // D4-PERF: hold the loop until the browser is idle after mount so it
+    // yields to hydration; the observer callbacks above may fire first but
+    // startLoop() no-ops while `ready` is false, then updateRunState() kicks
+    // it off here if the field is on-screen. Falls back to a short timeout
+    // where requestIdleCallback is unavailable (older Safari).
+    const beginAnimation = (): void => {
+      ready = true
+      updateRunState()
+    }
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(beginAnimation, { timeout: 500 })
+      cancelDeferredStart = () => window.cancelIdleCallback(handle)
+    } else {
+      const handle = window.setTimeout(beginAnimation, 200)
+      cancelDeferredStart = () => window.clearTimeout(handle)
+    }
   }
 })
 
 onBeforeUnmount(() => {
+  cancelDeferredStart?.()
   stopLoop()
   resizeObserver?.disconnect()
   intersectionObserver?.disconnect()

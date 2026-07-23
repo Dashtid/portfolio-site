@@ -87,9 +87,13 @@
     sans-serif;
   /* D3-DSN-01: Geist Mono leads — the technical-mono idiom (eyebrows,
      dates, tags, section labels) was rendering in whatever system mono
-     the OS had. Self-hosted via @fontsource-variable/geist-mono. */
+     the OS had. Self-hosted via @fontsource-variable/geist-mono.
+     'Geist Mono Fallback' (D4-PERF, declared in style.css) is a
+     metric-matched Courier New that holds the layout during the font swap
+     so above-the-fold mono labels don't reflow. */
   --font-mono:
-    'Geist Mono Variable', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    'Geist Mono Variable', 'Geist Mono Fallback', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono',
+    Consolas, monospace;
 
   /* D3-DSN-01: fluid display steps (Utopia-style, 360->1440px viewport).
      Body sizes stay static by design; only display type scales with the

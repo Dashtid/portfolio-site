@@ -1,5 +1,3 @@
-import { marked } from 'marked'
-
 /**
  * D3-FEAT-03: markdown-driven writing pipeline. Articles live in
  * frontend/content/writing/*.md with a YAML-ish frontmatter block; the
@@ -10,10 +8,16 @@ import { marked } from 'marked'
  * owner approval), so rendering with v-html downstream is trusted-input
  * rendering, not a user-content XSS surface.
  *
- * Bundle note: the eager raw glob inlines full article text into any
- * chunk importing this module (HomeView's Words block included). Fine at
- * a handful of articles; if the archive grows, split meta and body into
- * separate modules and lazy-load bodies in the article view.
+ * Bundle note (D4-PERF): this module is METADATA-ONLY on purpose. The
+ * homepage Words block and the /writing index import `writingPosts` (title
+ * / date / slug), and includedRoutes reads slugs — none need the rendered
+ * HTML. So `marked` (~13KB gzip) lives in data/renderMarkdown.ts, imported
+ * ONLY by the lazy article view, which keeps the renderer off the eager
+ * homepage chunk (it used to ride the eager `vendor` chunk via App.vue's
+ * synchronous @unhead/vue import — see vite.config manualChunks 'marked').
+ * Raw bodies are exposed through findPostBody() for that view. Bodies still
+ * inline here via the eager glob; fine at a handful of articles (currently
+ * zero — content/writing holds only README.md).
  */
 
 export interface WritingPost {
@@ -24,7 +28,6 @@ export interface WritingPost {
   date: string
   /** Canonical URL override for cross-posted pieces; null = self-canonical */
   canonical: string | null
-  html: string
 }
 
 const rawModules = import.meta.glob('../../content/writing/*.md', {
@@ -62,8 +65,13 @@ export function parseFrontmatter(text: string): Frontmatter {
   return { meta, body }
 }
 
-const buildPosts = (): WritingPost[] => {
-  const posts: WritingPost[] = []
+interface BuiltPost extends WritingPost {
+  /** Raw markdown body, rendered lazily by the article view (D4-PERF). */
+  body: string
+}
+
+const buildPosts = (): BuiltPost[] => {
+  const posts: BuiltPost[] = []
   for (const [path, raw] of Object.entries(rawModules)) {
     const { meta, body } = parseFrontmatter(raw)
     // Non-article files (README) and unapproved drafts never publish
@@ -77,13 +85,30 @@ const buildPosts = (): WritingPost[] => {
       description: meta.description ?? '',
       date: meta.date,
       canonical: meta.canonical || null,
-      html: marked.parse(body, { async: false })
+      body
     })
   }
   return posts.sort((a, b) => b.date.localeCompare(a.date))
 }
 
-export const writingPosts: WritingPost[] = buildPosts()
+const builtPosts: BuiltPost[] = buildPosts()
+
+/** Public metadata list — carries no body/renderer (keeps `marked` off the
+ *  eager homepage chunk). Imported by HomeView, the /writing index and
+ *  includedRoutes. */
+export const writingPosts: WritingPost[] = builtPosts.map(p => ({
+  slug: p.slug,
+  title: p.title,
+  description: p.description,
+  date: p.date,
+  canonical: p.canonical
+}))
 
 export const findPost = (slug: string): WritingPost | undefined =>
   writingPosts.find(p => p.slug === slug)
+
+/** Raw markdown body for a slug — consumed only by the lazy article view,
+ *  which renders it through renderMarkdown(). Keeping the render step out of
+ *  this module is what lets `marked` land in the article route chunk. */
+export const findPostBody = (slug: string): string | undefined =>
+  builtPosts.find(p => p.slug === slug)?.body

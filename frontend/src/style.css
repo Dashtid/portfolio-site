@@ -43,6 +43,24 @@
   line-gap-override: 0%;
 }
 
+/* D4-PERF: metric-matched local fallback for Geist Mono, so the swap on the
+   above-the-fold mono labels (hero eyebrow + proof row, both wrap on narrow
+   viewports) and the large mono "404" glyph is layout-neutral. Metrics read
+   from the shipped geist-mono-latin woff2: 0.6em advance (monospace), ascent
+   1005, descent 295 per 1000 upm. Courier New is the one monospace present on
+   ~all Windows and macOS at the SAME 0.6em advance, so a single size-adjust
+   (100%) is correct on both platforms; the ascent/descent overrides pin the
+   line box to Geist Mono's metrics. Same override math as the sans face above
+   (ascent 1.005 / size-adjust 1.0 = 100.5%). */
+@font-face {
+  font-family: 'Geist Mono Fallback';
+  src: local('Courier New');
+  size-adjust: 100%;
+  ascent-override: 100.5%;
+  descent-override: 29.5%;
+  line-gap-override: 0%;
+}
+
 @layer base {
   /* No universal margin/padding reset here: Tailwind preflight (also in
      @layer base, emitted later) already zeroes margins/paddings and sets

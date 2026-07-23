@@ -40,9 +40,10 @@
         </header>
 
         <!-- Trusted input: repo-committed, owner-reviewed markdown (see
-             data/writing.ts) -->
+             data/writing.ts). Rendered here (not in the data module) so the
+             `marked` renderer stays in this lazy route's chunk — D4-PERF. -->
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="article-prose mt-8" v-html="post.html"></div>
+        <div class="article-prose mt-8" v-html="html"></div>
 
         <footer class="mt-12 border-t border-slate-200 pt-8 dark:border-slate-800">
           <router-link
@@ -65,10 +66,19 @@ import { useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import NavBar from '@/components/NavBar.vue'
 import FooterSection from '@/components/FooterSection.vue'
-import { findPost } from '@/data/writing'
+import { findPost, findPostBody } from '@/data/writing'
+import { renderMarkdown } from '@/data/renderMarkdown'
 
 const route = useRoute()
 const post = computed(() => findPost(route.params.slug as string))
+
+// Render the raw body lazily (kept out of the data module so `marked` ships
+// in this route's chunk, not on the homepage — D4-PERF). Synchronous, so
+// setup() stays sync as SSG hydration requires.
+const html = computed(() => {
+  const body = findPostBody(route.params.slug as string)
+  return body ? renderMarkdown(body) : ''
+})
 
 const selfUrl = computed(() => `https://dashti.se/writing/${route.params.slug as string}`)
 
