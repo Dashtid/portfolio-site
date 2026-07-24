@@ -267,6 +267,51 @@ describe('ExperienceDetail', () => {
       expect(canonical?.href.value).toBe('https://dashti.se/experience/co-99')
     })
 
+    it('emits an Organization for the employer (and NO Article) once the company loads (D5-SEO)', async () => {
+      mockedApiClient.get.mockResolvedValue({
+        data: {
+          ...baseCompany,
+          name: 'Initech',
+          title: 'Staff Engineer',
+          website: 'https://initech.example',
+          logo_url: 'https://initech.example/logo.png'
+        }
+      })
+      await createWrapper('co-7')
+
+      const headArg = mockedUseHead.mock.calls[0][0] as {
+        script: Array<{ type: string; innerHTML: ComputedRef<string> }>
+      }
+      const graph = JSON.parse(headArg.script[0].innerHTML.value)['@graph'] as Array<
+        Record<string, unknown>
+      >
+      const types = graph.map(n => n['@type'])
+      expect(types).toEqual(expect.arrayContaining(['BreadcrumbList', 'Organization']))
+      // Deliberately NOT an Article — schema.org/Google scope Article to
+      // news/blog content, not employment pages (D5-SEO review).
+      expect(types).not.toContain('Article')
+
+      const org = graph.find(n => n['@type'] === 'Organization') as Record<string, unknown>
+      expect(org.name).toBe('Initech')
+      expect(org.url).toBe('https://initech.example')
+      expect(org.logo).toBe('https://initech.example/logo.png')
+      expect(org['@id']).toBe('https://dashti.se/experience/co-7#organization')
+    })
+
+    it('emits only the BreadcrumbList (no Article) in the 404 state (D5-SEO)', async () => {
+      mockedApiClient.get.mockRejectedValue({ response: { status: 404 } })
+      await createWrapper('missing')
+
+      const headArg = mockedUseHead.mock.calls[0][0] as {
+        script: Array<{ type: string; innerHTML: ComputedRef<string> }>
+      }
+      const graph = JSON.parse(headArg.script[0].innerHTML.value)['@graph'] as Array<
+        Record<string, unknown>
+      >
+      // No Article/Organization is asserted for a role that doesn't exist.
+      expect(graph.map(n => n['@type'])).toEqual(['BreadcrumbList'])
+    })
+
     it('falls back to a generic title before the company resolves', async () => {
       mockedApiClient.get.mockReturnValue(new Promise(() => {}) as never)
       await createWrapper('co-1')

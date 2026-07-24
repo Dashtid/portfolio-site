@@ -461,6 +461,51 @@ const websiteHost = computed(() => {
 
 const canonicalUrl = computed(() => `https://dashti.se/experience/${companyId.value}`)
 
+// D5-SEO: per-experience structured data. The BreadcrumbList (SERP trail,
+// D3-SEO-02) is ALWAYS present; once the company resolves we add an
+// Organization node for the employer — the page's real subject entity — with
+// a stable @id. Deliberately NO Article node: schema.org and Google scope
+// Article to news/blog/sports content, so tagging an employment page Article
+// misrepresents the content (Google's "markup must represent the page" policy)
+// and yields no rich result anyway — pure risk against this change's zero-risk
+// intent. Guarded on company existence so the 404/loading states emit only the
+// breadcrumb.
+const structuredData = computed<Record<string, unknown>>(() => {
+  const graph: Record<string, unknown>[] = [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://dashti.se/' },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Experience',
+          item: 'https://dashti.se/#experience'
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: company.value?.name ?? 'Experience detail',
+          item: canonicalUrl.value
+        }
+      ]
+    }
+  ]
+
+  const c = company.value
+  if (c) {
+    graph.push({
+      '@type': 'Organization',
+      '@id': `${canonicalUrl.value}#organization`,
+      name: c.name,
+      ...(c.website ? { url: c.website } : {}),
+      ...(c.logo_url ? { logo: c.logo_url } : {})
+    })
+  }
+
+  return { '@context': 'https://schema.org', '@graph': graph }
+})
+
 useHead({
   title: pageTitle,
   meta: [
@@ -490,28 +535,9 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      // D3-SEO-02: breadcrumb trail for the detail pages (SERP context)
-      innerHTML: computed(() =>
-        JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://dashti.se/' },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: 'Experience',
-              item: 'https://dashti.se/#experience'
-            },
-            {
-              '@type': 'ListItem',
-              position: 3,
-              name: company.value?.name ?? 'Experience detail',
-              item: canonicalUrl.value
-            }
-          ]
-        })
-      )
+      // D3-SEO-02 breadcrumb + D5-SEO Article/Organization graph — see
+      // structuredData above.
+      innerHTML: computed(() => JSON.stringify(structuredData.value))
     }
   ]
 })
