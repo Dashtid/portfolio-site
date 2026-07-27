@@ -238,7 +238,10 @@ async def migrate_education_data() -> None:
             "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&lang=en",
             None,
         ),
-        "CompTIA": (None, None, 4, None, "Ongoing certification."),
+        # Description deliberately untouched (...): the cert is EARNED
+        # (Jan 2026) — the old "Ongoing certification." copy here once
+        # overwrote the seed's honest description in prod.
+        "CompTIA": (None, None, 4, None, ...),
     }
 
     async with AsyncSessionLocal() as session:
