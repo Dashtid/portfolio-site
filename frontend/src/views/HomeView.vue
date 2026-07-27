@@ -835,8 +835,7 @@
                   Technical skills
                 </p>
                 <p class="mt-4 leading-relaxed">
-                  Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python, Rust and
-                  Git
+                  Windows Server, Unix/Linux, Docker, Kubernetes, PowerShell, Bash, Python and Git
                 </p>
               </div>
               <p class="mt-6 leading-relaxed">
@@ -851,7 +850,7 @@
 
       <!-- Words block (D3-FEAT-03): latest writing, filippo.io-style.
            Hidden until the first article is approved and committed —
-           re-check the band alternation around About/CTA at launch. -->
+           re-check the band alternation around About at launch. -->
       <section
         v-if="writingPosts.length"
         id="writing-latest"
@@ -886,29 +885,6 @@
           >
             All writing
           </router-link>
-        </div>
-      </section>
-
-      <!-- D3-CNT-03: closing CTA band — the page ended on About with no ask -->
-      <section class="bg-slate-50 py-16 dark:bg-surface-1">
-        <div class="mx-auto max-w-3xl px-6 text-center">
-          <h2
-            class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
-          >
-            Working on premarket security for medical software?
-          </h2>
-          <p class="mt-3 text-slate-600 dark:text-slate-300">
-            Let's talk — threat modeling, submissions, secure lifecycle, or all three.
-          </p>
-          <a
-            href="https://www.linkedin.com/in/david-dashti/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
-            @click="trackOutbound('linkedin', 'cta')"
-          >
-            Connect on LinkedIn
-          </a>
         </div>
       </section>
     </main>

@@ -224,10 +224,35 @@
           </div>
         </aside>
 
-        <!-- Main content column. Outcomes lead (the recruiter-facing
-             evidence, D3-UX-03); employer marketing media is demoted to the
-             bottom, below all role content. -->
+        <!-- Main content column. Media leads (owner call 2026-07-27: at the
+             bottom it was easily missed), then Outcomes and the role
+             content. -->
         <div class="mt-12 lg:col-start-1 lg:row-start-2 lg:mt-14">
+          <!-- Media — first in the column so it's seen (owner: "otherwise
+               it is easily missed"). -->
+          <section v-if="company.video_url || company.map_url" class="experience-section mb-12">
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              Media
+            </h2>
+            <div
+              class="mt-4 grid gap-6"
+              :class="company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:max-w-xl'"
+            >
+              <VideoEmbed
+                v-if="company.video_url"
+                :url="company.video_url"
+                :heading="company.video_title || `${company.name} Video`"
+                :title="company.video_title || `${company.name} Video`"
+              />
+              <MapEmbed
+                v-if="company.map_url"
+                :url="company.map_url"
+                :heading="company.map_title || `${company.name} Location`"
+                :title="company.map_title || `${company.name} Location Map`"
+              />
+            </div>
+          </section>
+
           <!-- Outcomes -->
           <section
             v-if="company.outcomes && company.outcomes.length > 0"
@@ -294,31 +319,6 @@
                 {{ responsibility }}
               </li>
             </ul>
-          </section>
-
-          <!-- Media — demoted below all role content (D3-UX-03): employer
-               marketing video and office map are context, not evidence. -->
-          <section v-if="company.video_url || company.map_url" class="experience-section mb-12">
-            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-              Media
-            </h2>
-            <div
-              class="mt-4 grid gap-6"
-              :class="company.video_url && company.map_url ? 'md:grid-cols-2' : 'md:max-w-xl'"
-            >
-              <VideoEmbed
-                v-if="company.video_url"
-                :url="company.video_url"
-                :heading="company.video_title || `${company.name} Video`"
-                :title="company.video_title || `${company.name} Video`"
-              />
-              <MapEmbed
-                v-if="company.map_url"
-                :url="company.map_url"
-                :heading="company.map_title || `${company.name} Location`"
-                :title="company.map_title || `${company.name} Location Map`"
-              />
-            </div>
           </section>
 
           <!-- Back Navigation -->
