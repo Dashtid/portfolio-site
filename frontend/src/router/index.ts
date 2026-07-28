@@ -161,6 +161,15 @@ const scrollMotion = (): ScrollBehavior =>
     ? 'auto'
     : 'smooth'
 
+// A hash from the URL bar can be anything ('#1abc', '#foo[bar') —
+// querySelector throws SyntaxError on such selectors. Sanitize to a safe
+// '#id' selector, or null when the hash can't address an element.
+const safeHashSelector = (hash: string): string | null => {
+  const id = hash.slice(1)
+  if (!id) return null
+  return `#${CSS.escape(id)}`
+}
+
 export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
   if (savedPosition) return savedPosition
   if (to.hash) {
@@ -171,17 +180,36 @@ export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) =
     // shows up (e.g. invalid hash).
     return new Promise(resolve => {
       const start = Date.now()
+      const selector = typeof CSS !== 'undefined' ? safeHashSelector(to.hash) : null
+      // Belt-and-braces: even an escaped selector can be rejected by a
+      // selector engine (happy-dom rejects escapes real browsers accept) —
+      // degrade to the top-of-page fallback instead of throwing.
+      const findTarget = (): Element | null => {
+        if (!selector || typeof document === 'undefined') return null
+        try {
+          return document.querySelector(selector)
+        } catch {
+          return null
+        }
+      }
       const tryResolve = (): void => {
-        if (typeof document !== 'undefined' && document.querySelector(to.hash)) {
-          resolve({ el: to.hash, behavior: scrollMotion(), top: getScrollOffset() })
-        } else if (Date.now() - start < 800) {
+        if (findTarget()) {
+          resolve({ el: selector as string, behavior: scrollMotion(), top: getScrollOffset() })
+        } else if (selector && Date.now() - start < 800) {
           setTimeout(tryResolve, 50)
         } else {
-          resolve({ top: 0, behavior: scrollMotion() })
+          resolve({ top: 0, behavior: 'instant' })
         }
       }
       tryResolve()
     })
   }
-  return { top: 0, behavior: scrollMotion() }
+  // Route changes jump to top INSTANTLY — smooth is for in-page anchors only.
+  // A smooth scroll-to-top here races the page transition and is cancelled by
+  // any wheel/trackpad input mid-animation, landing the new page partway down
+  // with its header half-hidden under the fixed navbar (owner-reported on the
+  // experience pages, 2026-07-28). 'instant' must be EXPLICIT: html has
+  // `scroll-behavior: smooth` (style.css), and an omitted/auto behavior
+  // defers to that CSS, silently re-animating the jump (measured ~700ms).
+  return { top: 0, behavior: 'instant' }
 }
