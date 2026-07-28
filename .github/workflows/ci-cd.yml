@@ -35,12 +35,17 @@ jobs:
         id: filter
         with:
           filters: |
+            # ci-cd.yml is in BOTH filters: a pipeline change must re-validate
+            # (and re-deploy) both sides, otherwise workflow edits ship with
+            # zero validation until the next code commit touches them.
             frontend:
               - 'frontend/**'
               - 'package*.json'
+              - '.github/workflows/ci-cd.yml'
             backend:
               - 'backend/**'
               - 'requirements*.txt'
+              - '.github/workflows/ci-cd.yml'
 
   # Frontend Quality Checks
   frontend-quality:
@@ -287,7 +292,10 @@ jobs:
         uses: trufflesecurity/trufflehog@ef6e76c3c4023279497fab4721ffa071a722fd05 # v3.92.4
         with:
           path: ./
-          base: ${{ github.event.before }}
+          # github.event.before is the all-zeros SHA on force-push and
+          # branch-creation events — an invalid base that errors the diff
+          # scan. Fall back to an empty base (= full scan at head) there.
+          base: ${{ github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '' }}
           head: ${{ github.sha }}
           extra_args: --only-verified
 
@@ -349,14 +357,22 @@ jobs:
   # we just trigger the deploy via CLI.
   deploy-frontend:
     runs-on: ubuntu-latest
-    needs: [changes, frontend-quality, e2e-tests, lighthouse]
+    # deploy-backend is in needs to serialize mixed FE+BE deploys: the SSG
+    # bake fetches the PRODUCTION API at build time, so deploying the
+    # frontend in parallel with a backend rollout can silently bake stale
+    # API data. On frontend-only commits deploy-backend is skipped — the
+    # !cancelled() + explicit result checks below keep this job running
+    # then (a skipped needed job would otherwise skip-cascade this one).
+    needs: [changes, frontend-quality, e2e-tests, lighthouse, deploy-backend]
     if: |
+      !cancelled() &&
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
       needs.changes.outputs.frontend == 'true' &&
       needs.frontend-quality.result == 'success' &&
       needs.e2e-tests.result == 'success' &&
-      needs.lighthouse.result == 'success'
+      needs.lighthouse.result == 'success' &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     timeout-minutes: 10
     environment:
       name: production

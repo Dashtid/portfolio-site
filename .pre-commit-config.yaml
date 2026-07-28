@@ -41,6 +41,14 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
 
+  # GitHub Actions workflow linting — expression typos, invalid needs/refs,
+  # shellcheck on run: blocks. check-yaml above validates YAML syntax only,
+  # not Actions semantics; 6 hand-maintained workflows had zero linting.
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+
   # Frontend: ESLint
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.38.0

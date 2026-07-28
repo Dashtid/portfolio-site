@@ -17,12 +17,25 @@ on:
 
 permissions:
   contents: read
+  # keepalive needs to flip the workflow's enabled bit via the API
+  actions: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # GitHub auto-disables scheduled workflows after 60 days without repo
+      # activity. This is the ONLY uptime alerting — silent disablement means
+      # a repeat of the invisible 21-hour June outage. Same pattern as
+      # db-backup.yml.
+      - name: Keepalive (reset the 60-day auto-disable clock)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT \
+            "repos/${{ github.repository }}/actions/workflows/uptime.yml/enable"
+
       - name: API readiness (hits the database)
         run: |
           curl --silent --show-error --fail \
