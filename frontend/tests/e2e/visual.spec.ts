@@ -39,10 +39,15 @@ const FIXTURE_COMPANIES = [
     end_date: null,
     location: 'Stockholm, Sweden',
     website: 'https://example.com',
-    video_url: null,
-    video_title: null,
-    map_url: null,
-    map_title: null,
+    // Media leads every experience page (owner call, cbc54b8) — the primary
+    // fixture carries BOTH embeds so the baselines cover the two-column
+    // media grid. URLs must satisfy useEmbedValidator (www host + embed
+    // path); the iframe loads themselves are fulfilled blank in
+    // useHermeticHome so third-party player chrome never enters a baseline.
+    video_url: 'https://www.youtube-nocookie.com/embed/fixture-video',
+    video_title: 'Fixture Product Video',
+    map_url: 'https://www.google.com/maps/embed?pb=fixture-location',
+    map_title: 'Fixture HQ Location',
     technologies: ['ISO 27001', 'NIS2', 'DICOM'],
     responsibilities: ['Regulatory compliance', 'Security assessments'],
     // Primary fixture carries outcomes so the baselines cover the D3-UX-03
@@ -65,7 +70,10 @@ const FIXTURE_COMPANIES = [
     end_date: '2024-05-01T00:00:00Z',
     location: 'Stockholm, Sweden',
     website: null,
-    video_url: null,
+    // Video-only (null title exercises the `${name} Video` caption
+    // fallback): pins the single-media md:max-w-xl layout state, which the
+    // two-embed primary fixture cannot reach.
+    video_url: 'https://www.youtube-nocookie.com/embed/fixture-video-2',
     video_title: null,
     map_url: null,
     map_title: null,
@@ -309,6 +317,16 @@ function useHermeticHome() {
       route.fulfill({ json: FIXTURE_GITHUB_STATS })
     )
     await page.route('**/api/v1/analytics/**', route => route.fulfill({ json: { status: 'ok' } }))
+    // The fixture media embeds above resolve to real third-party hosts —
+    // fulfill them with an empty document so the ratio boxes render a
+    // deterministic blank (an abort would paint Chromium's subframe error
+    // page instead; YouTube/Maps chrome is not ours to baseline either way).
+    await page.route('https://www.youtube-nocookie.com/**', route =>
+      route.fulfill({ contentType: 'text/html', body: '' })
+    )
+    await page.route('https://www.google.com/maps/**', route =>
+      route.fulfill({ contentType: 'text/html', body: '' })
+    )
   })
 }
 
@@ -331,12 +349,13 @@ test.describe('Visual Regression Tests', () => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto('/')
       await waitForStableUI(page)
-      // Toggle to dark mode
+      // Toggle to dark mode. Hard visibility assert: an if-visible guard
+      // here silently baselines LIGHT mode as the dark baseline whenever
+      // the toggle goes missing.
       const themeToggle = page.locator('[data-testid="theme-toggle"]')
-      if (await themeToggle.isVisible()) {
-        await themeToggle.click()
-        await page.waitForTimeout(300)
-      }
+      await expect(themeToggle).toBeVisible()
+      await themeToggle.click()
+      await page.waitForTimeout(300)
       // Non-snapshot smoke (D3-TEST-04): the dark motif canvas must be
       // mounted — a regression that silently dropped the field would
       // otherwise just look like a "cleaner" baseline.
@@ -435,13 +454,14 @@ test.describe('Visual Regression Tests', () => {
     test('theme toggle states', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
+      // Hard assert (not if-visible): a missing toggle must fail the test,
+      // not skip both snapshots forever.
       const themeToggle = page.locator('[data-testid="theme-toggle"]')
-      if (await themeToggle.isVisible()) {
-        await expect(themeToggle).toHaveScreenshot('theme-toggle-light.png')
-        await themeToggle.click()
-        await page.waitForTimeout(300)
-        await expect(themeToggle).toHaveScreenshot('theme-toggle-dark.png')
-      }
+      await expect(themeToggle).toBeVisible()
+      await expect(themeToggle).toHaveScreenshot('theme-toggle-light.png')
+      await themeToggle.click()
+      await page.waitForTimeout(300)
+      await expect(themeToggle).toHaveScreenshot('theme-toggle-dark.png')
     })
   })
 
@@ -514,11 +534,12 @@ test.describe('Visual Regression Tests', () => {
     test('experience detail page - dark mode', async ({ page }) => {
       await page.goto(`/experience/${primaryId}`)
       await waitForStableUI(page)
+      // Hard visibility assert — see the hero dark-mode note: an if-visible
+      // guard silently captures light mode as this dark baseline.
       const themeToggle = page.locator('[data-testid="theme-toggle"]')
-      if (await themeToggle.isVisible()) {
-        await themeToggle.click()
-        await page.waitForTimeout(300)
-      }
+      await expect(themeToggle).toBeVisible()
+      await themeToggle.click()
+      await page.waitForTimeout(300)
       await expect(page).toHaveScreenshot('experience-detail-dark.png', { fullPage: true })
     })
   })

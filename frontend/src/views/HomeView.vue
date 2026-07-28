@@ -64,6 +64,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
+                aria-label="Connect on LinkedIn (opens in new tab)"
                 @click="trackOutbound('linkedin', 'hero')"
               >
                 Connect on LinkedIn
@@ -73,6 +74,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary-400/60 hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:border-slate-800 dark:text-slate-200 dark:hover:border-primary-400/40 dark:hover:text-primary-400"
+                aria-label="GitHub profile (opens in new tab)"
                 @click="trackOutbound('github', 'hero')"
               >
                 GitHub
@@ -708,6 +710,9 @@
                   >
                     {{ ossBlurb(pr) }}
                   </span>
+                  <!-- sr-only, NOT aria-label: a label would suppress the
+                       composed repo/number/title/blurb accessible name -->
+                  <span class="sr-only"> (opens in new tab)</span>
                 </span>
                 <span
                   class="flex shrink-0 items-center gap-2 font-mono text-xs text-slate-500 dark:text-slate-400"

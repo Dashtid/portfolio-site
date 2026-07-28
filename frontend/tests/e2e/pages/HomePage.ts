@@ -52,7 +52,10 @@ export class HomePage extends BasePage {
     this.aboutTitle = page.locator('h2:has-text("About")')
 
     this.experienceSection = page.locator('#experience, section:has(h2:text("Experience"))')
-    this.experienceCards = page.locator('#experience .card, [data-testid="experience-card"]')
+    // .experience-card is the class the cards actually carry — the previous
+    // '#experience .card, [data-testid=...]' pair matched NOTHING, which is
+    // why clickExperienceCard sat unused (its guard made the miss silent).
+    this.experienceCards = page.locator('#experience .experience-card')
 
     this.educationSection = page.locator('#education, section:has(h2:text("Education"))')
     this.educationCards = page.locator('#education .card, [data-testid="education-card"]')
@@ -109,13 +112,15 @@ export class HomePage extends BasePage {
   }
 
   /**
-   * Click on an experience card to view details
+   * Click on an experience card to view details. Fails loudly when the
+   * card doesn't exist — a silent no-op here lets the calling test pass
+   * without ever navigating.
    */
   async clickExperienceCard(index: number = 0): Promise<void> {
-    const cards = await this.experienceCards.all()
-    if (cards.length > index) {
-      await cards[index].click()
-    }
+    const card = this.experienceCards.nth(index)
+    await card.scrollIntoViewIfNeeded()
+    await expect(card).toBeVisible()
+    await card.click()
   }
 
   /**
