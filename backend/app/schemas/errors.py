@@ -2,13 +2,21 @@
 Pydantic schemas for frontend error logging
 """
 
+import json
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # Allowed error types - strict validation to prevent abuse
 ErrorType = Literal["error", "unhandledRejection", "vueError", "manual"]
+
+# The endpoint is unauthenticated (rate-limited 30/min), and context lands
+# verbatim in the structured logs — both caps exist to bound attacker-
+# controlled log volume. 5000 bytes mirrors the stack field's budget;
+# legitimate context is small ad-hoc objects from trackError().
+MAX_CONTEXT_KEYS = 10
+MAX_CONTEXT_SERIALIZED_BYTES = 5000
 
 
 class FrontendErrorCreate(BaseModel):
@@ -32,16 +40,34 @@ class FrontendErrorCreate(BaseModel):
     timestamp: str = Field(..., max_length=50, pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
     url: str = Field(..., max_length=1000, pattern=r"^https?://")
     user_agent: str = Field(..., max_length=300, alias="userAgent")
-    context: dict | None = Field(None, description="Additional context (max 10 keys)")
+    context: dict | None = Field(
+        None,
+        description="Additional context (max 10 keys, 5000 serialized bytes)",
+    )
 
+    @field_validator("context")
     @classmethod
-    def model_validate(cls, obj, **kwargs):
-        """Validate context dict size to prevent DoS"""
-        if isinstance(obj, dict) and "context" in obj and obj["context"]:
-            ctx = obj["context"]
-            if isinstance(ctx, dict) and len(ctx) > 10:
-                obj = {**obj, "context": dict(list(ctx.items())[:10])}
-        return super().model_validate(obj, **kwargs)
+    def bound_context(cls, v: dict | None) -> dict | None:
+        """Reject oversized context instead of logging it.
+
+        A field_validator runs inside pydantic-core's body validation —
+        unlike the previous model_validate override, which FastAPI never
+        invoked (and which only trimmed key COUNT, so a single key could
+        still carry megabytes into the logs).
+        """
+        if v is None:
+            return v
+        if len(v) > MAX_CONTEXT_KEYS:
+            raise ValueError(f"context must have at most {MAX_CONTEXT_KEYS} keys")
+        try:
+            serialized = json.dumps(v, ensure_ascii=False)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("context must be JSON-serializable") from exc
+        if len(serialized.encode("utf-8")) > MAX_CONTEXT_SERIALIZED_BYTES:
+            raise ValueError(
+                f"context must serialize to at most {MAX_CONTEXT_SERIALIZED_BYTES} bytes"
+            )
+        return v
 
 
 class FrontendErrorResponse(BaseModel):

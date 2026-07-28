@@ -35,17 +35,21 @@ async def log_frontend_error(
 
     error_id = str(uuid.uuid4())
 
-    # Log the error with structured data
+    # Log the error with structured data. Extra keys must not collide with
+    # LogRecord attributes: 'message', 'filename' and 'lineno' made
+    # Logger.makeRecord raise KeyError, which 500'd this endpoint on EVERY
+    # valid request while all tests mocked the logger (fixed 2026-07-28;
+    # the src_* naming mirrors middleware/error_tracking.py).
     logger.error(
         "Frontend error received",
         extra={
             "error_id": error_id,
             "error_type": error.type,
-            "message": error.message[:500],  # Truncate for log
+            "error_message": error.message[:500],  # Truncate for log
             "url": error.url,
-            "filename": error.filename,
-            "lineno": error.lineno,
-            "colno": error.colno,
+            "src_file": error.filename,
+            "src_line": error.lineno,
+            "src_col": error.colno,
             "component": error.component_name,
             "client_ip": client_ip,
             "user_agent": error.user_agent[:200] if error.user_agent else None,

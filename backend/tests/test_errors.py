@@ -78,6 +78,128 @@ class TestFrontendErrorEndpoint:
             call_kwargs = mock_logger.error.call_args[1]
             assert "context" in call_kwargs.get("extra", {})
 
+    def test_log_frontend_error_real_logger_emits_record(self, client: TestClient):
+        """Success path with the REAL logger — no mock.
+
+        Guards the reserved-LogRecord-key crash: extra keys colliding with
+        LogRecord attributes ('message', 'filename', 'lineno') make
+        Logger.makeRecord raise KeyError, which 500'd this endpoint on
+        every valid request while every other test mocked the logger.
+        """
+        import logging
+
+        from app.api.v1.errors import logger as errors_logger
+
+        records: list[logging.LogRecord] = []
+
+        class _Capture(logging.Handler):
+            def emit(self, record: logging.LogRecord) -> None:
+                records.append(record)
+
+        handler = _Capture()
+        errors_logger.addHandler(handler)
+        try:
+            response = client.post(
+                "/api/v1/errors",
+                json=make_error_data(
+                    filename="main.js",
+                    lineno=42,
+                    colno=7,
+                    context={"component": "RealLoggerTest"},
+                ),
+            )
+        finally:
+            errors_logger.removeHandler(handler)
+
+        assert response.status_code == 200
+        received = [r for r in records if r.getMessage() == "Frontend error received"]
+        assert len(received) == 1
+        # extras land on record.__dict__ (that is how the JSON formatter
+        # scans them too); attribute access would trip mypy's LogRecord stub
+        extras = received[0].__dict__
+        assert extras["error_message"] == "Test error message"
+        assert extras["src_file"] == "main.js"
+        assert extras["src_line"] == 42
+        assert extras["context"] == {"component": "RealLoggerTest"}
+
+    def test_log_frontend_error_explicit_null_context_accepted(self, client: TestClient):
+        """context: null is a realistic frontend payload and must pass."""
+        error_data = make_error_data(context=None)
+
+        with patch("app.api.v1.errors.logger"):
+            response = client.post("/api/v1/errors", json=error_data)
+            assert response.status_code == 200
+
+    def test_context_non_serializable_rejected(self):
+        """Direct model construction with a non-JSON value hits the
+        serializability branch (unreachable over HTTP, where bodies are
+        already JSON)."""
+        import pytest
+        from pydantic import ValidationError
+
+        from app.schemas.errors import FrontendErrorCreate
+
+        data = make_error_data(context={"bad": {1, 2}})
+        with pytest.raises(ValidationError, match="JSON-serializable"):
+            FrontendErrorCreate.model_validate(data)
+
+    def test_log_frontend_error_context_at_key_limit_accepted(self, client: TestClient):
+        """Context with exactly MAX_CONTEXT_KEYS keys passes validation."""
+        error_data = make_error_data(context={f"key_{i}": i for i in range(10)})
+
+        with patch("app.api.v1.errors.logger"):
+            response = client.post("/api/v1/errors", json=error_data)
+            assert response.status_code == 200
+
+    def test_log_frontend_error_context_too_many_keys_rejected(self, client: TestClient):
+        """Context with more than MAX_CONTEXT_KEYS keys is a 422, not silently trimmed.
+
+        The old model_validate override was never invoked by FastAPI's body
+        validation — this asserts the field_validator actually runs in the
+        request path.
+        """
+        error_data = make_error_data(context={f"key_{i}": i for i in range(11)})
+
+        with patch("app.api.v1.errors.logger") as mock_logger:
+            response = client.post("/api/v1/errors", json=error_data)
+
+            assert response.status_code == 422
+            mock_logger.error.assert_not_called()
+
+    def test_log_frontend_error_context_oversized_value_rejected(self, client: TestClient):
+        """A single huge value is rejected by the serialized-size cap.
+
+        This was the actual hole: key-count trimming (even had it run)
+        allowed one key to carry megabytes into the logs, unauthenticated.
+        """
+        error_data = make_error_data(context={"payload": "X" * 6000})
+
+        with patch("app.api.v1.errors.logger") as mock_logger:
+            response = client.post("/api/v1/errors", json=error_data)
+
+            assert response.status_code == 422
+            mock_logger.error.assert_not_called()
+
+    def test_log_frontend_error_context_under_size_cap_accepted(self, client: TestClient):
+        """Context comfortably under the serialized-size cap passes."""
+        error_data = make_error_data(context={"payload": "X" * 4000})
+
+        with patch("app.api.v1.errors.logger"):
+            response = client.post("/api/v1/errors", json=error_data)
+            assert response.status_code == 200
+
+    def test_context_size_cap_counts_utf8_bytes(self):
+        """The cap measures encoded bytes, not characters."""
+        import pytest
+        from pydantic import ValidationError
+
+        from app.schemas.errors import FrontendErrorCreate
+
+        # 2000 three-byte characters -> 6000+ bytes but only ~2000 chars
+        data = make_error_data(context={"payload": "€" * 2000})
+        with pytest.raises(ValidationError, match="at most 5000 bytes"):
+            FrontendErrorCreate.model_validate(data)
+
     def test_log_frontend_error_long_message_truncated(self, client: TestClient):
         """Test that long error messages are truncated in logs."""
         long_message = "X" * 1000  # 1000 character message
@@ -90,7 +212,7 @@ class TestFrontendErrorEndpoint:
             assert response.status_code == 200
             # Check that message was truncated to 500 chars in log
             call_kwargs = mock_logger.error.call_args[1]
-            logged_message = call_kwargs.get("extra", {}).get("message", "")
+            logged_message = call_kwargs.get("extra", {}).get("error_message", "")
             assert len(logged_message) <= 500
 
     def test_log_frontend_error_long_user_agent_truncated(self, client: TestClient):

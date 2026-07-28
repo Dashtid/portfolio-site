@@ -44,6 +44,27 @@ class TestDefaultLimitEnforced:
         assert "Retry-After" in blocked.headers
         assert "Rate limit exceeded" in blocked.json()["detail"]
 
+    def test_undecorated_included_route_enforces_default_limit(self, client: TestClient):
+        """Same 429 demand, but through an include_router route.
+
+        fastapi 0.137+ registers included routers as _IncludedRouter
+        entries without .endpoint; slowapi's middleware then resolves no
+        handler and _should_exempt(None) silently EXEMPTS every /api/v1
+        route from the default limit while '/' (a direct app route, which
+        stays flattened) keeps working — so the test above cannot catch
+        it. This regression drove the fastapi<0.137 cap in pyproject.toml
+        and must fail again if the cap is lifted without a slowapi fix.
+        """
+        limit = int(settings.RATE_LIMIT_DEFAULT.split("/")[0])
+
+        for i in range(limit):
+            response = client.get("/api/v1/health")
+            assert response.status_code == 200, (
+                f"request {i + 1} unexpectedly {response.status_code}"
+            )
+
+        assert client.get("/api/v1/health").status_code == 429
+
     def test_decorated_routes_not_double_counted(self, client: TestClient):
         """A decorator-limited route must be exempt from the default limit.
 

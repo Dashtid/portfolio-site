@@ -142,7 +142,6 @@ async def delete_company(
 
 # NOTE: rebuild_complete_data_temp endpoint has been REMOVED for security reasons.
 # This endpoint allowed database manipulation and should not exist in production.
-# If needed for development, use the migration scripts in the backend directory instead:
-#   - migrate_data.py
-#   - migrate_real_content.py
-#   - populate_experience_details.py
+# Content corrections go through the admin API (partial PUT) or a one-off
+# script against the prod DB; the legacy hardcoded migration scripts were
+# deleted 2026-07-28 after twice overwriting curated prod content.

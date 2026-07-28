@@ -290,9 +290,13 @@ async def cleanup_oauth_states_periodically():
             logger.exception("Error during OAuth state cleanup: %s", e)
 
 
-# Data migrations (company/education/skill content corrections) have been
-# extracted to scripts/migrate_data.py. Run once with:
-#   cd backend && python -m scripts.migrate_data
+# Data migrations (the ~500-line hardcoded content-correction block that
+# once ran in this lifespan) were extracted to scripts/migrate_data.py and
+# later DELETED (2026-07-28): the script was invoked by nothing and its
+# stale hardcoded map twice overwrote curated prod content (the Security+
+# "Ongoing certification." incident, f5cc0df). Schema migrations run via
+# scripts/migrate.py (fly release_command); content edits go through the
+# admin API or one-off fly-ssh scripts.
 
 
 # Validate CSP configuration to prevent dev CSP leaking to production

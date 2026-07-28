@@ -169,7 +169,10 @@ class TestApplicationLifecycle:
 
     def test_app_routes_configured(self):
         """Test that routes are configured."""
-        routes = [route.path for route in app.routes]
+        # starlette 1.x stopped flattening included routers into app.routes;
+        # the _IncludedRouter entries carry no .path, so enumerate only the
+        # direct path-bearing routes.
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
         assert "/" in routes or "/docs" in routes
 
 
