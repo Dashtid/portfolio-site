@@ -446,7 +446,7 @@ async def seed_education(session: AsyncSession):
             "start_date": datetime(2024, 10, 1),
             "end_date": datetime(2024, 12, 31),
             "location": "Stockholm, Sweden",
-            "description": "Course covering core information-security concepts and defensive practices.",
+            "description": "Eight-week YH course covering the threat landscape and cyber kill chain, systematic information security work, incident response and digital forensics, SCADA/ICS security, and secure software development.",
             "is_certification": False,
             "certificate_url": "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&lang=en",
             "order_index": 3,

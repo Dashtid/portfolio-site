@@ -231,12 +231,17 @@ async def migrate_education_data() -> None:
     education_updates = {
         "KTH Royal Institute of Technology": (date(2018, 8, 1), date(2021, 6, 30), 1, None, ...),
         "Lund University": (date(2015, 8, 1), date(2018, 6, 30), 2, None, ...),
+        # Description skip-sentinel (...), like CompTIA below: the prod row
+        # now carries a curated syllabus description (2026-07-28) that a
+        # None here would silently null on any rerun. (The prod institution
+        # was also renamed to the school's real "Företagsuniversitetet",
+        # so this key no longer matches a row at all.)
         "Företagsuniversitet": (
             date(2024, 10, 1),
             date(2024, 12, 31),
             3,
             "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&lang=en",
-            None,
+            ...,
         ),
         # Description deliberately untouched (...): the cert is EARNED
         # (Jan 2026) — the old "Ongoing certification." copy here once

@@ -552,7 +552,9 @@
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Course covering core information-security concepts and defensive practices.
+                  Eight-week YH course covering the threat landscape and cyber kill chain,
+                  systematic information security work, incident response and digital forensics,
+                  SCADA/ICS security, and secure software development.
                 </p>
               </article>
               <article
