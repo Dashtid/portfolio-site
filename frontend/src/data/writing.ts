@@ -14,7 +14,11 @@
  * HTML. So `marked` (~13KB gzip) lives in data/renderMarkdown.ts, imported
  * ONLY by the lazy article view, which keeps the renderer off the eager
  * homepage chunk (it used to ride the eager `vendor` chunk via App.vue's
- * synchronous @unhead/vue import — see vite.config manualChunks 'marked').
+ * synchronous @unhead/vue import). This module separation IS the
+ * enforcement mechanism (custom chunk grouping was removed in the vite-8
+ * sprint — Rolldown default splitting respects the import graph), and
+ * scripts/verify-dist-invariants.mjs fails the build if marked ever
+ * reaches the eager graph again.
  * Raw bodies are exposed through findPostBody() for that view. Bodies still
  * inline here via the eager glob; fine at a handful of articles (currently
  * zero — content/writing holds only README.md).

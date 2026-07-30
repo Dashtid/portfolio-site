@@ -1,4 +1,4 @@
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
+import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router'
 
 /**
  * Shape of the auth store the guard depends on. Decoupled from the
@@ -21,6 +21,9 @@ export type AuthStoreResolver = () => AuthStoreLike | Promise<AuthStoreLike>
 /**
  * Admin auth guard for the Vue Router ``beforeEach`` hook.
  *
+ * Return-style guard (vue-router 5 deprecates the ``next()`` callback):
+ * ``true`` continues the navigation, a route location redirects.
+ *
  * Behaviour:
  *   - Routes flagged ``requiresAuth`` or ``requiresGuest`` trigger an
  *     ``initializeAuth()`` call when the store isn't initialised yet —
@@ -32,22 +35,17 @@ export type AuthStoreResolver = () => AuthStoreLike | Promise<AuthStoreLike>
  *   - ``requiresAuth`` + unauthenticated -> bounce to ``admin-login``.
  *   - ``requiresGuest`` + authenticated -> bounce to ``admin-dashboard``
  *     (so an already-logged-in admin can't land on the login page).
- *   - All other combinations -> ``next()``.
+ *   - All other combinations -> continue (``true``).
  *
  * Extracted from ``main.ts`` for FRONTEND-TESTS-02 so the guard can be
  * exercised in isolation.
  */
 export const createAdminAuthGuard = (resolveAuthStore: AuthStoreResolver) => {
-  return async (
-    to: RouteLocationNormalized,
-    _from: RouteLocationNormalized,
-    next: NavigationGuardNext
-  ): Promise<void> => {
+  return async (to: RouteLocationNormalized): Promise<boolean | RouteLocationRaw> => {
     const needsAuthState = to.matched.some(r => r.meta.requiresAuth || r.meta.requiresGuest)
 
     if (!needsAuthState) {
-      next()
-      return
+      return true
     }
 
     const authStore = await resolveAuthStore()
@@ -60,15 +58,13 @@ export const createAdminAuthGuard = (resolveAuthStore: AuthStoreResolver) => {
     const requiresGuest = to.matched.some(r => r.meta.requiresGuest)
 
     if (requiresAuth && !authStore.isAuthenticated) {
-      next({ name: 'admin-login' })
-      return
+      return { name: 'admin-login' }
     }
 
     if (requiresGuest && authStore.isAuthenticated) {
-      next({ name: 'admin-dashboard' })
-      return
+      return { name: 'admin-dashboard' }
     }
 
-    next()
+    return true
   }
 }

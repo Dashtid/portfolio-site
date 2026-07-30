@@ -1,15 +1,17 @@
 /**
  * Unit tests for the admin router auth guard (FRONTEND-TESTS-02).
  *
- * The guard is wired onto vue-router's `beforeEach` in `main.ts`. Its
- * job is to redirect unauthenticated users away from `requiresAuth`
- * routes, redirect already-authenticated users away from `requiresGuest`
- * routes (so the login page bounces them back to the dashboard), and
- * crucially to SKIP the `/auth/me` lookup on public routes so anonymous
- * visitors don't generate a spurious 401 on every page load.
+ * The guard is wired onto vue-router's `beforeEach` in `main.ts`. It is
+ * a RETURN-style guard (vue-router 5 deprecates the next() callback):
+ * `true` continues, a route location redirects. Its job is to redirect
+ * unauthenticated users away from `requiresAuth` routes, redirect
+ * already-authenticated users away from `requiresGuest` routes (so the
+ * login page bounces them back to the dashboard), and crucially to SKIP
+ * the `/auth/me` lookup on public routes so anonymous visitors don't
+ * generate a spurious 401 on every page load.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
+import { describe, it, expect, vi } from 'vitest'
+import type { RouteLocationNormalized } from 'vue-router'
 import { createAdminAuthGuard, type AuthStoreLike } from '@/router/authGuard'
 
 const route = (overrides: Partial<RouteLocationNormalized> = {}): RouteLocationNormalized => {
@@ -40,37 +42,29 @@ const makeStore = (overrides: Partial<AuthStoreLike> = {}): AuthStoreLike => ({
 })
 
 describe('admin auth guard', () => {
-  let next: NavigationGuardNext
-
-  beforeEach(() => {
-    next = vi.fn() as unknown as NavigationGuardNext
-  })
-
   describe('public routes', () => {
     it('does NOT resolve the auth store on a public route', async () => {
       const resolver = vi.fn().mockResolvedValue(makeStore())
       const guard = createAdminAuthGuard(resolver)
 
-      await guard(route({ path: '/', matched: [matchedRecord({})] }), route(), next)
+      const result = await guard(route({ path: '/', matched: [matchedRecord({})] }))
 
       // The whole point of the early-exit: anonymous visitors must not
       // fire /auth/me on every navigation.
       expect(resolver).not.toHaveBeenCalled()
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
 
     it('skips auth store even when both flags happen to be undefined', async () => {
       const resolver = vi.fn().mockResolvedValue(makeStore())
       const guard = createAdminAuthGuard(resolver)
 
-      await guard(
-        route({ path: '/experience/foo', matched: [matchedRecord({ title: 'Experience' })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/experience/foo', matched: [matchedRecord({ title: 'Experience' })] })
       )
 
       expect(resolver).not.toHaveBeenCalled()
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
   })
 
@@ -79,54 +73,46 @@ describe('admin auth guard', () => {
       const store = makeStore({ isInitialized: true, isAuthenticated: false })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] })
       )
 
-      expect(next).toHaveBeenCalledWith({ name: 'admin-login' })
+      expect(result).toEqual({ name: 'admin-login' })
     })
 
     it('lets authenticated users through', async () => {
       const store = makeStore({ isInitialized: true, isAuthenticated: true })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] })
       )
 
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
 
     it('calls initializeAuth when the store is not yet initialised', async () => {
       const store = makeStore({ isInitialized: false, isAuthenticated: false })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] })
       )
 
       expect(store.initializeAuth).toHaveBeenCalledTimes(1)
-      expect(next).toHaveBeenCalledWith({ name: 'admin-login' })
+      expect(result).toEqual({ name: 'admin-login' })
     })
 
     it('does NOT call initializeAuth when the store is already initialised', async () => {
       const store = makeStore({ isInitialized: true, isAuthenticated: true })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] })
       )
 
       expect(store.initializeAuth).not.toHaveBeenCalled()
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
 
     it('redirects deep-linked unauthenticated users to login (child route inherits parent flag)', async () => {
@@ -134,16 +120,14 @@ describe('admin auth guard', () => {
       const guard = createAdminAuthGuard(() => store)
 
       // /admin/companies inherits requiresAuth via the parent matched record.
-      await guard(
+      const result = await guard(
         route({
           path: '/admin/companies',
           matched: [matchedRecord({ requiresAuth: true }), matchedRecord({})]
-        }),
-        route(),
-        next
+        })
       )
 
-      expect(next).toHaveBeenCalledWith({ name: 'admin-login' })
+      expect(result).toEqual({ name: 'admin-login' })
     })
   })
 
@@ -152,26 +136,22 @@ describe('admin auth guard', () => {
       const store = makeStore({ isInitialized: true, isAuthenticated: true })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin/login', matched: [matchedRecord({ requiresGuest: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin/login', matched: [matchedRecord({ requiresGuest: true })] })
       )
 
-      expect(next).toHaveBeenCalledWith({ name: 'admin-dashboard' })
+      expect(result).toEqual({ name: 'admin-dashboard' })
     })
 
     it('lets unauthenticated users see the login page', async () => {
       const store = makeStore({ isInitialized: true, isAuthenticated: false })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin/login', matched: [matchedRecord({ requiresGuest: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin/login', matched: [matchedRecord({ requiresGuest: true })] })
       )
 
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
 
     it('still initializes auth before deciding (so a logged-in user is detected via cookie)', async () => {
@@ -184,14 +164,12 @@ describe('admin auth guard', () => {
       store.initializeAuth = initWithFlip
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin/login', matched: [matchedRecord({ requiresGuest: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin/login', matched: [matchedRecord({ requiresGuest: true })] })
       )
 
       expect(initWithFlip).toHaveBeenCalledTimes(1)
-      expect(next).toHaveBeenCalledWith({ name: 'admin-dashboard' })
+      expect(result).toEqual({ name: 'admin-dashboard' })
     })
   })
 
@@ -208,27 +186,23 @@ describe('admin auth guard', () => {
         })
       const guard = createAdminAuthGuard(resolver)
 
-      await guard(
-        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] })
       )
 
       expect(resolved).toBe(true)
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
 
     it('accepts a synchronous resolver', async () => {
       const store = makeStore({ isInitialized: true, isAuthenticated: true })
       const guard = createAdminAuthGuard(() => store)
 
-      await guard(
-        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] }),
-        route(),
-        next
+      const result = await guard(
+        route({ path: '/admin', matched: [matchedRecord({ requiresAuth: true })] })
       )
 
-      expect(next).toHaveBeenCalledWith()
+      expect(result).toBe(true)
     })
   })
 })

@@ -31,7 +31,7 @@ export default defineConfig({
     // hardcoded. The static base (home + section anchors) lives in
     // public/sitemap.xml and is copied into dist before this hook runs.
     onFinished() {
-      const distDir = path.resolve(__dirname, 'dist')
+      const distDir = path.resolve(import.meta.dirname, 'dist')
 
       // D3-SEC-03: convert vite-ssg's executable state script into a
       // non-executing JSON data block so script-src needs no per-build
@@ -73,7 +73,7 @@ export default defineConfig({
       // app builds from. The frontmatter parse here is a deliberate tiny
       // duplicate of src/data/writing.ts (this hook runs in node, the
       // data module builds for the app) — keep the two in sync.
-      const writingDir = path.resolve(__dirname, 'content/writing')
+      const writingDir = path.resolve(import.meta.dirname, 'content/writing')
       if (fs.existsSync(writingDir)) {
         const escapeXml = (s: string): string =>
           s
@@ -395,7 +395,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(import.meta.dirname, './src')
     }
   },
   server: {
@@ -408,8 +408,10 @@ export default defineConfig({
     }
   },
   build: {
-    // Production build optimizations
-    target: 'es2015',
+    // Production build optimizations. es2022 (vite 8's default floor is
+    // higher still — baseline-widely-available — but stay explicit so a
+    // future default change can't silently move the target).
+    target: 'es2022',
     outDir: 'dist',
     assetsDir: 'assets',
     // 'hidden': maps generated without sourceMappingURL comments; uploaded
@@ -424,58 +426,38 @@ export default defineConfig({
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info', 'console.debug'],
         passes: 2 // Run compression twice for better results
-      },
-      mangle: {
-        safari10: true // Fix Safari 10+ issues
       }
+      // mangle.safari10 dropped with the es2022 target: Safari 10 cannot
+      // run es2022 output anyway, so the workaround was dead weight.
     },
-    rollupOptions: {
+    // vite 8 (Rolldown): rollupOptions -> rolldownOptions. There is
+    // deliberately NO custom chunk grouping here anymore. On Rolldown
+    // 1.2.1 ANY custom vendor grouping — output.codeSplitting.groups or
+    // the deprecated manualChunks function, with either minifier — emits
+    // an axios-bearing chunk that throws at module scope ("TypeError: e
+    // is not a function": the cross-chunk export helper is consumed
+    // before its chunk initializes), killing the whole eager graph and
+    // the app mount. 100% reproducible via a 6-boot pageerror probe
+    // (see BACKLOG Watching). Rolldown's DEFAULT splitting both works
+    // and preserves the D4-PERF invariant on its own: marked rides the
+    // lazy WritingArticleView chunk (never eager), and the eager total
+    // is ~7KB smaller than the vite-7 build. Trade-off: coarser vendor
+    // cache granularity — reintroduce named groups only after Rolldown
+    // fixes the init-order bug AND the probe passes.
+    rolldownOptions: {
       output: {
-        // Manual chunk splitting for better caching and performance
-        manualChunks: (id: string) => {
-          // Vue ecosystem — note 'node_modules/@vue' also matches @vueuse,
-          // so VueUse deliberately rides in vue-vendor (a separate branch
-          // for it below this one was unreachable dead config, D3-PERF-02).
-          if (id.includes('node_modules/vue') || id.includes('node_modules/@vue')) {
-            return 'vue-vendor'
-          }
-          // Vue Router
-          if (id.includes('node_modules/vue-router')) {
-            return 'vue-vendor'
-          }
-          // Pinia
-          if (id.includes('node_modules/pinia')) {
-            return 'vue-vendor'
-          }
-          // Axios
-          if (id.includes('node_modules/axios')) {
-            return 'axios'
-          }
-          // marked (markdown renderer) — its own chunk so it does NOT glue
-          // into the eager `vendor` chunk below. Its only importer is
-          // data/renderMarkdown.ts, pulled in by the lazy WritingArticleView
-          // route, so this chunk loads with an article page instead of on
-          // the homepage (D4-PERF). Without this branch the node_modules
-          // catch-all sends marked to `vendor`, which App.vue makes eager
-          // via its synchronous @unhead/vue import.
-          if (id.includes('node_modules/marked')) {
-            return 'marked'
-          }
-          // Other node_modules
-          if (id.includes('node_modules')) {
-            return 'vendor'
-          }
-        },
         // Asset naming for cache busting
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: assetInfo => {
-          // Organize assets by type
-          const info = assetInfo.name?.split('.') || []
+          // Organize assets by type. Rolldown deprecates the singular
+          // assetInfo.name in favor of names[] — fall back for safety.
+          const assetName = assetInfo.names?.[0] ?? ''
+          const info = assetName.split('.')
           let extType = info[info.length - 1]
-          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp)$/i.test(assetInfo.name || '')) {
+          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp)$/i.test(assetName)) {
             extType = 'img'
-          } else if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name || '')) {
+          } else if (/\.(woff2?|eot|ttf|otf)$/i.test(assetName)) {
             extType = 'fonts'
           }
           return `assets/${extType}/[name]-[hash].[ext]`
