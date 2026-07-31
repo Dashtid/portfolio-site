@@ -91,7 +91,7 @@ jobs:
         # Reporting nicety must never block the gate (D3-CI-01): a missing
         # summary file killed every frontend PR before Codecov/SSG/artifact.
         continue-on-error: true
-        uses: davelosert/vitest-coverage-report-action@3c50566c523e04813df28de8f7c48dd97d663f1c # v2.11.2
+        uses: davelosert/vitest-coverage-report-action@8b157684c6a6b259b97d45e72b44242865c0f6a5 # v2.12.2
         with:
           working-directory: ./frontend
           # vitest writes to .coverage/ (vitest.config.ts:33), not coverage/.
