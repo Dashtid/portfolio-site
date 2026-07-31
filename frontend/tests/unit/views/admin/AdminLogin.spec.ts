@@ -4,6 +4,13 @@ import { createTestingPinia } from '@pinia/testing'
 import AdminLogin from '@/views/admin/AdminLogin.vue'
 import { useAuthStore } from '@/stores/auth'
 
+// The component reads useRoute().query (the ?oauth=denied cancel notice);
+// specs mount without a router, so serve a controllable route stub.
+const mockRoute = { query: {} as Record<string, string> }
+vi.mock('vue-router', () => ({
+  useRoute: () => mockRoute
+}))
+
 describe('AdminLogin', () => {
   const createWrapper = (options = {}) => {
     return mount(AdminLogin, {
@@ -20,6 +27,23 @@ describe('AdminLogin', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockRoute.query = {}
+  })
+
+  describe('OAuth deny notice', () => {
+    it('is hidden without the oauth=denied query param', () => {
+      const wrapper = createWrapper()
+      expect(wrapper.find('.login-denied').exists()).toBe(false)
+    })
+
+    it('shows the cancelled message when oauth=denied is present', () => {
+      mockRoute.query = { oauth: 'denied' }
+      const wrapper = createWrapper()
+
+      const notice = wrapper.find('.login-denied')
+      expect(notice.exists()).toBe(true)
+      expect(notice.text()).toContain('cancelled')
+    })
   })
 
   describe('Rendering', () => {

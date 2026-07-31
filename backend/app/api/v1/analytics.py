@@ -209,7 +209,9 @@ async def get_analytics_summary(
     outbound_clicks = [
         OutboundClick(
             destination=row.page_path.removeprefix("/event/outbound/"),
-            count=row.count,
+            # _mapping["count"]: attribute access (row.count) shadows
+            # tuple.count in the type stubs and mypy rejects it.
+            count=row._mapping["count"],
         )
         for row in outbound_result.all()
     ]
@@ -254,7 +256,9 @@ async def get_visitor_stats(
         .limit(10)
     )
     top_countries = [
-        TopCountry(country=row.country, count=row.count) for row in countries_result.all()
+        # _mapping["count"]: see the outbound_clicks note above.
+        TopCountry(country=row.country, count=row._mapping["count"])
+        for row in countries_result.all()
     ]
 
     return VisitorStats(

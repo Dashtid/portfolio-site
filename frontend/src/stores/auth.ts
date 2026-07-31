@@ -37,19 +37,6 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // Check if we're returning from OAuth callback and fetch user
-    async initializeFromCallback(): Promise<boolean> {
-      if (window.location.pathname === '/admin') {
-        try {
-          await this.fetchUser()
-          return !!this.user
-        } catch {
-          return false
-        }
-      }
-      return false
-    },
-
     // Fetch current user info (uses HTTP-only cookies automatically)
     async fetchUser(): Promise<void> {
       try {

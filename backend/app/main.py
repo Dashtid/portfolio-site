@@ -176,7 +176,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
             return message
 
         # Reassign the request's receive so handler body reads go through us.
-        request._receive = counting_receive  # type: ignore[attr-defined]
+        request._receive = counting_receive
         response = await call_next(request)
         if oversize:
             return self._oversize_response(max_body_size)
@@ -263,9 +263,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# Background task for periodic OAuth state cleanup
+# Background task for periodic auth-row cleanup
 async def cleanup_oauth_states_periodically():
-    """Periodically clean up expired OAuth states (every 5 minutes)"""
+    """Periodically purge expired OAuth states AND refresh-token rows (every 5 min).
+
+    Refresh tokens: only EXPIRED rows are purged — revoked-but-unexpired
+    rows must survive, they are what makes replay-of-a-rotated-token
+    detection (RFC 6819 §5.2.2.3) work until natural expiry. Before this,
+    the table grew one row per login + one per rotation, forever.
+    """
     # Local imports to avoid circular dependencies (noqa: PLC0415)
     from datetime import datetime  # noqa: PLC0415
 
@@ -273,21 +279,30 @@ async def cleanup_oauth_states_periodically():
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
     from app.models.oauth_state import OAuthState  # noqa: PLC0415
+    from app.models.refresh_token import RefreshToken  # noqa: PLC0415
 
     while True:
         try:
             await asyncio.sleep(300)  # Run every 5 minutes
             async with AsyncSessionLocal() as session:
-                result = await session.execute(
-                    delete(OAuthState).where(OAuthState.expires_at < datetime.now(UTC))
+                now = datetime.now(UTC)
+                states = await session.execute(
+                    delete(OAuthState).where(OAuthState.expires_at < now)
                 )
-                if result.rowcount > 0:  # type: ignore[attr-defined]
+                tokens = await session.execute(
+                    delete(RefreshToken).where(RefreshToken.expires_at < now)
+                )
+                if states.rowcount > 0 or tokens.rowcount > 0:  # type: ignore[attr-defined]
                     await session.commit()
-                    logger.debug("Cleaned up %d expired OAuth states", result.rowcount)  # type: ignore[attr-defined]
+                    logger.debug(
+                        "Auth cleanup: %d expired OAuth states, %d expired refresh tokens",
+                        states.rowcount,  # type: ignore[attr-defined]
+                        tokens.rowcount,  # type: ignore[attr-defined]
+                    )
         except asyncio.CancelledError:
             break
         except Exception as e:
-            logger.exception("Error during OAuth state cleanup: %s", e)
+            logger.exception("Error during auth-row cleanup: %s", e)
 
 
 # Data migrations (the ~500-line hardcoded content-correction block that

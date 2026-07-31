@@ -40,3 +40,22 @@ The live site is **[dashti.se](https://dashti.se)** and the backend API is at
 ## Supported Versions
 
 Only the current `main` branch is supported. Older versions are not patched.
+
+## Accepted Dependency-Audit Residuals
+
+Known `npm audit` findings that are consciously accepted rather than fixed,
+reviewed 2026-07-31:
+
+- **brace-expansion OOM DoS (GHSA-mh99-v99m-4gvg)** in four nested dev-only
+  copies (1.1.18 / 2.1.4) under three chains: `@lhci/cli` → `rimraf`,
+  `@vue/test-utils` → `js-beautify` (glob + editorconfig), and
+  `vite-plugin-pwa` → `workbox-build` → `ejs` → `jake` → `filelist`. The
+  advisory is patched only in 5.0.8+ with no 1.x/2.x backports, so the
+  offered "fix" is a breaking-major downgrade of dev tooling. Exposure: the
+  vulnerable code runs only in local dev / CI / build time against
+  repo-controlled glob patterns — never in the deployed frontend or backend.
+  Re-check when `@lhci/cli`, `js-beautify`, or `workbox-build` move off
+  legacy `minimatch`/`jake` majors.
+
+Everything else reported by `npm audit` at review time was fixed in-range
+(`body-parser`, `fast-uri`, top-level `brace-expansion`).

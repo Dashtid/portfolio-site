@@ -5,6 +5,10 @@
         <h1 class="login-title">Admin Login</h1>
         <p class="login-subtitle">Sign in with your GitHub account to manage your portfolio</p>
 
+        <p v-if="oauthDenied" class="login-denied" role="status">
+          GitHub sign-in was cancelled. You can try again below.
+        </p>
+
         <button class="github-login-button" @click="loginWithGitHub">
           <svg class="github-icon" viewBox="0 0 16 16" fill="currentColor">
             <path
@@ -25,9 +29,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()
+const route = useRoute()
+
+// Set by the backend's OAuth deny redirect (/admin/login?oauth=denied)
+// when the user cancels GitHub's authorization screen.
+const oauthDenied = computed(() => route.query.oauth === 'denied')
 
 const loginWithGitHub = (): void => {
   authStore.loginWithGitHub()
@@ -62,6 +73,17 @@ const loginWithGitHub = (): void => {
   color: var(--color-slate-900);
   text-align: center;
   margin: 0 0 var(--spacing-2);
+}
+
+.login-denied {
+  font-size: var(--font-size-sm);
+  color: var(--color-amber-800, #92400e);
+  background: var(--color-amber-50, #fffbeb);
+  border: 1px solid var(--color-amber-200, #fde68a);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3);
+  text-align: center;
+  margin: 0 0 var(--spacing-4);
 }
 
 .login-subtitle {

@@ -2,7 +2,6 @@
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
-import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ToastContainer.vue'
 import ErrorBoundary from './components/ErrorBoundary.vue'
 // D3-PERF-03: the hero h1 is the LCP element, but Geist's latin woff2 was
@@ -23,8 +22,6 @@ useHead({
   ]
 })
 
-// Store
-const authStore = useAuthStore()
 const route = useRoute()
 
 // Move focus to the incoming page's <main> so screen readers announce the
@@ -43,10 +40,13 @@ const focusMainContent = (): void => {
 // On mount, just remove the loading skeleton. Auth is initialized lazily
 // by the route guard for admin routes only — calling checkAuth here would
 // hit /auth/me on every public page load and surface a 401 in the console
-// for unauthenticated visitors (the dominant case).
+// for unauthenticated visitors (the dominant case). The post-OAuth landing
+// on /admin needs no special casing either: every /admin route is guarded,
+// so the guard's initializeAuth() fetches /auth/me exactly once (the old
+// initializeFromCallback here double-fetched it on every admin entry —
+// it never set isInitialized, so the guard always refetched).
 onMounted((): void => {
   document.getElementById('app-loading')?.remove()
-  authStore.initializeFromCallback()
 })
 </script>
 

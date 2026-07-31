@@ -60,16 +60,35 @@ class TestGitHubCallback:
         assert "Invalid or expired state" in response.json()["detail"]
 
     def test_github_callback_missing_code(self, client: TestClient):
-        """Test callback without code parameter."""
-        response = client.get("/api/v1/auth/github/callback?state=test_state")
+        """Callback without code redirects to the admin entry (not 422)."""
+        response = client.get(
+            "/api/v1/auth/github/callback?state=test_state", follow_redirects=False
+        )
 
-        assert response.status_code == 422
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
 
     def test_github_callback_missing_state(self, client: TestClient):
-        """Test callback without state parameter."""
-        response = client.get("/api/v1/auth/github/callback?code=test_code")
+        """Callback without state redirects to the admin entry (not 422)."""
+        response = client.get("/api/v1/auth/github/callback?code=test_code", follow_redirects=False)
 
-        assert response.status_code == 422
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
+
+    def test_github_callback_user_cancelled(self, client: TestClient):
+        """GitHub's cancel path (error=, no code) gets a human-friendly
+        redirect — this used to surface as a raw 422 JSON blob."""
+        response = client.get(
+            "/api/v1/auth/github/callback?error=access_denied"
+            "&error_description=The+user+has+denied+your+application+access"
+            "&state=test_state",
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
+        # No cookies on the deny path
+        assert "set-cookie" not in response.headers
 
 
 class TestRefreshToken:
@@ -203,24 +222,32 @@ class TestGitHubOAuthCallbackValidation:
         assert response.status_code == 400
 
     def test_callback_requires_both_params(self, client: TestClient):
-        """Test that callback requires both code and state."""
+        """Missing code or state -> 302 back to admin, never a 422 blob."""
         # Missing state
-        response = client.get("/api/v1/auth/github/callback?code=test")
-        assert response.status_code == 422
+        response = client.get("/api/v1/auth/github/callback?code=test", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
 
         # Missing code
-        response = client.get("/api/v1/auth/github/callback?state=test")
-        assert response.status_code == 422
+        response = client.get("/api/v1/auth/github/callback?state=test", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
 
     def test_callback_empty_code(self, client: TestClient):
-        """Test callback with empty code parameter."""
-        response = client.get("/api/v1/auth/github/callback?code=&state=test_state")
-        assert response.status_code in [400, 422]
+        """Empty code is treated as missing -> redirect, no token exchange."""
+        response = client.get(
+            "/api/v1/auth/github/callback?code=&state=test_state", follow_redirects=False
+        )
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
 
     def test_callback_empty_state(self, client: TestClient):
-        """Test callback with empty state parameter."""
-        response = client.get("/api/v1/auth/github/callback?code=test_code&state=")
-        assert response.status_code in [400, 422]
+        """Empty state is treated as missing -> redirect, state never consumed."""
+        response = client.get(
+            "/api/v1/auth/github/callback?code=test_code&state=", follow_redirects=False
+        )
+        assert response.status_code == 302
+        assert response.headers["location"].endswith("/admin/login?oauth=denied")
 
 
 class TestAuthIntegration:

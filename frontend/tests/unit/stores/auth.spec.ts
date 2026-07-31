@@ -93,37 +93,6 @@ describe('Auth Store', () => {
     })
   })
 
-  describe('initializeFromCallback', () => {
-    it('returns false when not on /admin', async () => {
-      window.location.pathname = '/other'
-      const store = useAuthStore()
-      const result = await store.initializeFromCallback()
-      expect(result).toBe(false)
-    })
-
-    it('returns true when user is fetched successfully on /admin', async () => {
-      window.location.pathname = '/admin'
-      const mockUser = { id: '1', username: 'testuser', name: 'Test User' }
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
-
-      const store = useAuthStore()
-      const result = await store.initializeFromCallback()
-
-      expect(result).toBe(true)
-      expect(store.user).toEqual(mockUser)
-    })
-
-    it('returns false when fetchUser fails on /admin', async () => {
-      window.location.pathname = '/admin'
-      vi.mocked(apiClient.get).mockRejectedValue(new Error('Not authenticated'))
-
-      const store = useAuthStore()
-      const result = await store.initializeFromCallback()
-
-      expect(result).toBe(false)
-    })
-  })
-
   describe('fetchUser', () => {
     it('fetches user info via cookies (no body, no header)', async () => {
       const mockUser = { id: '1', username: 'testuser', name: 'Test User' }

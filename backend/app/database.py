@@ -22,7 +22,10 @@ is_postgres = settings.async_database_url.startswith("postgresql")
 # Create async engine with production-ready settings
 # SQLite doesn't support pool_size/max_overflow - must exclude them entirely
 _engine_kwargs: dict = {
-    "echo": settings.DEBUG and getattr(settings, "DEBUG_SQL", False),
+    # SQL echo stays off: the old `getattr(settings, "DEBUG_SQL", False)`
+    # gate was permanently False (Settings never declared DEBUG_SQL and
+    # pydantic ignores undeclared env vars) — flip locally when debugging.
+    "echo": False,
     "future": True,
 }
 

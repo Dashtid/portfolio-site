@@ -43,4 +43,7 @@ class RefreshToken(Base):
         exp = self.expires_at
         if exp.tzinfo is None:
             exp = exp.replace(tzinfo=UTC)
-        return exp <= moment
+        # bool() for mypy: pre-Mapped[] models type this Column[datetime],
+        # so the compare "returns" ColumnElement[bool]; at runtime it's a
+        # plain datetime comparison.
+        return bool(exp <= moment)

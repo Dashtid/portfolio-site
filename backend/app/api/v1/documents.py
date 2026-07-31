@@ -24,6 +24,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -65,6 +66,12 @@ _MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 # predictable and to dodge a path-traversal pattern that splices ``..``
 # or path separators into the upload name.
 _FILENAME_SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _persist_upload(target_path: Path, contents: bytes) -> None:
+    """Sync mkdir + write, run via run_in_threadpool (26MB off the loop)."""
+    _UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    target_path.write_bytes(contents)
 
 
 def _safe_filename(original: str) -> str:
@@ -265,9 +272,10 @@ async def upload_document_file(
     if not unique_name.lower().endswith(".pdf"):
         unique_name = f"{unique_name}.pdf"
 
-    _UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     target_path = _UPLOAD_DIR / unique_name
-    target_path.write_bytes(contents)
+    # Up to 26MB of sync disk I/O — off the event loop (a slow disk write
+    # here used to stall every in-flight request on the single worker).
+    await run_in_threadpool(_persist_upload, target_path, contents)
 
     relative_path = f"documents/{unique_name}"
     public_url = f"/media/{unique_name}"

@@ -24,6 +24,9 @@ from app.models.oauth_state import OAuthState
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.schemas.auth import RefreshSuccess, RefreshTokenRequest, UserResponse
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -174,10 +177,39 @@ async def github_login(request: Request, db: DbSession):
     return RedirectResponse(url=github_auth_url)
 
 
+def _oauth_denied_redirect(error: str | None) -> RedirectResponse:
+    """Back to the login page when the OAuth dance ends without a code.
+
+    Targets /admin/login directly: /admin is auth-gated, so the router
+    guard would bounce an unauthenticated (cancelled) user to the login
+    page anyway — and DROP the query string in the named-route redirect.
+    AdminLogin reads ?oauth=denied and shows a "sign-in was cancelled"
+    notice.
+    """
+    logger.info("OAuth callback without code (error=%s); redirecting to login", error)
+    return RedirectResponse(
+        url=f"{settings.FRONTEND_URL}/admin/login?oauth=denied",
+        status_code=status.HTTP_302_FOUND,
+    )
+
+
 @router.get("/github/callback")
 @limiter.limit(settings.RATE_LIMIT_AUTH)
-async def github_callback(request: Request, code: str, state: str, db: DbSession):
+async def github_callback(
+    request: Request,
+    db: DbSession,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+):
     """Handle GitHub OAuth callback"""
+    # Cancelling GitHub's authorization screen calls back with error=
+    # (e.g. access_denied) and NO code — when code/state were required
+    # params that surfaced as a raw 422 JSON blob. Send the human back to
+    # the admin entry instead; the unused state row expires on its own.
+    if error or not code or not state:
+        return _oauth_denied_redirect(error)
+
     # Get client IP for state verification
     client_ip = get_client_ip(request)
 
@@ -444,7 +476,7 @@ async def refresh_token_endpoint(
         .where(RefreshToken.jti == presented_jti, RefreshToken.revoked_at.is_(None))
         .values(revoked_at=now)
     )
-    if claim.rowcount == 0:
+    if claim.rowcount == 0:  # type: ignore[attr-defined]
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh superseded by a concurrent request",
@@ -478,9 +510,11 @@ async def refresh_token_endpoint(
 async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> None:
     """Mark every non-revoked refresh-token row for this user as revoked.
 
-    Called from the reuse-detection path and from logout. We don't delete
-    rows — keeping them with revoked_at populated lets a future audit
-    trail / sessions admin surface what happened.
+    Called from the reuse-detection path and from logout. Rows are marked,
+    not deleted, so replay of a revoked-but-unexpired token is still
+    detectable; the periodic cleanup task (main.py) purges them once they
+    pass expires_at, so any audit surface built on these rows sees at most
+    REFRESH_TOKEN_EXPIRE_DAYS of history.
     """
     if not user_id:
         return
