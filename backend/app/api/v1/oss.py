@@ -121,10 +121,9 @@ async def get_oss_dashboard(
     last_refresh_at: datetime | None = None
     for row in rows:
         bucket_key = cast("BucketLiteral", row.bucket)
-        synced_at = cast("datetime", row.synced_at)
         buckets[bucket_key].append(_row_to_dto(row))
-        if last_refresh_at is None or synced_at > last_refresh_at:
-            last_refresh_at = synced_at
+        if last_refresh_at is None or row.synced_at > last_refresh_at:
+            last_refresh_at = row.synced_at
 
     buckets["LATER"].extend(_later_items_as_rows())
 

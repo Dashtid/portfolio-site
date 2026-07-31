@@ -27,7 +27,7 @@ import contextlib
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any
 
 from githubkit import GitHub
 from sqlalchemy import delete, select
@@ -287,10 +287,7 @@ class OssSyncService:
         # authored row carries the richer NOW/WAITING signals).
         deduped: dict[str, OssContribution] = {}
         for row in rows:
-            deduped.setdefault(
-                cast("str", row.github_node_id),
-                row,
-            )
+            deduped.setdefault(row.github_node_id, row)
         return list(deduped.values())
 
 

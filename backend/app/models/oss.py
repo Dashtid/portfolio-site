@@ -14,8 +14,10 @@ serve time, never persisted.
 """
 
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String
+from sqlalchemy import Boolean, DateTime, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -32,46 +34,48 @@ class OssContribution(Base):
 
     __tablename__ = "oss_contributions"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # GraphQL Global Node ID — stable across renames and repo transfers.
     # Unique so a future delta-tracking step (v1.3) can address rows by
     # source identity without depending on repo-name string equality.
-    github_node_id = Column(String(64), nullable=False, unique=True, index=True)
+    github_node_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
 
     # "pr" or "issue". Kept short for index density.
-    kind = Column(String(16), nullable=False)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
 
     # e.g. "anchore/syft". Indexed because the UI groups within bucket
     # by repository.
-    repo_name_with_owner = Column(String(255), nullable=False, index=True)
+    repo_name_with_owner: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
-    number = Column(Integer, nullable=False)
-    title = Column(String(500), nullable=False)
-    url = Column(String(500), nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
 
     # Source state from GitHub: OPEN / CLOSED / MERGED.
-    state = Column(String(16), nullable=False)
-    is_draft = Column(Boolean, nullable=False, default=False, server_default="0")
+    state: Mapped[str] = mapped_column(String(16), nullable=False)
+    is_draft: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
 
     # Author login. NULL only when GitHub returns a deleted/ghost user
     # (rare but possible on very old threads).
-    author_login = Column(String(255), nullable=True)
+    author_login: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Classifier output. Indexed because the GET endpoint groups by it.
-    bucket = Column(String(16), nullable=False, index=True)
+    bucket: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
 
     # GitHub timestamps. ``created_at`` is the contribution birth; the
     # dashboard renders "X days since" from ``last_activity_at``.
-    created_at = Column(DateTime(timezone=True), nullable=False)
-    last_activity_at = Column(DateTime(timezone=True), nullable=False)
-    closed_at = Column(DateTime(timezone=True), nullable=True)
-    merged_at = Column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    merged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Our row's last refresh. Only ever stamped at INSERT (via server_default)
     # because oss_sync.refresh() is delete-all + insert-all; no UPDATE path
     # exists, so onupdate=... would be dead code.
-    synced_at = Column(
+    synced_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,

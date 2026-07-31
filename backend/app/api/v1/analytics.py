@@ -134,7 +134,7 @@ async def track_pageview(
         page_path=str(db_pageview.page_path),
         page_title=None,
         referrer=str(db_pageview.referrer) if db_pageview.referrer else None,
-        timestamp=db_pageview.created_at or datetime.now(UTC),  # type: ignore[arg-type]
+        timestamp=db_pageview.created_at or datetime.now(UTC),
     )
 
 

@@ -4,7 +4,10 @@ Document Model
 Represents academic papers, theses, and other downloadable documents.
 """
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from datetime import datetime
+
+from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -29,16 +32,21 @@ class Document(Base):
     __tablename__ = "documents"
 
     # DB-09: PRIMARY KEY already implies an index; index=True dropped.
-    id = Column(String, primary_key=True)
-    title = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
-    document_type = Column(String, nullable=False)  # thesis, paper, report, etc.
-    file_path = Column(String, nullable=False)  # e.g., "documents/bachelor-thesis.pdf"
-    file_size = Column(Integer, nullable=False)  # Size in bytes
-    file_url = Column(String, nullable=False)  # Public download URL
-    published_date = Column(String, nullable=True)  # ISO date string
-    order_index = Column(Integer, default=0, index=True)  # For custom sorting
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # thesis, paper, report, etc.
+    document_type: Mapped[str] = mapped_column(String, nullable=False)
+    # e.g., "documents/bachelor-thesis.pdf"
+    file_path: Mapped[str] = mapped_column(String, nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False)  # Size in bytes
+    file_url: Mapped[str] = mapped_column(String, nullable=False)  # Public download URL
+    published_date: Mapped[str | None] = mapped_column(String, nullable=True)  # ISO date string
+    # For custom sorting
+    order_index: Mapped[int | None] = mapped_column(Integer, default=0, index=True)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     def __repr__(self):
         return f"<Document {self.title} ({self.document_type})>"

@@ -72,7 +72,7 @@
     "globals": "^17.6.0",
     "happy-dom": "^20.8.4",
     "prettier": "^3.8.1",
-    "rollup-plugin-visualizer": "^6.0.5",
+    "rollup-plugin-visualizer": "^7.0.1",
     "terser": "^5.48.0",
     "typescript": "^5.9.3",
     "vite": "^8.2.0",

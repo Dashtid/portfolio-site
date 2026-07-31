@@ -11,7 +11,8 @@ The JWT itself remains the bearer credential, but we now also persist its
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -25,14 +26,20 @@ class RefreshToken(Base):
     # The `jti` claim from the JWT. Url-safe random string. Primary key so
     # an attempted reuse of an already-rotated jti collides at insert and
     # surfaces in logs.
-    jti = Column(String(64), primary_key=True)
-    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    issued_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    jti: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    issued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
     # Non-null timestamp means the token has been used in a rotation OR
     # explicitly revoked. Any subsequent /auth/refresh that decodes to this
     # jti is a replay attempt — see auth.refresh_token_endpoint.
-    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     def is_revoked(self) -> bool:
         return self.revoked_at is not None
@@ -43,7 +50,4 @@ class RefreshToken(Base):
         exp = self.expires_at
         if exp.tzinfo is None:
             exp = exp.replace(tzinfo=UTC)
-        # bool() for mypy: pre-Mapped[] models type this Column[datetime],
-        # so the compare "returns" ColumnElement[bool]; at runtime it's a
-        # plain datetime comparison.
-        return bool(exp <= moment)
+        return exp <= moment

@@ -19,7 +19,10 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  PYTHON_VERSION: '3.13'
+  # Must track backend/Dockerfile's base image: Fly runs whatever the
+  # Dockerfile pins, so testing on a different interpreter than production
+  # ships means the tested and deployed runtimes are simply not the same.
+  PYTHON_VERSION: '3.14'
   NODE_VERSION: '24'
 
 jobs:
@@ -30,8 +33,8 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: filter
         with:
           filters: |
@@ -62,10 +65,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -88,7 +91,7 @@ jobs:
         # Reporting nicety must never block the gate (D3-CI-01): a missing
         # summary file killed every frontend PR before Codecov/SSG/artifact.
         continue-on-error: true
-        uses: davelosert/vitest-coverage-report-action@3c50566c523e04813df28de8f7c48dd97d663f1c # v2
+        uses: davelosert/vitest-coverage-report-action@3c50566c523e04813df28de8f7c48dd97d663f1c # v2.11.2
         with:
           working-directory: ./frontend
           # vitest writes to .coverage/ (vitest.config.ts:33), not coverage/.
@@ -110,7 +113,7 @@ jobs:
         run: npm run build:ssg
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frontend-dist
           path: frontend/dist
@@ -131,10 +134,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -143,7 +146,8 @@ jobs:
       - name: Install dependencies
         # Pip itself is version-pinned so the bootstrap doesn't drift with
         # the runner image. Application deps come from the SHA-pinned
-        # requirements files (see backend/scripts/compile-requirements.sh).
+        # requirements files (regenerate with: uv pip compile pyproject.toml
+        # --output-file requirements.txt --generate-hashes).
         run: |
           python -m pip install --upgrade 'pip==26.1.1'
           pip install --require-hashes -r requirements.txt
@@ -201,13 +205,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install dependencies
         run: npm ci
 
       - name: Download frontend-dist artifact (built by frontend-quality)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: frontend-dist
           path: frontend/dist
@@ -231,7 +235,7 @@ jobs:
           HOME: /root
 
       - name: Upload Playwright test results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: playwright-report
@@ -239,7 +243,7 @@ jobs:
           retention-days: 3
 
       - name: Upload Playwright videos
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: playwright-videos
@@ -256,7 +260,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Trivy CLI
         # Avoids aquasecurity/trivy-action which had a supply chain compromise in March 2026
@@ -283,13 +287,22 @@ jobs:
           trivy fs --severity CRITICAL,HIGH --format sarif --output trivy-results.sarif .
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@d4b3ca9fa7f69d38bfcd667bdc45bc373d16277e # v4
+        uses: github/codeql-action/upload-sarif@f205ea1c3313d32999d8d6a48b4f6530d4437b38 # v4.37.4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
 
+      - name: Verify SHA-pinned actions match their version comments
+        # A pin whose `# vX.Y.Z` comment names a different commit is a false
+        # audit trail, and pinning the tag OBJECT of a moving major alias
+        # (`# v4`) is not a pin at all — upstream re-points the alias and the
+        # object is orphaned. Both shipped here undetected until 2026-07-31.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/verify_action_pins.py
+
       - name: Check for secrets
-        uses: trufflesecurity/trufflehog@ef6e76c3c4023279497fab4721ffa071a722fd05 # v3.92.4
+        uses: trufflesecurity/trufflehog@6f3c981e7b77f235fd2702dd74af25fc4b72bf11 # v3.96.0
         with:
           path: ./
           # github.event.before is the all-zeros SHA on force-push and
@@ -309,13 +322,23 @@ jobs:
       pull-requests: write # the action posts a summary comment on the PR
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Dependency Review
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
+          # TruffleHog is AGPL-3.0 and is INVOKED as a CI scanner, never
+          # linked into or distributed with the frontend or backend, so the
+          # copyleft terms have nothing to attach to. Without this allowance
+          # the deny-list pins the secret scanner at whatever version first
+          # landed: the original pin was grandfathered in (dependency-review
+          # only inspects CHANGED dependencies), so every bump failed the
+          # gate while staying on an ageing scanner passed silently -- the
+          # exact inversion of what the policy is for. See PR #115.
+          allow-dependencies-licenses: >-
+            pkg:githubactions/trufflesecurity/trufflehog
 
   # Lighthouse Performance Audit
   lighthouse:
@@ -326,10 +349,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -344,7 +367,7 @@ jobs:
         run: npm run build:ssg
 
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@512cc908a55bfb0ad231facca52adf3d3a651df4 # v12
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
         with:
           configPath: './.github/lighthouse/lighthouserc.json'
           temporaryPublicStorage: true
@@ -380,10 +403,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -480,7 +503,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # 1.5

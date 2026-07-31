@@ -1,0 +1,87 @@
+# Quarterly restore drill.
+#
+# A backup that has never been restored is a hypothesis, not a backup. Both
+# nightly artifacts (Postgres dump + uploads volume tar) are age-encrypted to
+# a key held OFFLINE by the owner, which means CI structurally cannot verify
+# them end-to-end — the runner has no decryption capability by design. The
+# only honest verification is a human doing a real restore.
+#
+# So this workflow does the one thing automation can do here: it makes the
+# drill impossible to silently skip, by filing a dated checklist issue every
+# quarter. Closing the issue is the record that the drill happened.
+name: Restore Drill
+
+on:
+  schedule:
+    # 09:00 UTC on the 1st of Jan/Apr/Jul/Oct.
+    - cron: '0 9 1 1,4,7,10 *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  file-drill-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Same 60-day auto-disable trap as db-backup.yml — and far worse here,
+      # since this workflow fires only 4 times a year and would cross the
+      # threshold between runs on its own.
+      - name: Keepalive (reset the 60-day auto-disable clock)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT \
+            "repos/${{ github.repository }}/actions/workflows/restore-drill.yml/enable"
+
+      - name: File the drill checklist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          QUARTER="$(date -u +%Y) Q$((($(date -u +%-m) - 1) / 3 + 1))"
+
+          BODY=$(cat <<'EOF'
+          Both nightly backups are encrypted to an offline key, so CI cannot
+          prove they restore. This drill is the proof. Work top to bottom and
+          close this issue when every box is ticked.
+
+          ### 1. Postgres dump
+          - [ ] Download the newest `pg-backup-*` artifact from the DB Backup workflow
+          - [ ] `unzip` it, then `age -d -i age-backup-key.txt portfolio-YYYYMMDD.dump.age > portfolio.dump`
+          - [ ] `pg_restore --list portfolio.dump` lists the expected tables
+          - [ ] Restore into a scratch database and confirm row counts on
+                `companies`, `education`, `skills`, `documents`, `cv_profile`
+          - [ ] Drop the scratch database
+
+          ### 2. Uploads volume
+          - [ ] Download the newest `uploads-backup-*` artifact
+          - [ ] `age -d -i age-backup-key.txt uploads-YYYYMMDD.tar.gz.age > uploads.tar.gz`
+          - [ ] `tar -tzf uploads.tar.gz` lists every PDF currently linked from the site
+          - [ ] Open one extracted PDF and confirm it renders
+
+          ### 3. Cross-check
+          - [ ] Every `documents.file_path` in the restored DB exists in the uploads tar
+                (a DB row pointing at a missing file is the failure mode this pair exists to catch)
+
+          ### 4. Key custody
+          - [ ] The age private key is still readable from the password manager
+          - [ ] Its recipient still matches the one in `db-backup.yml`
+
+          If any step fails, that is a real incident: fix the backup path before
+          closing this issue.
+          EOF
+          )
+
+          gh issue create \
+            --repo "$REPO" \
+            --title "Restore drill — ${QUARTER}" \
+            --label "ops" \
+            --body "$BODY" \
+          || gh issue create \
+            --repo "$REPO" \
+            --title "Restore drill — ${QUARTER}" \
+            --body "$BODY"

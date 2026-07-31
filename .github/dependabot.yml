@@ -12,6 +12,20 @@ updates:
         update-types: ["minor", "patch"]
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # fastapi is CAPPED <0.137 in pyproject.toml. 0.137.0 introduced
+      # _IncludedRouter (lazy include_router), which breaks slowapi's
+      # _find_route_handler — it needs route.endpoint, gets None, and
+      # _should_exempt(None) returns True, so RATE_LIMIT_DEFAULT goes
+      # silently dead on every /api/v1 route. It also regresses
+      # performance.py's _resolve_route_template to per-URL metric keys.
+      # Without this ignore the python-minor group PR regenerates weekly
+      # carrying a version the cap can never accept (see PR #128).
+      # Lift together with the pyproject cap, and only once
+      # test_undecorated_included_route_enforces_default_limit passes —
+      # slowapi 0.1.10 (Jun 2026) still does NOT resolve via scope['route'].
+      - dependency-name: "fastapi"
+        versions: [">=0.137"]
     # D3-CI-02: 7-day cooldown before adopting fresh releases — the window
     # in which hijacked-package incidents are typically caught and yanked.
     # Dependabot security updates bypass cooldown automatically, so known
@@ -31,6 +45,16 @@ updates:
         update-types: ["minor", "patch"]
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # @types/node must track the Node MAJOR we actually build and run on
+      # (ci-cd.yml NODE_VERSION, currently 24). Types from a newer major
+      # describe APIs that do not exist at runtime, so type-check passes and
+      # the call still throws in production — the one failure mode a type
+      # checker is supposed to prevent. Raise this bound in the same commit
+      # that raises NODE_VERSION, never before (see PR #122, which proposed
+      # @types/node 26 against a Node 24 runtime).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7
 

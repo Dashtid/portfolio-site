@@ -17,7 +17,11 @@ Singleton: a single row (id=1). _get_or_create_profile() in the router owns
 that invariant.
 """
 
-from sqlalchemy import JSON, Column, DateTime, Integer, String, Text, func
+from datetime import datetime
+from typing import Any
+
+from sqlalchemy import JSON, DateTime, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
@@ -25,24 +29,25 @@ from app.database import Base
 class CvProfile(Base):
     __tablename__ = "cv_profile"
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Public-safe profile prose (mirrors JSON Resume `basics`). These are the
     # fields with no other DB home; experience/education/skills live in their
     # own tables and are assembled at export time.
-    name = Column(String(200), nullable=False, default="")
-    label = Column(String(300), nullable=False, default="")
-    summary = Column(Text, nullable=False, default="")
-    focus = Column(Text, nullable=False, default="")
-    location_city = Column(String(120), nullable=False, default="")
-    location_region = Column(String(120), nullable=False, default="")
-    location_country = Column(String(2), nullable=False, default="")  # ISO 3166-1 alpha-2
-    url = Column(String(500), nullable=False, default="")
-    linkedin_url = Column(String(500), nullable=False, default="")
-    github_url = Column(String(500), nullable=False, default="")
+    name: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    label: Mapped[str] = mapped_column(String(300), nullable=False, default="")
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    focus: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    location_city: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    location_region: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    # ISO 3166-1 alpha-2
+    location_country: Mapped[str] = mapped_column(String(2), nullable=False, default="")
+    url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    linkedin_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    github_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     # [{"language": "...", "fluency": "..."}] — there is no separate language
     # table; the CV needs only this small flat list.
-    languages = Column(JSON, nullable=False, default=list)
+    languages: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
 
     # Private contact — admin-only. NEVER surfaced on a public serializer, the
     # SSG bundle, or any unauthenticated route. Blank by default and populated
@@ -50,8 +55,10 @@ class CvProfile(Base):
     # are never committed to the repo. personnummer is optional and off by
     # default (data minimisation — modern Swedish CVs omit it, and it is
     # needless identity-theft exposure to store unless an employer requires it).
-    email = Column(String(320), nullable=False, default="")
-    phone = Column(String(64), nullable=False, default="")
-    personnummer = Column(String(64), nullable=False, default="")
+    email: Mapped[str] = mapped_column(String(320), nullable=False, default="")
+    phone: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    personnummer: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

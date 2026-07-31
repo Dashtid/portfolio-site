@@ -104,9 +104,94 @@ jobs:
           ls -la portfolio-*.dump.age
 
       - name: Upload backup artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pg-backup-${{ github.run_id }}
           path: portfolio-*.dump.age
+          retention-days: 30
+          if-no-files-found: error
+
+  # Admin-uploaded PDFs live on the backend's `portfolio_data` Fly volume at
+  # /data/uploads/documents (backend/fly.toml [env] UPLOAD_DIR). They are NOT
+  # in the Postgres dump and NOT in git — the DB only stores the file_path, so
+  # a lost volume means every document link 404s with nothing to restore from.
+  # Fly's 60-day volume snapshots were the only copy until this job.
+  #
+  # Runs independently of the Postgres job: a broken pg proxy must not cost us
+  # the uploads backup, and vice versa.
+  uploads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # 1.5
+
+      - name: Install age
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age
+
+      - name: Archive the uploads volume
+        env:
+          # Scoped to the backend app (the volume's owner), unlike FLY_DB_TOKEN.
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The tar is built in-memory and base64'd on the machine, then framed
+          # between markers: flyctl writes connection banners on the same
+          # channel, so anything unframed would corrupt the archive.
+          REMOTE=$(cat <<'PY'
+          import base64, io, os, sys, tarfile
+          buf = io.BytesIO()
+          with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+              if os.path.isdir("/data/uploads"):
+                  tf.add("/data/uploads", arcname="uploads")
+          sys.stdout.write("-----B64-START-----")
+          sys.stdout.write(base64.b64encode(buf.getvalue()).decode())
+          sys.stdout.write("-----B64-END-----\n")
+          PY
+          )
+          ENCODED=$(printf '%s' "$REMOTE" | base64 -w0)
+          flyctl ssh console -a dashti-portfolio-backend \
+            -C "python -c \"import base64;exec(base64.b64decode('${ENCODED}'))\"" \
+            > raw-output.txt
+
+          # Extract strictly between the markers.
+          sed -n 's/.*-----B64-START-----\(.*\)-----B64-END-----.*/\1/p' \
+            raw-output.txt | tr -d '\r\n' > uploads.b64
+          if [ ! -s uploads.b64 ]; then
+            echo "No framed payload in flyctl output — archive step failed." >&2
+            head -c 2000 raw-output.txt >&2
+            exit 1
+          fi
+          base64 -d uploads.b64 > "uploads-$(date -u +%Y%m%d).tar.gz"
+          rm -f raw-output.txt uploads.b64
+
+          # Prove the archive is readable before it is encrypted; a corrupt
+          # tar that only fails at restore time is worse than no backup.
+          ARCHIVE="$(ls uploads-*.tar.gz)"
+          tar -tzf "$ARCHIVE" > listing.txt
+          COUNT=$(grep -c . listing.txt || true)
+          echo "Archived ${COUNT} entries from /data/uploads:"
+          head -20 listing.txt
+          if [ "$COUNT" -eq 0 ]; then
+            echo "Archive is empty — /data/uploads missing on the machine?" >&2
+            exit 1
+          fi
+
+      - name: Encrypt archive (age, same public-key recipient as the DB dump)
+        run: |
+          set -euo pipefail
+          ARCHIVE="$(ls uploads-*.tar.gz)"
+          age -r age137axkhhga6awtmmpv7lqzkt7fdmlm7pgucqh3rspwysg33whud5skcnkun \
+            -o "${ARCHIVE}.age" "${ARCHIVE}"
+          shred -u uploads-*.tar.gz
+          ls -la uploads-*.tar.gz.age
+
+      - name: Upload uploads artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: uploads-backup-${{ github.run_id }}
+          path: uploads-*.tar.gz.age
           retention-days: 30
           if-no-files-found: error

@@ -1,5 +1,5 @@
 <template>
-  <Teleport to="body">
+  <Teleport v-if="mounted" to="body">
     <div class="toast-container" role="region" aria-label="Notifications" aria-live="polite">
       <TransitionGroup name="toast">
         <div
@@ -32,9 +32,25 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useToast } from '@/composables/useToast'
 
 const { toasts, remove } = useToast()
+
+// Client-only by design. vite-ssg never serializes Teleport payloads, so the
+// prerendered HTML carries an empty teleport anchor while the client renders
+// .toast-container into <body> — Vue logged "Hydration completed but contains
+// mismatches." on every single page load because of it (check-only in prod,
+// but it is the only console error the site emits).
+//
+// Gating the whole Teleport on a post-mount flag makes the first client render
+// identical to the server's, then adds the container once hydration is done.
+// Nothing is lost: toasts are user-action driven and can never need to exist
+// before mount.
+const mounted = ref(false)
+onMounted(() => {
+  mounted.value = true
+})
 </script>
 
 <style scoped>
