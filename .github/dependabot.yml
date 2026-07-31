@@ -55,6 +55,15 @@ updates:
       # @types/node 26 against a Node 24 runtime).
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # @unhead/vue is not ours to bump: vite-ssg 28.3.0 declares
+      # `@unhead/dom ^2.1.2` and `@unhead/vue ^2.1.2` as hard DEPENDENCIES
+      # (not peers), so taking unhead 3 installs a second copy and the head
+      # management the prerender depends on splits across two instances.
+      # Re-check on the next vite-ssg major; verify with
+      # `node -e "console.log(require('vite-ssg/package.json').dependencies)"`
+      # rather than assuming, then lift this. (See PR #133.)
+      - dependency-name: "@unhead/vue"
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7
 
