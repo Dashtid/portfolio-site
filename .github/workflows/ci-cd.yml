@@ -103,7 +103,7 @@ jobs:
       - name: Upload coverage to Codecov
         # vitest writes to .coverage/ (per frontend/vitest.config.ts:33),
         # not coverage/ — keep these in sync if the directory ever moves.
-        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: ./frontend/.coverage/lcov.info
           flags: frontend
@@ -174,7 +174,7 @@ jobs:
           junitxml-path: ./backend/pytest-report.xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: ./backend/coverage.xml
           flags: backend
