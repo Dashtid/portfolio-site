@@ -64,6 +64,16 @@ updates:
       # rather than assuming, then lift this. (See PR #133.)
       - dependency-name: "@unhead/vue"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 (the native/Go port) is blocked by hard evidence, not
+      # assumption (experiment run 2026-08-03): installing typescript@7.0.2
+      # makes vue-tsc crash before checking a single file with
+      # ERR_PACKAGE_PATH_NOT_EXPORTED — TS7 no longer exports ./lib/tsc,
+      # which vue-tsc patches at require-time — and
+      # @typescript-eslint/parser peers ">=4.8.4 <6.1.0". Lift when BOTH
+      # vue-tsc supports TS7 (rerun: npm i --no-save typescript@7 &&
+      # npx vue-tsc --noEmit) and typescript-eslint widens its peer range.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7
 
