@@ -19,16 +19,14 @@ describe('useTheme', () => {
     document.documentElement.removeAttribute('data-theme')
 
     // Reset matchMedia mock
-    window.matchMedia = vi.fn().mockImplementation(
-      (query: string): MockMediaQueryList => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn()
-      })
-    )
+    window.matchMedia = vi.fn().mockImplementation((query: string): MockMediaQueryList => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
   })
 
   it('initializes with default theme', () => {
@@ -113,16 +111,14 @@ describe('useTheme', () => {
 
   it('respects system preference when no stored theme', () => {
     // Mock system prefers dark mode
-    window.matchMedia = vi.fn().mockImplementation(
-      (query: string): MockMediaQueryList => ({
-        matches: query === '(prefers-color-scheme: dark)',
-        media: query,
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn()
-      })
-    )
+    window.matchMedia = vi.fn().mockImplementation((query: string): MockMediaQueryList => ({
+      matches: query === '(prefers-color-scheme: dark)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
 
     const { isDark } = useTheme()
 

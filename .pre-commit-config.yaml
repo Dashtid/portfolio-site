@@ -39,7 +39,7 @@ repos:
       - id: prettier
         files: ^frontend/.*\.(js|ts|vue|json|css|scss|md)$
         additional_dependencies:
-          - prettier@3.6.2
+          - prettier@3.9.6
 
   # GitHub Actions workflow linting — expression typos, invalid needs/refs,
   # shellcheck on run: blocks. check-yaml above validates YAML syntax only,
@@ -62,7 +62,7 @@ repos:
         additional_dependencies:
           - eslint@10.8.0
           - '@eslint/js@10.0.1'
-          - '@typescript-eslint/eslint-plugin@8.64.0'
+          - '@typescript-eslint/eslint-plugin@8.65.0'
           - '@typescript-eslint/parser@8.64.0'
           - eslint-plugin-vue@10.10.0
           - eslint-plugin-prettier@5.5.6
@@ -72,7 +72,7 @@ repos:
 
   # Backend: Ruff (linting and formatting)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.16.0
     hooks:
       # Ruff linter
       - id: ruff
