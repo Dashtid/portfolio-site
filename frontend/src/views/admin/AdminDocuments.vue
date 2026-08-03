@@ -74,8 +74,12 @@
             maxlength="200"
             class="form-input"
             :class="{ 'input-error': formErrors.title }"
+            :aria-invalid="formErrors.title ? true : undefined"
+            :aria-describedby="formErrors.title ? 'doc-title-error' : undefined"
           />
-          <span v-if="formErrors.title" class="error-message">{{ formErrors.title }}</span>
+          <span v-if="formErrors.title" id="doc-title-error" role="alert" class="error-message">{{
+            formErrors.title
+          }}</span>
         </div>
 
         <div class="form-group">
@@ -113,7 +117,7 @@
         </div>
 
         <div class="form-group">
-          <label>PDF File *</label>
+          <label for="doc-file-url">PDF File *</label>
           <!-- The upload happens BEFORE the row is created. On success
                the form's file_url / file_path / file_size fields are
                populated from the server response, which the row then
@@ -121,11 +125,14 @@
                file unless the admin uploads a new one. -->
           <div class="upload-row">
             <input
+              id="doc-file-url"
               ref="fileInput"
               type="file"
               accept="application/pdf"
               :disabled="isUploading"
               class="form-input file-input"
+              :aria-invalid="formErrors.file_url ? true : undefined"
+              :aria-describedby="formErrors.file_url ? 'doc-file-url-error' : undefined"
               @change="handleFileSelect"
             />
             <span v-if="isUploading" class="upload-status">Uploading…</span>
@@ -136,7 +143,13 @@
             </span>
             <span v-else class="upload-hint">Max 25 MB. PDF only.</span>
           </div>
-          <span v-if="formErrors.file_url" class="error-message">{{ formErrors.file_url }}</span>
+          <span
+            v-if="formErrors.file_url"
+            id="doc-file-url-error"
+            role="alert"
+            class="error-message"
+            >{{ formErrors.file_url }}</span
+          >
         </div>
 
         <div class="form-group">

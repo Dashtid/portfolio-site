@@ -58,6 +58,17 @@ describe('AdminFormModal', () => {
     expect(wrapper.emitted('close')).toHaveLength(1)
   })
 
+  it('renders a visible close button that emits close', async () => {
+    const wrapper = mount(AdminFormModal, { props: { open: true, title: 'X' } })
+    const close = wrapper.find('.modal-close')
+    expect(close.exists()).toBe(true)
+    expect(close.attributes('aria-label')).toBe('Close dialog')
+    // type="button" so a click inside a slotted <form> never submits it
+    expect(close.attributes('type')).toBe('button')
+    await close.trigger('click')
+    expect(wrapper.emitted('close')).toHaveLength(1)
+  })
+
   it('applies the maxWidth prop as inline style', () => {
     const wrapper = mount(AdminFormModal, {
       props: { open: true, title: 'X', maxWidth: '720px' }

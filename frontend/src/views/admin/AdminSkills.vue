@@ -80,8 +80,12 @@
             required
             class="form-input"
             :class="{ 'input-error': formErrors.name }"
+            :aria-invalid="formErrors.name ? true : undefined"
+            :aria-describedby="formErrors.name ? 'skill-name-error' : undefined"
           />
-          <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
+          <span v-if="formErrors.name" id="skill-name-error" role="alert" class="error-message">{{
+            formErrors.name
+          }}</span>
         </div>
 
         <div class="form-row">
@@ -102,10 +106,16 @@
               step="0.5"
               class="form-input"
               :class="{ 'input-error': formErrors.years_of_experience }"
+              :aria-invalid="formErrors.years_of_experience ? true : undefined"
+              :aria-describedby="formErrors.years_of_experience ? 'skill-years-error' : undefined"
             />
-            <span v-if="formErrors.years_of_experience" class="error-message">{{
-              formErrors.years_of_experience
-            }}</span>
+            <span
+              v-if="formErrors.years_of_experience"
+              id="skill-years-error"
+              role="alert"
+              class="error-message"
+              >{{ formErrors.years_of_experience }}</span
+            >
           </div>
         </div>
 
@@ -133,10 +143,16 @@
             min="0"
             class="form-input"
             :class="{ 'input-error': formErrors.order_index }"
+            :aria-invalid="formErrors.order_index ? true : undefined"
+            :aria-describedby="formErrors.order_index ? 'skill-order-error' : undefined"
           />
-          <span v-if="formErrors.order_index" class="error-message">{{
-            formErrors.order_index
-          }}</span>
+          <span
+            v-if="formErrors.order_index"
+            id="skill-order-error"
+            role="alert"
+            class="error-message"
+            >{{ formErrors.order_index }}</span
+          >
         </div>
 
         <div

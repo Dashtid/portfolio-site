@@ -72,8 +72,12 @@
             required
             class="form-input"
             :class="{ 'input-error': formErrors.name }"
+            :aria-invalid="formErrors.name ? true : undefined"
+            :aria-describedby="formErrors.name ? 'name-error' : undefined"
           />
-          <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
+          <span v-if="formErrors.name" id="name-error" role="alert" class="error-message">{{
+            formErrors.name
+          }}</span>
         </div>
 
         <div class="form-group">
@@ -84,10 +88,16 @@
             rows="3"
             class="form-textarea"
             :class="{ 'input-error': formErrors.description }"
+            :aria-invalid="formErrors.description ? true : undefined"
+            :aria-describedby="formErrors.description ? 'description-error' : undefined"
           ></textarea>
-          <span v-if="formErrors.description" class="error-message">{{
-            formErrors.description
-          }}</span>
+          <span
+            v-if="formErrors.description"
+            id="description-error"
+            role="alert"
+            class="error-message"
+            >{{ formErrors.description }}</span
+          >
         </div>
 
         <div class="form-group">
@@ -98,10 +108,18 @@
             rows="6"
             class="form-textarea"
             :class="{ 'input-error': formErrors.detailed_description }"
+            :aria-invalid="formErrors.detailed_description ? true : undefined"
+            :aria-describedby="
+              formErrors.detailed_description ? 'detailed_description-error' : undefined
+            "
           ></textarea>
-          <span v-if="formErrors.detailed_description" class="error-message">{{
-            formErrors.detailed_description
-          }}</span>
+          <span
+            v-if="formErrors.detailed_description"
+            id="detailed_description-error"
+            role="alert"
+            class="error-message"
+            >{{ formErrors.detailed_description }}</span
+          >
         </div>
 
         <div class="form-row">
@@ -133,10 +151,16 @@
               type="text"
               class="form-input"
               :class="{ 'input-error': formErrors.video_title }"
+              :aria-invalid="formErrors.video_title ? true : undefined"
+              :aria-describedby="formErrors.video_title ? 'video_title-error' : undefined"
             />
-            <span v-if="formErrors.video_title" class="error-message">{{
-              formErrors.video_title
-            }}</span>
+            <span
+              v-if="formErrors.video_title"
+              id="video_title-error"
+              role="alert"
+              class="error-message"
+              >{{ formErrors.video_title }}</span
+            >
           </div>
         </div>
 
@@ -153,10 +177,16 @@
               type="text"
               class="form-input"
               :class="{ 'input-error': formErrors.map_title }"
+              :aria-invalid="formErrors.map_title ? true : undefined"
+              :aria-describedby="formErrors.map_title ? 'map_title-error' : undefined"
             />
-            <span v-if="formErrors.map_title" class="error-message">{{
-              formErrors.map_title
-            }}</span>
+            <span
+              v-if="formErrors.map_title"
+              id="map_title-error"
+              role="alert"
+              class="error-message"
+              >{{ formErrors.map_title }}</span
+            >
           </div>
         </div>
 

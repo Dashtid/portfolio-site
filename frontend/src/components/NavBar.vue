@@ -227,9 +227,11 @@ const scrollToSection = (sectionId: string): void => {
       element.setAttribute('tabindex', '-1')
     }
     element.focus({ preventScroll: true })
-    // Remove the temporary tabindex to avoid polluting the DOM
     if (!hadTabindex) {
-      element.removeAttribute('tabindex')
+      // Remove the temporary tabindex on BLUR, not synchronously: stripping
+      // tabindex from the currently-focused element blurs it (focus drops to
+      // <body>), which un-did the focus() one line up for its entire life.
+      element.addEventListener('blur', () => element.removeAttribute('tabindex'), { once: true })
     }
   }
 }

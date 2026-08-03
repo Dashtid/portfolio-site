@@ -64,8 +64,12 @@
             required
             class="form-input"
             :class="{ 'input-error': formErrors.name }"
+            :aria-invalid="formErrors.name ? true : undefined"
+            :aria-describedby="formErrors.name ? 'name-error' : undefined"
           />
-          <span v-if="formErrors.name" class="error-message">{{ formErrors.name }}</span>
+          <span v-if="formErrors.name" id="name-error" role="alert" class="error-message">{{
+            formErrors.name
+          }}</span>
         </div>
 
         <div class="form-group">
@@ -77,8 +81,12 @@
             required
             class="form-input"
             :class="{ 'input-error': formErrors.title }"
+            :aria-invalid="formErrors.title ? true : undefined"
+            :aria-describedby="formErrors.title ? 'title-error' : undefined"
           />
-          <span v-if="formErrors.title" class="error-message">{{ formErrors.title }}</span>
+          <span v-if="formErrors.title" id="title-error" role="alert" class="error-message">{{
+            formErrors.title
+          }}</span>
         </div>
 
         <div class="form-row">
@@ -91,10 +99,16 @@
               required
               class="form-input"
               :class="{ 'input-error': formErrors.start_date }"
+              :aria-invalid="formErrors.start_date ? true : undefined"
+              :aria-describedby="formErrors.start_date ? 'start_date-error' : undefined"
             />
-            <span v-if="formErrors.start_date" class="error-message">{{
-              formErrors.start_date
-            }}</span>
+            <span
+              v-if="formErrors.start_date"
+              id="start_date-error"
+              role="alert"
+              class="error-message"
+              >{{ formErrors.start_date }}</span
+            >
           </div>
 
           <div class="form-group">
@@ -105,8 +119,16 @@
               type="date"
               class="form-input"
               :class="{ 'input-error': formErrors.end_date }"
+              :aria-invalid="formErrors.end_date ? true : undefined"
+              :aria-describedby="formErrors.end_date ? 'end_date-error' : undefined"
             />
-            <span v-if="formErrors.end_date" class="error-message">{{ formErrors.end_date }}</span>
+            <span
+              v-if="formErrors.end_date"
+              id="end_date-error"
+              role="alert"
+              class="error-message"
+              >{{ formErrors.end_date }}</span
+            >
           </div>
         </div>
 
@@ -118,8 +140,12 @@
             type="text"
             class="form-input"
             :class="{ 'input-error': formErrors.location }"
+            :aria-invalid="formErrors.location ? true : undefined"
+            :aria-describedby="formErrors.location ? 'location-error' : undefined"
           />
-          <span v-if="formErrors.location" class="error-message">{{ formErrors.location }}</span>
+          <span v-if="formErrors.location" id="location-error" role="alert" class="error-message">{{
+            formErrors.location
+          }}</span>
         </div>
 
         <div class="form-group">
@@ -130,10 +156,16 @@
             rows="4"
             class="form-textarea"
             :class="{ 'input-error': formErrors.description }"
+            :aria-invalid="formErrors.description ? true : undefined"
+            :aria-describedby="formErrors.description ? 'description-error' : undefined"
           ></textarea>
-          <span v-if="formErrors.description" class="error-message">{{
-            formErrors.description
-          }}</span>
+          <span
+            v-if="formErrors.description"
+            id="description-error"
+            role="alert"
+            class="error-message"
+            >{{ formErrors.description }}</span
+          >
         </div>
 
         <div class="form-group">

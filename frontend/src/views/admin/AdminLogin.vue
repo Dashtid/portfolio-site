@@ -1,5 +1,10 @@
 <template>
-  <div class="admin-login">
+  <!-- main#main-content matches the pattern every other routed view uses
+       (HomeView, AdminDashboard): App.vue's skip-link href and its
+       after-enter focus call both target #main-content, so a view without
+       it silently breaks both — and this is the one admin page a keyboard
+       user can reach logged-out. -->
+  <main id="main-content" role="main" tabindex="-1" class="admin-login">
     <div class="login-container">
       <div class="login-card">
         <h1 class="login-title">Admin Login</h1>
@@ -25,7 +30,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">

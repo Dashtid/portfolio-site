@@ -10,8 +10,24 @@
     @keydown.escape="emit('close')"
   >
     <div class="modal-content" :style="{ maxWidth }">
-      <h3 :id="titleId" class="modal-title">{{ title }}</h3>
-      <slot />
+      <!-- Header row stays put while .modal-body scrolls: an absolutely
+           positioned close button would scroll away with the content on
+           forms taller than 90vh, hiding the one visible close affordance
+           exactly when the form is long. Escape and click-outside already
+           work, but both are invisible — a dialog needs a discoverable,
+           focusable close control. The button is the first focusable
+           element in the dialog, so the trap lands on it on open (standard
+           pattern: AT announces the title via aria-labelledby, then
+           "Close dialog, button"). -->
+      <div class="modal-header">
+        <h3 :id="titleId" class="modal-title">{{ title }}</h3>
+        <button class="modal-close" type="button" aria-label="Close dialog" @click="emit('close')">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -73,19 +89,60 @@ watch(
 }
 
 .modal-content {
+  display: flex;
+  flex-direction: column;
   background: white;
   border-radius: var(--radius-lg, 12px);
   padding: var(--spacing-6, 1.5rem);
   width: 100%;
   max-height: 90vh;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+/* The BODY scrolls, not .modal-content — that keeps the header (and its
+   close button) visible on forms taller than 90vh. */
+.modal-body {
   overflow-y: auto;
+}
+
+.modal-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-base, 8px);
+  background: transparent;
+  color: var(--color-slate-500, #64748b);
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: var(--color-slate-100, #f1f5f9);
+  color: var(--color-slate-900, #0f172a);
+}
+
+.modal-close:focus-visible {
+  outline: 3px solid var(--primary-400, #60a5fa);
+  outline-offset: 2px;
 }
 
 .modal-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-slate-900);
-  margin: 0 0 var(--spacing-4);
+  margin: 0; /* spacing owned by .modal-header */
 }
 
 @media (max-width: 640px) {
@@ -103,6 +160,15 @@ watch(
 }
 
 [data-theme='dark'] .modal-title {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme='dark'] .modal-close {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme='dark'] .modal-close:hover {
+  background: var(--color-slate-700, #334155);
   color: var(--text-primary, #f8fafc);
 }
 </style>
