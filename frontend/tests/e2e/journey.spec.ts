@@ -87,4 +87,47 @@ test.describe('Experience Journey', () => {
     await expect(page.locator('#hero')).toBeVisible()
     await expect(page.locator('h1')).not.toHaveText('E2E Fixture Role')
   })
+
+  test('cross-route nav click lands the section flush under the navbar', async ({ page }) => {
+    // Regression guard for useHashAlignment: on /experience/:id -> nav click,
+    // the router scrolls while the home page is still settling (late images,
+    // idle-mounted hero canvas), which left sections 10-60px off the navbar
+    // edge. The composable re-aligns after scroll and layout go quiet.
+    await page.route('**/api/v1/companies/*', route => {
+      const id = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+      return route.fulfill({ json: fixtureCompany(id) })
+    })
+
+    const homePage = new HomePage(page)
+    await homePage.goto()
+    await page.locator('[data-anim]').first().waitFor({ state: 'attached' })
+    await expect(homePage.experienceCards.first().locator('a[href^="/experience/"]')).toBeAttached()
+    await homePage.clickExperienceCard(0)
+    await page.waitForURL(/\/experience\/[^/]+$/)
+
+    await page.getByTestId('nav-link-publications').click()
+    await page.waitForURL(url => new URL(url).pathname === '/')
+
+    // Give the router scroll, the settle detector, and both correction
+    // passes room to finish (second pass fires 1200ms after quiet).
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const nav = document.querySelector('.navbar-custom')
+            const sec = document.getElementById('publications')
+            if (!nav || !sec) return Number.NaN
+            return sec.getBoundingClientRect().top - nav.getBoundingClientRect().bottom
+          }),
+        { timeout: 10000 }
+      )
+      .toBeLessThan(3)
+    const delta = await page.evaluate(() => {
+      const nav = document.querySelector('.navbar-custom')
+      const sec = document.getElementById('publications')
+      if (!nav || !sec) return Number.NaN
+      return sec.getBoundingClientRect().top - nav.getBoundingClientRect().bottom
+    })
+    expect(Math.abs(delta)).toBeLessThan(3)
+  })
 })

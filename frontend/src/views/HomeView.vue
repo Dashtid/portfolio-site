@@ -920,6 +920,7 @@ import GitHubStats from '../components/GitHubStats.vue'
 // so the only gate left is the theme.
 import CanvasHeroField from '../components/CanvasHeroField.vue'
 import { useIntersectionAnimation } from '../composables/useIntersectionAnimation'
+import { useHashAlignment } from '../composables/useHashAlignment'
 import { useTheme } from '../composables/useTheme'
 import { useOutboundTracking } from '../composables/useOutboundTracking'
 import { OSS_BLURBS } from '../data/ossBlurbs'
@@ -1096,6 +1097,12 @@ const projectCardAnimation = useIntersectionAnimation('.project-card', { stagger
 const documentCardAnimation = useIntersectionAnimation('.document-card', { stagger: 0.12 })
 useIntersectionAnimation('.section-title', { stagger: 0 })
 useIntersectionAnimation('.about-block', { stagger: 0.12 })
+
+// Cross-route hash landings (/experience/:id → /#publications) scroll while
+// the page is still settling — late images/canvas above the target shift the
+// layout after the router's scroll, leaving sections 10-60px off the navbar
+// edge. This re-aligns once things go quiet (and yields to any user input).
+useHashAlignment()
 
 // Load data on mount. Portfolio data (documents included, D3-UX-02)
 // normally arrives via __INITIAL_STATE__ (baked by the onServerPrefetch
