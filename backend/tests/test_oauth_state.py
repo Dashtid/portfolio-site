@@ -225,6 +225,63 @@ class TestOAuthStateTtl:
         assert "expired-b-xxxxxxxxxxxx" not in remaining
         assert "fresh-xxxxxxxxxxxxxxxx" in remaining
 
+    def test_periodic_cleanup_prunes_old_page_views(self, client: TestClient):
+        """The sweep also enforces analytics retention.
+
+        page_views is the only table an UNAUTHENTICATED caller can grow, and
+        it had no retention at all -- every beacon since launch stayed
+        resident. Rows past PAGE_VIEW_RETENTION go; recent ones stay.
+        """
+        _ = client
+
+        async def go():
+            from app.main import PAGE_VIEW_RETENTION  # noqa: PLC0415
+            from app.models.analytics import PageView  # noqa: PLC0415
+
+            now = datetime.now(UTC)
+            async with TestSessionLocal() as session:
+                session.add(
+                    PageView(
+                        page_path="/ancient",
+                        session_id="s-old",
+                        created_at=now - PAGE_VIEW_RETENTION - timedelta(days=1),
+                    )
+                )
+                session.add(
+                    PageView(
+                        page_path="/recent",
+                        session_id="s-new",
+                        created_at=now - timedelta(days=1),
+                    )
+                )
+                await session.commit()
+
+            call_count = {"n": 0}
+            real_sleep = asyncio.sleep
+
+            async def fake_sleep(_delay):
+                call_count["n"] += 1
+                if call_count["n"] >= 2:
+                    raise asyncio.CancelledError
+                await real_sleep(0)
+
+            from unittest.mock import patch  # noqa: PLC0415
+
+            with (
+                patch("app.main.asyncio.sleep", fake_sleep),
+                patch("app.database.AsyncSessionLocal", TestSessionLocal),
+                contextlib.suppress(asyncio.CancelledError),
+            ):
+                await cleanup_oauth_states_periodically()
+
+            async with TestSessionLocal() as session:
+                rows = (await session.execute(select(PageView))).scalars().all()
+                return {row.page_path for row in rows}
+
+        remaining = _run(go())
+        assert "/ancient" not in remaining
+        assert "/recent" in remaining
+
     def test_cleanup_loop_exits_on_cancellation(self, client: TestClient):
         """The cleanup loop's ``except CancelledError: break`` is reachable.
 

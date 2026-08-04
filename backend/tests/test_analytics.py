@@ -52,6 +52,51 @@ class TestTrackPageviewEndpoint:
         assert "id" in data
         assert "timestamp" in data
 
+    def test_track_pageview_strips_control_characters(self, client: TestClient):
+        """A JSON-escaped NUL in any stored string field must not reach the DB.
+
+        Postgres text columns cannot store U+0000: asyncpg raised DataError
+        and this UNAUTHENTICATED endpoint returned 500 on live prod for
+        page_path, referrer and visitor_id (verified 2026-08-04). Same class
+        as the length-overflow guard below, missed by it. CR/LF are stripped
+        with the rest of C0 so an attacker cannot forge log lines either.
+        """
+        nul = chr(0)
+        response = client.post(
+            "/api/v1/analytics/track/pageview",
+            json={
+                "page_path": f"/proj{nul}ects",
+                "referrer": f"https://ex.com/{nul}a",
+                "visitor_id": f"vis{nul}itor",
+            },
+            headers={"User-Agent": f"Mozilla{nul}/5.0"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert nul not in data["page_path"]
+        assert data["page_path"] == "/projects"
+        assert data["referrer"] is not None and nul not in data["referrer"]
+        assert nul not in data["visitor_id"]
+
+    def test_track_pageview_strips_crlf_log_injection(self, client: TestClient):
+        """CR/LF in a beacon value must not survive into stored data."""
+        response = client.post(
+            "/api/v1/analytics/track/pageview",
+            json={"page_path": "/a" + chr(13) + chr(10) + "FAKE LOG LINE", "visitor_id": "v1"},
+        )
+        assert response.status_code == 200
+        assert response.json()["page_path"] == "/aFAKE LOG LINE"
+
+    def test_track_pageview_all_control_chars_yields_usable_row(self, client: TestClient):
+        """A path of nothing but control chars scrubs to empty -> falls back
+        to "/" rather than storing an empty string or 500-ing."""
+        response = client.post(
+            "/api/v1/analytics/track/pageview",
+            json={"page_path": chr(0) + chr(1) + chr(31), "visitor_id": "v2"},
+        )
+        assert response.status_code == 200
+        assert response.json()["page_path"] == "/"
+
     def test_track_pageview_truncates_long_values_to_column_width(self, client: TestClient):
         """Long UTM-style paths/referrers (501-2048 chars) are accepted and
         stored truncated to the String(500) columns instead of 500-ing at

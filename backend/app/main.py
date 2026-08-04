@@ -5,7 +5,7 @@ FastAPI main application
 import asyncio
 import contextlib
 from contextlib import asynccontextmanager
-from datetime import UTC
+from datetime import UTC, timedelta
 from pathlib import Path
 
 import sentry_sdk
@@ -55,6 +55,12 @@ from app.services.github_service import github_service
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# How long analytics page views are kept. The dashboard's `days` query
+# param is capped at 365 (app/api/v1/analytics.py), so nothing older is
+# reachable through the UI — keeping it only grows the row the one
+# unauthenticated writer on this API can create.
+PAGE_VIEW_RETENTION = timedelta(days=400)
 
 # Initialize Sentry for error tracking and performance monitoring.
 # We explicitly enumerate integrations rather than relying on Sentry's
@@ -278,6 +284,7 @@ async def cleanup_oauth_states_periodically():
     from sqlalchemy import delete  # noqa: PLC0415
 
     from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.models.analytics import PageView  # noqa: PLC0415
     from app.models.oauth_state import OAuthState  # noqa: PLC0415
     from app.models.refresh_token import RefreshToken  # noqa: PLC0415
 
@@ -292,12 +299,25 @@ async def cleanup_oauth_states_periodically():
                 tokens = await session.execute(
                     delete(RefreshToken).where(RefreshToken.expires_at < now)
                 )
-                if states.rowcount > 0 or tokens.rowcount > 0:  # type: ignore[attr-defined]
+                # page_views is the only table an UNAUTHENTICATED caller can
+                # grow, and it had no retention at all — every beacon since
+                # launch was still resident. The analytics dashboard never
+                # queries beyond 365 days (the `days` param is capped at 365
+                # in analytics.py), so anything older is unreadable weight.
+                views = await session.execute(
+                    delete(PageView).where(PageView.created_at < now - PAGE_VIEW_RETENTION)
+                )
+                if (
+                    states.rowcount > 0  # type: ignore[attr-defined]
+                    or tokens.rowcount > 0  # type: ignore[attr-defined]
+                    or views.rowcount > 0  # type: ignore[attr-defined]
+                ):
                     await session.commit()
                     logger.debug(
-                        "Auth cleanup: %d expired OAuth states, %d expired refresh tokens",
+                        "Cleanup: %d OAuth states, %d refresh tokens, %d page views",
                         states.rowcount,  # type: ignore[attr-defined]
                         tokens.rowcount,  # type: ignore[attr-defined]
+                        views.rowcount,  # type: ignore[attr-defined]
                     )
         except asyncio.CancelledError:
             break

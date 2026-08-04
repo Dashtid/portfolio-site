@@ -42,6 +42,26 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 AdminUser = Annotated[User, Depends(get_current_admin_user)]
 
 
+# C0 control characters (U+0000-U+001F) plus DEL. Postgres text columns
+# cannot store U+0000 at all — asyncpg raises and the request 500s — and
+# CR/LF in a value that later reaches a log line is log injection. Tabs
+# and the rest of C0 carry no meaning in a URL path or a User-Agent, so
+# the whole range goes.
+_CONTROL_CHARS = dict.fromkeys(list(range(0x20)) + [0x7F])
+
+
+def _scrub(value: str | None, limit: int) -> str | None:
+    """Strip control characters and truncate to the column width.
+
+    Returns None for None/empty input so optional columns stay NULL rather
+    than becoming empty strings.
+    """
+    if not value:
+        return None
+    cleaned = value.translate(_CONTROL_CHARS)[:limit]
+    return cleaned or None
+
+
 async def _backfill_country(pageview_id: str, client_ip: str) -> None:
     """Resolve client_ip → country and write it onto the PageView row.
 
@@ -105,11 +125,18 @@ async def track_pageview(
     # turning this unauthenticated beacon into a 500. The UA header is
     # attacker-sized (it bypasses body-size limits and the request
     # schema), so cap it before the unbounded Text column.
-    page_path = page_view.page_path[:500]
-    referrer = page_view.referrer[:500] if page_view.referrer else None
-    user_agent = request.headers.get("User-Agent")
-    if user_agent:
-        user_agent = user_agent[:512]
+    #
+    # _scrub also strips C0 control characters, which is the SAME class of
+    # bug as the length overflow above and was missed by it: Postgres text
+    # columns cannot store U+0000 at all, so a JSON-escaped \u0000 in
+    # page_path/referrer/visitor_id raised DataError and 500'd this
+    # unauthenticated endpoint (verified live, 2026-08-04). Stripping the
+    # whole C0 range also keeps newlines and NULs out of log lines built
+    # from these values — attacker-controlled log injection.
+    page_path = _scrub(page_view.page_path, 500) or "/"
+    referrer = _scrub(page_view.referrer, 500)
+    session_id = _scrub(session_id, 255) or f"anon_{hash_ip(client_ip)}"
+    user_agent = _scrub(request.headers.get("User-Agent"), 512)
 
     db_pageview = PageView(
         page_path=page_path,
