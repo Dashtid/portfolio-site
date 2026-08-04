@@ -2,13 +2,15 @@
 Application configuration using Pydantic Settings
 """
 
+import json
 import logging
 import os
 import warnings
+from typing import Annotated
 from urllib.parse import urlparse
 
 from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # Marker for explicitly allowing insecure development mode
 # Set SECRET_KEY=dev-mode-insecure to explicitly enable insecure development
@@ -96,7 +98,16 @@ class Settings(BaseSettings):
     # CORS - environment-specific origins
     # In production, only production origins are allowed (override via CORS_ORIGINS env var)
     # In development, localhost origins are included
-    CORS_ORIGINS: list = []
+    #
+    # NoDecode is load-bearing, not decoration. Without it pydantic-settings
+    # treats a list-typed field as "complex" and runs json.loads() on the raw
+    # env value BEFORE any validator sees it — so the comma-separated form the
+    # validator below explicitly supports raised SettingsError at import time
+    # and the app refused to boot. That took production down for ~7 minutes on
+    # 2026-08-04 while tightening this very setting. NoDecode hands the raw
+    # string to parse_cors_origins, which accepts comma-separated OR a JSON
+    # array. Keep it if this field is ever retyped.
+    CORS_ORIGINS: Annotated[list, NoDecode] = []
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -104,9 +115,23 @@ class Settings(BaseSettings):
         """Parse and set CORS_ORIGINS based on environment"""
         environment = info.data.get("ENVIRONMENT", "development")
 
-        if isinstance(v, str) and v:
-            # Support comma-separated string from environment
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        if isinstance(v, str) and v.strip():
+            raw = v.strip()
+            # Accept BOTH shapes. The deployed Fly secret is a JSON array
+            # (that is what pydantic-settings required before NoDecode), and
+            # the documented .env form is comma-separated — silently
+            # comma-splitting a JSON array yields origins like '["https://x"'
+            # that match nothing, which fails OPEN-looking (no CORS errors in
+            # CI) but blocks the real site in production.
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                except json.JSONDecodeError as exc:
+                    raise ValueError(f"CORS_ORIGINS looks like JSON but is invalid: {exc}") from exc
+                if not isinstance(parsed, list):
+                    raise ValueError("CORS_ORIGINS JSON must be an array of origin strings")
+                return [str(o).strip() for o in parsed if str(o).strip()]
+            return [origin.strip() for origin in raw.split(",") if origin.strip()]
         if isinstance(v, list) and v:
             return v
 

@@ -28,6 +28,61 @@ class TestSettings:
         # Should be a list (either default or parsed from env)
         assert isinstance(settings.CORS_ORIGINS, list)
 
+    def test_cors_origins_accepts_comma_separated_env(self, monkeypatch):
+        """Comma-separated CORS_ORIGINS must boot.
+
+        Regression guard for a real production outage (2026-08-04): the field
+        was a bare `list`, so pydantic-settings ran json.loads() on the env
+        value BEFORE parse_cors_origins ran. Setting the documented
+        comma-separated form raised SettingsError at import and the app would
+        not start. NoDecode on the field is what makes this pass.
+        """
+        monkeypatch.setenv("CORS_ORIGINS", "https://dashti.se,https://www.dashti.se")
+        settings = Settings()
+        assert settings.CORS_ORIGINS == ["https://dashti.se", "https://www.dashti.se"]
+
+    def test_cors_origins_accepts_json_array_env(self, monkeypatch):
+        """The JSON-array form must ALSO boot — it is what is deployed on Fly.
+
+        With NoDecode the raw string reaches the validator, so a JSON array
+        would be comma-split into '["https://dashti.se"' unless explicitly
+        handled. That fails silently in CI and blocks the real site in prod.
+        """
+        monkeypatch.setenv("CORS_ORIGINS", '["https://dashti.se","https://www.dashti.se"]')
+        settings = Settings()
+        assert settings.CORS_ORIGINS == ["https://dashti.se", "https://www.dashti.se"]
+
+    def test_cors_origins_rejects_malformed_json(self, monkeypatch):
+        """A truncated JSON array fails loudly instead of silently allowing
+        an origin list that matches nothing."""
+        monkeypatch.setenv("CORS_ORIGINS", '["https://dashti.se"')
+        with pytest.raises(ValidationError):
+            Settings()
+
+    def test_cors_origins_production_default_excludes_localhost(self, monkeypatch):
+        """With no override, production must not trust localhost.
+
+        Prod was serving Access-Control-Allow-Origin for http://localhost:3000
+        WITH credentials until 2026-08-04 because a deployed secret overrode
+        this default. The default itself was always correct — assert it stays
+        that way so a future edit cannot quietly reintroduce it.
+        """
+        monkeypatch.delenv("CORS_ORIGINS", raising=False)
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        # ENVIRONMENT=production arms the other fail-closed validators, so
+        # supply values that satisfy them; this test is about CORS only.
+        monkeypatch.setenv("SECRET_KEY", "x" * 48)
+        monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@db.internal:5432/app")
+        monkeypatch.setenv(
+            "GITHUB_REDIRECT_URI", "https://api.dashti.se/api/v1/auth/github/callback"
+        )
+        # _env_file=None ignores the developer's local backend/.env, which
+        # legitimately sets localhost origins. Fly has no .env file, so this
+        # models the real production environment.
+        settings = Settings(_env_file=None)
+        assert settings.CORS_ORIGINS == ["https://dashti.se", "https://www.dashti.se"]
+        assert not any("localhost" in o for o in settings.CORS_ORIGINS)
+
     def test_database_url_default(self):
         """Test database URL has a default."""
         settings = Settings()
