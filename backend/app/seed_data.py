@@ -465,8 +465,14 @@ async def seed_education(session: AsyncSession):
             "institution": "CompTIA",
             "degree": "Security+ Certification",
             "field_of_study": "Cybersecurity",
-            "start_date": datetime(2024, 1, 1),
-            "end_date": datetime(2026, 1, 31),
+            # Verified against the issuer's own Open Badges assertion at
+            # credly.com/api/v1/obi/v2/badge_assertions/450d4dcd-...:
+            # issuedOn 2026-01-04, expires 2029-01-04 (exam SY0-701).
+            # These were 2024-01-01 -> 2026-01-31, which was wrong in BOTH
+            # directions and made the site's only earned certification look
+            # EXPIRED as of 2026-01-31. It is valid for another three years.
+            "start_date": datetime(2026, 1, 4),
+            "end_date": datetime(2029, 1, 4),
             "location": "Online",
             "description": "Industry-standard certification covering network security, threats, vulnerabilities, and risk management.",
             "is_certification": True,

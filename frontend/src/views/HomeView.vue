@@ -514,7 +514,7 @@
                   <p
                     class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Jan 2026
+                    Jan 2026 — Jan 2029
                   </p>
                 </header>
                 <p
