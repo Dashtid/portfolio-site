@@ -204,7 +204,7 @@ describe('Portfolio Store', () => {
 
       it('should handle skills without category as "other"', () => {
         const store = usePortfolioStore()
-        store.skills = [{ id: '1', name: 'Skill', category: '', proficiency_level: 50 }]
+        store.skills = [{ id: '1', name: 'Skill', category: '' }]
 
         const grouped = store.skillsByCategory
 

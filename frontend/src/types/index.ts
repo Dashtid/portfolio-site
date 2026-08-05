@@ -73,13 +73,21 @@ export interface Project {
   updated_at?: string | null
 }
 
+/** PUBLIC skill shape. No proficiency_level/years — the public API stopped
+ *  serving those (see backend SkillResponse); nothing renders them and an
+ *  unfalsifiable 0-100 self-rating is a liability, not proof. */
 export interface Skill {
   id: string
   name: string
   category: string
-  proficiency_level: number
-  years_of_experience?: number | null
+  order_index?: number | null
   created_at?: string
+}
+
+/** Full row, only from the admin-authenticated GET /api/v1/skills/admin/all. */
+export interface AdminSkill extends Skill {
+  proficiency_level: number | null
+  years_of_experience?: number | null
 }
 
 export interface Document {

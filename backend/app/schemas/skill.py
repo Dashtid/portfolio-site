@@ -27,7 +27,32 @@ class SkillUpdate(BaseModel):
     order_index: int | None = Field(None, ge=0)
 
 
-class SkillResponse(SkillBase):
+class SkillResponse(BaseModel):
+    """PUBLIC skill payload — deliberately WITHOUT proficiency_level/years.
+
+    Nothing on the site renders those numbers (verified by diffing the live
+    homepage against its own __INITIAL_STATE__: the skill names appear only
+    inside the baked state blob, never in visible markup), yet the public
+    endpoint served a 0-100 self-rating for all 19 rows to anyone who curled
+    it -- including 'Security Auditing: 95', the joint-highest number on a
+    site whose one earned certification is Security+. An unfalsifiable rating
+    nobody chose to display is a liability, not proof. The values still exist
+    in the DB and stay editable in /admin/skills via SkillAdminResponse; the
+    site simply stops publishing them.
+    """
+
+    id: str
+    name: str
+    category: str | None = None
+    order_index: int | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class SkillAdminResponse(SkillBase):
+    """Full skill payload — admin-authenticated callers only."""
+
     id: str
     created_at: datetime
 

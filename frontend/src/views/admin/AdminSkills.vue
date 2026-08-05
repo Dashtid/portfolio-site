@@ -44,13 +44,15 @@
                 <div class="proficiency-bar" :aria-label="`${skill.proficiency_level}%`">
                   <div
                     class="proficiency-fill"
-                    :style="{ width: `${Math.min(100, Math.max(0, skill.proficiency_level))}%` }"
+                    :style="{
+                      width: `${Math.min(100, Math.max(0, skill.proficiency_level ?? 0))}%`
+                    }"
                   ></div>
                 </div>
                 <span class="proficiency-label">{{ skill.proficiency_level }}%</span>
               </td>
               <td>{{ skill.years_of_experience ?? '—' }}</td>
-              <td>{{ (skill as Skill & { order_index?: number }).order_index ?? 0 }}</td>
+              <td>{{ skill.order_index ?? 0 }}</td>
               <td>
                 <AdminCardActions
                   :item-name="skill.name"
@@ -182,7 +184,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import apiClient from '../../api/client'
-import type { Skill } from '@/types'
+import type { AdminSkill } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
 import AdminFormModal from '@/components/admin/AdminFormModal.vue'
@@ -220,11 +222,11 @@ const emptyForm = (): SkillFormData => ({
   order_index: 0
 })
 
-const skills = ref<Skill[]>([])
+const skills = ref<AdminSkill[]>([])
 const loading = ref<boolean>(false)
 const isSaving = ref<boolean>(false)
 const showAddForm = ref<boolean>(false)
-const editingSkill = ref<Skill | null>(null)
+const editingSkill = ref<AdminSkill | null>(null)
 
 const form = ref<SkillFormData>(emptyForm())
 const formErrors = ref<Record<string, string>>({})
@@ -260,7 +262,9 @@ const validateForm = (): boolean => {
 const fetchSkills = async (): Promise<void> => {
   loading.value = true
   try {
-    const response = await apiClient.get<Skill[]>('/api/v1/skills')
+    // Admin-only route: the PUBLIC GET no longer returns proficiency_level or
+    // years_of_experience, and this editor needs them to populate the form.
+    const response = await apiClient.get<AdminSkill[]>('/api/v1/skills/admin/all')
     skills.value = response.data
   } catch (error) {
     apiLogger.error('Error fetching skills:', error)
@@ -270,14 +274,14 @@ const fetchSkills = async (): Promise<void> => {
   }
 }
 
-const editSkill = (skill: Skill): void => {
+const editSkill = (skill: AdminSkill): void => {
   editingSkill.value = skill
   form.value = {
     name: skill.name,
     category: skill.category ?? '',
-    proficiency_level: skill.proficiency_level,
+    proficiency_level: skill.proficiency_level ?? 0,
     years_of_experience: skill.years_of_experience ?? null,
-    order_index: (skill as Skill & { order_index?: number }).order_index ?? 0
+    order_index: skill.order_index ?? 0
   }
 }
 

@@ -14,7 +14,7 @@ from app.database import get_db
 from app.middleware.rate_limit import rate_limit_public
 from app.models.skill import Skill
 from app.models.user import User
-from app.schemas.skill import SkillCreate, SkillResponse, SkillUpdate
+from app.schemas.skill import SkillAdminResponse, SkillCreate, SkillResponse, SkillUpdate
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
@@ -39,6 +39,22 @@ async def get_skills(
     return result.scalars().all()
 
 
+@router.get("/admin/all", response_model=list[SkillAdminResponse])
+async def get_skills_admin(
+    db: DbSession,
+    current_user: AdminUser,
+):
+    """Full skill rows INCLUDING proficiency_level/years (admin only).
+
+    The public GET deliberately omits those fields (see SkillResponse), but the
+    /admin/skills editor still has to load current values to populate its form.
+    Two path segments so this never collides with GET /{skill_id}.
+    """
+    _ = current_user  # Used for authentication
+    result = await db.execute(select(Skill).order_by(Skill.order_index))
+    return result.scalars().all()
+
+
 @router.get("/{skill_id}", response_model=SkillResponse)
 @rate_limit_public
 async def get_skill(request: Request, skill_id: str, db: DbSession):
@@ -53,7 +69,7 @@ async def get_skill(request: Request, skill_id: str, db: DbSession):
     return skill
 
 
-@router.post("/", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=SkillAdminResponse, status_code=status.HTTP_201_CREATED)
 async def create_skill(
     skill: SkillCreate,
     db: DbSession,
@@ -68,7 +84,7 @@ async def create_skill(
     return db_skill
 
 
-@router.put("/{skill_id}", response_model=SkillResponse)
+@router.put("/{skill_id}", response_model=SkillAdminResponse)
 async def update_skill(
     skill_id: str,
     skill_update: SkillUpdate,

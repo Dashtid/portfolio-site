@@ -77,12 +77,37 @@ class TestSeedProjects:
 
     @pytest.mark.asyncio
     async def test_seed_projects_creates_correct_count(self, db_session):
-        """Test that seed_projects creates exactly 5 projects."""
+        """Test that seed_projects creates exactly 4 projects."""
         await seed_projects(db_session)
 
         result = await db_session.execute(select(Project))
         projects = result.scalars().all()
-        assert len(projects) == 5
+        assert len(projects) == 4
+
+    @pytest.mark.asyncio
+    async def test_every_seeded_project_advertises_an_openable_repo(self, db_session):
+        """A project record without a working github_url is an unfalsifiable
+        claim on a security portfolio.
+
+        The old seed shipped four inventions with github_url=None ("Medical
+        Device Security Framework", "Vulnerability Scanner Dashboard", ...) and
+        production separately accumulated three links to repos that 404 for a
+        logged-out visitor. Both are the same defect: named deliverables whose
+        proof cannot be checked. Every seeded project must point at a real
+        Dashtid repo, and technologies must be a LIST (the column is JSON --
+        the old seed passed comma-strings).
+        """
+        await seed_projects(db_session)
+        projects = (await db_session.execute(select(Project))).scalars().all()
+
+        assert projects, "seed must produce projects"
+        for project in projects:
+            assert project.github_url, f"{project.name} has no github_url"
+            assert project.github_url.startswith("https://github.com/Dashtid/"), project.github_url
+            assert isinstance(project.technologies, list), (
+                f"{project.name}.technologies must be a list, got "
+                f"{type(project.technologies).__name__}"
+            )
 
     @pytest.mark.asyncio
     async def test_seed_projects_has_required_fields(self, db_session):
@@ -246,7 +271,7 @@ class TestSeedDataIntegration:
         education = (await db_session.execute(select(Education))).scalars().all()
 
         assert len(companies) == 8
-        assert len(projects) == 5
+        assert len(projects) == 4
         assert len(skills) == 20
         assert len(education) == 4
 
@@ -305,7 +330,7 @@ class TestSeedDataMain:
 
         async with TestSessionLocal() as session:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
-            assert len((await session.execute(select(Project))).scalars().all()) == 5
+            assert len((await session.execute(select(Project))).scalars().all()) == 4
             assert len((await session.execute(select(Skill))).scalars().all()) == 20
             assert len((await session.execute(select(Education))).scalars().all()) == 4
 

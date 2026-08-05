@@ -4,6 +4,7 @@ Seed data script to populate database with initial portfolio content
 
 import asyncio
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -195,51 +196,62 @@ async def seed_projects(session: AsyncSession):
     if await _already_seeded(session, Project, "projects"):
         return
 
-    projects = [
+    # Annotated because `technologies` is now a real list (it is a JSON column)
+    # while its siblings are str/bool/int, so the inferred value type widens to
+    # `object` and Project(**project_data) stops being a valid mapping unpack.
+    #
+    # Every project here must be a repo a logged-out recruiter can OPEN.
+    #
+    # The previous seed listed five projects, four of which were inventions --
+    # "Medical Device Security Framework", "Vulnerability Scanner Dashboard",
+    # "DICOM Processing Pipeline", "Compliance Automation Tool" -- with no
+    # github_url and no corresponding repo anywhere, plus a fifth pointing at
+    # the pre-rename portfolio-migration. They also passed `technologies` as a
+    # comma-string into a JSON list column, so a fresh install stored a string
+    # where every reader expects a list. All four inventions are gone; the
+    # names below were verified to return 200 unauthenticated on 2026-08-05.
+    #
+    # Deliberately ABSENT: biomedical-ai (its README is the medtech-ai-security
+    # project -- employer-IP-adjacent, stays private) and defensive-toolkit
+    # (private; publish it first, then add it back). Advertising either one
+    # with a 404 proof link is worse for a security candidate than not
+    # advertising it at all.
+    projects: list[dict[str, Any]] = [
         {
-            "name": "Portfolio Migration",
-            "description": "Modern portfolio website built with Vue 3 and FastAPI, featuring dynamic content management and GitHub integration",
-            "technologies": "Vue 3, FastAPI, SQLAlchemy, PostgreSQL, Docker",
-            "github_url": "https://github.com/Dashtid/portfolio-migration",
+            "name": "subvectors",
+            "description": "Cited, versioned conformance vectors for CI/CD OIDC trust decisions — the answer key for whether a workload-identity trust condition actually matches, and whether it is safe.",
+            "technologies": ["Python", "OIDC", "GitHub Actions", "AWS IAM", "Azure", "GCP"],
+            "github_url": "https://github.com/Dashtid/subvectors",
             "live_url": None,
             "featured": True,
             "order_index": 1,
         },
         {
-            "name": "Medical Device Security Framework",
-            "description": "Comprehensive security framework for medical devices implementing IEC 62304 and ISO 14971 standards",
-            "technologies": "Python, Django, PostgreSQL, Docker, Kubernetes",
-            "github_url": None,
+            "name": "subcheck",
+            "description": "CI gate against cloud trust-policy drift: decodes a GitHub Actions OIDC token's claims and checks them against an expected-claims policy before an over-broad trust policy lets the wrong branch assume a role.",
+            "technologies": ["Python", "OIDC", "JWT", "GitHub Actions", "AWS IAM"],
+            "github_url": "https://github.com/Dashtid/subcheck",
             "live_url": None,
             "featured": True,
             "order_index": 2,
         },
         {
-            "name": "Vulnerability Scanner Dashboard",
-            "description": "Real-time vulnerability scanning and reporting dashboard for healthcare infrastructure",
-            "technologies": "React, Node.js, MongoDB, ElasticSearch, Grafana",
-            "github_url": None,
-            "live_url": None,
+            "name": "Portfolio Site",
+            "description": "This site. Vue 3 + TypeScript static build with a FastAPI/PostgreSQL backend, hash-based CSP, SHA-pinned actions and a full CI/CD pipeline.",
+            "technologies": ["Vue 3", "TypeScript", "FastAPI", "PostgreSQL", "Docker", "CI/CD"],
+            "github_url": "https://github.com/Dashtid/portfolio-site",
+            "live_url": "https://dashti.se",
             "featured": True,
             "order_index": 3,
         },
         {
-            "name": "DICOM Processing Pipeline",
-            "description": "Automated pipeline for processing and analyzing DICOM medical imaging files with AI/ML integration",
-            "technologies": "Python, TensorFlow, PyDICOM, FastAPI, Redis",
-            "github_url": None,
+            "name": "Sysadmin Toolkit",
+            "description": "System administration automation for Windows and Linux: maintenance, monitoring, backup and hardening scripts.",
+            "technologies": ["PowerShell", "Bash", "Python", "Windows Server", "Linux"],
+            "github_url": "https://github.com/Dashtid/sysadmin-toolkit",
             "live_url": None,
             "featured": False,
             "order_index": 4,
-        },
-        {
-            "name": "Compliance Automation Tool",
-            "description": "Automated compliance checking tool for ISO 27001, GDPR, and medical device regulations",
-            "technologies": "Python, Flask, SQLite, Docker",
-            "github_url": None,
-            "live_url": None,
-            "featured": False,
-            "order_index": 5,
         },
     ]
 

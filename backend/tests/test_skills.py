@@ -375,3 +375,72 @@ class TestSkillEdgeCases:
         assert "proficiency_level" in data
         assert "order_index" in data
         assert "created_at" in data
+
+
+class TestSkillProficiencyIsNotPublic:
+    """The 0-100 self-rating must not leave the admin boundary.
+
+    Nothing on the public site renders proficiency_level or
+    years_of_experience -- verified by diffing the live homepage against its
+    own __INITIAL_STATE__ -- yet the public endpoint served them for all 19
+    rows, including 'Security Auditing: 95'. An unfalsifiable self-rating
+    nobody chose to display is a liability, not proof. The values stay in the
+    DB and stay editable; they just stop being published.
+    """
+
+    SKILL = {
+        "name": "Proficiency Leak Probe",
+        "category": "Security",
+        "proficiency_level": 95,
+        "years_of_experience": 4.0,
+        "order_index": 1,
+    }
+
+    def _create(self, client: TestClient, admin: dict[str, Any]) -> str:
+        r = client.post("/api/v1/skills/", json=self.SKILL, headers=admin["headers"])
+        assert r.status_code == 201
+        # The admin write path still echoes the full row back to the editor.
+        assert r.json()["proficiency_level"] == 95
+        return r.json()["id"]
+
+    def test_public_list_omits_proficiency_and_years(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        self._create(client, admin_user_in_db)
+        rows = client.get("/api/v1/skills/").json()
+        assert rows, "fixture skill should be listed"
+        for row in rows:
+            assert "proficiency_level" not in row
+            assert "years_of_experience" not in row
+            # The honest, renderable fields survive.
+            assert "name" in row and "category" in row
+
+    def test_public_detail_omits_proficiency_and_years(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        skill_id = self._create(client, admin_user_in_db)
+        row = client.get(f"/api/v1/skills/{skill_id}").json()
+        assert "proficiency_level" not in row
+        assert "years_of_experience" not in row
+
+    def test_admin_route_still_returns_full_rows(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        self._create(client, admin_user_in_db)
+        r = client.get("/api/v1/skills/admin/all", headers=admin_user_in_db["headers"])
+        assert r.status_code == 200
+        row = next(s for s in r.json() if s["name"] == self.SKILL["name"])
+        assert row["proficiency_level"] == 95
+        assert row["years_of_experience"] == 4.0
+
+    def test_admin_route_requires_auth(self, client: TestClient):
+        assert client.get("/api/v1/skills/admin/all").status_code == 401
+
+    def test_admin_route_requires_admin(self, client: TestClient, test_user_in_db: dict[str, Any]):
+        r = client.get("/api/v1/skills/admin/all", headers=test_user_in_db["headers"])
+        assert r.status_code == 403
+
+    def test_admin_path_is_not_swallowed_by_the_id_route(self, client: TestClient):
+        """'/skills/admin/all' has two segments so GET /{skill_id} cannot match
+        it -- if it ever did, this would 404 as a missing skill instead of 401."""
+        assert client.get("/api/v1/skills/admin/all").status_code == 401
