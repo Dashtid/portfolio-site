@@ -52,11 +52,26 @@ import NavBar from '../components/NavBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
 // D3-UX-01: designed 404. Served for the router catch-all and the
-// prerendered /404 path. Unknown URLs reach Vercel's SPA rewrite (200 +
-// home HTML), so the honest signal for crawlers is the noindex below —
-// without it every mistyped URL was a soft-404 indexing the homepage.
+// prerendered /404 path. Since S3 the vercel.json rewrite serves this
+// document with a REAL 404 status (verified live), so the noindex below is
+// belt-and-braces rather than the only signal it used to be.
+// The og/canonical tags in index.html are the HOMEPAGE's, and every
+// prerendered page inherits them unless it overrides. On /404 that meant a
+// dead link pasted into LinkedIn or Slack unfurled as the live homepage —
+// a broken URL presenting itself as working — and the page declared
+// rel=canonical to a different, 200 document. noindex + the real 404 status
+// mean this was never an indexing risk, but the preview was a lie.
 useHead({
   title: '404 — Page Not Found | David Dashti',
-  meta: [{ name: 'robots', content: 'noindex' }]
+  link: [{ rel: 'canonical', href: 'https://dashti.se/404' }],
+  meta: [
+    { name: 'robots', content: 'noindex' },
+    { name: 'description', content: 'This page does not exist.' },
+    { property: 'og:title', content: 'Page not found — dashti.se' },
+    { property: 'og:description', content: 'This page does not exist.' },
+    { property: 'og:url', content: 'https://dashti.se/404' },
+    { name: 'twitter:title', content: 'Page not found — dashti.se' },
+    { name: 'twitter:description', content: 'This page does not exist.' }
+  ]
 })
 </script>

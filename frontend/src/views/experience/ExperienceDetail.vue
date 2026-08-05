@@ -412,10 +412,64 @@ const logoError = ref<boolean>(false)
 // also de-dupes the two Scania stints), and every detail page gets its own
 // og/twitter tags — before this, shares of any detail URL scraped the
 // homepage's card and og:url pointed the share back at dashti.se.
-const truncateAtWord = (text: string, max = 155): string => {
+// Cut at the last CLAUSE boundary that fits, not the last space. Cutting at a
+// space left all 8 descriptions ending on a conjunction or an article —
+// "...upgrade assessment, and…", "...learning how a…", "...SBOM…" — which is
+// what a recruiter reads under the Google result and in every LinkedIn unfurl
+// of a shared experience URL. Reads as broken output rather than a summary.
+// Prefer a sentence end (no ellipsis needed), then an em-dash or comma, and
+// only fall back to a word boundary when the text has no punctuation at all.
+// 150 keeps the appended ellipsis inside the ~160-char render budget.
+// Function words that must never be the last thing a description says, and
+// never the word a final term dangles off ("...analysis to improve").
+const DANGLING_WORDS = new Set([
+  'and',
+  'or',
+  'but',
+  'plus',
+  'how',
+  'a',
+  'an',
+  'the',
+  'to',
+  'of',
+  'in',
+  'on',
+  'at',
+  'by',
+  'for',
+  'with',
+  'as',
+  'from',
+  'into',
+  'that',
+  'which',
+  'while',
+  'when',
+  'its',
+  'their'
+])
+const truncateAtWord = (text: string, max = 150): string => {
   if (text.length <= max) return text
   const cut = text.slice(0, max)
-  return `${cut.slice(0, cut.lastIndexOf(' '))}…`
+  // A sentence boundary is a clean stop — no trailing ellipsis needed.
+  const sentence = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '))
+  if (sentence > max * 0.6) return cut.slice(0, sentence + 1)
+  // Otherwise the strongest clause break that still keeps most of the text.
+  const clause = Math.max(cut.lastIndexOf(' — '), cut.lastIndexOf(', '))
+  if (clause > max * 0.6) return `${cut.slice(0, clause)}…`
+  // Last resort: word boundary, then reel back off any dangling function
+  // word so the snippet ends on a noun phrase instead of "and…" / "how a…".
+  const words = cut.slice(0, cut.lastIndexOf(' ')).split(' ')
+  const bare = (w: string): string => w.toLowerCase().replace(/[.,;:]+$/, '')
+  while (
+    words.length > 1 &&
+    (DANGLING_WORDS.has(bare(words[words.length - 1])) ||
+      DANGLING_WORDS.has(bare(words[words.length - 2])))
+  ) {
+    words.pop()
+  }
+  return `${words.join(' ')}…`
 }
 
 const pageTitle = computed(() =>
@@ -473,18 +527,20 @@ const canonicalUrl = computed(() => `https://dashti.se/experience/${companyId.va
 const structuredData = computed<Record<string, unknown>>(() => {
   const graph: Record<string, unknown>[] = [
     {
+      // Two rungs, not three. The middle 'Experience' rung pointed at
+      // https://dashti.se/#experience — a FRAGMENT of the homepage, which is
+      // the same document position 1 already names. There is no /experience
+      // route (router/index.ts has '/', '/experience/:id', '/writing*',
+      // '/404'), so no honest distinct URL exists for that level, and a
+      // BreadcrumbList whose first two items resolve to one page is a trail
+      // Google cannot render as a hierarchy. Positions must stay contiguous
+      // from 1 after the removal.
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://dashti.se/' },
         {
           '@type': 'ListItem',
           position: 2,
-          name: 'Experience',
-          item: 'https://dashti.se/#experience'
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
           name: company.value?.name ?? 'Experience detail',
           item: canonicalUrl.value
         }
@@ -499,7 +555,11 @@ const structuredData = computed<Record<string, unknown>>(() => {
       '@id': `${canonicalUrl.value}#organization`,
       name: c.name,
       ...(c.website ? { url: c.website } : {}),
-      ...(c.logo_url ? { logo: c.logo_url } : {})
+      // logo_url is stored relative ('/images/hermes.png'). schema.org URL
+      // values must be absolute — a consumer parsing the JSON-LD out of band
+      // has no base to resolve against, so the relative form is simply an
+      // unusable value.
+      ...(c.logo_url ? { logo: new URL(c.logo_url, 'https://dashti.se').href } : {})
     })
   }
 
@@ -681,6 +741,15 @@ onUnmounted(() => {
   opacity: 0;
   transform: translate3d(0, 24px, 0);
   will-change: opacity, transform;
+}
+
+/* Focus beats the reveal — see the matching rule in HomeView. Here the
+   animated wrapper is .experience-section, so this also covers the video
+   and map iframes a keyboard user tabs into. */
+[data-anim='hidden']:focus-within {
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 [data-anim='visible'] {

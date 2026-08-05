@@ -81,9 +81,15 @@
               </a>
             </div>
 
-            <!-- D3-CNT-03 proof row, retyped into the HERO-01 layout -->
+            <!-- D3-CNT-03 proof row, retyped into the HERO-01 layout.
+                 The slate-500/dark:slate-400 pairing is deliberate and must
+                 not be flipped back: at 11px this is normal-size text needing
+                 4.5:1, and the inverted pair (slate-400 on white) measured
+                 2.56:1 — the most hiring-relevant line above the fold was the
+                 least legible text on the site. Now 4.76:1 light / 7.87:1 dark.
+                 Matches the eyebrow above it. -->
             <p
-              class="mt-10 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500"
+              class="mt-10 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
             >
               FDA Premarket &middot; IEC 81001-5-1 &middot; EU MDR &middot; Security+
             </p>
@@ -136,9 +142,14 @@
           </div>
         </div>
 
+        <!-- The chevron is aria-hidden and this link has no text node, so the
+             stroke IS the control: WCAG 1.4.11 wants 3:1 for it. slate-400 on
+             the near-white hero measured 2.56:1, and the dot-grid backdrop is
+             radially masked away at bottom-centre so nothing compensates.
+             Same swap as the credential row above. -->
         <a
           href="#experience"
-          class="absolute bottom-8 left-1/2 z-[2] -translate-x-1/2 text-slate-400 transition-colors hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-slate-500 dark:hover:text-primary-400 [@media(max-height:640px)]:hidden"
+          class="absolute bottom-8 left-1/2 z-[2] -translate-x-1/2 text-slate-500 transition-colors hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-slate-400 dark:hover:text-primary-400 [@media(max-height:640px)]:hidden"
           aria-label="Scroll to experience"
         >
           <svg
@@ -295,8 +306,13 @@
                 <p
                   class="company-description mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Remote Service Engineer providing Level 1 support for Intellispace Portal (ISP)
-                  and Intellispace Cardiovascular (ISCV) systems across the Nordics.
+                  <!-- Was "Remote Service Engineer providing ..." — a SECOND job title,
+                       contradicting the "Incident Support Specialist, Nordics" heading
+                       directly above it. Mirrors the live DB description now.
+                       Philips spells the products IntelliSpace, not Intellispace. -->
+                  Level 1 support for IntelliSpace Portal and IntelliSpace Cardiovascular across the
+                  Nordics and UK/Ireland — full incident lifecycle, upgrade assessment, and
+                  cross-regional knowledge sharing.
                 </p>
               </article>
               <article
@@ -474,7 +490,18 @@
             </template>
             <template v-else>
               <!-- Static fallback — rendered when the SSG build fetched no
-                   education rows. Kept in sync with seed_data. -->
+                   education rows.
+
+                   MUST mirror the LIVE DB, not seed_data alone. This block had
+                   drifted into a third, wrong version of the CV: KTH as
+                   "Aug 2017 — Jun 2022 / M.Sc. Medical Engineering / Thesis on
+                   AI-driven diagnostic systems" (no such thesis exists — the
+                   real one is printed in the Publications section of this same
+                   page) and Lund demoted from a full B.Sc. to a 2020-2021
+                   "(Exchange)". A build that could not reach the API therefore
+                   published an academic history that contradicts both the
+                   database and the rest of the page. Verified against
+                   /api/v1/education/ 2026-08-05; seed_data.py updated to match. -->
               <article
                 class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-surface-1 dark:hover:border-primary-400/40 dark:hover:bg-surface-2"
               >
@@ -569,22 +596,22 @@
                   <p
                     class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Aug 2017 — Jun 2022
+                    Aug 2018 — Jun 2021
                   </p>
                 </header>
                 <p
                   class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
-                  M.Sc. Medical Engineering
+                  Master of Science - MS
                 </p>
                 <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                  Medical Technology and Bioengineering
+                  Biomedical Engineering - Computer Science
                 </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Specialized in medical imaging, signal processing, and healthcare informatics.
-                  Thesis on AI-driven diagnostic systems.
+                  Master's Thesis - 'Improving Quality Assurance of Radiology Equipment Using
+                  Process Modelling and Multi-actor System Analysis'
                 </p>
               </article>
               <article
@@ -594,18 +621,18 @@
                   <h3
                     class="education-institution text-lg font-semibold text-slate-900 dark:text-white"
                   >
-                    Lund University (LTH)
+                    Lund University
                   </h3>
                   <p
                     class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Jan 2020 — Jun 2021
+                    Aug 2015 — Jun 2018
                   </p>
                 </header>
                 <p
                   class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
-                  B.Sc. Biomedical Engineering (Exchange)
+                  Bachelor of Science - BS
                 </p>
                 <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Biomedical Engineering
@@ -613,7 +640,8 @@
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Exchange program focusing on medical device development and regulatory affairs.
+                  Bachelor's Thesis - 'Development of a User-friendly Method of Processing Data from
+                  Ergonomics Measurements Utilizing Inclinometers'
                 </p>
               </article>
             </template>
@@ -753,15 +781,23 @@
           <div class="about-layout grid max-w-6xl items-start gap-10 lg:grid-cols-[280px_1fr]">
             <div class="about-block">
               <picture>
-                <source srcset="/images/optimized/cropped.avif" type="image/avif" />
+                <!-- NO AVIF source, deliberately. An <source type="image/avif">
+                     listed first only pays off if the AVIF is SMALLER, and for
+                     this portrait it never was: the shipped pair was 138 KB
+                     AVIF vs 100 KB WebP, so every AVIF-capable browser (~95% of
+                     traffic) was served 37% MORE bytes than the format it was
+                     preempting. Re-encoding confirmed it is the image, not the
+                     old encoder — a second encoder put AVIF above WebP at every
+                     quality, and even at q=60 (visibly degraded) AVIF only
+                     matched WebP at q=82. Do not re-add an AVIF source without
+                     measuring both files first.
+
+                     Both assets are now 560px wide, not 851px: the element
+                     renders in a 280px grid column, so 560px is exactly 2x DPR
+                     and the old 851px master was ~3x oversized at 1x. PNG
+                     fallback stays a 192-colour palette PNG for the <3% of
+                     clients with no WebP support. -->
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
-                <!-- FRONTEND-PERF-08 / D3-PRUNE-01: PNG fallback is a
-                     640px-wide palette PNG (180 KB, resized from the 851px
-                     master in Sprint 4 — the element renders <=500px wide).
-                     >97% of clients hit the AVIF/WebP branches above so the
-                     fallback path is rarely walked, but the saving still
-                     applies to Lighthouse's total-payload budget and to
-                     older browsers/screen readers that fall back. -->
                 <img
                   src="/images/optimized/cropped.png"
                   alt="David Dashti - product security specialist for medical software"
@@ -1182,6 +1218,17 @@ watch(
   opacity: 0;
   transform: translate3d(0, 30px, 0);
   will-change: opacity, transform;
+}
+
+/* Tabbing reaches a card before the IntersectionObserver has revealed it:
+   the browser scrolls the link into view, then the fade runs for 0.5s plus
+   up to 0.24s of stagger, and for that whole window the focused element and
+   its focus ring are literally invisible (WCAG 2.4.7). Mouse users never hit
+   it, so it survives normal QA. Focus wins over the reveal animation. */
+:deep([data-anim='hidden']:focus-within) {
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 :deep([data-anim='visible']) {

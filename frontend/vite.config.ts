@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import os from 'os'
 import fs from 'fs'
+import { execFileSync } from 'child_process'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 
@@ -153,6 +154,31 @@ export default defineConfig({
           return buildDate
         }
       }
+      // The homepage lastmod was a hand-typed literal in public/sitemap.xml
+      // and had been frozen at 2026-07-20 across every deploy since — the
+      // priority-1.0 page telling Google "nothing here has changed" during
+      // an active push of homepage keyword and copy changes. HEAD's commit
+      // date is the honest signal: the prerendered homepage is a pure
+      // function of the commit, so a redeploy of the same commit reports the
+      // same date (no crying-wolf, which is what D3-SEO-02 guarded against)
+      // while a real content change moves it. Falls back to the build date
+      // if git is unavailable in the build container.
+      let homeLastmod = buildDate
+      try {
+        homeLastmod = execFileSync('git', ['log', '-1', '--format=%cs'], {
+          cwd: import.meta.dirname,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'ignore']
+        }).trim()
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(homeLastmod)) homeLastmod = buildDate
+      } catch {
+        homeLastmod = buildDate
+      }
+      xml = xml.replace(
+        /(<loc>https:\/\/dashti\.se\/<\/loc>\s*<lastmod>)[^<]*(<\/lastmod>)/,
+        `$1${homeLastmod}$2`
+      )
+
       const entries = ids
         .map(
           id =>
@@ -224,8 +250,13 @@ export default defineConfig({
         ],
         screenshots: [
           {
+            // 1200x800 is the file's ACTUAL intrinsic size. It declared
+            // 1920x1080 (wrong on both axes AND aspect ratio) — Chrome
+            // validates declared-vs-decoded and silently drops a screenshot
+            // that disagrees, so the richer install UI this entry exists to
+            // trigger never appeared.
             src: '/images/optimized/stockholm-desktop.webp',
-            sizes: '1920x1080',
+            sizes: '1200x800',
             type: 'image/webp',
             form_factor: 'wide',
             label: 'Desktop view of portfolio'
@@ -246,12 +277,12 @@ export default defineConfig({
             name: 'Projects',
             url: '/#projects',
             description: 'View GitHub projects'
-          },
-          {
-            name: 'Contact',
-            url: '/#contact',
-            description: 'Get in touch'
           }
+          // No 'Contact' shortcut: it pointed at '/#contact' and no element
+          // with that id has ever existed (the sections are #experience,
+          // #education, #publications, #projects). Installed-PWA users who
+          // picked it were dropped at the top of the homepage with nothing
+          // highlighted. Contact is LinkedIn-only and lives in the footer.
         ]
       },
       workbox: {
@@ -329,7 +360,13 @@ export default defineConfig({
               },
               networkTimeoutSeconds: 10,
               cacheableResponse: {
-                statuses: [0, 200]
+                // 200 only. Status 0 is an OPAQUE response — the body of a
+                // no-cors cross-origin fetch, which is unreadable by
+                // definition. The app talks to the API with credentialed
+                // CORS requests that always carry a real status, so a 0 here
+                // could only ever cache something the app cannot parse and
+                // then serve it from cache for 5 minutes as if it were data.
+                statuses: [200]
               }
             }
           },

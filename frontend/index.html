@@ -10,7 +10,13 @@
     />
     <meta name="author" content="David Dashti" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://dashti.se" />
+    <!-- No static canonical link here, deliberately. Every public view sets its
+         own via useHead and unhead replaces rather than appends, so a static one
+         never reached a page that had its own — it only reached a page that
+         FORGOT one, and then aimed it at the homepage, asking Google to fold
+         that page away. That is how /404 came to canonicalize to the homepage
+         (D3-CNT-02 regression class). No canonical self-canonicalizes, which is
+         the safe default; a wrong inherited one is not. -->
 
     <!-- Security headers (CSP, X-Frame-Options, HSTS, ...) come from the
          Vercel edge — frontend/vercel.json "headers" — NOT the backend.
@@ -22,7 +28,10 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="David Dashti — Product &amp; Application Security | Medical Devices" />
+    <meta
+      property="og:title"
+      content="David Dashti — Product &amp; Application Security | Medical Devices"
+    />
     <meta
       property="og:description"
       content="Medical device cybersecurity, application and cloud security in Stockholm — FDA 524B premarket, threat modeling and secure SDLC for regulated medical software."
@@ -30,13 +39,19 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dashti.se" />
     <meta property="og:image" content="https://dashti.se/images/share-card.png" />
-    <meta property="og:image:alt" content="David Dashti — Product &amp; Application Security | Medical Devices" />
+    <meta
+      property="og:image:alt"
+      content="David Dashti — Product &amp; Application Security | Medical Devices"
+    />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="David Dashti — Product &amp; Application Security | Medical Devices" />
+    <meta
+      name="twitter:title"
+      content="David Dashti — Product &amp; Application Security | Medical Devices"
+    />
     <meta
       name="twitter:description"
       content="Medical device cybersecurity, application and cloud security in Stockholm — FDA 524B premarket, threat modeling and secure SDLC for regulated medical software."

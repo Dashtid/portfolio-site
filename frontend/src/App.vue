@@ -30,11 +30,31 @@ const route = useRoute()
 // while the out-in transition still showed the outgoing view, so focus
 // landed on a dying node and dropped to <body> — D3-A11Y-01). No `appear`
 // on the Transition means this never fires on initial page load, only on
-// SPA navigations. Skipped for hash navigations: scrollBehavior owns those,
-// and focusing #main-content would yank the viewport back to the top.
+// SPA navigations.
+//
+// Hash navigations used to `return` here, which left keyboard users with no
+// focus at all: EVERY cross-route nav click carries a hash (NavBar's non-home
+// branch pushes { path: '/', hash: '#section' }, as do the "back to
+// experience" links on the detail and 404 pages), and the <a> that was
+// clicked lives inside the NavBar mounted *within* the outgoing view — so the
+// out-in Transition unmounts it and the browser resets activeElement to
+// <body>. The section scrolled into view but the next Tab restarted at the
+// skip link, and screen readers announced nothing. Now the hash target itself
+// takes focus, using the same temporary-tabindex dance as NavBar's same-page
+// path. preventScroll is what makes this safe: scrollBehavior and
+// useHashAlignment keep sole ownership of the viewport, so the alignment
+// behaviour is unchanged.
 const focusMainContent = (): void => {
-  if (route.hash) return
-  document.getElementById('main-content')?.focus({ preventScroll: false })
+  const el = document.getElementById(route.hash ? route.hash.slice(1) : 'main-content')
+  if (!el) return
+  const hadTabindex = el.hasAttribute('tabindex')
+  if (!hadTabindex) {
+    el.setAttribute('tabindex', '-1')
+    // Remove on BLUR, never synchronously — stripping tabindex from the
+    // focused element blurs it straight back to <body>.
+    el.addEventListener('blur', () => el.removeAttribute('tabindex'), { once: true })
+  }
+  el.focus({ preventScroll: true })
 }
 
 // On mount, just remove the loading skeleton. Auth is initialized lazily
@@ -86,7 +106,15 @@ onMounted((): void => {
   transform: translateX(-50%);
   z-index: var(--z-index-skip-link);
   padding: 0.75rem 1.5rem;
-  background: var(--primary-600, #2563eb);
+  /* --color-primary-600 (the Tailwind @theme scale), NOT --primary-600 (the
+     alias family). variables.css redefines --primary-600 to #2f88e8 under
+     [data-theme='dark'], which put white on #2f88e8 = 3.62:1 — below AA for
+     16px semibold — on the ONE control a low-vision keyboard user must be
+     able to read, and only in dark mode, which is why it went unnoticed. The
+     @theme scale is not shadowed by the dark block, so #1a6ad1 = 5.22:1 holds
+     in both themes. Do not "fix" this by reaching for --primary-700: dark
+     redefines that one to a pale #93c7f9. */
+  background: var(--color-primary-600, #1a6ad1);
   color: white;
   text-decoration: none;
   font-weight: 600;

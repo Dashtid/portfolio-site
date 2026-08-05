@@ -69,7 +69,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Philips Healthcare",
             "title": "Incident Support Specialist, Nordics",
-            "description": "Level 1 support for Intellispace Portal and Cardiovascular across the Nordics and UK/Ireland — full incident lifecycle, upgrade assessment, and cross-regional knowledge sharing for enterprise imaging informatics.",
+            "description": "Level 1 support for IntelliSpace Portal and IntelliSpace Cardiovascular across the Nordics and UK/Ireland — full incident lifecycle, upgrade assessment, and cross-regional knowledge sharing for enterprise imaging informatics.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2022, 3, 1),
             "end_date": datetime(2024, 5, 31),
@@ -415,25 +415,31 @@ async def seed_education(session: AsyncSession):
         return
 
     education_items = [
+        # Reconciled with the live DB (/api/v1/education/, 2026-08-05). These
+        # rows had drifted into a different academic history than production:
+        # KTH 2017-2022 "M.Sc. Medical Engineering" with a thesis on "AI-driven
+        # diagnostic systems" that does not exist, and Lund as a 2020-2021
+        # exchange rather than the full 2015-2018 B.Sc. HomeView's static
+        # education fallback carried the same wrong values; both now match.
         {
             "institution": "KTH Royal Institute of Technology",
-            "degree": "M.Sc. Medical Engineering",
-            "field_of_study": "Medical Technology and Bioengineering",
-            "start_date": datetime(2017, 8, 1),
-            "end_date": datetime(2022, 6, 15),
+            "degree": "Master of Science - MS",
+            "field_of_study": "Biomedical Engineering - Computer Science",
+            "start_date": datetime(2018, 8, 1),
+            "end_date": datetime(2021, 6, 30),
             "location": "Stockholm, Sweden",
-            "description": "Specialized in medical imaging, signal processing, and healthcare informatics. Thesis on AI-driven diagnostic systems.",
+            "description": "Master's Thesis - 'Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis'",
             "is_certification": False,
             "order_index": 1,
         },
         {
-            "institution": "Lund University (LTH)",
-            "degree": "B.Sc. Biomedical Engineering (Exchange)",
+            "institution": "Lund University",
+            "degree": "Bachelor of Science - BS",
             "field_of_study": "Biomedical Engineering",
-            "start_date": datetime(2020, 1, 1),
-            "end_date": datetime(2021, 6, 1),
+            "start_date": datetime(2015, 8, 1),
+            "end_date": datetime(2018, 6, 30),
             "location": "Lund, Sweden",
-            "description": "Exchange program focusing on medical device development and regulatory affairs.",
+            "description": "Bachelor's Thesis - 'Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers'",
             "is_certification": False,
             "order_index": 2,
         },
