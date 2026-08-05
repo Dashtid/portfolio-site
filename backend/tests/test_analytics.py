@@ -260,6 +260,41 @@ class TestAnalyticsSummaryEndpoint:
         clicks = {c["destination"]: c["count"] for c in data["outbound_clicks"]}
         assert clicks == {"linkedin/hero": 2, "github/footer": 1}
 
+    def test_summary_excludes_admin_navigations(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """The owner's own CMS traffic is not visitor traffic.
+
+        router.afterEach fired on /admin routes too, so every navigation inside
+        the admin SPA was POSTed to the PUBLIC track endpoint and landed in the
+        same table this summary reports on. The frontend no longer sends them,
+        but rows already in the table must not skew history either -- hence the
+        read-time '/admin%' filter this test pins.
+        """
+        for path in ["/", "/experience/hermes"]:
+            client.post(
+                "/api/v1/analytics/track/pageview",
+                json={"page_path": path, "visitor_id": "visitor-session"},
+            )
+        for path in ["/admin", "/admin/companies", "/admin/cv"]:
+            client.post(
+                "/api/v1/analytics/track/pageview",
+                json={"page_path": path, "visitor_id": "owner-session"},
+            )
+
+        data = client.get(
+            "/api/v1/analytics/stats/summary",
+            headers=admin_user_in_db["headers"],
+        ).json()
+
+        assert data["total_views"] == 2
+        page_paths = {p["path"] for p in data["top_pages"]}
+        assert page_paths == {"/", "/experience/hermes"}
+        assert not any(p.startswith("/admin") for p in page_paths)
+        assert sum(d["views"] for d in data["daily_views"]) == 2
+        # An admin-ONLY session has no real page view, so it is not a visitor.
+        assert data["unique_visitors"] == 1
+
     def test_summary_default_period(self, client: TestClient, admin_user_in_db: dict[str, Any]):
         """Test analytics summary uses 30-day default period."""
         response = client.get(

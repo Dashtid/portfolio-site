@@ -183,7 +183,13 @@ async def get_analytics_summary(
     # '/event/outbound/...' page views (trackEvent). Keep them OUT of the
     # real page-view metrics so total_views / top_pages / daily_views reflect
     # actual pages, then aggregate them separately below.
-    is_real_page = PageView.page_path.not_like("/event/%")
+    #
+    # '/admin%' is excluded for the same reason: router.afterEach used to fire
+    # on admin navigations too, so the owner's own CMS sessions were counted as
+    # visitor traffic. The frontend no longer sends them, but the rows already
+    # in the table would keep skewing every window that reaches back far
+    # enough -- filter at read time so history reads honestly too.
+    is_real_page = PageView.page_path.not_like("/event/%") & PageView.page_path.not_like("/admin%")
 
     # Total page views (real pages only)
     total_result = await db.execute(
@@ -191,10 +197,14 @@ async def get_analytics_summary(
     )
     total_views = total_result.scalar() or 0
 
-    # Unique visitors (by session_id) — a session with an event also has real
-    # views, so the distinct-session count is unaffected by the event rows.
+    # Unique visitors (by session_id) — sessions that recorded at least one
+    # real page view. Event-only rows never occur without a real view in the
+    # same session, but an admin-only session does, so the same filter has to
+    # apply here or the owner's own CMS sessions count as visitors.
     unique_result = await db.execute(
-        select(func.count(func.distinct(PageView.session_id))).where(PageView.created_at >= cutoff)
+        select(func.count(func.distinct(PageView.session_id))).where(
+            PageView.created_at >= cutoff, is_real_page
+        )
     )
     unique_visitors = unique_result.scalar() or 0
 

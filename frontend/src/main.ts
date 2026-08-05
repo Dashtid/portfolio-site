@@ -109,6 +109,14 @@ export const createApp = ViteSSG(
         const title = to.meta.title as string | undefined
         document.title = title || DEFAULT_TITLE
 
+        // Admin navigations are the site owner driving the CMS, not visitor
+        // traffic — sending them POSTed '/admin/companies' and the admin page
+        // title to the PUBLIC analytics endpoint, where they landed in the
+        // same table the dashboard reports on. The backend summary also
+        // filters '/admin%' for the rows already recorded; this stops new ones
+        // at the source so the beacon never fires from a logged-in session.
+        if (to.path.startsWith('/admin')) return
+
         analyticsService.trackPageView(to.path, to.name as string | undefined)
       })
 

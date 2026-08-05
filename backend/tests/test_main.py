@@ -191,6 +191,18 @@ class TestSecurityHeaders:
         assert "Referrer-Policy" in response.headers
         assert "Permissions-Policy" in response.headers
 
+    def test_x_robots_tag_keeps_the_api_out_of_the_index(self, client: TestClient):
+        """api.dashti.se is a different host from dashti.se, so the site's
+        robots.txt 'Disallow: /api/' does not cover it and this host serves no
+        robots.txt (404 == crawl everything). Endpoints like /api/v1/companies
+        republish the exact prose the canonical pages carry, so without this
+        header Google can index the JSON as duplicate content competing with
+        the pages it came from. X-Robots-Tag is the only noindex signal that
+        travels with a JSON response.
+        """
+        response = client.get("/api/v1/health")
+        assert response.headers["X-Robots-Tag"] == "noindex, nofollow"
+
     def test_hsts_header_in_production(self):
         """Test that HSTS header is added in production mode."""
         from app.main import SecurityHeadersMiddleware  # noqa: PLC0415

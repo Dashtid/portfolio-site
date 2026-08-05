@@ -203,6 +203,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "0"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
+        # api.dashti.se is a SEPARATE host from dashti.se, so the site's
+        # robots.txt "Disallow: /api/" does not apply to it -- and this host
+        # serves no robots.txt at all (404 == crawl everything). Left alone,
+        # Google can index /api/v1/companies etc., which republish the exact
+        # prose the canonical pages carry: duplicate content competing with
+        # the pages it was scraped from. X-Robots-Tag is the only signal that
+        # travels with a JSON response.
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+
         # Cross-origin isolation headers (OWASP 2025)
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
