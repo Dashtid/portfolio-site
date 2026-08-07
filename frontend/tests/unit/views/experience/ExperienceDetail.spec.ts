@@ -445,12 +445,12 @@ describe('ExperienceDetail', () => {
       })
       const { wrapper } = await createWrapper()
 
-      const img = wrapper.find('img[alt$="logo"]')
+      const img = wrapper.find('header img')
       expect(img.exists()).toBe(true)
 
       await img.trigger('error')
 
-      expect(wrapper.find('img[alt$="logo"]').exists()).toBe(false)
+      expect(wrapper.find('header img').exists()).toBe(false)
     })
   })
 })

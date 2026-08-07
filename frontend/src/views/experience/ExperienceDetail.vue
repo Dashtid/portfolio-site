@@ -9,7 +9,7 @@
       <!-- Loading State -->
       <div v-if="loading" class="mx-auto max-w-3xl px-6 py-20 text-center">
         <div
-          class="spinner-border mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-primary-500 dark:border-slate-700 dark:border-t-primary-400"
+          class="spinner-border mx-auto h-10 w-10 motion-safe:animate-spin rounded-full border-2 border-slate-200 border-t-primary-500 dark:border-slate-700 dark:border-t-primary-400"
           role="status"
         >
           <span class="sr-only">Loading...</span>
@@ -105,7 +105,7 @@
           <img
             v-if="company.logo_url && !logoError"
             :src="company.logo_url"
-            :alt="`${company.name} logo`"
+            alt=""
             class="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-800"
             @error="logoError = true"
           />

@@ -1,5 +1,12 @@
 <template>
-  <div v-if="hasError" class="error-boundary">
+  <!-- <main id="main-content">, not a bare div: this fallback REPLACES the
+       routed view (v-if/v-else are exclusive), and every view is where the
+       landmark lives — so while hasError is true the document had ZERO main
+       landmarks and App.vue's skip link pointed at a fragment that no longer
+       existed. tabindex="-1" is what lets fragment navigation actually move
+       focus there, same as HomeView/NotFoundView/ExperienceDetail. No
+       duplicate-id risk: the slot and this branch are never both mounted. -->
+  <main v-if="hasError" id="main-content" role="main" tabindex="-1" class="error-boundary">
     <div class="error-container">
       <div class="error-icon">
         <svg
@@ -30,7 +37,7 @@
         <button class="btn-home" @click="handleGoHome">Go to Homepage</button>
       </div>
     </div>
-  </div>
+  </main>
   <slot v-else />
 </template>
 

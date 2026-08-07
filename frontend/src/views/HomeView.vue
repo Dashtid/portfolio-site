@@ -201,7 +201,7 @@
                   <img
                     v-if="company.logo_url"
                     :src="company.logo_url"
-                    :alt="`${company.name} Logo`"
+                    alt=""
                     class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:bg-slate-100 dark:ring-slate-600"
                     width="56"
                     height="56"
@@ -364,7 +364,7 @@
                   <img
                     v-if="company.logo_url"
                     :src="company.logo_url"
-                    :alt="`${company.name} Logo`"
+                    alt=""
                     class="h-9 w-9 shrink-0 rounded-md bg-white object-contain p-1 ring-1 ring-slate-200 dark:bg-slate-100 dark:ring-slate-600"
                     width="36"
                     height="36"
@@ -422,7 +422,7 @@
                   <img
                     v-if="edu.logo_url"
                     :src="edu.logo_url"
-                    :alt="`${edu.institution} Logo`"
+                    alt=""
                     class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:bg-slate-100 dark:ring-slate-600"
                     width="56"
                     height="56"

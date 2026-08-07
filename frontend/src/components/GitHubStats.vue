@@ -266,6 +266,21 @@ onUnmounted(() => {
   }
 }
 
+/* Reduced motion. The ring freezes static — progress is still conveyed by the
+   adjacent "Loading GitHub stats..." text inside the role="status" live
+   region, so nothing is lost. fadeIn has no fill-mode, so dropping it leaves
+   .stats-container at its natural opacity: 1 with no end state to pin (unlike
+   HomeView's trace-* animations, which DO need explicit end values — see the
+   note there). Scoped, not global: style.css:219-223 records that global
+   .loading-spinner rules once corrupted this component's identically-named
+   container, so the component owns its spinner CSS. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .stats-container {
+    animation: none;
+  }
+}
+
 /* Dark mode overrides. Most surfaces swap via semantic tokens or the
    shared Tailwind card recipe; only the brighter error tint and the
    higher-opacity empty-state border need explicit dark treatment. */

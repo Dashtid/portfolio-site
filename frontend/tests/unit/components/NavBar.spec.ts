@@ -356,7 +356,9 @@ describe('NavBar', () => {
       }) as VueWrapper<NavBarInstance>
 
       const heroLink = wrapper.find('[data-testid="nav-link-hero"]')
-      expect(heroLink.attributes('aria-current')).toBe('page')
+      // 'location' not 'page': these are fragment links, and on /experience/<id>
+      // the active one points at a different document. See NavBar.vue.
+      expect(heroLink.attributes('aria-current')).toBe('location')
     })
 
     it('does not set aria-current on inactive links', async () => {

@@ -21,13 +21,20 @@
            regardless of brand or actions width. -->
       <ul class="hidden items-center justify-self-center gap-1 lg:flex">
         <li v-for="item in navItems" :key="item.href">
+          <!-- aria-current is 'location', not 'page'. These are in-page fragment
+               links, and on /experience/<id> routeSection() marks 'experience'
+               active while that link points at a DIFFERENT document (the
+               homepage) — so 'page' asserted "this link IS the current
+               document", which was false. ARIA defines 'location' as the current
+               place within an environment: the current section on home, the
+               current area of the site elsewhere. One token, honest in both. -->
           <a
             class="nav-link"
             :class="{ active: activeSection === item.href }"
             :href="`#${item.href}`"
             :data-testid="`nav-link-${item.href}`"
             :aria-label="`Navigate to ${item.name} section`"
-            :aria-current="activeSection === item.href ? 'page' : undefined"
+            :aria-current="activeSection === item.href ? 'location' : undefined"
             @click.prevent="scrollToSection(item.href)"
           >
             {{ item.name }}

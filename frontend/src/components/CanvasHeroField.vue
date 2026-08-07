@@ -51,6 +51,7 @@ let ready = false
 let cancelDeferredStart: (() => void) | null = null
 let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
+let motionQuery: MediaQueryList | null = null
 
 // mulberry32 — tiny deterministic PRNG
 const mulberry32 = (seed: number) => {
@@ -170,8 +171,27 @@ const resize = (): void => {
 
 const handleVisibilityChange = (): void => updateRunState()
 
+// The mount-time read is a snapshot. Someone who turns reduced motion ON
+// mid-session -- often BECAUSE they noticed this field moving -- would keep the
+// loop until they navigate or reload, and the visibilitychange/intersection
+// callbacks actively RE-ARM it on tab return because startLoop gates on the
+// stale flag. Honour the transition and repaint the static t=0 frame.
+// The reverse (reduce -> no-preference) is deliberately NOT handled: the
+// observers and the D4-PERF idle gate below are only wired on the
+// no-preference path, and re-arming them for a decorative backdrop is not
+// worth the surface.
+const handleMotionPreferenceChange = (event: MediaQueryListEvent): void => {
+  if (!event.matches) return
+  reducedMotion = true
+  cancelDeferredStart?.()
+  stopLoop()
+  draw(0)
+}
+
 onMounted(() => {
-  reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reducedMotion = motionQuery.matches
+  motionQuery.addEventListener('change', handleMotionPreferenceChange)
   buildField()
   resize()
 
@@ -217,6 +237,7 @@ onBeforeUnmount(() => {
   intersectionObserver?.disconnect()
   window.removeEventListener('resize', resize)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  motionQuery?.removeEventListener('change', handleMotionPreferenceChange)
 })
 </script>
 
