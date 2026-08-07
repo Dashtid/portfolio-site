@@ -197,6 +197,8 @@ frontend/.pnpm-store/
 # would disclose unshipped scope/roadmap. Past commits still contain them
 # (history rewrite would be a separate, coordinated change).
 BACKLOG.md
+BACKLOG-ARCHIVE.md
+LESSONS.md
 docs/admin-oss-dashboard-NOTES.md
 .private/
 
