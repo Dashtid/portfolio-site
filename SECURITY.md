@@ -44,7 +44,17 @@ Only the current `main` branch is supported. Older versions are not patched.
 ## Accepted Dependency-Audit Residuals
 
 Known `npm audit` findings that are consciously accepted rather than fixed,
-reviewed 2026-07-31:
+reviewed 2026-08-07:
+
+- **js-yaml quadratic CPU on `!!omap` (GHSA-5p4m-2wfm-xmqj, CVE-2026-59870)**
+  via a single dev-only chain: `@lhci/cli@0.15.1` → `@lhci/utils` →
+  `js-yaml@3.15.0`. The fix exists only in js-yaml 5.x and was explicitly NOT
+  backported to 3.x or 4.x, and 4.x already removed the `safeLoad`-era API that
+  `@lhci/utils` calls — so an `overrides` pin to 5.x would break Lighthouse CI
+  rather than patch it. Exposure: js-yaml here parses `lighthouserc` config
+  from this repo during CI only. The input is not attacker-controlled and the
+  package never reaches the deployed frontend (`npm audit --omit=dev` reports
+  0 vulnerabilities). Re-check when `@lhci/cli` moves off js-yaml 3.x.
 
 - **brace-expansion OOM DoS (GHSA-mh99-v99m-4gvg)** in nested dev-only copies
   (1.1.18 / 2.1.4). `npm audit` reports this as 15 high-severity entries, but
