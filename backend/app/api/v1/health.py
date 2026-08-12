@@ -51,6 +51,13 @@ def _format_uptime(seconds: float) -> str:
     return " ".join(parts)
 
 
+# HEAD is registered explicitly on both health routes: FastAPI's APIRoute does
+# NOT auto-add HEAD to GET routes the way bare Starlette does, so uptime
+# monitors that probe with HEAD (UptimeRobot's free tier is locked to it) got
+# 405 and reported a healthy API as down. The decorators stack; the ASGI
+# server strips the body from HEAD responses, so status and headers behave
+# identically to GET.
+@router.head("/health")
 @router.get("/health")
 async def health_check():
     """
@@ -77,6 +84,7 @@ async def health_check():
     }
 
 
+@router.head("/health/ready")
 @router.get("/health/ready")
 async def readiness_check(db: DbSession, response: Response):
     """

@@ -33,6 +33,46 @@ def test_readiness_check(client: TestClient):
     assert "uptime_seconds" in data
 
 
+class TestHeadMethodSupport:
+    """HEAD support on the health routes.
+
+    Uptime monitors commonly probe with HEAD (UptimeRobot's free tier is
+    locked to it), and FastAPI does not auto-register HEAD for GET routes,
+    so these guard against a healthy API reading as down.
+    """
+
+    def test_head_health_returns_200_with_empty_body(self, client: TestClient):
+        response = client.head("/api/v1/health")
+        assert response.status_code == 200
+        assert response.content == b""
+
+    def test_head_readiness_returns_200(self, client: TestClient):
+        response = client.head("/api/v1/health/ready")
+        assert response.status_code == 200
+        assert response.content == b""
+
+    def test_head_readiness_returns_503_on_db_failure(self, client: TestClient):
+        """The monitor must still see a real 503 when the database is gone."""
+        from unittest.mock import AsyncMock
+
+        from app.database import get_db
+
+        async def mock_db_failure():
+            mock_session = AsyncMock()
+            mock_session.execute.side_effect = Exception("Database connection failed")
+            yield mock_session
+
+        from app.main import app
+
+        app.dependency_overrides[get_db] = mock_db_failure
+
+        try:
+            response = client.head("/api/v1/health/ready")
+            assert response.status_code == 503
+        finally:
+            del app.dependency_overrides[get_db]
+
+
 def test_root_endpoint(client: TestClient):
     """Test root API endpoint."""
     response = client.get("/")
