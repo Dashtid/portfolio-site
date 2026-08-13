@@ -45,6 +45,11 @@ export interface CvResume {
   certificates: Array<{ name: string; date: string; issuer: string; url?: string }>
   skills: Array<{ name: string; keywords: string[] }>
   languages: CvLanguage[]
+  /**
+   * Övrigt / logistics one-liners (e.g. B-körkort), rendered LAST — a
+   * separate section so they can never be presented as credentials.
+   */
+  other?: string[]
 }
 
 export interface CvProfile {
@@ -60,6 +65,7 @@ export interface CvProfile {
   linkedin_url: string
   github_url: string
   languages: CvLanguage[]
+  other_items: string[]
   email: string
   phone: string
   personnummer: string

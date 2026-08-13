@@ -195,3 +195,51 @@ class TestCvExportEndpoint:
         client.put(PROFILE_URL, headers=headers, json={"personnummer": "900101-0000"})
         cv = client.get(EXPORT_URL, headers=headers).json()
         assert cv["basics"]["personalNumber"] == "900101-0000"
+
+
+class TestCvOtherSection:
+    """Övrigt / logistics items (CV-generator requirements, 2026-08-06).
+
+    B-körkort must render as logistics info at the bottom of the CV and can
+    NEVER appear in a certifications section. The structural guarantee is
+    that it lives in cv_profile.other_items and is exported under "other" —
+    a key the certificates assembly cannot reach.
+    """
+
+    ITEM = "B-körkort (category B driving licence)"
+
+    def test_other_items_round_trip(self, client: TestClient, admin_user_in_db: dict[str, Any]):
+        headers = admin_user_in_db["headers"]
+        response = client.put(PROFILE_URL, headers=headers, json={"other_items": [self.ITEM]})
+        assert response.status_code == 200
+        assert response.json()["other_items"] == [self.ITEM]
+
+        again = client.get(PROFILE_URL, headers=headers).json()
+        assert again["other_items"] == [self.ITEM]
+
+    def test_export_carries_other_never_certificates(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)  # includes a real certificate row
+        client.put(PROFILE_URL, headers=headers, json={"other_items": [self.ITEM]})
+
+        cv = client.get(EXPORT_URL, headers=headers).json()
+        assert cv["other"] == [self.ITEM]
+        # The certificates section carries ONLY is_certification education
+        # rows; no logistics string can appear there.
+        assert all("körkort" not in c["name"].lower() for c in cv["certificates"])
+        assert [c["name"] for c in cv["certificates"]] == ["Security+"]
+
+    def test_blank_other_items_rejected_not_500(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Blank rows 422 at the schema layer — including whitespace-only.
+
+        strip_whitespace runs before min_length, so "   " cannot sneak past
+        as a visually blank bullet the way it would with min_length alone.
+        """
+        headers = admin_user_in_db["headers"]
+        for blank in ("", "   "):
+            response = client.put(PROFILE_URL, headers=headers, json={"other_items": [blank]})
+            assert response.status_code == 422, f"blank item {blank!r} was accepted"

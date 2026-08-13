@@ -179,6 +179,33 @@
           </button>
         </fieldset>
 
+        <fieldset>
+          <legend>Other (Övrigt)</legend>
+          <span class="field-hint">
+            Logistics one-liners (e.g. B-körkort). Rendered as the LAST section of the CV — never
+            under Certificates.
+          </span>
+          <div v-for="(_, index) in profile.other_items" :key="index" class="other-row">
+            <input
+              v-model="profile.other_items[index]"
+              type="text"
+              class="form-control"
+              placeholder="e.g. B-körkort (category B driving licence)"
+              :aria-label="`Other item ${index + 1}`"
+            />
+            <button
+              type="button"
+              class="btn-row-action btn-row-delete btn-danger"
+              @click="removeOtherItem(index)"
+            >
+              Remove
+            </button>
+          </div>
+          <button type="button" class="btn-cancel btn-secondary" @click="addOtherItem">
+            Add item
+          </button>
+        </fieldset>
+
         <div class="form-actions">
           <button
             type="submit"
@@ -226,8 +253,9 @@ const loadError = ref<string | null>(null)
 
 const fetchProfile = async (): Promise<void> => {
   const response = await api.get<CvProfile>('/api/v1/admin/cv/profile')
-  // Guard against a null languages column from a freshly-created singleton.
+  // Guard against null JSON columns from a freshly-created singleton.
   response.data.languages = response.data.languages ?? []
+  response.data.other_items = response.data.other_items ?? []
   profile.value = response.data
 }
 
@@ -269,6 +297,10 @@ const save = async (): Promise<void> => {
       languages: p.languages
         .map(l => ({ language: l.language.trim(), fluency: l.fluency.trim() }))
         .filter(l => l.language.length > 0),
+      // Same pruning rationale as languages: the backend rejects blank items
+      // (strip_whitespace + min_length=1), so an unfilled "Add item" row
+      // would 422 the whole PUT and silently drop every other edit.
+      other_items: p.other_items.map(item => item.trim()).filter(item => item.length > 0),
       email: p.email,
       phone: p.phone,
       personnummer: p.personnummer
@@ -290,6 +322,14 @@ const addLanguage = (): void => {
 
 const removeLanguage = (index: number): void => {
   profile.value?.languages.splice(index, 1)
+}
+
+const addOtherItem = (): void => {
+  profile.value?.other_items.push('')
+}
+
+const removeOtherItem = (index: number): void => {
+  profile.value?.other_items.splice(index, 1)
 }
 
 const printCv = (): void => {
@@ -418,6 +458,17 @@ onMounted(async (): Promise<void> => {
 .lang-row {
   display: grid;
   grid-template-columns: 2fr 2fr auto;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+/* Other rows have one input + Remove, not the Languages rows' two inputs —
+   reusing .lang-row's 3-track grid would trap the input at half width and
+   stretch the Remove button across the middle track. */
+.other-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
   align-items: center;

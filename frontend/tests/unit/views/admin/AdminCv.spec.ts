@@ -29,6 +29,7 @@ const profileFixture = () => ({
   linkedin_url: 'https://www.linkedin.com/in/david-dashti/',
   github_url: 'https://github.com/Dashtid',
   languages: [{ language: 'Swedish', fluency: 'Native' }],
+  other_items: ['B-körkort (category B driving licence)'],
   email: '',
   phone: '',
   personnummer: ''
@@ -124,6 +125,18 @@ describe('AdminCv', () => {
     expect(mockToast.success).toHaveBeenCalledWith('CV profile saved')
     // preview re-assembled after save
     expect(api.get).toHaveBeenCalledWith('/api/v1/admin/cv/export')
+  })
+
+  it('prunes blank Other rows before the PUT (same 422 trap as languages)', async () => {
+    const wrapper = await createWrapper()
+    const addBtn = wrapper.findAll('button').find(b => b.text() === 'Add item')!
+    await addBtn.trigger('click') // blank row left empty on purpose
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const body = vi.mocked(api.put).mock.calls[0][1] as { other_items: unknown }
+    expect(body.other_items).toEqual(['B-körkort (category B driving licence)'])
   })
 
   it('surfaces an error toast when saving fails', async () => {

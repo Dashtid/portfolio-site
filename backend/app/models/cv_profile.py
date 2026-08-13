@@ -48,6 +48,12 @@ class CvProfile(Base):
     # [{"language": "...", "fluency": "..."}] — there is no separate language
     # table; the CV needs only this small flat list.
     languages: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
+    # Övrigt / logistics one-liners (e.g. "B-körkort (category B driving
+    # licence)") rendered at the BOTTOM of the CV under "Other". Deliberately
+    # its own column, not an education/certification row: the CV-generator
+    # requirements (2026-08-06) forbid logistics facts from ever being
+    # classified as credentials, and a separate column makes that structural.
+    other_items: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
 
     # Private contact — admin-only. NEVER surfaced on a public serializer, the
     # SSG bundle, or any unauthenticated route. Blank by default and populated

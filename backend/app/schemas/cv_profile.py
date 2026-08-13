@@ -7,12 +7,21 @@ personnummer) — an anonymous visitor can never reach them. Do not reuse
 CvProfileResponse on any public route.
 """
 
-from pydantic import BaseModel, Field
+from typing import Annotated
+
+from pydantic import BaseModel, Field, StringConstraints
 
 
 class LanguageItem(BaseModel):
     language: str = Field(..., min_length=1, max_length=100)
     fluency: str = Field("", max_length=100)
+
+
+# Övrigt / logistics one-liners (e.g. "B-körkort ..."), rendered under the
+# CV's bottom "Other" section — never under certificates. strip_whitespace
+# runs BEFORE min_length, so a whitespace-only item is rejected rather than
+# persisted as a visually blank bullet.
+OtherItem = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 
 class CvProfileBase(BaseModel):
@@ -28,6 +37,7 @@ class CvProfileBase(BaseModel):
     linkedin_url: str = Field("", max_length=500)
     github_url: str = Field("", max_length=500)
     languages: list[LanguageItem] = Field(default_factory=list)
+    other_items: list[OtherItem] = Field(default_factory=list)
 
     # Private contact — only ever returned to the authenticated admin.
     email: str = Field("", max_length=320)
@@ -55,6 +65,7 @@ class CvProfileUpdate(BaseModel):
     linkedin_url: str | None = Field(None, max_length=500)
     github_url: str | None = Field(None, max_length=500)
     languages: list[LanguageItem] | None = None
+    other_items: list[OtherItem] | None = None
     email: str | None = Field(None, max_length=320)
     phone: str | None = Field(None, max_length=64)
     personnummer: str | None = Field(None, max_length=64)

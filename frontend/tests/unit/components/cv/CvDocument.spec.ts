@@ -51,7 +51,8 @@ const fullResume = (): CvResume => ({
   languages: [
     { language: 'Swedish', fluency: 'Native' },
     { language: 'English', fluency: 'Fluent' }
-  ]
+  ],
+  other: ['B-körkort (category B driving licence)']
 })
 
 const emptyResume = (): CvResume => ({
@@ -151,6 +152,24 @@ describe('CvDocument', () => {
     // Security+ is linked, the plain course is not.
     const certLink = wrapper.findAll('a').find(a => a.text().includes('Security+'))
     expect(certLink?.attributes('href')).toBe('https://www.credly.com/x')
+  })
+
+  it('renders Other (Övrigt) as the LAST section, separate from Certificates', () => {
+    const wrapper = make(fullResume())
+    const headings = wrapper.findAll('h2').map(h => h.text())
+    // Logistics items render at the bottom of the CV and never as a
+    // credential (CV-generator requirements, 2026-08-06).
+    expect(headings[headings.length - 1]).toBe('Other')
+    expect(wrapper.text()).toContain('B-körkort (category B driving licence)')
+    const certSection = wrapper
+      .findAll('section')
+      .find(s => s.find('h2').exists() && s.find('h2').text() === 'Certificates')!
+    expect(certSection.text()).not.toContain('körkort')
+  })
+
+  it('hides the Other section when the export carries none', () => {
+    const wrapper = make(emptyResume())
+    expect(wrapper.findAll('h2').map(h => h.text())).not.toContain('Other')
   })
 
   it('hides every empty section without error', () => {

@@ -180,6 +180,19 @@
         </template>
       </p>
     </section>
+
+    <!-- Other (Övrigt) — logistics one-liners such as B-körkort. Kept as the
+         LAST section, separate from Certificates by design: these are
+         logistics facts, not credentials. -->
+    <section v-if="resume.other?.length" class="mt-10">
+      <h2 class="cv-heading">Other</h2>
+      <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
+        <template v-for="(item, index) in resume.other" :key="item">
+          <template v-if="index > 0"> &middot; </template>
+          {{ item }}
+        </template>
+      </p>
+    </section>
   </div>
 </template>
 

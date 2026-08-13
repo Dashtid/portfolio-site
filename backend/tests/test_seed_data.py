@@ -129,12 +129,50 @@ class TestSeedSkills:
 
     @pytest.mark.asyncio
     async def test_seed_skills_creates_correct_count(self, db_session):
-        """Test that seed_skills creates exactly 20 skills."""
+        """Test that seed_skills creates exactly 24 skills."""
         await seed_skills(db_session)
 
         result = await db_session.execute(select(Skill))
         skills = result.scalars().all()
-        assert len(skills) == 20
+        assert len(skills) == 24
+
+    @pytest.mark.asyncio
+    async def test_seed_skills_keyword_policy(self, db_session):
+        """The seeded skills enforce the decided keyword set (2026-08-06).
+
+        One set across LinkedIn / CV / site. The IN terms below were decided
+        in the career-plan session; NIS 2 + GAMP 5 additionally carried a
+        tier-map gate that the owner signed off 2026-08-13. The OUT terms are
+        claim-gated (unverifiable or unearned) and must never reappear.
+        Existing prod is converged by the b5d21e04c7a9 data migration (the
+        seed alone cannot reach a populated table). Changing this list is a
+        content decision, not a refactor: update it only alongside the
+        owner's keyword set.
+        """
+        await seed_skills(db_session)
+
+        result = await db_session.execute(select(Skill))
+        names = {s.name for s in result.scalars().all()}
+
+        required = {
+            "NIS 2",
+            "GAMP 5",
+            "IEC 62304",
+            "IEC 81001-5-1",
+            "Threat Modeling",
+            "Application Security",
+            "Software Supply-Chain Security (SBOM)",
+            "Secure SDLC",
+            "Vulnerability Management",
+            "Kubernetes",
+        }
+        assert required <= names, f"IN keywords missing from seed: {required - names}"
+
+        lowered = {n.lower() for n in names}
+        for banned in ("iso 27001", "owasp", "pentest", "penetration"):
+            assert not any(banned in n for n in lowered), (
+                f"claim-gated OUT term '{banned}' present in seeded skills"
+            )
 
     @pytest.mark.asyncio
     async def test_seed_skills_column_mapping(self, db_session):
@@ -272,7 +310,7 @@ class TestSeedDataIntegration:
 
         assert len(companies) == 8
         assert len(projects) == 4
-        assert len(skills) == 20
+        assert len(skills) == 24
         assert len(education) == 4
 
     @pytest.mark.asyncio
@@ -331,7 +369,7 @@ class TestSeedDataMain:
         async with TestSessionLocal() as session:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
             assert len((await session.execute(select(Project))).scalars().all()) == 4
-            assert len((await session.execute(select(Skill))).scalars().all()) == 20
+            assert len((await session.execute(select(Skill))).scalars().all()) == 24
             assert len((await session.execute(select(Education))).scalars().all()) == 4
 
     @pytest.mark.asyncio

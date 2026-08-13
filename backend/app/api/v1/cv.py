@@ -49,6 +49,7 @@ _PROFILE_UPDATE_FIELDS = frozenset(
         "linkedin_url",
         "github_url",
         "languages",
+        "other_items",
         "email",
         "phone",
         "personnummer",
@@ -216,4 +217,8 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
         "certificates": certificates,
         "skills": skills_out,
         "languages": profile.languages or [],
+        # Övrigt / logistics one-liners (B-körkort etc.). A separate section
+        # rendered LAST by CvDocument — structurally incapable of landing in
+        # certificates, per the CV-generator requirements (2026-08-06).
+        "other": list(profile.other_items or []),
     }
