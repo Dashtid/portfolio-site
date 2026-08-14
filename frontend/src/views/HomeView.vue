@@ -821,9 +821,8 @@
                 it for market — premarket cybersecurity, threat modeling, and security risk
                 management, grounded in FDA premarket guidance and IEC 81001-5-1. As AI moves into
                 these devices, I've started an early gap analysis against the EU AI Act to
-                understand what it will ask of us. I also build my own tools — an internal RAG
-                system over company data, still a work in progress, and in-house security tooling
-                and tests.
+                understand what it will ask of us. I also build my own tools — in-house security
+                tooling and tests.
               </p>
               <div class="mt-6">
                 <p
