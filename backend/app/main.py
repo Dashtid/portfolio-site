@@ -505,6 +505,12 @@ app.add_middleware(
         "X-Requested-With",
         "Cache-Control",
         "Pragma",
+        # Sentry browserTracingIntegration attaches these to fetches whose URL
+        # matches tracePropagationTargets (which includes api.dashti.se). If
+        # they are missing here, the CORS preflight rejects EVERY API call the
+        # moment a frontend DSN is configured.
+        "sentry-trace",
+        "baggage",
     ],
 )
 
