@@ -26,6 +26,13 @@ updates:
       # slowapi 0.1.10 (Jun 2026) still does NOT resolve via scope['route'].
       - dependency-name: "fastapi"
         versions: [">=0.137"]
+      # pydantic pins pydantic-core EXACTLY (e.g. 2.13.4 -> ==2.46.4), so a
+      # pydantic-core bump without a matching pydantic release is
+      # unresolvable by construction — and NO stable pydantic pinned 2.48.0
+      # when group PR #159 proposed it (2026-08-16). pydantic-core moves
+      # ONLY when pydantic itself is bumped (hand-paired in the hash file),
+      # so keep it out of dependabot's hands entirely.
+      - dependency-name: "pydantic-core"
     # D3-CI-02: 7-day cooldown before adopting fresh releases — the window
     # in which hijacked-package incidents are typically caught and yanked.
     # Dependabot security updates bypass cooldown automatically, so known
