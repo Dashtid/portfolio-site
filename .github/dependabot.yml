@@ -83,6 +83,12 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    # One PR for all actions bumps: codeql-action's coupled pins (init/
+    # analyze/upload-sarif must move in lockstep) previously arrived as
+    # separate PRs that could never pass individually.
+    groups:
+      actions-all:
+        patterns: ["*"]
     commit-message:
       prefix: "chore(ci)"
 

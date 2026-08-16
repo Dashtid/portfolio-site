@@ -305,12 +305,19 @@ jobs:
         uses: trufflesecurity/trufflehog@6f3c981e7b77f235fd2702dd74af25fc4b72bf11 # v3.96.0
         with:
           path: ./
-          # github.event.before is the all-zeros SHA on force-push and
-          # branch-creation events — an invalid base that errors the diff
-          # scan. Fall back to an empty base (= full scan at head) there.
-          base: ${{ github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '' }}
+          # On pull_request events github.event.before does not exist, which
+          # silently degraded the diff scan into a FULL scan on every PR.
+          # Use the PR base SHA there. On push, github.event.before is the
+          # all-zeros SHA on force-push and branch-creation — an invalid base
+          # that errors the diff scan. Fall back to an empty base (= full
+          # scan at head) there.
+          base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '') }}
           head: ${{ github.sha }}
-          extra_args: --only-verified
+          # --exclude-detectors=lob: TruffleHog's Lob detector "verifies"
+          # ordinary pytest fixture strings (confirmed false positive
+          # 2026-08-16, full local scan: no real secrets). Lob is a print/
+          # mail API this project will never use.
+          extra_args: --only-verified --exclude-detectors=lob
 
   # Dependency Review - blocks PRs with vulnerable dependencies
   dependency-review:
