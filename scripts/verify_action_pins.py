@@ -27,12 +27,20 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 WORKFLOW_DIR = Path(__file__).resolve().parent.parent / ".github" / "workflows"
 API = "https://api.github.com"
+
+# A 5xx or a dropped connection from api.github.com says nothing about whether
+# the pins are correct, but without a retry it fails the whole security-scan
+# job and trains readers to wave red CI through. Seen 2026-08-17: a single
+# HTTP 504 failed the gate on an unrelated commit.
+HTTP_ATTEMPTS = 4
+HTTP_BACKOFF_SECONDS = 2
 
 # `uses: owner/repo[/sub/path]@<40-hex sha> # <version>`
 PIN_RE = re.compile(
@@ -65,20 +73,40 @@ def _api(path: str, token: str | None) -> dict | list | None:
     req.add_header("User-Agent", "portfolio-site-pin-audit")
     if token:
         req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            return None
-        if exc.code in (403, 429):
-            print(
-                f"[-] GitHub API rate limit or forbidden on {path} "
-                f"({exc.code}). Provide GITHUB_TOKEN.",
-                file=sys.stderr,
-            )
-            sys.exit(2)
-        raise
+    for attempt in range(1, HTTP_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as exc:
+            # 404 and the rate-limit codes are ANSWERS, not transport failures:
+            # retrying them changes nothing and hides the real cause.
+            if exc.code == 404:
+                return None
+            if exc.code in (403, 429):
+                print(
+                    f"[-] GitHub API rate limit or forbidden on {path} "
+                    f"({exc.code}). Provide GITHUB_TOKEN.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+            if exc.code < 500 or attempt == HTTP_ATTEMPTS:
+                raise
+            transient = f"HTTP {exc.code}"
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            if attempt == HTTP_ATTEMPTS:
+                raise
+            transient = type(exc).__name__
+
+        delay = HTTP_BACKOFF_SECONDS * (2 ** (attempt - 1))
+        print(
+            f"[!] {transient} on {path} (attempt {attempt}/{HTTP_ATTEMPTS}); "
+            f"retrying in {delay}s",
+            file=sys.stderr,
+        )
+        time.sleep(delay)
+
+    # Unreachable: the final attempt either returns or re-raises above.
+    raise RuntimeError(f"exhausted retries for {path}")
 
 
 def resolve_tag(repo: str, tag: str, token: str | None) -> tuple[str | None, str | None]:
