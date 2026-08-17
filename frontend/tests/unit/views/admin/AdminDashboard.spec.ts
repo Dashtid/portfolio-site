@@ -20,11 +20,22 @@ vi.mock('@/api/client', () => ({
 const createTestRouter = (): Router => {
   return createRouter({
     history: createWebHistory(),
+    // Names must mirror src/router/index.ts: the dashboard decides between the
+    // overview and <router-view> on $route.name, so an unnamed fixture route
+    // silently rendered neither and made these assertions vacuous.
     routes: [
-      { path: '/admin', component: { template: '<div>Dashboard</div>' } },
-      { path: '/admin/login', component: { template: '<div>Login</div>' } },
-      { path: '/admin/companies', component: { template: '<div>Companies</div>' } },
-      { path: '/admin/projects', component: { template: '<div>Projects</div>' } }
+      { path: '/admin', name: 'admin-dashboard', component: { template: '<div>Dashboard</div>' } },
+      { path: '/admin/login', name: 'admin-login', component: { template: '<div>Login</div>' } },
+      {
+        path: '/admin/companies',
+        name: 'admin-companies',
+        component: { template: '<div>Companies</div>' }
+      },
+      {
+        path: '/admin/projects',
+        name: 'admin-projects',
+        component: { template: '<div>Projects</div>' }
+      }
     ]
   })
 }
@@ -113,9 +124,13 @@ describe('AdminDashboard', () => {
       const userInfo = wrapper.find('.user-info')
       expect(userInfo.exists()).toBe(true)
 
+      // Initials, not a remote <img>: the site's CSP is img-src 'self', so the
+      // GitHub avatar_url was blocked and rendered as a broken image.
       const avatar = wrapper.find('.user-avatar')
       expect(avatar.exists()).toBe(true)
-      expect(avatar.attributes('src')).toBe('https://example.com/avatar.jpg')
+      expect(avatar.element.tagName).toBe('SPAN')
+      expect(avatar.attributes('src')).toBeUndefined()
+      expect(avatar.text()).toBe('TU')
 
       const userName = wrapper.find('.user-name')
       expect(userName.exists()).toBe(true)

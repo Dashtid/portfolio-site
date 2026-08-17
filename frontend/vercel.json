@@ -5,6 +5,8 @@
   "installCommand": "npm ci",
   "framework": "vite",
   "cleanUrls": true,
+  "//trailingSlash": "308-redirect /x/ to /x instead of 404ing. Verified 2026-08-16: /admin/ and /experience/ both returned a hard 404 because the /admin/:path* rewrite does not match a bare trailing slash and SSG emits no directory indexes.",
+  "trailingSlash": false,
   "git": {
     "deploymentEnabled": false
   },

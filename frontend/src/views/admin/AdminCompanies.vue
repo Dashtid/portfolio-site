@@ -435,7 +435,10 @@ onMounted((): void => {
 
 <style scoped>
 .admin-companies {
-  padding: var(--spacing-4);
+  /* No padding: .admin-content owns the gutter. A wrapper padding here stacked
+     on top of it and pushed this panel's heading out of line with both the nav
+     tabs and the panels that have no wrapper padding. */
+  padding: 0;
 }
 
 .page-header {

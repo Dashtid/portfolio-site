@@ -8,12 +8,11 @@
         </div>
         <div class="header-right">
           <div v-if="authStore.currentUser" class="user-info">
-            <img
-              v-if="authStore.currentUser.avatar_url"
-              :src="authStore.currentUser.avatar_url"
-              :alt="authStore.currentUser.name"
-              class="user-avatar"
-            />
+            <!-- Initials, not the GitHub avatar_url: the site's CSP is
+                 img-src 'self', so the remote avatar was blocked and rendered
+                 as a broken-image circle. This is a private page's decoration
+                 and does not justify opening img-src to a third-party host. -->
+            <span class="user-avatar" aria-hidden="true">{{ userInitials }}</span>
             <span class="user-name">{{
               authStore.currentUser.name || authStore.currentUser.username
             }}</span>
@@ -25,73 +24,86 @@
 
     <!-- Admin Navigation -->
     <nav class="admin-nav print:hidden" role="navigation" aria-label="Admin navigation">
-      <router-link to="/admin" class="nav-link" :class="{ active: $route.path === '/admin' }">
-        Dashboard
-      </router-link>
-      <router-link
-        to="/admin/companies"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/companies' }"
-      >
-        Experience
-      </router-link>
-      <router-link
-        to="/admin/projects"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/projects' }"
-      >
-        Projects
-      </router-link>
-      <router-link
-        to="/admin/skills"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/skills' }"
-      >
-        Skills
-      </router-link>
-      <router-link
-        to="/admin/education"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/education' }"
-      >
-        Education
-      </router-link>
-      <router-link
-        to="/admin/documents"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/documents' }"
-      >
-        Documents
-      </router-link>
-      <router-link
-        to="/admin/analytics"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/analytics' }"
-      >
-        Analytics
-      </router-link>
-      <router-link
-        to="/admin/metrics"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/metrics' }"
-      >
-        Metrics
-      </router-link>
-      <router-link
-        to="/admin/oss"
-        class="nav-link"
-        :class="{ active: $route.path === '/admin/oss' }"
-      >
-        OSS
-      </router-link>
-      <router-link to="/admin/cv" class="nav-link" :class="{ active: $route.path === '/admin/cv' }">
-        CV
-      </router-link>
+      <div class="admin-nav-inner">
+        <router-link
+          to="/admin"
+          class="nav-link"
+          :class="{ active: $route.name === 'admin-dashboard' }"
+        >
+          Dashboard
+        </router-link>
+        <router-link
+          to="/admin/companies"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/companies' }"
+        >
+          Experience
+        </router-link>
+        <router-link
+          to="/admin/projects"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/projects' }"
+        >
+          Projects
+        </router-link>
+        <router-link
+          to="/admin/skills"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/skills' }"
+        >
+          Skills
+        </router-link>
+        <router-link
+          to="/admin/education"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/education' }"
+        >
+          Education
+        </router-link>
+        <router-link
+          to="/admin/documents"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/documents' }"
+        >
+          Documents
+        </router-link>
+        <router-link
+          to="/admin/analytics"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/analytics' }"
+        >
+          Analytics
+        </router-link>
+        <router-link
+          to="/admin/metrics"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/metrics' }"
+        >
+          Metrics
+        </router-link>
+        <router-link
+          to="/admin/oss"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/oss' }"
+        >
+          OSS
+        </router-link>
+        <router-link
+          to="/admin/cv"
+          class="nav-link"
+          :class="{ active: $route.path === '/admin/cv' }"
+        >
+          CV
+        </router-link>
+      </div>
     </nav>
 
     <!-- Admin Content -->
     <main id="main-content" class="admin-content" tabindex="-1">
-      <router-view v-if="$route.path !== '/admin'" />
+      <!-- Route NAME, not path string: vue-router resolves '/admin/' (trailing
+           slash) to path '/admin/', which failed a path equality check and
+           rendered header + nav with a blank main. -->
+      <router-view v-if="$route.name !== 'admin-dashboard'" />
       <DashboardOverview
         v-else
         :companies-count="portfolioStore.companies.length"
@@ -125,6 +137,19 @@ const featuredProjects = computed<number>(() => {
   return portfolioStore.projects.filter(p => p.featured).length
 })
 
+const userInitials = computed<string>(() => {
+  const user = authStore.currentUser
+  if (!user) return ''
+  const source = user.name || user.username || ''
+  const initials = source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0])
+    .join('')
+  return initials.toUpperCase()
+})
+
 // Methods
 const logout = async (): Promise<void> => {
   try {
@@ -156,6 +181,10 @@ onMounted(async (): Promise<void> => {
 
 <style scoped>
 .admin-dashboard {
+  /* 80rem = 1280px, matching the public site's max-w-7xl so the gutter does
+     not jump when moving between /admin and the site itself. */
+  --admin-container-max: 80rem;
+
   min-height: 100vh;
   background: var(--color-slate-50);
 }
@@ -168,7 +197,7 @@ onMounted(async (): Promise<void> => {
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: var(--admin-container-max);
   margin: 0 auto;
   padding: 0 var(--spacing-6);
   display: flex;
@@ -202,10 +231,19 @@ onMounted(async (): Promise<void> => {
 }
 
 .user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: var(--radius-full);
   border: 2px solid var(--color-slate-200);
+  background: var(--color-slate-100);
+  color: var(--color-slate-700);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  user-select: none;
 }
 
 .user-name {
@@ -236,14 +274,27 @@ onMounted(async (): Promise<void> => {
   outline-offset: 2px;
 }
 
-/* Admin Navigation */
+/* Admin Navigation
+   The band (background + border) is full-bleed on .admin-nav so it lines up
+   with the full-bleed .admin-header above it; the width constraint lives on
+   the inner element, mirroring .admin-header/.header-content. Keeping both on
+   one element painted the nav as a centred 1200px island under a full-bleed
+   header — a notch of page background down each side at wide viewports.
+   overflow-x is unconditional: the ten links need ~900px, so the tab strip
+   was unreachable (and the whole document scrolled sideways) between 769px
+   and ~911px, where the old max-width:768px media query no longer applied. */
 .admin-nav {
   background: white;
   border-bottom: 1px solid var(--color-slate-200);
-  padding: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-nav-inner {
   display: flex;
   gap: var(--spacing-1);
-  max-width: 1200px;
+  min-width: max-content;
+  max-width: var(--admin-container-max);
   margin: 0 auto;
   padding: 0 var(--spacing-6);
 }
@@ -254,6 +305,8 @@ onMounted(async (): Promise<void> => {
   text-decoration: none;
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
   border-bottom: 2px solid transparent;
   transition: all var(--transition-base) ease;
 }
@@ -269,7 +322,7 @@ onMounted(async (): Promise<void> => {
 
 /* Admin Content */
 .admin-content {
-  max-width: 1200px;
+  max-width: var(--admin-container-max);
   margin: 0 auto;
   padding: var(--spacing-8) var(--spacing-6);
 }
@@ -282,8 +335,7 @@ onMounted(async (): Promise<void> => {
     align-items: flex-start;
   }
 
-  .admin-nav {
-    overflow-x: auto;
+  .admin-nav-inner {
     padding: 0 var(--spacing-4);
   }
 }
@@ -308,6 +360,8 @@ onMounted(async (): Promise<void> => {
 
 [data-theme='dark'] .user-avatar {
   border-color: var(--border-primary, #334155);
+  background: var(--bg-tertiary, #334155);
+  color: var(--text-primary, #f8fafc);
 }
 
 [data-theme='dark'] .logout-button {

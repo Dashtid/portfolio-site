@@ -535,7 +535,8 @@ onUnmounted(() => {
 
 <style scoped>
 .admin-education {
-  padding: 2rem;
+  /* No padding: .admin-content owns the gutter (see AdminCompanies.vue). */
+  padding: 0;
 }
 
 .admin-header {

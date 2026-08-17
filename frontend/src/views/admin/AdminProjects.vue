@@ -493,7 +493,8 @@ onMounted((): void => {
 
 <style scoped>
 .admin-projects {
-  padding: var(--spacing-4);
+  /* No padding: .admin-content owns the gutter (see AdminCompanies.vue). */
+  padding: 0;
 }
 
 .page-header {
