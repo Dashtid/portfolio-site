@@ -211,11 +211,11 @@ async def seed_projects(session: AsyncSession):
     # where every reader expects a list. All four inventions are gone; the
     # names below were verified to return 200 unauthenticated on 2026-08-05.
     #
-    # Deliberately ABSENT: biomedical-ai (its README is the medtech-ai-security
-    # project -- employer-IP-adjacent, stays private) and defensive-toolkit
-    # (private; publish it first, then add it back). Advertising either one
-    # with a 404 proof link is worse for a security candidate than not
-    # advertising it at all.
+    # Inclusion rule: a project is listed only if its github_url resolves 200
+    # unauthenticated. Advertising a repo behind a 404 proof link is worse for a
+    # security candidate than not advertising it at all. Repos that do not meet
+    # the bar are simply absent; this file does not name them or say why, because
+    # it is world-readable and the explanation would undo the omission.
     projects: list[dict[str, Any]] = [
         {
             "name": "subvectors",
