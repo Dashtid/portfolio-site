@@ -22,13 +22,22 @@ class RefreshSuccess(BaseModel):
 
 
 class RefreshTokenRequest(BaseModel):
-    """Refresh token request schema with validation"""
+    """Refresh token request schema with validation.
 
-    refresh_token: str = Field(
-        ...,
+    ``refresh_token`` is OPTIONAL because the primary delivery channel is the
+    HTTP-only ``refresh_token`` cookie — the browser client cannot read that
+    cookie, so it POSTs an empty ``{}`` body and lets the endpoint pick the
+    token off the request. While this field was required, that empty body
+    failed validation and the endpoint answered 422 instead of reaching its
+    own 401 "Refresh token required" branch, so every unauthenticated visit
+    to an /admin URL logged a console error.
+    """
+
+    refresh_token: str | None = Field(
+        default=None,
         min_length=10,
         max_length=2000,
-        description="JWT refresh token",
+        description="JWT refresh token (omit when supplying it via the refresh_token cookie)",
         examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."],
     )
 

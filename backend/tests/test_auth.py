@@ -163,9 +163,30 @@ def test_token_refresh(client: TestClient):
     refresh_token, _, _ = create_refresh_token(subject="nonexistent_user")
 
     response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
-    # Endpoint returns 401 for unknown jti, 422 for validation; 200 only with
-    # a persisted jti (covered by test_user_in_db fixtures elsewhere).
-    assert response.status_code in [200, 401, 422]
+    # Unknown jti -> 401. 422 is NOT acceptable here: accepting it is what let a
+    # required-field regression ship green (see test_refresh_with_empty_body).
+    assert response.status_code == 401
+
+
+def test_refresh_with_empty_body_is_401_not_422(client: TestClient):
+    """An empty body must reach the endpoint's own 'Refresh token required' 401.
+
+    The browser client cannot read the HTTP-only refresh_token cookie, so it
+    POSTs `{}` and lets the endpoint take the token off the request. While
+    RefreshTokenRequest.refresh_token was required, that body failed validation
+    and every unauthenticated /admin visit logged a 422 in the console.
+    """
+    response = client.post("/api/v1/auth/refresh", json={})
+    assert response.status_code == 401
+
+    # Same for no body at all.
+    assert client.post("/api/v1/auth/refresh").status_code == 401
+
+
+def test_refresh_rejects_malformed_token_value(client: TestClient):
+    """Loosening the field to optional must not loosen validation of real values."""
+    response = client.post("/api/v1/auth/refresh", json={"refresh_token": "short"})
+    assert response.status_code == 422
 
 
 def test_protected_endpoint_without_auth(client: TestClient):
