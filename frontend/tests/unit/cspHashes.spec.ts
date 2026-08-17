@@ -82,3 +82,28 @@ describe('CSP script hashes (D3-SEC-03)', () => {
     }
   })
 })
+
+describe('vercel.json schema hygiene', () => {
+  // Vercel validates vercel.json against a CLOSED schema and REJECTS the whole
+  // deploy on any unknown key: "Invalid vercel.json - should NOT have additional
+  // property X". JSON has no comment syntax, so the tempting `"//key": "why"`
+  // convention is a deploy-breaker, not a comment — it cost a deploy on
+  // 2026-08-17. Rationale for a setting belongs in the commit message.
+  // Every gate here (JSON lint, prettier, build) passes on such a file; only
+  // Vercel rejects it, which is why this guard exists.
+  it('has no comment-style keys at any depth', () => {
+    const offenders: string[] = []
+    const walk = (node: unknown, path: string): void => {
+      if (Array.isArray(node)) {
+        node.forEach((item, i) => walk(item, `${path}[${i}]`))
+      } else if (node && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) {
+          if (key.startsWith('//') || key.startsWith('#')) offenders.push(`${path}.${key}`)
+          walk(value, `${path}.${key}`)
+        }
+      }
+    }
+    walk(JSON.parse(read('vercel.json')), 'vercel.json')
+    expect(offenders).toEqual([])
+  })
+})
