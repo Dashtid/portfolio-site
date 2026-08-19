@@ -227,3 +227,16 @@
    fighting the responsive sm:/lg: variants that already handle small
    screens. Utility clones (.text-center, .mt-4, .p-8, ...) are gone too —
    Tailwind generates the identical class names with identical values. */
+
+/* When "Background graphics" is enabled in the print dialog, the body's tinted
+   background paints over the whole sheet — on the CV that showed as a pale
+   block filling the rest of the last page. Printed pages are white; nothing
+   in the CV depends on a painted background (the bullet markers are real list
+   markers and the headshot is an <img>, both foreground ink). */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    min-height: 0 !important;
+  }
+}

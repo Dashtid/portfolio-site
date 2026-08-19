@@ -575,6 +575,9 @@ async def seed_cv_profile(session: AsyncSession):
         # Övrigt / logistics — rendered at the BOTTOM of the CV, never under
         # certificates (CV-generator requirements, 2026-08-06).
         other_items=["B-körkort (category B driving licence)"],
+        # photo intentionally left empty: the headshot is personal data and is
+        # uploaded through /admin/cv after deploy, exactly like email/phone, so
+        # it never lives in this public repo.
     )
     session.add(profile)
     await session.commit()

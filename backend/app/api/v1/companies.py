@@ -110,6 +110,7 @@ async def update_company(
             "responsibilities",
             "technologies",
             "outcomes",
+            "cv_highlights",
         }
     )
 

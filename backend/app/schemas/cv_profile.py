@@ -23,6 +23,21 @@ class LanguageItem(BaseModel):
 # persisted as a visually blank bullet.
 OtherItem = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
+# Headshot, carried as a `data:` URI so it never becomes a file on the public
+# host. Constrained to raster image types with base64 payloads: an unrestricted
+# data: URI would accept `data:text/html;base64,...`, and the CV renders this
+# straight into an <img src>. 700_000 chars ~= 512 KB of binary, comfortably
+# above the ~87 KB a 600x600 q90 JPEG needs and well under any row limit.
+PHOTO_MAX_CHARS = 700_000
+PhotoDataUri = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        max_length=PHOTO_MAX_CHARS,
+        pattern=r"^$|^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$",
+    ),
+]
+
 
 class CvProfileBase(BaseModel):
     # Public-safe prose
@@ -43,6 +58,7 @@ class CvProfileBase(BaseModel):
     email: str = Field("", max_length=320)
     phone: str = Field("", max_length=64)
     personnummer: str = Field("", max_length=64)
+    photo: PhotoDataUri = ""
 
 
 class CvProfileResponse(CvProfileBase):
@@ -69,3 +85,4 @@ class CvProfileUpdate(BaseModel):
     email: str | None = Field(None, max_length=320)
     phone: str | None = Field(None, max_length=64)
     personnummer: str | None = Field(None, max_length=64)
+    photo: PhotoDataUri | None = None

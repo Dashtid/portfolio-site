@@ -166,15 +166,13 @@ class TestCvExportEndpoint:
         # personnummer is off by default -> key absent entirely.
         assert "personalNumber" not in cv["basics"]
 
-        # work from companies; highlights = responsibilities + outcomes; open-ended.
+        # work from companies; open-ended. With no cv_highlights set, the export
+        # falls back to outcomes ALONE — never responsibilities + outcomes, which
+        # are two parallel descriptions of the same role and restate each other.
         assert len(cv["work"]) == 1
         assert cv["work"][0]["name"] == "Hermes Medical Solutions"
         assert cv["work"][0]["endDate"] == ""
-        assert cv["work"][0]["highlights"] == [
-            "Threat modeling",
-            "SBOM-based SCA",
-            "Cut vulnerability triage time",
-        ]
+        assert cv["work"][0]["highlights"] == ["Cut vulnerability triage time"]
 
         # education vs certificate split on is_certification.
         assert [e["institution"] for e in cv["education"]] == ["KTH Royal Institute of Technology"]
@@ -243,3 +241,129 @@ class TestCvOtherSection:
         for blank in ("", "   "):
             response = client.put(PROFILE_URL, headers=headers, json={"other_items": [blank]})
             assert response.status_code == 422, f"blank item {blank!r} was accepted"
+
+
+class TestCvHighlightsPrecedence:
+    """The CV bullet list must be curated, not the site's two lists concatenated.
+
+    `responsibilities` and `outcomes` describe the same role twice for the
+    public detail page. Concatenating them for the CV produced 11 bullets for
+    one job where the owner's real CV carries 3.
+    """
+
+    def test_cv_highlights_win_over_both_lists(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)
+
+        company_id = client.get("/api/v1/companies/", headers=headers).json()[0]["id"]
+        curated = ["Curated CV bullet one", "Curated CV bullet two"]
+        patch = client.put(
+            f"/api/v1/companies/{company_id}",
+            headers=headers,
+            json={"cv_highlights": curated},
+        )
+        assert patch.status_code == 200, patch.text
+
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert cv["work"][0]["highlights"] == curated
+        # The site's own lists are untouched and must NOT leak into the CV.
+        assert "Threat modeling" not in cv["work"][0]["highlights"]
+        assert "Cut vulnerability triage time" not in cv["work"][0]["highlights"]
+
+    def test_falls_back_to_outcomes_then_responsibilities(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)
+        company_id = client.get("/api/v1/companies/", headers=headers).json()[0]["id"]
+
+        # No cv_highlights -> outcomes alone (never concatenated).
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert cv["work"][0]["highlights"] == ["Cut vulnerability triage time"]
+
+        # No outcomes either -> responsibilities.
+        client.put(f"/api/v1/companies/{company_id}", headers=headers, json={"outcomes": []})
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert cv["work"][0]["highlights"] == ["Threat modeling", "SBOM-based SCA"]
+
+
+class TestCvCertificateDates:
+    def test_certificate_date_is_issue_not_expiry(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """Exporting end_date printed the EXPIRY as if it were the award date."""
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)
+
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        cert = cv["certificates"][0]
+        assert cert["date"] == "2024-01", "date must be the issue month (start_date)"
+        assert cert["expires"] == "2026-01", "expiry belongs in its own field"
+
+    def test_education_keeps_its_verification_url(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """A completed course kept its certificate_url; the export dropped it."""
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)
+        client.post(
+            "/api/v1/education/",
+            headers=headers,
+            json={
+                "institution": "Företagsuniversitetet",
+                "degree": "Cybersecurity Fundamentals (Course)",
+                "start_date": "2024-10-01",
+                "end_date": "2024-12-31",
+                "is_certification": False,
+                "certificate_url": "https://example.com/verify/abc",
+                "order_index": 3,
+            },
+        )
+
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        course = next(e for e in cv["education"] if "Course" in e["studyType"])
+        assert course["url"] == "https://example.com/verify/abc"
+
+
+class TestCvPhoto:
+    """The headshot rides in the 401-gated payload, never a public file."""
+
+    _PNG = (
+        "data:image/png;base64,"
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    )
+
+    def test_photo_round_trips_and_reaches_export(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        headers = admin_user_in_db["headers"]
+        assert (
+            client.put(
+                "/api/v1/admin/cv/profile", headers=headers, json={"photo": self._PNG}
+            ).status_code
+            == 200
+        )
+
+        assert client.get("/api/v1/admin/cv/profile", headers=headers).json()["photo"] == self._PNG
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert cv["basics"]["image"] == self._PNG
+
+    def test_absent_photo_omits_the_key(self, client: TestClient, admin_user_in_db: dict[str, Any]):
+        headers = admin_user_in_db["headers"]
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert "image" not in cv["basics"]
+
+    def test_non_image_data_uri_rejected(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """An <img src> fed an unrestricted data: URI is an injection surface."""
+        headers = admin_user_in_db["headers"]
+        for bad in (
+            "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+            "javascript:alert(1)",
+            "https://example.com/photo.jpg",
+        ):
+            resp = client.put("/api/v1/admin/cv/profile", headers=headers, json={"photo": bad})
+            assert resp.status_code == 422, f"{bad!r} should be rejected, got {resp.status_code}"

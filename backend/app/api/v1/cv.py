@@ -50,6 +50,7 @@ _PROFILE_UPDATE_FIELDS = frozenset(
         "github_url",
         "languages",
         "other_items",
+        "photo",
         "email",
         "phone",
         "personnummer",
@@ -137,10 +138,19 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
 
     work: list[dict[str, Any]] = []
     for c in companies:
-        # DB stores bullets as responsibilities + quantified outcomes (D3-UX-03);
-        # a CV highlight list is the concatenation. Fall back to the summary
-        # paragraph only when a role has no structured bullets at all.
-        highlights = list(c.responsibilities or []) + list(c.outcomes or [])
+        # A CV bullet list is NOT the site's bullet list. `responsibilities`
+        # (terse, present tense) and `outcomes` (narrative, past tense) are two
+        # parallel descriptions of the same role, written for the public detail
+        # page where they render as separate blocks. Concatenating them for the
+        # CV produced 64 bullets across 8 roles — 11 for one job — with 21 of 25
+        # outcomes restating a responsibility almost word for word.
+        #
+        # `cv_highlights` is the curated CV list: 1-3 bullets per role, the ones
+        # the owner actually sends out. Fall back through outcomes (the better
+        # written of the two) to responsibilities, then the summary paragraph.
+        highlights = (
+            list(c.cv_highlights or []) or list(c.outcomes or []) or list(c.responsibilities or [])
+        )
         if not highlights and c.description:
             highlights = [c.description]
         work.append(
@@ -158,11 +168,15 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
     certificates: list[dict[str, Any]] = []
     for e in education_rows:
         if e.is_certification:
+            # start_date is when it was EARNED; end_date is when it expires.
+            # Exporting end_date printed "Jan 2029" on a certificate awarded in
+            # January 2026 — the expiry read as the award date.
             certificates.append(
                 {
                     "name": e.degree,
                     "issuer": e.institution,
-                    "date": _fmt_ym(e.end_date),
+                    "date": _fmt_ym(e.start_date),
+                    "expires": _fmt_ym(e.end_date),
                     "url": e.certificate_url or "",
                 }
             )
@@ -172,9 +186,13 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
                     "institution": e.institution,
                     "studyType": e.degree,
                     "area": e.field_of_study or "",
+                    "location": e.location or "",
                     "startDate": _fmt_ym(e.start_date),
                     "endDate": _fmt_ym(e.end_date),
                     "courses": [e.description] if e.description else [],
+                    # A completed course keeps its verification link too; this
+                    # branch used to drop certificate_url entirely.
+                    "url": e.certificate_url or "",
                 }
             )
 
@@ -209,6 +227,10 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
     # Optional and off by default — only present when the owner filled it in.
     if profile.personnummer:
         basics["personalNumber"] = profile.personnummer
+    # A `data:` URI, deliberately not a file on the public host: this payload is
+    # 401-gated, so the headshot never becomes world-readable.
+    if profile.photo:
+        basics["image"] = profile.photo
 
     return {
         "basics": basics,

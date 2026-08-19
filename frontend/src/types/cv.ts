@@ -23,6 +23,11 @@ export interface CvResume {
     focus?: string
     /** Optional, off by default — present only when the owner filled it in. */
     personalNumber?: string
+    /**
+     * Headshot as a `data:` URI, served only inside this 401-gated payload —
+     * never as a file on the public host. Empty when no photo is set.
+     */
+    image?: string
     location: { city: string; region?: string; countryCode: string }
     profiles?: Array<{ network: string; url: string }>
   }
@@ -38,9 +43,12 @@ export interface CvResume {
     institution: string
     area?: string
     studyType: string
+    location?: string
     startDate: string
     endDate: string
     courses?: string[]
+    /** Verification link (e.g. a course certificate) when one is stored. */
+    url?: string
   }>
   certificates: Array<{ name: string; date: string; issuer: string; url?: string }>
   skills: Array<{ name: string; keywords: string[] }>
@@ -69,4 +77,6 @@ export interface CvProfile {
   email: string
   phone: string
   personnummer: string
+  /** Headshot as a `data:` URI (or empty). Private, like the contact fields. */
+  photo: string
 }

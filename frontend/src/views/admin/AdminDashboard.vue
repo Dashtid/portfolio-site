@@ -340,6 +340,22 @@ onMounted(async (): Promise<void> => {
   }
 }
 
+/* Print: the admin shell is chrome, not content. Its header and nav are
+   already print:hidden, but .admin-content's gutter still offset the printed
+   CV by 24px per side and 32px on top, so the page margins came out wrong. */
+@media print {
+  .admin-content {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .admin-dashboard {
+    min-height: 0;
+    background: none;
+  }
+}
+
 /* Dark Mode */
 [data-theme='dark'] .admin-dashboard {
   background: var(--bg-primary, #0f172a);

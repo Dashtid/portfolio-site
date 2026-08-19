@@ -65,6 +65,13 @@ class CvProfile(Base):
     phone: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     personnummer: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
+    # Headshot as a `data:` URI (~85 KB of base64 for a 600x600 JPEG). Stored
+    # here rather than served as a file because this row is 401-gated: the repo
+    # and the host are public, and a portrait under frontend/public/ would be
+    # world-readable. Text, not String(n) — Postgres varchar limits would
+    # truncate it. Empty string means "no photo", and the CV simply omits it.
+    photo: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

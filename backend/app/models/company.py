@@ -46,6 +46,13 @@ class Company(Base):
     technologies: Mapped[Any | None] = mapped_column(JSON, nullable=True)  # Technologies used
     # List of quantified outcome bullets (D3-UX-03)
     outcomes: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    # Curated CV bullets — 1-3 per role, deliberately SEPARATE from the two
+    # lists above. Those describe the role for the public detail page, where
+    # they render as distinct blocks; a CV needs a short, past-tense selection.
+    # Concatenating responsibilities + outcomes for the CV produced 64 bullets
+    # across 8 roles with heavy restatement. NULL means "fall back" (see the
+    # export in api/v1/cv.py), so a new role still exports something sane.
+    cv_highlights: Mapped[Any | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps — DB-01: server_default on updated_at so INSERTs populate
     # the column instead of leaving it NULL until first UPDATE.

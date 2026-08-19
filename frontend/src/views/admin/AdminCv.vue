@@ -147,6 +147,38 @@
               needless identity-theft exposure. Blank means it never appears on the CV.
             </span>
           </div>
+
+          <div class="form-group">
+            <label for="cv-photo">Headshot (optional)</label>
+            <div class="photo-row">
+              <img v-if="profile.photo" :src="profile.photo" alt="" class="photo-thumb" />
+              <div v-else class="photo-thumb photo-thumb--empty" aria-hidden="true">No photo</div>
+              <div class="photo-actions">
+                <input
+                  id="cv-photo"
+                  ref="photoInput"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="form-control"
+                  @change="onPhotoSelected"
+                />
+                <button
+                  v-if="profile.photo"
+                  type="button"
+                  class="btn-row-action"
+                  @click="clearPhoto"
+                >
+                  Remove photo
+                </button>
+              </div>
+            </div>
+            <span v-if="photoError" class="field-hint field-hint--error">{{ photoError }}</span>
+            <span class="field-hint">
+              Stored in the admin-gated database as an embedded image, not as a file on the public
+              site — so it is never world-readable. Square images work best; the CV crops it to a
+              circle. Leave empty to print the CV without a photo (usual for US/UK applications).
+            </span>
+          </div>
         </fieldset>
 
         <fieldset>
@@ -251,11 +283,58 @@ const exportData = ref<CvResume | null>(null)
 const isSaving = ref<boolean>(false)
 const loadError = ref<string | null>(null)
 
+const photoInput = ref<HTMLInputElement | null>(null)
+const photoError = ref<string | null>(null)
+
+// Keep this under the backend's 700_000-char ceiling with room to spare: a
+// 600x600 q90 JPEG is ~87k chars, and base64 inflates bytes by ~4/3.
+const PHOTO_MAX_BYTES = 400 * 1024
+
+const onPhotoSelected = async (event: Event): Promise<void> => {
+  photoError.value = null
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !profile.value) return
+
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    photoError.value = 'Use a JPEG, PNG or WebP image.'
+    input.value = ''
+    return
+  }
+  if (file.size > PHOTO_MAX_BYTES) {
+    photoError.value = `That image is ${Math.round(file.size / 1024)} KB — keep it under ${
+      PHOTO_MAX_BYTES / 1024
+    } KB (a 600×600 JPEG is plenty for print).`
+    input.value = ''
+    return
+  }
+
+  try {
+    profile.value.photo = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(new Error('read failed'))
+      reader.readAsDataURL(file)
+    })
+    toast.info('Photo loaded — press Save to store it')
+  } catch {
+    photoError.value = 'Could not read that file.'
+  }
+}
+
+const clearPhoto = (): void => {
+  if (!profile.value) return
+  profile.value.photo = ''
+  photoError.value = null
+  if (photoInput.value) photoInput.value.value = ''
+}
+
 const fetchProfile = async (): Promise<void> => {
   const response = await api.get<CvProfile>('/api/v1/admin/cv/profile')
   // Guard against null JSON columns from a freshly-created singleton.
   response.data.languages = response.data.languages ?? []
   response.data.other_items = response.data.other_items ?? []
+  response.data.photo = response.data.photo ?? ''
   profile.value = response.data
 }
 
@@ -303,7 +382,8 @@ const save = async (): Promise<void> => {
       other_items: p.other_items.map(item => item.trim()).filter(item => item.length > 0),
       email: p.email,
       phone: p.phone,
-      personnummer: p.personnummer
+      personnummer: p.personnummer,
+      photo: p.photo
     })
     toast.success('CV profile saved')
     // Re-assemble the export so the preview reflects the saved profile.
@@ -532,15 +612,56 @@ onMounted(async (): Promise<void> => {
   font-weight: 600;
 }
 
+/* The document renders its own A4 sheet (fixed 794px) and casts its own
+   shadow, so the wrapper only has to centre it and give it a backdrop to
+   sit on. A border here would frame the page twice. */
 .cv-preview {
-  border: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 24px 0;
+  background: var(--bg-tertiary, #f1f5f9);
   border-radius: 8px;
-  overflow: hidden;
-  background: white;
 }
 
 .text-muted {
   color: var(--text-tertiary);
+}
+
+.photo-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.photo-thumb {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.photo-thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary, #f1f5f9);
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.photo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.field-hint--error {
+  color: var(--color-danger, #dc2626);
 }
 
 .btn-save:focus-visible,
@@ -550,13 +671,28 @@ onMounted(async (): Promise<void> => {
   outline-offset: 2px;
 }
 
+/* Margins live HERE, not on the document element: element padding applies to
+   the first page only, so putting them there let text run to the very top
+   edge of pages 2 and 3. @page repeats them on every sheet. Values match the
+   reference CV (37px top, 62px sides, 27px bottom at 96dpi).
+
+   Chrome's own header/footer (date, title, URL, "1/6") is NOT CSS and cannot
+   be suppressed from here — untick "Headers and footers" in the print dialog. */
+@page {
+  size: A4;
+  margin: 37px 62px 27px;
+}
+
 @media print {
   .admin-cv {
     padding: 0;
   }
 
   .cv-preview {
-    border: none;
+    display: block;
+    padding: 0;
+    overflow: visible;
+    background: none;
     border-radius: 0;
   }
 }

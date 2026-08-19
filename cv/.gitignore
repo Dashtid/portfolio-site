@@ -1,3 +1,7 @@
 # Source CV (contains phone, personal email, photo) - keep OUT of this public repo.
 # Available locally as a reference to build resume.json from; never committed.
 source/
+
+# Generated CV exports (printed from /admin/cv) - carry phone, personal email and
+# photo, same as source/. Kept locally for before/after comparison; never committed.
+exports/

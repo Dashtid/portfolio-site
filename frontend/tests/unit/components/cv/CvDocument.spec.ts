@@ -127,10 +127,12 @@ describe('CvDocument', () => {
     expect(wrapper.text()).not.toContain('@')
   })
 
-  it('shows Present for an open-ended role and an in-progress degree', () => {
+  it('shows "present" for an open-ended role and an in-progress degree', () => {
     const wrapper = make(fullResume())
-    // Experience and Education both fall back to "Present" on a blank end date.
-    expect(wrapper.text().match(/Present/g)?.length).toBe(2)
+    // Numeric MM/YYYY with a lowercase "present", matching the reference CV:
+    // "May 2024" wasted the narrow meta column and wrapped.
+    expect(wrapper.text()).toContain('05/2024 – present')
+    expect(wrapper.text().match(/present/g)?.length).toBe(2)
   })
 
   it('formats year-only dates without a month', () => {
@@ -140,7 +142,7 @@ describe('CvDocument', () => {
     expect(wrapper.text()).toContain('2024')
   })
 
-  it('renders skills, education courses, certificates (linked + plain) and languages', () => {
+  it('renders skills, education courses, certificates and languages', () => {
     const wrapper = make(fullResume())
     const text = wrapper.text()
     expect(text).toContain('AppSec')
@@ -149,9 +151,35 @@ describe('CvDocument', () => {
     expect(text).toContain('Cybersecurity Fundamentals')
     expect(text).toContain('Swedish (Native)')
     expect(text).toContain('English (Fluent)')
-    // Security+ is linked, the plain course is not.
-    const certLink = wrapper.findAll('a').find(a => a.text().includes('Security+'))
+  })
+
+  it('prints the credential URL as visible text, shortened', () => {
+    // The print stylesheet strips link colour and underline, so a bare
+    // hyperlink left the credential unverifiable on paper. The host plus a
+    // stub is printed instead of an 80-character Credly URL.
+    const wrapper = make(fullResume())
+    expect(wrapper.text()).toContain('credly.com/x')
+    const certLink = wrapper.findAll('a').find(a => a.attributes('href')?.includes('credly'))
     expect(certLink?.attributes('href')).toBe('https://www.credly.com/x')
+  })
+
+  it('renders the headshot only when one is set, and never as a remote URL', () => {
+    const withPhoto = fullResume()
+    withPhoto.basics.image = 'data:image/jpeg;base64,AAAA'
+    expect(make(withPhoto).find('img.cv-photo').attributes('src')).toBe(
+      'data:image/jpeg;base64,AAAA'
+    )
+    // Absent by default — a CV without a photo is the norm outside the Nordics.
+    expect(make(fullResume()).find('img.cv-photo').exists()).toBe(false)
+  })
+
+  it('gives every bullet a real list marker', () => {
+    // Markers were background-coloured spans, which Chrome drops when
+    // printing: they came out white, i.e. invisible, in the PDF.
+    const wrapper = make(fullResume())
+    const items = wrapper.findAll('.cv-bullets li')
+    expect(items).toHaveLength(2)
+    expect(wrapper.find('.cv-bullets').element.tagName).toBe('UL')
   })
 
   it('renders Other (Övrigt) as the LAST section, separate from Certificates', () => {
@@ -182,21 +210,25 @@ describe('CvDocument', () => {
     expect(headings).not.toContain('Languages')
   })
 
-  it('forces light theme around print and restores it afterward', async () => {
+  it('stays a white sheet in dark mode without touching the page theme', () => {
+    // The document used to swap <html data-theme> around print because its
+    // dark: variants would otherwise emit a near-black PDF. It now renders as
+    // a white A4 sheet in both themes — a document does not invert — so the
+    // theme is left alone and the preview shows exactly what prints.
     document.documentElement.setAttribute('data-theme', 'dark')
-    make(fullResume())
+    const wrapper = make(fullResume())
 
     window.dispatchEvent(new Event('beforeprint'))
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
-
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
     window.dispatchEvent(new Event('afterprint'))
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
-  })
 
-  it('afterprint without a prior beforeprint leaves the theme untouched', () => {
-    document.documentElement.setAttribute('data-theme', 'dark')
-    make(fullResume())
-    window.dispatchEvent(new Event('afterprint'))
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+    // No element carries a dark: variant class (checked on classes, not raw
+    // HTML — the template's own comment mentions the string).
+    const darkVariants = wrapper
+      .findAll('*')
+      .flatMap(el => el.classes())
+      .filter(c => c.startsWith('dark:'))
+    expect(darkVariants).toEqual([])
   })
 })
