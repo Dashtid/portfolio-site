@@ -367,3 +367,32 @@ class TestCvPhoto:
         ):
             resp = client.put("/api/v1/admin/cv/profile", headers=headers, json={"photo": bad})
             assert resp.status_code == 422, f"{bad!r} should be rejected, got {resp.status_code}"
+
+
+class TestCvHighlightsStayPrivate:
+    def test_public_companies_endpoint_never_returns_cv_highlights(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """GET /api/v1/companies/ is PUBLIC — the printed CV's wording is not.
+
+        cv_highlights briefly sat on CompanyBase, which CompanyResponse
+        inherits, so the curated CV bullets were served on the open API.
+        """
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)
+        company_id = client.get("/api/v1/companies/", headers=headers).json()[0]["id"]
+        client.put(
+            f"/api/v1/companies/{company_id}",
+            headers=headers,
+            json={"cv_highlights": ["Curated CV bullet"]},
+        )
+
+        public = client.get("/api/v1/companies/")
+        assert public.status_code == 200
+        body = public.text
+        assert "cv_highlights" not in body
+        assert "Curated CV bullet" not in body
+
+        # ...but it still reaches the admin-gated CV export.
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert cv["work"][0]["highlights"] == ["Curated CV bullet"]
