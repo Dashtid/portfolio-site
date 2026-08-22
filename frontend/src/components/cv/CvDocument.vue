@@ -19,23 +19,20 @@
             <dt>Email</dt>
             <dd>{{ resume.basics.email }}</dd>
           </template>
+          <!-- Bare text, no anchors: recruiters need the LinkedIn/GitHub/site
+               identity lines, but a printed document has nothing to click and
+               link styling only adds noise (owner call, 2026-08-22). -->
           <template v-if="linkedInUrl">
             <dt>LinkedIn</dt>
-            <dd>
-              <a :href="linkedInUrl">{{ stripProtocol(linkedInUrl) }}</a>
-            </dd>
+            <dd>{{ stripProtocol(linkedInUrl) }}</dd>
           </template>
           <template v-if="gitHubUrl">
             <dt>GitHub</dt>
-            <dd>
-              <a :href="gitHubUrl">{{ stripProtocol(gitHubUrl) }}</a>
-            </dd>
+            <dd>{{ stripProtocol(gitHubUrl) }}</dd>
           </template>
           <template v-if="resume.basics.url">
             <dt>Web</dt>
-            <dd>
-              <a :href="resume.basics.url">{{ stripProtocol(resume.basics.url) }}</a>
-            </dd>
+            <dd>{{ stripProtocol(resume.basics.url) }}</dd>
           </template>
           <template v-if="locationLine">
             <dt>Location</dt>
@@ -99,9 +96,6 @@
           <p v-for="course in edu.courses ?? []" :key="course" class="cv-prose cv-prose--entry">
             {{ course }}
           </p>
-          <p v-if="edu.url" class="cv-prose cv-prose--entry">
-            <a :href="edu.url">{{ shortUrl(edu.url) }}</a>
-          </p>
         </div>
       </article>
     </section>
@@ -114,11 +108,11 @@
           <span class="cv-meta-line">{{ formatYm(cert.date) }}</span>
         </div>
         <div class="cv-body">
+          <!-- No verification URL line: issuer + name + date is how a cert
+               reads on paper; long Credly/trueoriginal strings were the
+               ugliest lines in the reference. -->
           <h3 class="cv-entry-title">{{ cert.name }}</h3>
           <p class="cv-entry-org">{{ cert.issuer }}</p>
-          <p v-if="cert.url" class="cv-prose cv-prose--entry">
-            <a :href="cert.url">{{ shortUrl(cert.url) }}</a>
-          </p>
         </div>
       </article>
     </section>
@@ -167,19 +161,10 @@ import type { CvResume } from '@/types/cv'
 const props = defineProps<{ resume: CvResume }>()
 
 const stripProtocol = (url: string): string =>
-  (url || '').replace(/^https?:\/\//, '').replace(/\/$/, '')
-
-// Long credential URLs (Credly, trueoriginal) wrap to two lines and read as
-// noise. Keep the host plus a recognisable stub so the credential is still
-// verifiable on paper, and let the anchor carry the full href on screen.
-const shortUrl = (url: string): string => {
-  const bare = stripProtocol(url).replace(/^www\./, '')
-  const [host, ...rest] = bare.split('/')
-  const path = rest.join('/').split('?')[0]
-  if (!path) return host
-  const stub = path.length > 24 ? `${path.slice(0, 24)}…` : path
-  return `${host}/${stub}`
-}
+  (url || '')
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '')
 
 const profileUrl = (network: string): string =>
   props.resume.basics.profiles?.find(p => p.network?.toLowerCase() === network)?.url || ''
@@ -187,10 +172,22 @@ const profileUrl = (network: string): string =>
 const linkedInUrl = computed<string>(() => profileUrl('linkedin'))
 const gitHubUrl = computed<string>(() => profileUrl('github'))
 
+// "Stockholm, Sweden" — not "Stockholm, SE". Intl.DisplayNames turns the
+// stored ISO code into the English country name; the code is the fallback if
+// the runtime cannot resolve it.
+const countryName = (code: string): string => {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase()) || code
+  } catch {
+    return code
+  }
+}
+
 const locationLine = computed<string>(() => {
   const loc = props.resume.basics.location
   if (!loc) return ''
-  return [loc.city, loc.countryCode].filter(Boolean).join(', ')
+  const country = loc.countryCode ? countryName(loc.countryCode) : ''
+  return [loc.city, country].filter(Boolean).join(', ')
 })
 
 // Numeric MM/YYYY throughout — "05/2024 – present" reads as a CV; "May 2024"
@@ -237,11 +234,6 @@ const dateRange = (start: string, end?: string): string => {
   widows: 2;
 }
 
-.cv-page :deep(a) {
-  color: inherit;
-  text-decoration: none;
-}
-
 /* --- Header ------------------------------------------------------------- */
 .cv-header {
   display: grid;
@@ -264,11 +256,14 @@ const dateRange = (start: string, end?: string): string => {
   letter-spacing: -0.01em;
 }
 
+/* Regular weight so the name stands alone; the headline is a subtitle, not a
+   second heading shouting at the first. */
 .cv-label {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
   color: var(--ink);
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 /* Definition list rather than stacked <p>s: these really are label/value
@@ -276,9 +271,10 @@ const dateRange = (start: string, end?: string): string => {
 .cv-contact {
   display: grid;
   grid-template-columns: max-content 1fr;
-  column-gap: 6px;
-  margin: 25px 0 0;
-  font-size: 13px;
+  column-gap: 8px;
+  /* One grid line of air, not an off-rhythm 25px hole. */
+  margin: 17px 0 0;
+  font-size: 12px;
 }
 
 .cv-contact dt {
@@ -302,26 +298,26 @@ const dateRange = (start: string, end?: string): string => {
 }
 
 /* --- Sections ----------------------------------------------------------- */
-/* 26px rather than the reference's ~40px. At the real print width (670px, not
-   the wider on-screen preview) the document came to 2151px against 2118px of
-   two-page capacity — it overshot by 33px and emitted a blank third sheet.
-   The heading and its rule already separate sections; the extra air was pure
-   overflow. Measured headroom after this: ~30px. */
+/* Space above a section is 2x the space under its rule, so a heading binds to
+   its own content instead of floating between neighbours. (Both distances are
+   re-measured against the 670px print width — the sheet must stay 2 pages.) */
 .cv-section {
-  margin-top: 26px;
+  margin-top: 28px;
 }
 
 .cv-section-title {
-  margin: 0 0 10px;
-  padding-bottom: 8px;
+  margin: 0 0 12px;
+  padding-bottom: 6px;
   /* Bleed the rule 8px past the text column on both sides. */
   width: calc(100% + 16px);
   margin-left: -8px;
   border-bottom: 1px solid var(--ink);
   color: var(--ink);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.06em;
   text-align: center;
+  text-transform: uppercase;
 }
 
 .cv-prose {
@@ -373,19 +369,22 @@ const dateRange = (start: string, end?: string): string => {
   line-height: var(--grid);
 }
 
+/* Role owns the line; employer recedes. Two bold near-identical lines per
+   entry was the loudest "template CV" tell — one voice each now. 15px also
+   keeps every degree line to a single line at the 502px body width. */
 .cv-entry-title {
   margin: 0;
   color: var(--ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   line-height: var(--grid);
 }
 
 .cv-entry-org {
-  margin: 0;
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 700;
+  margin: 1px 0 0;
+  color: var(--prose);
+  font-size: 13px;
+  font-weight: 400;
   line-height: var(--grid);
 }
 
@@ -457,12 +456,6 @@ const dateRange = (start: string, end?: string): string => {
     box-shadow:
       0 1px 3px rgb(15 23 42 / 12%),
       0 8px 24px rgb(15 23 42 / 8%);
-  }
-
-  .cv-page :deep(a) {
-    text-decoration: underline;
-    text-decoration-color: rgb(0 0 0 / 25%);
-    text-underline-offset: 2px;
   }
 }
 

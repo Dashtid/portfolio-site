@@ -40,7 +40,8 @@ const fullResume = (): CvResume => ({
       area: 'Biomedical Engineering',
       startDate: '2018-08',
       endDate: '',
-      courses: ['Thesis: process modelling']
+      courses: ['Thesis: process modelling'],
+      url: 'https://example.com/utbildningsbevis-226768'
     }
   ],
   certificates: [
@@ -102,7 +103,8 @@ describe('CvDocument', () => {
     expect(text).toContain('Security engineer for regulated medical software.')
     expect(text).toContain('Current focus')
     expect(text).toContain('Cloud & CI/CD security.')
-    expect(text).toContain('Stockholm, SE')
+    // Intl.DisplayNames expands the stored ISO code — "SE" is data, not prose.
+    expect(text).toContain('Stockholm, Sweden')
   })
 
   it('strips the protocol from the displayed URL', () => {
@@ -111,12 +113,15 @@ describe('CvDocument', () => {
     expect(wrapper.text()).not.toContain('https://dashti.se')
   })
 
-  it('renders profile links and private contact when present', () => {
+  it('renders profiles and private contact as plain text — never as anchors', () => {
+    // A printed document has nothing to click: the LinkedIn/GitHub/site lines
+    // stay (recruiters retype them) but carry no hyperlink, per the owner's
+    // 2026-08-22 no-links call. The bare-text form drops protocol and www.
     const wrapper = make(fullResume())
-    const hrefs = wrapper.findAll('a').map(a => a.attributes('href'))
-    expect(hrefs).toContain('https://www.linkedin.com/in/david-dashti/')
-    expect(hrefs).toContain('https://github.com/Dashtid')
+    expect(wrapper.findAll('a')).toHaveLength(0)
     const text = wrapper.text()
+    expect(text).toContain('linkedin.com/in/david-dashti')
+    expect(text).toContain('github.com/Dashtid')
     expect(text).toContain('me@example.com')
     expect(text).toContain('+46 70 000 00 00')
     expect(text).toContain('900101-0000')
@@ -153,14 +158,15 @@ describe('CvDocument', () => {
     expect(text).toContain('English (Fluent)')
   })
 
-  it('prints the credential URL as visible text, shortened', () => {
-    // The print stylesheet strips link colour and underline, so a bare
-    // hyperlink left the credential unverifiable on paper. The host plus a
-    // stub is printed instead of an 80-character Credly URL.
+  it('never prints credential or course URLs', () => {
+    // Issuer + name + date is how a certificate reads on paper; the long
+    // Credly/trueoriginal strings were the ugliest lines in the reference CV.
+    // The URLs stay in the data (the admin JSON download keeps them) but the
+    // document renders none of them.
     const wrapper = make(fullResume())
-    expect(wrapper.text()).toContain('credly.com/x')
-    const certLink = wrapper.findAll('a').find(a => a.attributes('href')?.includes('credly'))
-    expect(certLink?.attributes('href')).toBe('https://www.credly.com/x')
+    expect(wrapper.text()).not.toContain('credly')
+    expect(wrapper.text()).not.toContain('utbildningsbevis')
+    expect(wrapper.findAll('a')).toHaveLength(0)
   })
 
   it('renders the headshot only when one is set, and never as a remote URL', () => {
