@@ -161,12 +161,7 @@
         "Python",
         "JavaScript/TypeScript",
         "SQL",
-        "Bash/PowerShell"
-      ]
-    },
-    {
-      "name": "Frameworks",
-      "keywords": [
+        "Bash/PowerShell",
         "FastAPI",
         "Vue.js"
       ]
@@ -180,23 +175,28 @@
       ]
     },
     {
-      "name": "Security",
+      "name": "Security Engineering",
       "keywords": [
-        "Vulnerability Management",
         "Application Security",
         "Threat Modeling",
         "Secure SDLC",
         "Software Supply-Chain Security (SBOM)",
+        "Vulnerability Management"
+      ]
+    },
+    {
+      "name": "Regulatory & Standards Compliance",
+      "keywords": [
+        "FDA Premarket Cybersecurity (524B)",
+        "IEC 81001-5-1",
+        "IEC 62304",
+        "GAMP 5",
         "NIS 2"
       ]
     },
     {
-      "name": "Medical",
+      "name": "Healthcare IT",
       "keywords": [
-        "IEC 62304",
-        "IEC 81001-5-1",
-        "GAMP 5",
-        "FDA Premarket Cybersecurity (524B)",
         "DICOM",
         "HL7"
       ]
