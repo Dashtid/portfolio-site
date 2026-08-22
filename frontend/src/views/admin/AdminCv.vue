@@ -33,6 +33,15 @@
         private contact (never shown publicly), then print to PDF or download the JSON.
       </p>
 
+      <!-- The date/URL stamped on a printed page is the BROWSER's print
+           chrome, not this page — no stylesheet can remove it. The one thing
+           that does is this checkbox, so say so where the printing happens. -->
+      <p class="print-hint" role="note">
+        [!] In the print dialog, open <strong>More settings</strong> and untick
+        <strong>"Headers and footers"</strong> — otherwise the browser stamps a timestamp and URL on
+        every page. The browser remembers the choice.
+      </p>
+
       <form v-if="profile" class="cv-form" @submit.prevent="save">
         <fieldset>
           <legend>Identity &amp; headline</legend>
@@ -467,10 +476,21 @@ onMounted(async (): Promise<void> => {
 
 .intro {
   max-width: 60ch;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   color: var(--text-secondary);
   font-size: 0.9rem;
   line-height: 1.6;
+}
+
+.print-hint {
+  max-width: 60ch;
+  margin-bottom: 2rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--primary-600, #2563eb);
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 .cv-form fieldset {

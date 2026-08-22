@@ -108,11 +108,13 @@
           <span class="cv-meta-line">{{ formatYm(cert.date) }}</span>
         </div>
         <div class="cv-body">
-          <!-- No verification URL line: issuer + name + date is how a cert
-               reads on paper; long Credly/trueoriginal strings were the
-               ugliest lines in the reference. -->
-          <h3 class="cv-entry-title">{{ cert.name }}</h3>
-          <p class="cv-entry-org">{{ cert.issuer }}</p>
+          <!-- Name and issuer share the line (no verification URL either):
+               a certificate is one fact, and a two-line entry under a
+               full-dress section heading read as a starved template block. -->
+          <h3 class="cv-entry-title">
+            {{ cert.name
+            }}<span v-if="cert.issuer" class="cv-cert-issuer"> — {{ cert.issuer }}</span>
+          </h3>
         </div>
       </article>
     </section>
@@ -124,7 +126,17 @@
       <div class="cv-skill-columns">
         <div v-for="group in resume.skills" :key="group.name" class="cv-skill-group">
           <p class="cv-skill-label">{{ group.name }}</p>
-          <p class="cv-skill-items">{{ group.keywords.join(' · ') }}</p>
+          <!-- Each keyword is an unbreakable run ("Software Supply-Chain /
+               Security (SBOM)" split across lines reads as two skills), and
+               the separator RIDES ITS KEYWORD so a wrapped line never opens
+               with a stray "·". -->
+          <p class="cv-skill-items">
+            <template v-for="(keyword, index) in group.keywords" :key="keyword"
+              ><span class="cv-skill-item"
+                >{{ keyword }}<template v-if="index < group.keywords.length - 1"> ·</template></span
+              >{{ index < group.keywords.length - 1 ? ' ' : '' }}</template
+            >
+          </p>
         </div>
         <!-- Languages ride here as one more labelled run rather than owning a
              section: a full centred heading + rule for one short line pushed
@@ -155,6 +167,13 @@
 </template>
 
 <script setup lang="ts">
+// The reference CV is set in Roboto (identified from its embedded glyph
+// metrics); without these imports the 'Roboto' declaration below silently
+// fell through to Arial, whose ~12% wider spacing changed every line break
+// against the reference. Self-hosted via fontsource (CSP font-src 'self'),
+// and only this lazy admin chunk pays the ~32KB.
+import '@fontsource/roboto/latin-400.css'
+import '@fontsource/roboto/latin-700.css'
 import { computed } from 'vue'
 import type { CvResume } from '@/types/cv'
 
@@ -226,7 +245,7 @@ const dateRange = (start: string, end?: string): string => {
   padding: 37px 62px 27px;
   background: #fff;
   color: var(--prose);
-  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Roboto', Arial, sans-serif;
   font-size: 13px;
   line-height: var(--grid);
   /* A stray line stranded across a page break reads as a printing accident. */
@@ -277,9 +296,15 @@ const dateRange = (start: string, end?: string): string => {
   font-size: 12px;
 }
 
+/* Micro-label voice (matches .cv-skill-label) rather than six bold-black
+   words stacking into a second heavy edge that competed with the name. */
 .cv-contact dt {
+  padding-top: 2px;
   color: var(--ink);
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .cv-contact dd {
@@ -290,7 +315,12 @@ const dateRange = (start: string, end?: string): string => {
 .cv-photo {
   width: 120px;
   height: 120px;
-  margin-left: 8px;
+  /* A true bleed: -8px pushes the circle's right edge onto the section
+     rules' right terminus (margin-left only reached the CONTENT edge, which
+     left the circle hanging 8px inboard of every rule). Centered against
+     the six-row identity block so the header's right side carries no void. */
+  align-self: center;
+  margin-right: -8px;
   border-radius: 50%;
   object-fit: cover;
   /* The asset's own backdrop is the grey that shows inside the circle — no
@@ -318,6 +348,9 @@ const dateRange = (start: string, end?: string): string => {
   letter-spacing: 0.06em;
   text-align: center;
   text-transform: uppercase;
+  /* A heading stranded at a page bottom is the one break worse than a split
+     entry. */
+  break-after: avoid;
 }
 
 .cv-prose {
@@ -352,8 +385,11 @@ const dateRange = (start: string, end?: string): string => {
   break-inside: avoid;
 }
 
+/* The first entry sits close under its section rule — the rule already
+   separates; 12px (title margin) + 14px opened every section with a hole
+   twice the inter-entry gap. */
 .cv-entry:first-of-type {
-  margin-top: 14px;
+  margin-top: 2px;
 }
 
 .cv-meta {
@@ -395,7 +431,9 @@ const dateRange = (start: string, end?: string): string => {
    Item spacing equals wrapped-line spacing — a flat grid, no extra gap. */
 .cv-bullets {
   margin: 2px 0 0;
-  padding-left: 16px;
+  /* Committed to the fine 0.7em dot: 13px closes the gap so the marker
+     reads as structure, not a stray mark adrift in a 16px indent. */
+  padding-left: 13px;
   list-style: disc;
 }
 
@@ -416,7 +454,8 @@ const dateRange = (start: string, end?: string): string => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 32px;
-  margin-top: 14px;
+  /* Same rule-to-first-content rhythm as the entry sections. */
+  margin-top: 2px;
 }
 
 .cv-skill-group {
@@ -440,6 +479,16 @@ const dateRange = (start: string, end?: string): string => {
 .cv-skill-items {
   margin: 0;
   color: var(--prose);
+}
+
+.cv-skill-item {
+  white-space: nowrap;
+}
+
+.cv-cert-issuer {
+  color: var(--prose);
+  font-size: 13px;
+  font-weight: 400;
 }
 
 .cv-lang-name {
