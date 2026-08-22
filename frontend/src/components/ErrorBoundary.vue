@@ -42,8 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onErrorCaptured, type ComponentPublicInstance } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch, onErrorCaptured, type ComponentPublicInstance } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { errorLogger } from '@/utils/logger'
 import { errorTracker } from '@/utils/errorTracking'
 import { captureException, isSentryInitialized } from '@/utils/sentry'
@@ -63,8 +63,21 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const router = useRouter()
+const route = useRoute()
 const hasError = ref<boolean>(false)
 const errorDetails = ref<string | null>(null)
+
+// The boundary must never LATCH: its fallback replaces the whole routed tree
+// (admin nav included), so a stale hasError turned one crashed admin view
+// into "every admin page is broken until refresh". A route change means new
+// content is about to mount — drop the fallback and let it try.
+watch(
+  () => route.fullPath,
+  () => {
+    hasError.value = false
+    errorDetails.value = null
+  }
+)
 
 const handleRetry = (): void => {
   if (props.onRetry) {

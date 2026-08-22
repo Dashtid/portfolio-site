@@ -86,6 +86,23 @@ export const createApp = ViteSSG(
         }
       })
 
+      // The admin variant of the same stale-tab problem is nastier: admin
+      // chunks are excluded from the precache and served CacheFirst from the
+      // runtime asset cache, so after a deploy an open tab's OLD admin code
+      // keeps loading successfully and crashes on the NEW backend's payload
+      // shapes instead of 404ing — neither net above ever fires. The moment
+      // the fresh service worker takes this tab over (skipWaiting +
+      // clientsClaim), reload once onto the new build; the shared stamp
+      // stops any loop, and the initial-registration takeover (no previous
+      // controller) is left alone.
+      if ('serviceWorker' in navigator) {
+        let hadController = !!navigator.serviceWorker.controller
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (hadController) reloadOnStaleChunk()
+          hadController = true
+        })
+      }
+
       // Navigation guards — client-only (localStorage / window not available
       // during SSG). The guard body is extracted to `router/authGuard.ts`
       // so it can be unit-tested without spinning up the full app

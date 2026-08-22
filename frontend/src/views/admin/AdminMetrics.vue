@@ -30,15 +30,15 @@
     <template v-else-if="metrics">
       <section class="summary-grid" aria-label="Summary">
         <div class="summary-card">
-          <div class="summary-value">{{ totalRequests.toLocaleString() }}</div>
+          <div class="summary-value">{{ formatCount(totalRequests) }}</div>
           <div class="summary-label">Total requests</div>
         </div>
         <div class="summary-card">
-          <div class="summary-value">{{ uniqueEndpoints.toLocaleString() }}</div>
+          <div class="summary-value">{{ formatCount(uniqueEndpoints) }}</div>
           <div class="summary-label">Endpoints</div>
         </div>
         <div class="summary-card">
-          <div class="summary-value">{{ errorCount.toLocaleString() }}</div>
+          <div class="summary-value">{{ formatCount(errorCount) }}</div>
           <div class="summary-label">Error responses (4xx + 5xx)</div>
         </div>
         <div class="summary-card">
@@ -64,7 +64,7 @@
             :class="statusClass(row.code)"
           >
             <span class="status-code">{{ row.code }}</span>
-            <span class="status-count">{{ row.count.toLocaleString() }}</span>
+            <span class="status-count">{{ formatCount(row.count) }}</span>
           </li>
         </ul>
       </section>
@@ -91,7 +91,7 @@
               <td>
                 <code>{{ row.name }}</code>
               </td>
-              <td class="num-col">{{ row.value.toLocaleString() }}</td>
+              <td class="num-col">{{ formatCount(row.value) }}</td>
             </tr>
           </tbody>
         </table>
@@ -120,9 +120,9 @@
             <tbody>
               <tr v-for="row in endpointEntries" :key="row.endpoint">
                 <td class="endpoint-cell">{{ row.endpoint }}</td>
-                <td class="num-col">{{ row.stats.count.toLocaleString() }}</td>
+                <td class="num-col">{{ formatCount(row.stats.count) }}</td>
                 <td class="num-col" :class="{ 'has-errors': row.stats.errors > 0 }">
-                  {{ row.stats.errors.toLocaleString() }}
+                  {{ formatCount(row.stats.errors) }}
                 </td>
                 <td class="num-col">{{ formatMs(row.stats.avg_response_time_ms) }}</td>
                 <td class="num-col">{{ formatMs(row.stats.p50_response_time_ms) }}</td>
@@ -145,6 +145,12 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import apiClient from '../../api/client'
 import { apiLogger } from '../../utils/logger'
 import { useToast } from '@/composables/useToast'
+
+// Payload drift across a deploy must render a blank, never brick the view
+// (undefined.toLocaleString() in a template throws into the app-level
+// error boundary).
+const formatCount = (n: number | null | undefined): string =>
+  typeof n === 'number' ? n.toLocaleString() : '—'
 
 // The /metrics payload mirrors backend/app/schemas/metrics.py::PerformanceMetrics.
 // Status codes arrive keyed by numeric HTTP code; JSON forces them to string

@@ -27,11 +27,11 @@
     <template v-else-if="summary">
       <section class="stats-grid" aria-label="Summary">
         <div class="stat-card">
-          <div class="stat-value">{{ summary.total_views.toLocaleString() }}</div>
+          <div class="stat-value">{{ formatCount(summary.total_views) }}</div>
           <div class="stat-label">Page views</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ summary.unique_visitors.toLocaleString() }}</div>
+          <div class="stat-value">{{ formatCount(summary.unique_visitors) }}</div>
           <div class="stat-label">Unique visitors</div>
         </div>
         <div class="stat-card">
@@ -96,13 +96,13 @@
           <div class="card-header">
             <h3 class="card-title">Top pages</h3>
           </div>
-          <ol v-if="summary.top_pages.length" class="top-list">
+          <ol v-if="summary.top_pages?.length" class="top-list">
             <li v-for="page in summary.top_pages" :key="page.path" class="top-list-item">
               <div class="top-list-text">
                 <div class="top-list-primary">{{ page.title || page.path }}</div>
                 <div class="top-list-secondary">{{ page.path }}</div>
               </div>
-              <div class="top-list-value">{{ page.views.toLocaleString() }}</div>
+              <div class="top-list-value">{{ formatCount(page.views) }}</div>
             </li>
           </ol>
           <div v-else class="empty-state">No pages tracked yet.</div>
@@ -115,12 +115,12 @@
               last {{ visitorStats.period_days }} days
             </span>
           </div>
-          <ol v-if="visitorStats && visitorStats.top_countries.length" class="top-list">
+          <ol v-if="visitorStats?.top_countries?.length" class="top-list">
             <li v-for="c in visitorStats.top_countries" :key="c.country" class="top-list-item">
               <div class="top-list-text">
                 <div class="top-list-primary">{{ c.country || 'Unknown' }}</div>
               </div>
-              <div class="top-list-value">{{ c.count.toLocaleString() }}</div>
+              <div class="top-list-value">{{ formatCount(c.count) }}</div>
             </li>
           </ol>
           <div v-else class="empty-state">
@@ -138,7 +138,7 @@
             <div class="top-list-text">
               <div class="top-list-primary">{{ c.destination }}</div>
             </div>
-            <div class="top-list-value">{{ c.count.toLocaleString() }}</div>
+            <div class="top-list-value">{{ formatCount(c.count) }}</div>
           </li>
         </ol>
         <div v-else class="empty-state">No outbound clicks tracked yet.</div>
@@ -231,6 +231,13 @@ const load = async (): Promise<void> => {
     loading.value = false
   }
 }
+
+// Payload drift across a deploy must render a blank, never brick the view:
+// these fields arrive from a backend that can be newer or older than this
+// chunk, and `undefined.toLocaleString()` in a template throws straight into
+// the app-level error boundary.
+const formatCount = (n: number | null | undefined): string =>
+  typeof n === 'number' ? n.toLocaleString() : '—'
 
 const formatDuration = (seconds: number | null | undefined): string => {
   if (!seconds || seconds < 1) return '—'

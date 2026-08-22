@@ -96,6 +96,24 @@ describe('ErrorBoundary', () => {
     expect(router.currentRoute.value.path).toBe('/')
   })
 
+  it('resets the fallback on route change instead of latching', async () => {
+    // The boundary's fallback replaces the routed tree, so a hasError that
+    // survived navigation turned one crashed admin view into "every admin
+    // page is broken until refresh" (2026-08-22 admin-bug diagnosis).
+    const wrapper = mount(ErrorBoundary, {
+      global: { plugins: [router] },
+      slots: { default: '<div class="child">Child content</div>' }
+    })
+    ;(wrapper.vm as unknown as { showError: (e: Error) => void }).showError(new Error('Boom'))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.error-boundary').exists()).toBe(true)
+
+    await router.push('/other')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.error-boundary').exists()).toBe(false)
+    expect(wrapper.find('.child').exists()).toBe(true)
+  })
+
   it('accepts error info object with message and context', async () => {
     const wrapper = mount(ErrorBoundary, {
       global: { plugins: [router] },

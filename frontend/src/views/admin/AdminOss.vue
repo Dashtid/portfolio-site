@@ -46,7 +46,7 @@
     >
       Refresh complete · {{ lastRefreshTelemetry.contributionsCount }} contributions · cost
       {{ lastRefreshTelemetry.rateLimitCost }} pts · remaining
-      {{ lastRefreshTelemetry.rateLimitRemaining.toLocaleString() }} / 5,000 per hour.
+      {{ formatCount(lastRefreshTelemetry.rateLimitRemaining) }} / 5,000 per hour.
     </div>
 
     <template v-if="dashboard && !loading">
@@ -123,6 +123,12 @@ import ossService, {
   type OssRefreshResult
 } from '../../services/oss'
 import { adminLogger } from '../../utils/logger'
+
+// Payload drift across a deploy must render a blank, never brick the view
+// (undefined.toLocaleString() in a template throws into the app-level
+// error boundary).
+const formatCount = (n: number | null | undefined): string =>
+  typeof n === 'number' ? n.toLocaleString() : '—'
 
 const dashboard = ref<OssDashboardView | null>(null)
 const loading = ref<boolean>(true)
