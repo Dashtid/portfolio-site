@@ -321,130 +321,109 @@ async def seed_skills(session: AsyncSession):
             "order_index": 6,
         },
         {
-            "name": "Django",
-            "category": "Frameworks",
-            "proficiency_level": 75,
-            "years_of_experience": 3,
-            "order_index": 7,
-        },
-        {
-            "name": "React",
-            "category": "Frameworks",
-            "proficiency_level": 70,
-            "years_of_experience": 3,
-            "order_index": 8,
-        },
-        {
             "name": "Docker",
             "category": "DevOps",
             "proficiency_level": 90,
             "years_of_experience": 4,
-            "order_index": 9,
+            "order_index": 7,
         },
         {
             "name": "Kubernetes",
             "category": "DevOps",
             "proficiency_level": 75,
             "years_of_experience": 3,
-            "order_index": 10,
+            "order_index": 8,
         },
         {
             "name": "GitHub Actions",
             "category": "DevOps",
             "proficiency_level": 85,
             "years_of_experience": 3,
-            "order_index": 11,
-        },
-        {
-            "name": "Azure",
-            "category": "Cloud",
-            "proficiency_level": 85,
-            "years_of_experience": 4,
-            "order_index": 12,
-        },
-        {
-            "name": "Security Auditing",
-            "category": "Security",
-            "proficiency_level": 85,
-            "years_of_experience": 4,
-            "order_index": 13,
+            "order_index": 9,
         },
         {
             "name": "Vulnerability Management",
             "category": "Security",
             "proficiency_level": 85,
             "years_of_experience": 4,
-            "order_index": 14,
+            "order_index": 10,
         },
         {
             "name": "Application Security",
             "category": "Security",
             "proficiency_level": 85,
             "years_of_experience": 4,
-            "order_index": 15,
+            "order_index": 11,
         },
         {
             "name": "Threat Modeling",
             "category": "Security",
             "proficiency_level": 85,
             "years_of_experience": 3,
-            "order_index": 16,
+            "order_index": 12,
         },
         {
             "name": "Secure SDLC",
             "category": "Security",
             "proficiency_level": 85,
             "years_of_experience": 3,
-            "order_index": 17,
+            "order_index": 13,
         },
         {
             "name": "Software Supply-Chain Security (SBOM)",
             "category": "Security",
             "proficiency_level": 85,
             "years_of_experience": 3,
-            "order_index": 18,
+            "order_index": 14,
         },
         {
             "name": "NIS 2",
             "category": "Security",
             "proficiency_level": 75,
             "years_of_experience": 2,
-            "order_index": 19,
+            "order_index": 15,
         },
         {
             "name": "IEC 62304",
             "category": "Medical",
             "proficiency_level": 85,
             "years_of_experience": 4,
-            "order_index": 20,
+            "order_index": 16,
         },
         {
             "name": "IEC 81001-5-1",
             "category": "Medical",
             "proficiency_level": 85,
             "years_of_experience": 3,
-            "order_index": 21,
+            "order_index": 17,
         },
         {
             "name": "GAMP 5",
             "category": "Medical",
             "proficiency_level": 80,
             "years_of_experience": 3,
-            "order_index": 22,
+            "order_index": 18,
         },
         {
             "name": "DICOM",
             "category": "Medical",
             "proficiency_level": 85,
             "years_of_experience": 5,
-            "order_index": 23,
+            "order_index": 20,
         },
         {
-            "name": "HL7/FHIR",
+            "name": "HL7",
             "category": "Medical",
             "proficiency_level": 75,
             "years_of_experience": 4,
-            "order_index": 24,
+            "order_index": 21,
+        },
+        {
+            "name": "FDA Premarket Cybersecurity (524B)",
+            "category": "Medical",
+            "proficiency_level": 85,
+            "years_of_experience": 2,
+            "order_index": 19,
         },
     ]
     for skill_data in skills:
@@ -509,7 +488,7 @@ async def seed_education(session: AsyncSession):
             # (CEH/pentest) certs are advertised; the public brand is
             # defensive-first product security for regulated medtech.
             "institution": "CompTIA",
-            "degree": "Security+ Certification",
+            "degree": "Security+",
             "field_of_study": "Cybersecurity",
             # Verified against the issuer's own Open Badges assertion at
             # credly.com/api/v1/obi/v2/badge_assertions/450d4dcd-...:
@@ -558,9 +537,12 @@ async def seed_cv_profile(session: AsyncSession):
             "guidance (Section 524B) and IEC 81001-5-1 expectations into structured security "
             "evidence and SDLC improvements."
         ),
+        # Evidence-backed wording only: the OIDC trust-policy research is real
+        # (subvectors/subcheck); there is no AWS or Terraform work anywhere, so
+        # they do not belong even in a "focus" line (2026-08-22 accuracy pass).
         focus=(
-            "Cloud & CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC for "
-            "regulated software"
+            "CI/CD and workload-identity security (OIDC trust policies) and "
+            "secure SDLC for regulated software"
         ),
         location_city="Stockholm",
         location_region="Stockholm",

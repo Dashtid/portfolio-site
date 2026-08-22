@@ -520,7 +520,7 @@
                 <p
                   class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
-                  Security+ Certification
+                  Security+
                 </p>
                 <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Cybersecurity
@@ -865,8 +865,8 @@
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Application and cloud security — secure SDLC, SAST/SCA and CI/CD hardening
-                    (OIDC/IAM, AWS/Terraform) for regulated software
+                    Application security — secure SDLC, SAST/SCA and CI/CD hardening (OIDC workload
+                    identity) for regulated software
                   </li>
                 </ul>
               </div>

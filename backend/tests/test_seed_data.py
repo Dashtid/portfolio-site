@@ -129,12 +129,12 @@ class TestSeedSkills:
 
     @pytest.mark.asyncio
     async def test_seed_skills_creates_correct_count(self, db_session):
-        """Test that seed_skills creates exactly 24 skills."""
+        """Test that seed_skills creates exactly 21 skills (2026-08-22 accuracy set)."""
         await seed_skills(db_session)
 
         result = await db_session.execute(select(Skill))
         skills = result.scalars().all()
-        assert len(skills) == 24
+        assert len(skills) == 21
 
     @pytest.mark.asyncio
     async def test_seed_skills_keyword_policy(self, db_session):
@@ -165,11 +165,27 @@ class TestSeedSkills:
             "Secure SDLC",
             "Vulnerability Management",
             "Kubernetes",
+            "FDA Premarket Cybersecurity (524B)",
+            "HL7",
         }
         assert required <= names, f"IN keywords missing from seed: {required - names}"
 
+        # First four: claim-gated OUT terms. The rest were pruned in the
+        # 2026-08-22 accuracy pass — no repo or role backs them (Django/React/
+        # Azure have zero code anywhere; "Security Auditing" is not the
+        # register's approved framing; the HL7 work was HL7, never FHIR).
         lowered = {n.lower() for n in names}
-        for banned in ("iso 27001", "owasp", "pentest", "penetration"):
+        for banned in (
+            "iso 27001",
+            "owasp",
+            "pentest",
+            "penetration",
+            "django",
+            "react",
+            "azure",
+            "auditing",
+            "fhir",
+        ):
             assert not any(banned in n for n in lowered), (
                 f"claim-gated OUT term '{banned}' present in seeded skills"
             )
@@ -310,7 +326,7 @@ class TestSeedDataIntegration:
 
         assert len(companies) == 8
         assert len(projects) == 4
-        assert len(skills) == 24
+        assert len(skills) == 21
         assert len(education) == 4
 
     @pytest.mark.asyncio
@@ -369,7 +385,7 @@ class TestSeedDataMain:
         async with TestSessionLocal() as session:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
             assert len((await session.execute(select(Project))).scalars().all()) == 4
-            assert len((await session.execute(select(Skill))).scalars().all()) == 24
+            assert len((await session.execute(select(Skill))).scalars().all()) == 21
             assert len((await session.execute(select(Education))).scalars().all()) == 4
 
     @pytest.mark.asyncio

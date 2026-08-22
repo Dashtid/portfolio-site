@@ -8,7 +8,7 @@
     "phone": "",
     "url": "https://dashti.se",
     "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance (Section 524B) and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
-    "focus": "Cloud & CI/CD security (OIDC/IAM, AWS/Terraform) and secure-SDLC for regulated software",
+    "focus": "CI/CD and workload-identity security (OIDC trust policies) and secure SDLC for regulated software",
     "location": {
       "city": "Stockholm",
       "countryCode": "SE",
@@ -156,57 +156,49 @@
   ],
   "skills": [
     {
-      "name": "Security Engineering",
-      "keywords": [
-        "Application Security (AppSec)",
-        "Secure SDLC / DevSecOps",
-        "Threat Modeling (STRIDE)",
-        "Security Requirements (traceability)",
-        "Software Supply-Chain Security (SBOM / SCA)",
-        "Vulnerability Management / Triage",
-        "Static Analysis Enablement (SAST)",
-        "Fuzzing / Dynamic Security Testing (DAST)"
-      ]
-    },
-    {
-      "name": "Cloud & CI/CD Security",
-      "keywords": [
-        "AWS",
-        "Terraform",
-        "GitHub Actions CI/CD",
-        "OIDC / IAM",
-        "Kubernetes",
-        "Container Security"
-      ]
-    },
-    {
-      "name": "Programming & Tooling",
+      "name": "Programming",
       "keywords": [
         "Python",
-        "PowerShell",
-        "Bash",
-        "Git",
-        "Docker",
-        "Linux (Ubuntu Server)"
+        "JavaScript/TypeScript",
+        "SQL",
+        "Bash/PowerShell"
       ]
     },
     {
-      "name": "Standards & Regulations",
+      "name": "Frameworks",
       "keywords": [
-        "IEC 81001-5-1",
-        "GAMP 5",
-        "IEC 62304",
-        "FDA 524B (premarket cybersecurity)",
-        "FDA Premarket Cybersecurity Guidance",
+        "FastAPI",
+        "Vue.js"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "keywords": [
+        "Docker",
+        "Kubernetes",
+        "GitHub Actions"
+      ]
+    },
+    {
+      "name": "Security",
+      "keywords": [
+        "Vulnerability Management",
+        "Application Security",
+        "Threat Modeling",
+        "Secure SDLC",
+        "Software Supply-Chain Security (SBOM)",
         "NIS 2"
       ]
     },
     {
-      "name": "Domain",
+      "name": "Medical",
       "keywords": [
+        "IEC 62304",
+        "IEC 81001-5-1",
+        "GAMP 5",
+        "FDA Premarket Cybersecurity (524B)",
         "DICOM",
-        "PACS",
-        "Medical Imaging"
+        "HL7"
       ]
     }
   ],
@@ -235,6 +227,6 @@
   "meta": {
     "canonical": "https://dashti.se",
     "version": "v1.0.0",
-    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the \u00d6vrigt/Other logistics lines (B-k\u00f6rkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06)."
+    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the \u00d6vrigt/Other logistics lines (B-k\u00f6rkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06); accuracy pass 2026-08-22 pruned repo-unbacked terms (Django/React/Azure/Security Auditing/FHIR/AWS/Terraform) and mirrored the DB's category grouping."
   }
 }
