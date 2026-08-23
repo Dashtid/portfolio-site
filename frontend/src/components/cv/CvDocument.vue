@@ -372,7 +372,9 @@ const dateRange = (start: string, end?: string): string => {
 }
 
 .cv-inline-label::after {
-  content: ' – ';
+  /* Em dash — the document's one dash voice (header, certificates, thesis
+     titles); the sweep found three styles doing this job. */
+  content: ' — ';
 }
 
 /* --- Entries (experience / education / certificates) -------------------- */
@@ -491,9 +493,11 @@ const dateRange = (start: string, end?: string): string => {
   font-weight: 400;
 }
 
+/* Same roman voice as every other skill value — Languages were the only
+   bolded values in the grid, which read as accidental emphasis. */
 .cv-lang-name {
-  color: var(--ink);
-  font-weight: 700;
+  color: var(--prose);
+  font-weight: 400;
 }
 
 /* --- Screen-only affordance ---------------------------------------------
