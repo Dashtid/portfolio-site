@@ -145,14 +145,18 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
         # CV produced 64 bullets across 8 roles — 11 for one job — with 21 of 25
         # outcomes restating a responsibility almost word for word.
         #
-        # `cv_highlights` is the curated CV list: 1-3 bullets per role, the ones
-        # the owner actually sends out. Fall back through outcomes (the better
-        # written of the two) to responsibilities, then the summary paragraph.
-        highlights = (
-            list(c.cv_highlights or []) or list(c.outcomes or []) or list(c.responsibilities or [])
-        )
-        if not highlights and c.description:
-            highlights = [c.description]
+        # `cv_highlights` is the curated CV list: 0-3 bullets per role, the ones
+        # the owner actually sends out. None means "not curated yet" and falls
+        # back through outcomes (the better written of the two) to
+        # responsibilities, then the summary paragraph. An EMPTY list is a
+        # deliberate curation — title and dates only (early-career stints) —
+        # and must never resurrect the site's bullets.
+        if c.cv_highlights is not None:
+            highlights = list(c.cv_highlights)
+        else:
+            highlights = list(c.outcomes or []) or list(c.responsibilities or [])
+            if not highlights and c.description:
+                highlights = [c.description]
         work.append(
             {
                 "name": c.name,

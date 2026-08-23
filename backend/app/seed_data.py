@@ -97,7 +97,7 @@ async def seed_companies(session: AsyncSession):
         },
         {
             "name": "SoftPro Medical Solutions",
-            "title": "Master Thesis Student",
+            "title": "Master's Thesis Student",
             "description": "Thesis research integrating the Medusa inventory system with radiology equipment workflows — process modeling and multi-actor analysis to improve quality assurance in a radiology department.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2020, 10, 1),
@@ -448,23 +448,23 @@ async def seed_education(session: AsyncSession):
         # education fallback carried the same wrong values; both now match.
         {
             "institution": "KTH Royal Institute of Technology",
-            "degree": "Master of Science - MS",
-            "field_of_study": "Biomedical Engineering - Computer Science",
+            "degree": "Master of Science",
+            "field_of_study": "Biomedical Engineering – Computer Science",
             "start_date": datetime(2018, 8, 1),
             "end_date": datetime(2021, 6, 30),
             "location": "Stockholm, Sweden",
-            "description": "Master's Thesis - 'Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis'",
+            "description": "Master's Thesis — 'Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis'",
             "is_certification": False,
             "order_index": 1,
         },
         {
             "institution": "Lund University",
-            "degree": "Bachelor of Science - BS",
+            "degree": "Bachelor of Science",
             "field_of_study": "Biomedical Engineering",
             "start_date": datetime(2015, 8, 1),
             "end_date": datetime(2018, 6, 30),
             "location": "Lund, Sweden",
-            "description": "Bachelor's Thesis - 'Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers'",
+            "description": "Bachelor's Thesis — 'Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers'",
             "is_certification": False,
             "order_index": 2,
         },
@@ -531,11 +531,12 @@ async def seed_cv_profile(session: AsyncSession):
         label="Product & Application Security Engineer — Regulated Medical Software",
         summary=(
             "Biomedical Engineer focused on product cybersecurity for regulated medical "
-            "software. Experienced extending STRIDE-based threat models into concrete, "
+            "software. Experienced in extending STRIDE-based threat models into concrete, "
             "product-specific security requirements and supporting vulnerability evaluation "
             "using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity "
             "guidance (Section 524B) and IEC 81001-5-1 expectations into structured security "
-            "evidence and SDLC improvements."
+            "evidence and SDLC improvements. Background: five years across "
+            "medical imaging and healthcare IT, in a formal security role since 2024."
         ),
         # Evidence-backed wording only: the OIDC trust-policy research is real
         # (subvectors/subcheck); there is no AWS or Terraform work anywhere, so

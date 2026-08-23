@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
     "name": "David Dashti",
-    "label": "Product & Application Security Engineer \u2014 Regulated Medical Software",
+    "label": "Product & Application Security Engineer — Regulated Medical Software",
     "image": "",
     "email": "",
     "phone": "",
     "url": "https://dashti.se",
-    "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance (Section 524B) and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
+    "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced in extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance (Section 524B) and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements. Background: five years across medical imaging and healthcare IT, in a formal security role since 2024.",
     "focus": "CI/CD and workload-identity security (OIDC trust policies) and secure SDLC for regulated software",
     "location": {
       "city": "Stockholm",
@@ -35,9 +35,9 @@
       "startDate": "2024-05",
       "endDate": "",
       "highlights": [
-        "Extending STRIDE-based threat models with product-specific threats and translating them into actionable, traceable security requirements for medical software.",
-        "Conducting SBOM-based SCA by manually compiling SBOMs from SOUP lists and analyzing with Grype; triaging vulnerabilities and feeding results into risk assessments and post-market monitoring.",
-        "Improving secure development practices by advocating Roslyn-based static analysis (rules tailored to a desktop DICOM viewer) and introducing DICOM fuzzing as dynamic security testing, supporting FDA premarket cybersecurity guidance and IEC 81001-5-1 documentation needs."
+        "Extend STRIDE threat models with product-specific threats and translate them into traceable security requirements for regulated medical software.",
+        "Conduct SBOM-based SCA by manually compiling SBOMs from SOUP lists and analyzing them with Grype; triage vulnerabilities and feed results into risk assessments and post-market monitoring.",
+        "Advocated Roslyn static analysis with rules tailored to a desktop DICOM viewer, and introduced DICOM protocol fuzzing as dynamic security testing — evidence supporting FDA premarket cybersecurity (524B) and IEC 81001-5-1."
       ]
     },
     {
@@ -47,8 +47,7 @@
       "startDate": "2022-03",
       "endDate": "2024-05",
       "highlights": [
-        "Spearheaded Level 1 support for image processing systems in healthcare IT across Nordics, UK&I, and IIG.",
-        "Collaborated with installation teams to resolve support cases and improve system integrations."
+        "Provided Level 1 support for medical image processing systems across the Nordics and UK & Ireland, handling the full incident lifecycle and collaborating with installation teams on system integrations."
       ]
     },
     {
@@ -63,16 +62,16 @@
     },
     {
       "name": "SoftPro Medical Solutions",
-      "position": "Master Thesis Student",
+      "position": "Master's Thesis Student",
       "location": "Stockholm, Sweden",
       "startDate": "2020-10",
       "endDate": "2021-06",
       "highlights": [
-        "Drove digital transformation by integrating Medusa with the workflow for maintenance of radiology equipment, enhancing QA processes."
+        "Integrated the Medusa inventory system into the radiology equipment maintenance workflow (master's thesis), improving QA processes."
       ]
     },
     {
-      "name": "S\u00f6dersjukhuset AB",
+      "name": "Södersjukhuset AB",
       "position": "Biomedical Engineer, Radiology Department",
       "location": "Stockholm, Sweden",
       "startDate": "2020-06",
@@ -84,7 +83,7 @@
     {
       "name": "Scania Group",
       "position": "Technician, Engine Analysis",
-      "location": "S\u00f6dert\u00e4lje, Sweden",
+      "location": "Södertälje, Sweden",
       "startDate": "2016-06",
       "endDate": "2016-08",
       "highlights": [
@@ -94,36 +93,33 @@
     {
       "name": "Finnish Defence Forces",
       "position": "Platoon Leader, 2nd Lieutenant (Military Service)",
-      "location": "Eken\u00e4s, Finland",
+      "location": "Ekenäs, Finland",
       "startDate": "2014-01",
       "endDate": "2015-01",
       "highlights": [
-        "Day-to-day command of 150 soldiers.",
-        "Field operation command of 30 soldiers.",
-        "In-depth officer training in stress resilience and organizational skills."
+        "Day-to-day command of 150 soldiers; field-operation command of 30.",
+        "Completed officer training in stress resilience and organizational leadership."
       ]
     },
     {
       "name": "Scania Group",
       "position": "Technician, Engine Analysis",
-      "location": "S\u00f6dert\u00e4lje, Sweden",
+      "location": "Södertälje, Sweden",
       "startDate": "2012-06",
       "endDate": "2012-08",
-      "highlights": [
-        "Supported a team of engineers and technicians, acquiring foundational troubleshooting skills."
-      ]
+      "highlights": []
     }
   ],
   "education": [
     {
       "institution": "Royal Institute of Technology in Sweden (KTH)",
-      "area": "Biomedical Engineering - Computer Science",
+      "area": "Biomedical Engineering – Computer Science",
       "studyType": "Master of Science (MS)",
       "location": "Stockholm, Sweden",
       "startDate": "2018-08",
       "endDate": "2021-06",
       "courses": [
-        "Master's Thesis: Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis"
+        "Master's Thesis — 'Improving Quality Assurance of Radiology Equipment Using Process Modelling and Multi-actor System Analysis'"
       ]
     },
     {
@@ -134,11 +130,11 @@
       "startDate": "2015-08",
       "endDate": "2018-06",
       "courses": [
-        "Bachelor's Thesis: Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers"
+        "Bachelor's Thesis — 'Development of a User-friendly Method of Processing Data from Ergonomics Measurements Utilizing Inclinometers'"
       ]
     },
     {
-      "institution": "F\u00f6retagsuniversitetet",
+      "institution": "Företagsuniversitetet",
       "url": "https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/",
       "studyType": "Course",
       "area": "Cybersecurity Fundamentals",
@@ -227,6 +223,6 @@
   "meta": {
     "canonical": "https://dashti.se",
     "version": "v1.0.0",
-    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the \u00d6vrigt/Other logistics lines (B-k\u00f6rkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06); accuracy pass 2026-08-22 pruned repo-unbacked terms (Django/React/Azure/Security Auditing/FHIR/AWS/Terraform) and mirrored the DB's category grouping."
+    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the Övrigt/Other logistics lines (B-körkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06); accuracy pass 2026-08-22 pruned repo-unbacked terms (Django/React/Azure/Security Auditing/FHIR/AWS/Terraform) and mirrored the DB's category grouping."
   }
 }

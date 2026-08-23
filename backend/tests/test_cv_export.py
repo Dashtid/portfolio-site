@@ -272,6 +272,29 @@ class TestCvHighlightsPrecedence:
         assert "Threat modeling" not in cv["work"][0]["highlights"]
         assert "Cut vulnerability triage time" not in cv["work"][0]["highlights"]
 
+    def test_empty_cv_highlights_means_no_bullets_not_fallback(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        """An EMPTY curated list is a decision, not an absence.
+
+        The 2026-08-22 bullet pack trims early-career stints to title+dates
+        only. If [] fell through to outcomes/responsibilities, the trim would
+        silently resurrect the site's bullets on the printed CV.
+        """
+        headers = admin_user_in_db["headers"]
+        _seed_cv_sources(client, headers)
+        company_id = client.get("/api/v1/companies/", headers=headers).json()[0]["id"]
+
+        patch = client.put(
+            f"/api/v1/companies/{company_id}",
+            headers=headers,
+            json={"cv_highlights": []},
+        )
+        assert patch.status_code == 200, patch.text
+
+        cv = client.get("/api/v1/admin/cv/export", headers=headers).json()
+        assert cv["work"][0]["highlights"] == []
+
     def test_falls_back_to_outcomes_then_responsibilities(
         self, client: TestClient, admin_user_in_db: dict[str, Any]
     ):
