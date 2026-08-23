@@ -20,6 +20,8 @@ on:
 permissions:
   contents: read
   issues: write
+  # keepalive needs to flip the workflow's enabled bit via the API
+  actions: write
 
 jobs:
   file-drill-issue:
