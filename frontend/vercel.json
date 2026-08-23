@@ -30,7 +30,7 @@
   "rewrites": [
     {
       "source": "/admin/:path*",
-      "destination": "/admin.html"
+      "destination": "/admin"
     },
     {
       "source": "/:path((?!images|assets|static|.*\\..*).*)",
