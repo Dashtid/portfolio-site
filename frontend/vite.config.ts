@@ -70,6 +70,37 @@ export default defineConfig({
       // eslint-disable-next-line no-console
       console.log(`[csp] state script -> JSON data block in ${rewritten} pages`)
 
+      // Bare /admin shell: the Vercel rewrite used to send /admin/* to "/",
+      // so admin routes hydrated against prerendered HOMEPAGE DOM — a
+      // guaranteed "Hydration completed but contains mismatches" plus a
+      // homepage flash before the admin chunk mounted. admin.html is
+      // index.html with an EMPTY app div (main.ts skips hydration when the
+      // container is empty and mounts clean) and a noindex belt on top of
+      // robots.txt. The homepage __INITIAL_STATE__ block stays: the shim in
+      // main.ts always feeds it to pinia, exactly as it did when /admin was
+      // served index.html verbatim.
+      const indexHtml = fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8')
+      const appStart = indexHtml.indexOf('<div id="app"')
+      const stateIdx = indexHtml.indexOf(
+        '<script type="application/json" id="__INITIAL_STATE__">',
+        appStart
+      )
+      const appClose = indexHtml.lastIndexOf('</div>', stateIdx)
+      if (appStart === -1 || stateIdx === -1 || appClose <= appStart) {
+        throw new Error('[admin-shell] index.html anatomy changed; refusing to emit admin.html')
+      }
+      const adminHtml = (
+        indexHtml.slice(0, appStart) +
+        '<div id="app"></div>' +
+        indexHtml.slice(appClose + '</div>'.length)
+      ).replace('</head>', '<meta name="robots" content="noindex"></head>')
+      if (!adminHtml.includes('<div id="app"></div>') || !adminHtml.includes('noindex')) {
+        throw new Error('[admin-shell] emitted shell failed its own invariants')
+      }
+      fs.writeFileSync(path.join(distDir, 'admin.html'), adminHtml)
+      // eslint-disable-next-line no-console
+      console.log('[admin-shell] bare admin.html emitted')
+
       // D3-FEAT-03: RSS for /writing from the same markdown content the
       // app builds from. The frontmatter parse here is a deliberate tiny
       // duplicate of src/data/writing.ts (this hook runs in node, the
@@ -309,6 +340,10 @@ export default defineConfig({
           // precache — without it an offline navigation dead-ends in
           // main.ts's stale-chunk reload loop instead of the retry UI.
           '**/experience/*.html',
+          // The bare /admin shell (emitted in onFinished): pointless weight
+          // in every public visitor's precache, and admin must always hit
+          // the network anyway (see navigateFallbackDenylist below).
+          '**/admin.html',
           // Non-Latin Geist/Geist Mono subsets the browser never requests
           // on an English-only site; the font-cache runtime rule would
           // still pick them up if unicode-range ever matched. The globs
@@ -328,7 +363,11 @@ export default defineConfig({
         // 2026-08 Sprint 2), so a returning visitor's SW must let /cv reach
         // the Vercel edge 301 (-> home) instead of serving the cached shell,
         // which would client-side 404 on the now-removed route.
-        navigateFallbackDenylist: [/\/[^/]+\.[a-z0-9]+$/i, /^\/cv$/],
+        // /admin is denylisted so the SW never answers an admin navigation
+        // with the precached homepage shell — it must reach the Vercel edge,
+        // which rewrites /admin/* to the bare admin.html (empty app div, no
+        // hydration mismatch, no homepage flash).
+        navigateFallbackDenylist: [/\/[^/]+\.[a-z0-9]+$/i, /^\/cv$/, /^\/admin/],
         // Runtime caching strategies
         runtimeCaching: [
           {

@@ -190,7 +190,16 @@ export const createApp = ViteSSG(
   // SSR data fetching goes through onServerPrefetch (see
   // HomeView/ExperienceDetail) — and the client render tree to match the
   // server HTML exactly.
-  { hydration: true }
+  //
+  // The one page with nothing to hydrate is the bare /admin shell
+  // (dist/admin.html, emitted in vite.config.ts onFinished with an EMPTY
+  // app div): hydrating an empty container makes Vue log a mismatch and
+  // re-render anyway, so an empty container mounts clean instead. During
+  // the SSG node pass `document` is undefined — hydration stays on there.
+  {
+    hydration:
+      typeof document === 'undefined' || (document.getElementById('app')?.hasChildNodes() ?? false)
+  }
 )
 
 // Export includedRoutes so vite-ssg can enumerate routes to pre-render.
