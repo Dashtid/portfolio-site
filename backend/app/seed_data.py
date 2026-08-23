@@ -535,8 +535,7 @@ async def seed_cv_profile(session: AsyncSession):
             "product-specific security requirements and supporting vulnerability evaluation "
             "using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity "
             "guidance (Section 524B) and IEC 81001-5-1 expectations into structured security "
-            "evidence and SDLC improvements. Background: five years across "
-            "medical imaging and healthcare IT, in a formal security role since 2024."
+            "evidence and SDLC improvements."
         ),
         # Evidence-backed wording only: the OIDC trust-policy research is real
         # (subvectors/subcheck); there is no AWS or Terraform work anywhere, so
