@@ -58,7 +58,7 @@ dev = [
     # starlette 1.3 deprecates httpx(1) in its TestClient and will hard-
     # require httpx2 in a future minor — install it ahead of that cliff.
     # Prod code keeps plain httpx (the OAuth client).
-    "httpx2==2.10.0",
+    "httpx2==2.11.0",
 ]
 
 [build-system]
