@@ -40,7 +40,7 @@
     "@vue/devtools-api": "^8.1.5",
     "@vueuse/core": "^14.4.0",
     "axios": "^1.19.0",
-    "marked": "^18.0.9",
+    "marked": "^18.0.10",
     "pinia": "^4.0.3",
     "tailwindcss": "^4.3.1",
     "vite-ssg": "^28.3.0",
