@@ -199,6 +199,22 @@ describe('HomeView', () => {
       expect(wrapper.find('#about').exists()).toBe(true)
       expect(wrapper.find('.about-layout').exists()).toBe(true)
     })
+
+    it("points the security-posture note at the site's own repository", async () => {
+      // The site claims to be its own work sample; that claim is only worth
+      // anything while the link to the evidence is actually present.
+      const wrapper = await createWrapper()
+
+      const repoLink = wrapper
+        .find('#about')
+        .findAll('a')
+        .find(a => a.attributes('href') === 'https://github.com/Dashtid/portfolio-site')
+
+      expect(repoLink).toBeDefined()
+      expect(repoLink!.attributes('rel')).toContain('noopener')
+      expect(repoLink!.attributes('target')).toBe('_blank')
+      expect(wrapper.find('#about').text()).toContain('work sample')
+    })
   })
 
   describe('Open Source strip (D3-FEAT-01)', () => {

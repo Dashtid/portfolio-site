@@ -885,6 +885,27 @@
                 patients by making sure the software, and increasingly the AI, inside their care is
                 secure by design.
               </p>
+              <!-- The site as its own work sample. Every claim here is checkable in
+                   the repo README: script-src 'self' CSP, a post-deploy smoke test
+                   that asserts the production security headers, SHA-pinned actions
+                   and checksum-verified scanning. Keep the wording tied to what the
+                   README actually documents. -->
+              <p
+                class="mt-6 border-t border-slate-200 pt-6 text-sm leading-relaxed dark:border-slate-800"
+              >
+                This site is itself a work sample — its content-security policy, CI gates and
+                supply-chain posture are documented in
+                <a
+                  href="https://github.com/Dashtid/portfolio-site"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="underline decoration-slate-300 underline-offset-4 transition-colors hover:text-primary-600 hover:decoration-primary-400 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:decoration-slate-600 dark:hover:text-primary-400"
+                  aria-label="Portfolio site source repository on GitHub (opens in new tab)"
+                  @click="trackOutbound('github', 'about-security-posture')"
+                >
+                  the repository</a
+                >.
+              </p>
             </div>
           </div>
         </div>
