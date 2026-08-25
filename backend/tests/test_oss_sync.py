@@ -275,3 +275,63 @@ class TestRefreshIntegration:
             assert "other-author-id" not in ids
             # ...and the fresh classification set landed alongside it.
             assert len(rows) == result.contributions_count + 1
+
+    async def test_refresh_restamps_a_preserved_row_that_is_still_in_the_window(
+        self,
+        client,
+        monkeypatch,
+        parsed_fixture: OssDashboardResponse,
+    ):
+        """A merged self-authored PR that is BOTH preserved AND still returned
+        by the 30-day fetch takes the update-in-place branch. That branch used
+        to copy ``synced_at`` off the incoming transient row, where the
+        server_default has not materialized yet — writing NULL into a NOT NULL
+        column and aborting the whole refresh. Prod froze on exactly this
+        (grype #3611), and the existing preservation test never caught it
+        because its preserved row is absent from the fresh payload.
+        """
+        _ = client
+
+        node = parsed_fixture.authored_open_prs.nodes[0]
+        already_present = OssContribution(
+            id="preserved-and-refetched",
+            github_node_id=node.id,  # the SAME node the fresh fetch returns
+            kind="pr",
+            repo_name_with_owner=node.repository.name_with_owner,
+            number=node.number,
+            title="stale title from the previous refresh",
+            url=node.url,
+            state="MERGED",
+            is_draft=False,
+            author_login="Dashtid",
+            bucket="DONE",
+            created_at=node.created_at,
+            last_activity_at=node.updated_at,
+            closed_at=node.created_at,
+            merged_at=node.created_at,
+        )
+        async with TestSessionLocal() as setup_session:
+            setup_session.add(already_present)
+            await setup_session.commit()
+
+        async def fake_fetch(self):
+            return parsed_fixture.model_dump(by_alias=True)
+
+        monkeypatch.setattr(OssSyncService, "_fetch_payload", fake_fetch)
+
+        service = OssSyncService()
+        async with TestSessionLocal() as session:
+            # Before the fix this raised IntegrityError (NotNullViolation).
+            await service.refresh(session)
+
+        async with TestSessionLocal() as verify_session:
+            row = (
+                await verify_session.execute(
+                    select(OssContribution).where(
+                        OssContribution.github_node_id == already_present.github_node_id
+                    )
+                )
+            ).scalar_one()
+            assert row.synced_at is not None
+            # The row was genuinely refreshed in place, not left stale.
+            assert row.title == node.title

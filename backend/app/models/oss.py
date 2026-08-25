@@ -72,9 +72,11 @@ class OssContribution(Base):
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     merged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    # Our row's last refresh. Only ever stamped at INSERT (via server_default)
-    # because oss_sync.refresh() is delete-all + insert-all; no UPDATE path
-    # exists, so onupdate=... would be dead code.
+    # Our row's last refresh. Stamped at INSERT by the server_default, and
+    # explicitly re-stamped by oss_sync.refresh() when it updates a
+    # preserved merged row in place (the replace-with-history path). Do NOT
+    # copy this field off a freshly built, unflushed row — the
+    # server_default has not materialized there yet and it reads None.
     synced_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

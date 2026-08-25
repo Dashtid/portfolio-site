@@ -187,6 +187,15 @@ class OssSyncService:
                 row.github_node_id: row
                 for row in ((await session.execute(select(OssContribution))).scalars().all())
             }
+            # One stamp for the whole refresh. It CANNOT be copied off the
+            # incoming rows: those are transient ORM objects whose
+            # synced_at comes from a server_default that only materializes
+            # at INSERT, so it reads None until flush. Copying it onto a
+            # preserved row wrote NULL into a NOT NULL column and aborted
+            # the entire refresh — which is what silently froze the public
+            # Open Source strip once a merged PR was both preserved AND
+            # still inside the 30-day fetch window.
+            synced_at = datetime.now(UTC)
             for row in rows:
                 existing = preserved.get(row.github_node_id)
                 if existing is None:
@@ -207,9 +216,9 @@ class OssSyncService:
                     "last_activity_at",
                     "closed_at",
                     "merged_at",
-                    "synced_at",
                 ):
                     setattr(existing, field, getattr(row, field))
+                existing.synced_at = synced_at
             await session.commit()
 
             return OssRefreshResult(
