@@ -62,6 +62,11 @@ logger = get_logger(__name__)
 # unauthenticated writer on this API can create.
 PAGE_VIEW_RETENTION = timedelta(days=400)
 
+# Cadence of the background OSS-dashboard refresh. 6h is what the sync
+# service's own httpx-lifecycle comment assumes, and at ~4 rate-limit
+# points per run it is free against GitHub's 5000/hour budget.
+OSS_REFRESH_INTERVAL_SECONDS = int(timedelta(hours=6).total_seconds())
+
 # Initialize Sentry for error tracking and performance monitoring.
 # We explicitly enumerate integrations rather than relying on Sentry's
 # auto-enable so the exact set is visible in code review and consistent
@@ -334,6 +339,48 @@ async def cleanup_oauth_states_periodically():
             logger.exception("Error during auth-row cleanup: %s", e)
 
 
+async def refresh_oss_dashboard_periodically():
+    """Keep the public Open Source strip current (every 6 hours).
+
+    Until 2026-08-25 the OSS dashboard refreshed ONLY when someone clicked
+    the admin button. Nobody did for four weeks, and a NOT NULL crash in
+    the refresh path (fixed in the same change) stayed invisible the whole
+    time because its traceback had no audience — the homepage quietly
+    served a frozen list of merged PRs. A proof surface that only updates
+    when a human remembers is a proof surface that goes stale.
+
+    6h matches the cadence the sync service already documents for its
+    httpx-client lifecycle. Cheap: ~4 rate-limit points per run against
+    5000/hour. The first run waits out the interval so boot stays fast and
+    a crash-looping machine cannot hammer the GitHub API.
+
+    Failures are logged and swallowed: a GitHub outage or an expired PAT
+    must never take the API process down, and the strip keeps serving the
+    last good rows from the database.
+    """
+    from app.database import AsyncSessionLocal  # noqa: PLC0415
+    from app.services.oss_sync import oss_sync_service  # noqa: PLC0415
+
+    while True:
+        try:
+            await asyncio.sleep(OSS_REFRESH_INTERVAL_SECONDS)
+            if not settings.GITHUB_OSS_DASHBOARD_PAT:
+                continue
+            async with AsyncSessionLocal() as session:
+                result = await oss_sync_service.refresh(session)
+            logger.info(
+                "Scheduled OSS dashboard refresh complete",
+                extra={
+                    "contributions_count": result.contributions_count,
+                    "rate_limit_remaining": result.rate_limit_remaining,
+                },
+            )
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.exception("Scheduled OSS dashboard refresh failed: %s", e)
+
+
 # Data migrations (the ~500-line hardcoded content-correction block that
 # once ran in this lifespan) were extracted to scripts/migrate_data.py and
 # later DELETED (2026-07-28): the script was invoked by nothing and its
@@ -392,6 +439,8 @@ async def lifespan(app: FastAPI):
 
     # Start background cleanup task
     cleanup_task = asyncio.create_task(cleanup_oauth_states_periodically())
+    # Keep the public OSS strip fresh without anyone clicking a button.
+    oss_refresh_task = asyncio.create_task(refresh_oss_dashboard_periodically())
 
     yield
 
@@ -399,6 +448,10 @@ async def lifespan(app: FastAPI):
     cleanup_task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await cleanup_task
+
+    oss_refresh_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await oss_refresh_task
 
     # Close GitHub service connection pool
     await github_service.close()
