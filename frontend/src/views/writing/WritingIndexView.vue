@@ -41,11 +41,16 @@
           </li>
         </ul>
 
-        <!-- Honest empty state: the surface exists ahead of its first
-             article (D3-FEAT-03 launch is owner-gated). noindex while
-             empty via the reactive robots meta below. -->
+        <!-- Honest empty state. The article programme was closed 2026-08-29
+             (no publish cadence, no article backlog, nothing gated on a
+             piece shipping), so this no longer announces a forthcoming
+             article — an unkept promise reads worse than absence. The
+             surface itself stays: dormant, unlinked from the nav, and
+             noindex while empty via the reactive robots meta below. It is
+             ready if a one-off piece or talk write-up ever warrants it. -->
         <p v-else class="mt-10 text-slate-500 dark:text-slate-400">
-          Nothing published yet — the first piece is on its way.
+          Nothing published yet. The public record is in the work itself — open-source projects and
+          upstream contributions, linked from the portfolio.
         </p>
 
         <div class="mt-12 border-t border-slate-200 pt-8 dark:border-slate-800">
@@ -83,7 +88,8 @@ useHead({
     { property: 'og:url', content: 'https://dashti.se/writing' },
     { name: 'twitter:title', content: 'Writing | David Dashti' },
     { name: 'twitter:description', content: WRITING_DESCRIPTION },
-    // Empty surface stays out of the index until the first article ships
+    // An empty surface stays out of the index; the check is reactive, so it
+    // flips back to index/follow if anything is ever committed to content/
     { name: 'robots', content: writingPosts.length ? 'index, follow' : 'noindex' }
   ],
   link: [
