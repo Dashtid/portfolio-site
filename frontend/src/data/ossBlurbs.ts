@@ -11,6 +11,8 @@
 export const OSS_BLURBS: Record<string, string> = {
   'Efferent-Health/fo-dicom.Codecs#190':
     'JPEG 2000 decoder hardening: a codestream claiming more samples than the declared pixel geometry could write past the destination buffer — now rejected before decoding.',
+  'Efferent-Health/fo-dicom.Codecs#181':
+    "Fixed a process crash in the JPEG decoder's error path: on malformed input it freed a caller-owned pixel buffer, corrupting the heap.",
   'DefectDojo/django-DefectDojo#15081':
     'Brings Promptfoo LLM eval and red-teaming findings into DefectDojo, so LLM security results live in the same vulnerability workflow as everything else.',
   'DefectDojo/django-DefectDojo#15013':
