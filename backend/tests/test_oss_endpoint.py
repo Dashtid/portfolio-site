@@ -62,7 +62,7 @@ class TestGetOssDashboard:
         for value in body["buckets"].values():
             assert value == []
         assert body["lastRefreshAt"] is None
-        assert len(body["trackedRepos"]) == 8
+        assert len(body["trackedRepos"]) == 9
 
     @pytest.mark.asyncio
     async def test_admin_gets_rows_grouped_by_bucket(

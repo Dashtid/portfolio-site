@@ -35,6 +35,7 @@ from app.services.oss_queries import (
     SEARCH_QUERY_MAX_LEN,
     TRACKED_REPOS,
     build_dashboard_variables,
+    shard_tracked_repos,
 )
 
 # Mirror of TRACKED_REPOS. Any new repo added to production must also be added
@@ -52,6 +53,9 @@ KNOWN_PUBLIC_REPOS = frozenset(
         "DefectDojo/django-DefectDojo",
         "DependencyTrack/dependency-track",
         "microsoft/presidio",
+        # Verified public 2026-08-29 (upstream org repo; PR #190 readable
+        # with an unauthenticated call).
+        "Efferent-Health/fo-dicom.Codecs",
     }
 )
 
@@ -138,7 +142,7 @@ class TestOssDashboardResponseParsing:
 class TestBuildDashboardVariables:
     def test_pinned_as_of_produces_deterministic_strings(self):
         as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
-        variables = build_dashboard_variables(as_of=as_of)
+        variables = build_dashboard_variables(repos=shard_tracked_repos()[0], as_of=as_of)
 
         assert variables["first"] == DEFAULT_SEARCH_LIMIT
         assert "author:Dashtid is:pr is:open" in variables["authoredOpenPRs"]
@@ -150,9 +154,10 @@ class TestBuildDashboardVariables:
         assert "closed:>=2026-05-15" in variables["commentedClosed"]
         assert "commenter:Dashtid -author:Dashtid is:open" in variables["commentedOpen"]
 
-    def test_all_8_tracked_repos_appear_in_every_search(self):
+    def test_every_tracked_repo_appears_in_exactly_one_shard_search(self):
+        """Across all shards, every tracked repo is queried once — the
+        merge in oss_sync depends on shards being disjoint AND complete."""
         as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
-        variables = build_dashboard_variables(as_of=as_of)
         search_keys = (
             "authoredOpenPRs",
             "authoredOpenIssues",
@@ -161,43 +166,51 @@ class TestBuildDashboardVariables:
             "commentedClosed",
         )
         for key in search_keys:
-            search = variables[key]
-            assert isinstance(search, str)
-            for repo in TRACKED_REPOS:
-                assert f"repo:{repo}" in search, f"{key} missing repo:{repo}"
+            hits: dict[str, int] = dict.fromkeys(TRACKED_REPOS, 0)
+            for shard in shard_tracked_repos():
+                search = build_dashboard_variables(repos=shard, as_of=as_of)[key]
+                assert isinstance(search, str)
+                for repo in TRACKED_REPOS:
+                    if f"repo:{repo}" in search:
+                        hits[repo] += 1
+            assert all(count == 1 for count in hits.values()), f"{key}: {hits}"
 
     def test_custom_window_changes_cutoff(self):
         as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
-        variables = build_dashboard_variables(as_of=as_of, window_days=7)
+        variables = build_dashboard_variables(
+            repos=shard_tracked_repos()[0], as_of=as_of, window_days=7
+        )
         assert "closed:>=2026-06-07" in variables["authoredClosed"]
 
     def test_custom_first_propagates(self):
         as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
-        variables = build_dashboard_variables(as_of=as_of, first=25)
+        variables = build_dashboard_variables(repos=shard_tracked_repos()[0], as_of=as_of, first=25)
         assert variables["first"] == 25
 
     def test_search_strings_stay_under_github_256_char_limit(self):
         """GitHub rejects search queries over 256 chars with Validation failed.
 
-        Pin the current lengths so a 9th tracked repo can't silently push
-        any search past the limit — the runtime guard raises before sending
-        to GitHub, but a CI failure here catches the regression first.
+        Sharding is what makes a 9th (or 15th) tracked repo safe — but only
+        if EVERY shard's five searches genuinely fit. The runtime guard
+        raises before sending to GitHub; a CI failure here catches the
+        regression first.
         """
         as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
-        variables = build_dashboard_variables(as_of=as_of)
-        for key in (
-            "authoredOpenPRs",
-            "authoredOpenIssues",
-            "authoredClosed",
-            "commentedOpen",
-            "commentedClosed",
-        ):
-            value = variables[key]
-            assert isinstance(value, str)
-            assert len(value) <= SEARCH_QUERY_MAX_LEN, (
-                f"{key} is {len(value)} chars, over GitHub's "
-                f"{SEARCH_QUERY_MAX_LEN}-char search-query limit"
-            )
+        for shard in shard_tracked_repos():
+            variables = build_dashboard_variables(repos=shard, as_of=as_of)
+            for key in (
+                "authoredOpenPRs",
+                "authoredOpenIssues",
+                "authoredClosed",
+                "commentedOpen",
+                "commentedClosed",
+            ):
+                value = variables[key]
+                assert isinstance(value, str)
+                assert len(value) <= SEARCH_QUERY_MAX_LEN, (
+                    f"{key} for shard {shard} is {len(value)} chars, over "
+                    f"GitHub's {SEARCH_QUERY_MAX_LEN}-char search-query limit"
+                )
 
     def test_oversized_repos_list_raises_loud(self):
         """The runtime guard converts a too-long search into a clear error."""
@@ -212,7 +225,7 @@ class TestBuildDashboardVariables:
 class TestConstants:
     def test_tracked_repos_immutable_and_complete(self):
         assert isinstance(TRACKED_REPOS, tuple)
-        assert len(TRACKED_REPOS) == 8
+        assert len(TRACKED_REPOS) == 9
         # Sanity-check a couple of well-known entries from NOTES.md.
         assert "anchore/syft" in TRACKED_REPOS
         assert "microsoft/presidio" in TRACKED_REPOS
@@ -264,3 +277,36 @@ class TestConstants:
 
     def test_default_window_is_30_days(self):
         assert DONE_WINDOW_DAYS == 30
+
+
+class TestShardTrackedRepos:
+    """The shard packer is what lets TRACKED_REPOS outgrow one 256-char query."""
+
+    def test_shards_cover_every_repo_exactly_once_in_order(self):
+        flattened = [repo for shard in shard_tracked_repos() for repo in shard]
+        assert flattened == list(TRACKED_REPOS)
+
+    def test_current_list_needs_exactly_two_shards(self):
+        """The first 8 repos measured 255/256 in one query, so the 9th must
+        open a second shard. If a template edit ever changes this, the
+        assertion forces a conscious look rather than a silent repack."""
+        shards = shard_tracked_repos()
+        assert len(shards) == 2
+        assert shards[1] == ("Efferent-Health/fo-dicom.Codecs",)
+
+    def test_every_shard_builds_valid_variables(self):
+        """No shard may trip the runtime 256-char guard."""
+        as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
+        for shard in shard_tracked_repos():
+            build_dashboard_variables(repos=shard, as_of=as_of)
+
+    def test_many_long_repos_pack_into_valid_shards(self):
+        """Future growth: even a pile of long names must pack cleanly."""
+        as_of = datetime(2026, 6, 14, 12, 0, tzinfo=UTC)
+        many = TRACKED_REPOS + tuple(
+            f"some-long-org-{i}/some-long-repository-name-{i}" for i in range(10)
+        )
+        shards = shard_tracked_repos(many)
+        assert [r for s in shards for r in s] == list(many)
+        for shard in shards:
+            build_dashboard_variables(repos=shard, as_of=as_of)

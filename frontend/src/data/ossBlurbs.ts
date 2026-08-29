@@ -9,6 +9,8 @@
  * they never tie a contribution to employer work or internal tooling.
  */
 export const OSS_BLURBS: Record<string, string> = {
+  'Efferent-Health/fo-dicom.Codecs#190':
+    'JPEG 2000 decoder hardening: a codestream claiming more samples than the declared pixel geometry could write past the destination buffer — now rejected before decoding.',
   'DefectDojo/django-DefectDojo#15081':
     'Brings Promptfoo LLM eval and red-teaming findings into DefectDojo, so LLM security results live in the same vulnerability workflow as everything else.',
   'DefectDojo/django-DefectDojo#15013':

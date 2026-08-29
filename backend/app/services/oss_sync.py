@@ -47,6 +47,7 @@ from app.services.oss_queries import (
     GITHUB_USERNAME,
     OSS_DASHBOARD_QUERY,
     build_dashboard_variables,
+    shard_tracked_repos,
 )
 from app.utils.logger import get_logger
 
@@ -144,29 +145,43 @@ class OssSyncService:
 
         async with self._refresh_lock:
             self._refresh_in_progress = True
+            responses: list[OssDashboardResponse] = []
             try:
-                payload = await self._fetch_payload()
+                # One query per shard: TRACKED_REPOS outgrew GitHub's
+                # 256-char search limit at 9 entries, so the same 5-alias
+                # document runs once per repo group and the results merge
+                # below. Shards are disjoint, so the merge dedupe is a
+                # guard, not a workhorse.
+                for shard in shard_tracked_repos():
+                    payload = await self._fetch_payload(shard)
+                    response = OssDashboardResponse.model_validate(payload)
+                    responses.append(response)
+                    # Log the rate-limit cost so Sentry breadcrumbs and
+                    # structured logs carry the telemetry per shard.
+                    logger.info(
+                        "OSS dashboard refresh fetched",
+                        extra={
+                            "shard_repo_count": len(shard),
+                            "rate_limit_cost": response.rate_limit.cost,
+                            "rate_limit_remaining": response.rate_limit.remaining,
+                            "rate_limit_reset_at": response.rate_limit.reset_at.isoformat(),
+                            "node_count": response.rate_limit.node_count,
+                        },
+                    )
             finally:
                 # Release the in-progress flag before the DB write so the
                 # admin endpoint shows progress only during the network
-                # call, not during the (much faster) DB swap.
+                # calls, not during the (much faster) DB swap.
                 self._refresh_in_progress = False
 
-            response = OssDashboardResponse.model_validate(payload)
-
-            # Log the rate-limit cost so Sentry breadcrumbs and structured
-            # logs carry the telemetry without a separate DB table.
-            logger.info(
-                "OSS dashboard refresh fetched",
-                extra={
-                    "rate_limit_cost": response.rate_limit.cost,
-                    "rate_limit_remaining": response.rate_limit.remaining,
-                    "rate_limit_reset_at": response.rate_limit.reset_at.isoformat(),
-                    "node_count": response.rate_limit.node_count,
-                },
-            )
-
-            rows = list(self._classify_response(response))
+            rows: list[OssContribution] = []
+            seen_node_ids: set[str] = set()
+            for response in responses:
+                for row in self._classify_response(response):
+                    if row.github_node_id in seen_node_ids:
+                        continue
+                    seen_node_ids.add(row.github_node_id)
+                    rows.append(row)
 
             # Replace-with-history transaction (D3-FEAT-01): the operational
             # buckets are replaced wholesale, but merged self-authored PRs
@@ -223,19 +238,21 @@ class OssSyncService:
 
             return OssRefreshResult(
                 contributions_count=len(rows),
-                rate_limit_cost=response.rate_limit.cost,
-                rate_limit_remaining=response.rate_limit.remaining,
+                # Cost is additive across shards; "remaining" is a budget
+                # gauge, so the tightest (minimum) reading is the honest one.
+                rate_limit_cost=sum(r.rate_limit.cost for r in responses),
+                rate_limit_remaining=min(r.rate_limit.remaining for r in responses),
                 finished_at=datetime.now(UTC),
             )
 
-    async def _fetch_payload(self) -> dict[str, Any]:
-        """Execute the GraphQL query and return the raw ``data`` envelope.
+    async def _fetch_payload(self, repos: tuple[str, ...]) -> dict[str, Any]:
+        """Execute the GraphQL query for one repo shard, return ``data``.
 
         githubkit's ``graphql.arequest()`` returns ``dict[str, Any]``
         (the unwrapped ``data`` field). We hand it to Pydantic next.
         """
 
-        variables = build_dashboard_variables()
+        variables = build_dashboard_variables(repos=repos)
         async with self._github_client() as client:
             try:
                 return await client.graphql.arequest(OSS_DASHBOARD_QUERY, variables)

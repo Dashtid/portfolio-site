@@ -1,11 +1,12 @@
 """GraphQL query + variable builders for the admin OSS contribution dashboard.
 
-The query covers the 8 upstream repos we track for OSS contributions and
+The query covers the upstream repos we track for OSS contributions and
 returns enough per-PR signal for the bucket classifier to discriminate
-NOW vs WAITING without a second round-trip. Cost ~7-8 GraphQL points
-per refresh (5 search aliases + nested connections); the 5000 pts/hour
-limit is 120,000 pts/day, and 4 refreshes/day burn ~32 pts/day —
-~3,750x headroom.
+NOW vs WAITING without a second round-trip. The tracked list is sharded
+(``shard_tracked_repos``) so it can outgrow GitHub's 256-char search
+limit; the sync service runs the query once per shard. Cost ~4 GraphQL
+points per shard per refresh against a 5000 pts/hour limit —
+thousands-fold headroom even at several shards.
 
 Wire up:
 - ``OSS_DASHBOARD_QUERY`` is the static query document; githubkit caches
@@ -42,8 +43,9 @@ TRACKED_REPOS: tuple[str, ...] = (
     "DefectDojo/django-DefectDojo",
     "DependencyTrack/dependency-track",
     "microsoft/presidio",
+    "Efferent-Health/fo-dicom.Codecs",
 )
-"""The 8 upstream repos covered by the v1 dashboard. v1.3 will auto-discover.
+"""The 9 upstream repos covered by the dashboard. v1.3 will auto-discover.
 
 INVARIANT: every entry MUST be a public repository accessible to a PAT
 scoped only to ``public_repo``. Private / archived / renamed repos
@@ -52,6 +54,15 @@ hides that repo from the dashboard. The unit-test allowlist mirror in
 ``tests/test_oss_schemas.py`` is the contract: adding a repo here
 requires updating the test in the same change so a private entry
 can't slip in.
+
+This list is also a SECURITY CONTROL, not just scope: it is what keeps
+private / IP-tainted repos out of the searches whose results feed a
+public surface. Never replace it with a bare ``author:`` search.
+
+Since 2026-08-29 the list is sharded (``shard_tracked_repos``) and the
+sync service runs the query once per shard, so adding a repo here no
+longer risks the 256-char search limit — the first 8 repos already sat
+at 255/256.
 """
 
 SEARCH_QUERY_MAX_LEN: int = 256
@@ -245,30 +256,21 @@ def _repo_filter(repos: tuple[str, ...]) -> str:
     return " ".join(f"repo:{repo}" for repo in repos)
 
 
-def build_dashboard_variables(
-    *,
-    username: str = GITHUB_USERNAME,
-    repos: tuple[str, ...] = TRACKED_REPOS,
-    as_of: datetime | None = None,
-    window_days: int = DONE_WINDOW_DAYS,
-    first: int = DEFAULT_SEARCH_LIMIT,
-) -> dict[str, str | int]:
-    """Build the 5 search-query strings + paging limit for ``OSS_DASHBOARD_QUERY``.
+def _search_strings(username: str, cutoff: str, repo_clause: str) -> dict[str, str]:
+    """The five search strings, in one place.
 
-    Pass ``as_of`` to pin the DONE-bucket window for deterministic tests;
-    production calls leave it None so the window slides with wall-clock time.
+    ``build_dashboard_variables`` fills these for real, and
+    ``shard_tracked_repos`` measures them with an empty repo clause to learn
+    the per-shard character budget — sharing the templates is what stops the
+    packer's budget from silently drifting when a template is edited.
+
+    ``closed:>=`` filters by close date AND implies ``is:closed``, saving
+    ~10 chars vs ``is:closed updated:>=``; the trade-off is missing the rare
+    long-closed thread that gets a recent comment — noise for an
+    operational DONE bucket anyway.
     """
 
-    now = as_of if as_of is not None else datetime.now(UTC)
-    cutoff = (now - timedelta(days=window_days)).date().isoformat()
-    repo_clause = _repo_filter(repos)
-
-    # ``closed:>=`` filters by close date AND implies ``is:closed``, saving
-    # ~10 chars vs ``is:closed updated:>=``. The 256-char search-query limit
-    # is tight at 8 repos; the trade-off is that we miss the rare case of a
-    # long-closed thread getting a recent Dashtid comment — that signal is
-    # noise for an operational DONE bucket anyway.
-    searches: dict[str, str] = {
+    return {
         "authoredOpenPRs": f"author:{username} is:pr is:open {repo_clause}",
         "authoredOpenIssues": f"author:{username} is:issue is:open {repo_clause}",
         "authoredClosed": f"author:{username} closed:>={cutoff} {repo_clause}",
@@ -278,14 +280,83 @@ def build_dashboard_variables(
         ),
     }
 
+
+def shard_tracked_repos(
+    repos: tuple[str, ...] = TRACKED_REPOS,
+    *,
+    username: str = GITHUB_USERNAME,
+) -> tuple[tuple[str, ...], ...]:
+    """Split ``repos`` into groups whose search strings all fit GitHub's limit.
+
+    The sync service runs ``OSS_DASHBOARD_QUERY`` once per shard and merges
+    the results, so the tracked list can grow past what a single 256-char
+    search can hold (the original 8 repos measured 255/256; the 9th made a
+    single query impossible). Greedy first-fit in declaration order: order
+    is stable, every repo lands in exactly one shard, and each extra shard
+    costs one more GraphQL request (~4 rate-limit points against 5000/hour).
+
+    The budget is derived from the LONGEST template with the clause empty —
+    the cutoff is an ISO date, so a fixed placeholder measures identically.
+    A single repo name too long for a whole shard of its own gets a
+    one-repo shard anyway; ``build_dashboard_variables`` then raises its
+    loud ValueError rather than this function guessing.
+    """
+
+    budget = SEARCH_QUERY_MAX_LEN - max(
+        len(s) for s in _search_strings(username, "0000-00-00", "").values()
+    )
+
+    shards: list[tuple[str, ...]] = []
+    current: list[str] = []
+    used = 0
+    for repo in repos:
+        cost = len(f"repo:{repo}") + (1 if current else 0)
+        if current and used + cost > budget:
+            shards.append(tuple(current))
+            current = []
+            used = 0
+            cost = len(f"repo:{repo}")
+        current.append(repo)
+        used += cost
+    if current:
+        shards.append(tuple(current))
+    return tuple(shards)
+
+
+def build_dashboard_variables(
+    *,
+    repos: tuple[str, ...],
+    username: str = GITHUB_USERNAME,
+    as_of: datetime | None = None,
+    window_days: int = DONE_WINDOW_DAYS,
+    first: int = DEFAULT_SEARCH_LIMIT,
+) -> dict[str, str | int]:
+    """Build the 5 search-query strings + paging limit for ``OSS_DASHBOARD_QUERY``.
+
+    ``repos`` is required and should be ONE shard from
+    ``shard_tracked_repos()`` — the full TRACKED_REPOS stopped fitting a
+    single query at 9 entries (it had no default precisely so nobody can
+    reach for the old single-query habit and hit the runtime guard).
+
+    Pass ``as_of`` to pin the DONE-bucket window for deterministic tests;
+    production calls leave it None so the window slides with wall-clock time.
+    """
+
+    now = as_of if as_of is not None else datetime.now(UTC)
+    cutoff = (now - timedelta(days=window_days)).date().isoformat()
+    searches = _search_strings(username, cutoff, _repo_filter(repos))
+
+    # Callers are expected to pass ONE SHARD from shard_tracked_repos();
+    # the full 9-repo TRACKED_REPOS no longer fits a single query. This
+    # guard stays as the last line of defence for a pathological shard
+    # (e.g. a single repo name that alone blows the budget).
     for key, value in searches.items():
         if len(value) > SEARCH_QUERY_MAX_LEN:
             raise ValueError(
                 f"OSS dashboard search '{key}' is {len(value)} chars, "
                 f"over GitHub's {SEARCH_QUERY_MAX_LEN}-char limit. "
-                f"Likely cause: a new entry was added to TRACKED_REPOS. "
-                f"Mitigation: split the offending search into multiple "
-                f"GraphQL aliases sharded by repo."
+                f"Callers must pass a shard from shard_tracked_repos(), "
+                f"not the full TRACKED_REPOS."
             )
 
     return {**searches, "first": first}

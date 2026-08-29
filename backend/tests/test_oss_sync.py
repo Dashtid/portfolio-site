@@ -180,7 +180,7 @@ class TestRefreshIntegration:
             await setup_session.commit()
 
         # Mock the network: bypass _fetch_payload to return the fixture.
-        async def fake_fetch(self):
+        async def fake_fetch(self, repos):
             return parsed_fixture.model_dump(by_alias=True)
 
         monkeypatch.setattr(OssSyncService, "_fetch_payload", fake_fetch)
@@ -190,7 +190,11 @@ class TestRefreshIntegration:
             result = await service.refresh(session)
 
         # Telemetry mirrors the fixture's rateLimit selection.
-        assert result.rate_limit_cost == 7
+        # The fixture reports cost 7 and the fake serves it once per shard,
+        # so the aggregated cost is 7 x the shard count (2 today).
+        from app.services.oss_queries import shard_tracked_repos
+
+        assert result.rate_limit_cost == 7 * len(shard_tracked_repos())
         assert result.rate_limit_remaining == 4993
         assert result.contributions_count > 0
 
@@ -257,7 +261,7 @@ class TestRefreshIntegration:
             setup_session.add_all([old_merged, other_author_merged])
             await setup_session.commit()
 
-        async def fake_fetch(self):
+        async def fake_fetch(self, repos):
             return parsed_fixture.model_dump(by_alias=True)
 
         monkeypatch.setattr(OssSyncService, "_fetch_payload", fake_fetch)
@@ -314,7 +318,7 @@ class TestRefreshIntegration:
             setup_session.add(already_present)
             await setup_session.commit()
 
-        async def fake_fetch(self):
+        async def fake_fetch(self, repos):
             return parsed_fixture.model_dump(by_alias=True)
 
         monkeypatch.setattr(OssSyncService, "_fetch_payload", fake_fetch)
