@@ -168,7 +168,7 @@ jobs:
 
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
-        uses: MishaKav/pytest-coverage-comment@d46d9d594f3e1d11008ed19939deb7a139b18751 # v1.11.1
+        uses: MishaKav/pytest-coverage-comment@ce64cfb4332195faa36733a0364dda8849109f70 # v1.11.2
         with:
           pytest-xml-coverage-path: ./backend/coverage.xml
           junitxml-path: ./backend/pytest-report.xml
@@ -287,7 +287,7 @@ jobs:
           trivy fs --severity CRITICAL,HIGH --format sarif --output trivy-results.sarif .
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -302,7 +302,7 @@ jobs:
         run: python3 scripts/verify_action_pins.py
 
       - name: Check for secrets
-        uses: trufflesecurity/trufflehog@bcfcf73aaf4759d4dadc2783177c245a02792318 # v3.97.0
+        uses: trufflesecurity/trufflehog@20652fbbdefffcdaa493a5bf57ab2ac6b1db715b # v3.97.1
         with:
           path: ./
           # On pull_request events github.event.before does not exist, which
