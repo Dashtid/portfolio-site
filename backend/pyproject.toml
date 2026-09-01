@@ -15,7 +15,7 @@ dependencies = [
     # explosion). Lift the cap only when slowapi resolves handlers via
     # scope['route'] (or equivalent) AND both paths are regression-tested.
     "fastapi>=0.115.0,<0.137",
-    "uvicorn[standard]==0.52.3",
+    "uvicorn[standard]==0.52.4",
     "python-multipart==0.0.32",
     # Database
     "sqlalchemy==2.0.52",
@@ -53,12 +53,12 @@ dev = [
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "aiosqlite==0.22.1",
-    "ruff==0.16.3",
+    "ruff==0.16.4",
     "mypy==2.3.1",
     # starlette 1.3 deprecates httpx(1) in its TestClient and will hard-
     # require httpx2 in a future minor — install it ahead of that cliff.
     # Prod code keeps plain httpx (the OAuth client).
-    "httpx2==2.11.0",
+    "httpx2==2.12.0",
 ]
 
 [build-system]
