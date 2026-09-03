@@ -1,0 +1,7 @@
+# Repository-root ruff settings.
+#
+# backend/pyproject.toml governs backend/. The couple of scripts outside it had
+# no ruff config and fell back to the 88-column default, which contradicts both
+# .editorconfig and backend/pyproject.toml. 100 matches both.
+line-length = 100
+target-version = "py311"
