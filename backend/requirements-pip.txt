@@ -1,0 +1,11 @@
+# Bootstrap pin for pip itself, kept in a file because `--hash` is a
+# requirements-file option only -- pip rejects it on the command line
+# ("no such option: --hash"), so `pip install pip==X --hash=...` cannot work.
+# Both artifacts are listed (wheel first, sdist as the fallback pip would
+# build from); --require-hashes accepts whichever it resolves to.
+# Refresh on a pip bump:
+#    curl -s https://pypi.org/pypi/pip/<version>/json \
+#      | python -c "import json,sys;[print(u['digests']['sha256'],u['filename']) for u in json.load(sys.stdin)['urls']]"
+pip==26.1.1 \
+    --hash=sha256:99cb1c2899893b075ff56e4ed0af55669a955b49ad7fb8d8603ecdaf4ed653fb \
+    --hash=sha256:d36762751d156a4ee895de8af39aa0abeeeb577f93a2eca6ab62467bbf0f8a78

@@ -144,14 +144,18 @@ jobs:
           cache-dependency-path: backend/requirements*.txt
 
       - name: Install dependencies
-        # Pip itself is version-pinned so the bootstrap doesn't drift with
-        # the runner image. Application deps come from the SHA-pinned
-        # requirements files (regenerate with: uv pip compile pyproject.toml
-        # --output-file requirements.txt --generate-hashes).
+        # Every install below runs under --require-hashes, including the pip
+        # bootstrap itself: a version pin alone still trusts whatever artifact
+        # the index serves for that version. Regenerate the three files with
+        #   uv pip compile pyproject.toml -o requirements.txt --generate-hashes
+        #   python scripts/gen-dev-requirements.py backend
+        #   (requirements-pip.txt: see the refresh command in its header)
+        # requirements-dev.txt is only the delta over requirements.txt, so it
+        # must be installed second -- on its own it is not a full resolution.
         run: |
-          python -m pip install --upgrade 'pip==26.1.1'
+          python -m pip install --upgrade --require-hashes -r requirements-pip.txt
           pip install --require-hashes -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install --require-hashes -r requirements-dev.txt
 
       - name: Lint with ruff
         run: |
