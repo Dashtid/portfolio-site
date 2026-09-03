@@ -1,11 +1,18 @@
 # Bootstrap pin for pip itself, kept in a file because `--hash` is a
-# requirements-file option only -- pip rejects it on the command line
+# requirements-file option only -- pip 26 rejects it on the command line
 # ("no such option: --hash"), so `pip install pip==X --hash=...` cannot work.
 # Both artifacts are listed (wheel first, sdist as the fallback pip would
 # build from); --require-hashes accepts whichever it resolves to.
+#
+# [!] osv-scanner reads this file, so the pin is now a scanned dependency and
+# pip's own CVEs apply to it. 26.1.1 was vulnerable to CVE-2026-8643 (entry
+# points installed outside the target directory) and CVE-2026-13346 (doubly
+# encoded index URLs writing to arbitrary paths); fixed in 26.1.2 and 26.2.
+# Do not pin below 26.2 again.
+#
 # Refresh on a pip bump:
 #    curl -s https://pypi.org/pypi/pip/<version>/json \
 #      | python -c "import json,sys;[print(u['digests']['sha256'],u['filename']) for u in json.load(sys.stdin)['urls']]"
-pip==26.1.1 \
-    --hash=sha256:99cb1c2899893b075ff56e4ed0af55669a955b49ad7fb8d8603ecdaf4ed653fb \
-    --hash=sha256:d36762751d156a4ee895de8af39aa0abeeeb577f93a2eca6ab62467bbf0f8a78
+pip==26.2.1 \
+    --hash=sha256:71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e \
+    --hash=sha256:f6ad667e89a1fe78046c8f13232b247200f5258d7828f3f7883d660878e0813f
