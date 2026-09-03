@@ -129,12 +129,12 @@ class TestSeedSkills:
 
     @pytest.mark.asyncio
     async def test_seed_skills_creates_correct_count(self, db_session):
-        """Test that seed_skills creates exactly 21 skills (2026-08-22 accuracy set)."""
+        """Test that seed_skills creates exactly 17 skills (2026-09-03 quiz set)."""
         await seed_skills(db_session)
 
         result = await db_session.execute(select(Skill))
         skills = result.scalars().all()
-        assert len(skills) == 21
+        assert len(skills) == 17
 
     @pytest.mark.asyncio
     async def test_seed_skills_keyword_policy(self, db_session):
@@ -189,6 +189,18 @@ class TestSeedSkills:
             assert not any(banned in n for n in lowered), (
                 f"claim-gated OUT term '{banned}' present in seeded skills"
             )
+
+        # Excluded 2026-08-29 by the owner's ten-minute-quiz rule (a skill is
+        # listed only if he would be comfortable being quizzed on it for ten
+        # minutes) and removed from the site by a7f3c81d9b24. Matched exactly,
+        # not as substrings: "SQL" would otherwise ban PostgreSQL, which is a
+        # legitimate future entry. dashti.se still states it is BUILT with
+        # Vue 3 + TypeScript + FastAPI via the Portfolio Site project row --
+        # that is a fact about the artifact, and this guard must not reach it.
+        quiz_excluded = {"JavaScript/TypeScript", "SQL", "FastAPI", "Vue.js"}
+        assert quiz_excluded.isdisjoint(names), (
+            f"ten-minute-quiz exclusions back in the seed: {quiz_excluded & names}"
+        )
 
     @pytest.mark.asyncio
     async def test_seed_skills_column_mapping(self, db_session):
@@ -326,7 +338,7 @@ class TestSeedDataIntegration:
 
         assert len(companies) == 8
         assert len(projects) == 4
-        assert len(skills) == 21
+        assert len(skills) == 17
         assert len(education) == 4
 
     @pytest.mark.asyncio
@@ -385,7 +397,7 @@ class TestSeedDataMain:
         async with TestSessionLocal() as session:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
             assert len((await session.execute(select(Project))).scalars().all()) == 4
-            assert len((await session.execute(select(Skill))).scalars().all()) == 21
+            assert len((await session.execute(select(Skill))).scalars().all()) == 17
             assert len((await session.execute(select(Education))).scalars().all()) == 4
 
     @pytest.mark.asyncio
