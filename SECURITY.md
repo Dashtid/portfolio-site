@@ -5,7 +5,7 @@
 If you believe you have found a security vulnerability in this project,
 please report it privately. Do not open a public GitHub issue.
 
-**Contact:** dashti.dat@gmail.com
+**Contact:** <dashti.dat@gmail.com>
 
 Include in your report:
 

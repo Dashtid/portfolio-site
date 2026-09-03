@@ -4,7 +4,7 @@
 
 Vue 3 frontend + FastAPI backend with GitHub OAuth authentication.
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Vercel    │────▶│   Fly.io    │────▶│ PostgreSQL  │
 │  (vite-ssg) │     │  (FastAPI)  │     │ (Fly Postgres)
@@ -17,7 +17,7 @@ hydrates into a full Vue app on the client.
 
 ## Directory Structure
 
-```
+```text
 frontend/src/
 ├── components/    # Reusable UI components
 ├── views/         # Page components (pre-rendered by vite-ssg)
@@ -40,7 +40,7 @@ backend/app/
 
 ## Data Flow
 
-```
+```text
 SSG build:  build script → /api/v1/companies → vite-ssg → pre-rendered HTML
 
 Runtime:    User → Vue route → Pinia store (hydrated from inline JSON) →
