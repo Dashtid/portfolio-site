@@ -57,9 +57,7 @@ def _token() -> str | None:
         if os.environ.get(var):
             return os.environ[var]
     try:
-        out = subprocess.run(
-            ["gh", "auth", "token"], capture_output=True, text=True, timeout=15
-        )
+        out = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=15)
         if out.returncode == 0 and out.stdout.strip():
             return out.stdout.strip()
     except (OSError, subprocess.SubprocessError):
@@ -99,8 +97,7 @@ def _api(path: str, token: str | None) -> dict | list | None:
 
         delay = HTTP_BACKOFF_SECONDS * (2 ** (attempt - 1))
         print(
-            f"[!] {transient} on {path} (attempt {attempt}/{HTTP_ATTEMPTS}); "
-            f"retrying in {delay}s",
+            f"[!] {transient} on {path} (attempt {attempt}/{HTTP_ATTEMPTS}); retrying in {delay}s",
             file=sys.stderr,
         )
         time.sleep(delay)
@@ -181,8 +178,7 @@ def main() -> int:
             )
         elif resolved != sha:
             failures.append(
-                f"{where}: {repo} comment says {version} "
-                f"(= {resolved[:12]}) but pin is {sha[:12]}"
+                f"{where}: {repo} comment says {version} (= {resolved[:12]}) but pin is {sha[:12]}"
             )
         else:
             print(f"[+] {repo}@{version} -> {sha[:12]}  ({where})")
