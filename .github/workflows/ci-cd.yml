@@ -148,6 +148,10 @@ jobs:
         # bootstrap itself: a version pin alone still trusts whatever artifact
         # the index serves for that version. Regenerate the three files with
         #   uv pip compile pyproject.toml -o requirements.txt --generate-hashes
+        #     --python-platform x86_64-unknown-linux-gnu --python-version 3.14
+        #   (the platform flags are not optional: without them the file is
+        #    resolved for whoever ran the command, and a Windows run silently
+        #    drops uvloop from the image that actually serves this app)
         #   python scripts/gen-dev-requirements.py backend
         #   (requirements-pip.txt: see the refresh command in its header)
         # requirements-dev.txt is only the delta over requirements.txt, so it
