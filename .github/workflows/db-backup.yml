@@ -14,6 +14,20 @@
 #   unzip artifact && age -d -i age-backup-key.txt portfolio-YYYYMMDD.dump.age \
 #     > portfolio.dump && pg_restore ...
 #
+# ROTATED 2026-09-03. The previous recipient (age137axk...skcnkun) was
+# retired after its private half was exposed, and every artifact encrypted
+# to it was deleted. The first real restore drill ran the same week: the
+# dump restores into postgres:17 with zero errors and row counts matching
+# production.
+# [!] Store the private key WITH its "AGE-SECRET-KEY-" prefix. The previous
+# copy was saved as the bare bech32 tail, which age rejects as
+# `unknown identity type` - indistinguishable from the wrong key, and it
+# nearly triggered a needless rotation that would have discarded 30 days of
+# backups. Verify a stored copy with:
+#   age-keygen -y <keyfile>    # must print the recipient above
+# Redirect that to a file, never a shared terminal: on a malformed key the
+# error message quotes the secret itself.
+#
 # Required repository secrets:
 #   FLY_DB_TOKEN - deploy token: flyctl tokens create deploy -a dashti-portfolio-db
 #                  (NOT FLY_API_TOKEN — that one is scoped to the backend
@@ -98,7 +112,7 @@ jobs:
       - name: Encrypt dump (age, public-key recipient)
         # Plaintext must never reach upload-artifact on this public repo.
         run: |
-          age -r age137axkhhga6awtmmpv7lqzkt7fdmlm7pgucqh3rspwysg33whud5skcnkun \
+          age -r age140rls4exlk7j7wmlqmc77n6msmfqvxkm4kt3nd0f20w3utjtqypql8pqv9 \
             -o "$(ls portfolio-*.dump).age" "$(ls portfolio-*.dump)"
           shred -u portfolio-*.dump
           ls -la portfolio-*.dump.age
@@ -183,7 +197,7 @@ jobs:
         run: |
           set -euo pipefail
           ARCHIVE="$(ls uploads-*.tar.gz)"
-          age -r age137axkhhga6awtmmpv7lqzkt7fdmlm7pgucqh3rspwysg33whud5skcnkun \
+          age -r age140rls4exlk7j7wmlqmc77n6msmfqvxkm4kt3nd0f20w3utjtqypql8pqv9 \
             -o "${ARCHIVE}.age" "${ARCHIVE}"
           shred -u uploads-*.tar.gz
           ls -la uploads-*.tar.gz.age
