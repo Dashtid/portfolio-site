@@ -19,14 +19,18 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  # keepalive needs to flip the workflow's enabled bit via the API
-  actions: write
 
 jobs:
   file-drill-issue:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Only this job runs the keepalive, so the workflow-enable scope lives
+    # here rather than at top level (Scorecard TokenPermissions scores a
+    # top-level 'actions: write' as 0 - every job would inherit it).
+    permissions:
+      contents: read
+      issues: write
+      actions: write
     steps:
       # Same 60-day auto-disable trap as db-backup.yml — and far worse here,
       # since this workflow fires only 4 times a year and would cross the

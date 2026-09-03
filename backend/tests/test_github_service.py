@@ -119,8 +119,10 @@ class TestGitHubServiceModuleLevel:
     def test_service_base_url_constant(self):
         """Test base URL is HTTPS GitHub API."""
         service = GitHubService()
-        assert service.base_url.startswith("https://")
-        assert "github.com" in service.base_url
+        # Anchored, not a substring test: `"github.com" in url` also accepts
+        # https://github.com.evil.tld and https://evil.tld/?x=github.com, so it
+        # would not notice the base URL being repointed at an attacker host.
+        assert service.base_url.rstrip("/") == "https://api.github.com"
 
 
 # Use separate event loops for async tests to avoid conftest conflicts

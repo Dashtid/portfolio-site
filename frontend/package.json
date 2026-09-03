@@ -51,7 +51,8 @@
   "overrides": {
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0",
     "tmp": "^0.2.7",
-    "uuid": "^11.1.1"
+    "uuid": "^11.1.1",
+    "qs": "^6.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -26,8 +26,16 @@ const FRONTEND_ROOT = resolve(__dirname, '../..')
 
 const read = (rel: string): string => readFileSync(resolve(FRONTEND_ROOT, rel), 'utf-8')
 
+// `<script\s*>` rather than `<script>`: HTML treats `<script >` and
+// `<SCRIPT>` as the same tag, so the stricter literal would skip a second
+// inline script written either way — and this guard exists precisely to stop
+// an unhashed inline script slipping past CSP. Attributes still exclude a tag
+// from the match (`\s*>` admits whitespace only), which is the intent: scripts
+// with src/type are covered by 'self' or are non-executing data blocks.
+const BARE_SCRIPT = /<script\s*>([\s\S]*?)<\/script\s*>/i
+
 const firstBareScriptBody = (html: string): string => {
-  const match = html.match(/<script>([\s\S]*?)<\/script>/)
+  const match = html.match(BARE_SCRIPT)
   if (!match) throw new Error('no bare inline <script> found')
   return match[1]
 }
@@ -71,7 +79,7 @@ describe('CSP script hashes (D3-SEC-03)', () => {
     // A second bare <script> would need its own hash — force the author
     // through this file. Scripts with src/type attributes don't count
     // (external scripts are 'self'; JSON-LD is a non-executing data block).
-    const bareScripts = read('index.html').match(/<script>[\s\S]*?<\/script>/g) ?? []
+    const bareScripts = read('index.html').match(new RegExp(BARE_SCRIPT, 'gi')) ?? []
     expect(bareScripts).toHaveLength(1)
   })
 

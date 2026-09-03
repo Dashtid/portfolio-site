@@ -74,7 +74,15 @@ class AnalyticsService {
     if (typeof sessionStorage === 'undefined') return ''
     let sessionId = sessionStorage.getItem('analytics_session_id')
     if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      // crypto.getRandomValues, not Math.random: this id is the only thing
+      // separating one visitor's page views from another's in the analytics
+      // table, so a predictable suffix would let a visitor guess — and write
+      // events into — someone else's session. getRandomValues needs no secure
+      // context and no fallback (baseline in every browser this site targets).
+      const bytes = new Uint8Array(6)
+      crypto.getRandomValues(bytes)
+      const suffix = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
+      sessionId = `session_${Date.now()}_${suffix}`
       sessionStorage.setItem('analytics_session_id', sessionId)
     }
     return sessionId

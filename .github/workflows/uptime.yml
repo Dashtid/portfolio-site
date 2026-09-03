@@ -17,13 +17,17 @@ on:
 
 permissions:
   contents: read
-  # keepalive needs to flip the workflow's enabled bit via the API
-  actions: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Only this job runs the keepalive, so the workflow-enable scope lives
+    # here rather than at top level (Scorecard TokenPermissions scores a
+    # top-level 'actions: write' as 0 - every job would inherit it).
+    permissions:
+      contents: read
+      actions: write
     steps:
       # GitHub auto-disables scheduled workflows after 60 days without repo
       # activity. This is the ONLY uptime alerting — silent disablement means
