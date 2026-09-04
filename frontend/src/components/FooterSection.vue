@@ -98,6 +98,10 @@ const footerLinks = [
   { name: 'Publications', href: '/#publications' },
   { name: 'Projects', href: '/#projects' },
   { name: 'Open Source', href: '/#oss' },
-  { name: 'About', href: '/#about' }
+  { name: 'About', href: '/#about' },
+  // Only entry that is a page rather than a homepage anchor. Footer, not
+  // nav: the nav carries the hiring journey, and a colophon is a
+  // "tell me more" link that belongs at the end of the page.
+  { name: 'Colophon', href: '/colophon' }
 ]
 </script>

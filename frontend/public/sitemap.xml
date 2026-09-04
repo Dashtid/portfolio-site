@@ -12,6 +12,14 @@
         <priority>1.0</priority>
     </url>
 
+    <!-- Colophon: how the site is built and secured -->
+    <url>
+        <loc>https://dashti.se/colophon</loc>
+        <lastmod>2026-09-04</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
     <!--
       /writing is deliberately absent while it is empty + noindex; add it
       (and per-article entries) when the first article launches.

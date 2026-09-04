@@ -6,6 +6,7 @@ import HomeView from '../views/HomeView.vue'
 // Detail views - lazy loaded for better performance
 const ExperienceDetail = () => import('../views/experience/ExperienceDetail.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
+const ColophonView = () => import('../views/ColophonView.vue')
 const WritingIndexView = () => import('../views/writing/WritingIndexView.vue')
 const WritingArticleView = () => import('../views/writing/WritingArticleView.vue')
 
@@ -38,6 +39,17 @@ export const routes: RouteRecordRaw[] = [
     component: ExperienceDetail,
     props: true,
     meta: { title: 'Experience | David Dashti' }
+  },
+  {
+    // Colophon: how the site is built and secured. Static content only — no
+    // API call, so it prerenders identically whether or not the backend is
+    // reachable at build time. includedRoutes picks it up automatically
+    // (non-admin, no route param); the sitemap entry is hand-added to
+    // public/sitemap.xml because only the experience routes are generated.
+    path: '/colophon',
+    name: 'colophon',
+    component: ColophonView,
+    meta: { title: 'Colophon | David Dashti' }
   },
   {
     // D3-FEAT-03: writing surface — index + per-article routes. Unlinked
