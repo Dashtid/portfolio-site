@@ -57,7 +57,9 @@ def _token() -> str | None:
         if os.environ.get(var):
             return os.environ[var]
     try:
-        out = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=15)
+        out = subprocess.run(
+            ["gh", "auth", "token"], capture_output=True, text=True, timeout=15, check=False
+        )
         if out.returncode == 0 and out.stdout.strip():
             return out.stdout.strip()
     except (OSError, subprocess.SubprocessError):

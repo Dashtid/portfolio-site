@@ -32,7 +32,8 @@ check_header() {
     local expected="$3"
     local headers_output="$4"
 
-    local value=$(echo "$headers_output" | grep -i "^$header:" | cut -d: -f2- | tr -d ' \r')
+    local value
+    value=$(echo "$headers_output" | grep -i "^$header:" | cut -d: -f2- | tr -d ' \r')
 
     if [ -z "$value" ]; then
         echo -e "  ${RED}[FAIL]${NC} $header: MISSING"
@@ -53,7 +54,8 @@ check_health() {
 
     echo "Checking $name health..."
 
-    local response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+    local response
+    response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
 
     if [ "$response" = "200" ]; then
         echo -e "  ${GREEN}[OK]${NC} $name is healthy (HTTP $response)"
@@ -74,7 +76,8 @@ verify_security_headers() {
     echo "URL: $url"
     echo ""
 
-    local headers=$(curl -sI "$url" 2>/dev/null)
+    local headers
+    headers=$(curl -sI "$url" 2>/dev/null)
 
     if [ -z "$headers" ]; then
         echo -e "  ${RED}[FAIL]${NC} Could not fetch headers from $url"
@@ -96,7 +99,8 @@ verify_security_headers() {
     fi
 
     # Content-Security-Policy (warning only)
-    local csp=$(echo "$headers" | grep -i "^Content-Security-Policy:" | cut -d: -f2-)
+    local csp
+    csp=$(echo "$headers" | grep -i "^Content-Security-Policy:" | cut -d: -f2-)
     if [ -n "$csp" ]; then
         echo -e "  ${GREEN}[OK]${NC} Content-Security-Policy: present"
     else
