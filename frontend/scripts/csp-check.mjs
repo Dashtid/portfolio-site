@@ -50,23 +50,35 @@ const TYPES = {
   '.xml': 'application/xml'
 }
 
-// Resolve a request path to a file INSIDE dist/, or null. The server only
-// ever binds an ephemeral localhost port for one test run, but a traversal
-// is a traversal (CodeQL js/path-injection): resolve first, then require
-// the dist prefix before any filesystem call. Anything escaping falls back
-// to index.html like any other unknown route.
-const containedInDist = rel => {
-  const abs = path.resolve(DIST, `.${rel.startsWith('/') ? rel : `/${rel}`}`)
-  return abs === DIST || abs.startsWith(DIST + path.sep) ? abs : null
+// Index every servable file up front. The request path is then only ever a
+// LOOKUP KEY into this map — no filesystem path is derived from user input
+// at all, so a traversal has nothing to traverse (this replaces a
+// resolve-and-check guard that was both weaker and opaque to CodeQL's
+// js/path-injection model). Unknown routes fall back to index.html, which
+// is what the SPA serves for them in production anyway.
+const FILES = new Map()
+const indexDist = dir => {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) indexDist(full)
+    else FILES.set(`/${path.relative(DIST, full).split(path.sep).join('/')}`, full)
+  }
 }
+indexDist(DIST)
+const INDEX_HTML = FILES.get('/index.html')
 
 const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split('?')[0])
-  let file = containedInDist(rel)
-  if (!file || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-    const asHtml = containedInDist(`${rel}.html`)
-    file = asHtml && fs.existsSync(asHtml) ? asHtml : path.join(DIST, 'index.html')
+  let rel
+  try {
+    rel = decodeURIComponent(req.url.split('?')[0])
+  } catch {
+    rel = '/'
   }
+  const file =
+    FILES.get(rel) ??
+    FILES.get(`${rel}.html`) ??
+    FILES.get(`${rel.replace(/\/+$/, '')}/index.html`) ??
+    INDEX_HTML
   const ext = path.extname(file)
   if (ext === '.html') res.setHeader('Content-Security-Policy', CSP)
   res.setHeader('Content-Type', TYPES[ext] ?? 'application/octet-stream')
