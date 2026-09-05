@@ -20,12 +20,28 @@ describe('ThemeToggle', () => {
     expect(wrapper.find('button').exists()).toBe(true)
   })
 
-  it('shows moon icon in light mode', () => {
+  it('renders BOTH icons regardless of theme — the hydration-safety contract', async () => {
+    // The SSG pass bakes the light page; a dark-preference client must
+    // hydrate against identical markup. That only holds if neither icon is
+    // behind a v-if on isDark: CSS ([data-theme] rules) picks the visible
+    // one instead. If this test starts failing because an icon left the
+    // DOM, the "Hydration completed but contains mismatches" console error
+    // is back for every dark-mode visitor.
     wrapper = mount(ThemeToggle)
-    const svg = wrapper.find('svg')
-    expect(svg.exists()).toBe(true)
-    // Moon icon has a path element with specific d attribute
-    expect(svg.find('path').exists()).toBe(true)
+    expect(wrapper.find('svg.icon-sun').exists()).toBe(true)
+    expect(wrapper.find('svg.icon-moon').exists()).toBe(true)
+
+    await wrapper.find('button').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('svg.icon-sun').exists()).toBe(true)
+    expect(wrapper.find('svg.icon-moon').exists()).toBe(true)
+  })
+
+  it('icons are decorative — hidden from assistive tech behind the button label', () => {
+    wrapper = mount(ThemeToggle)
+    wrapper.findAll('svg').forEach(svg => {
+      expect(svg.attributes('aria-hidden')).toBe('true')
+    })
   })
 
   it('has proper ARIA label', () => {

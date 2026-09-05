@@ -6,46 +6,50 @@
     :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
     @click="handleToggle"
   >
-    <transition name="icon-fade" mode="out-in">
-      <svg
-        v-if="isDark"
-        key="sun"
-        class="theme-icon"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <!-- Sun icon -->
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      </svg>
-      <svg
-        v-else
-        key="moon"
-        class="theme-icon"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <!-- Moon icon -->
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      </svg>
-    </transition>
+    <!-- Both icons are ALWAYS in the DOM; [data-theme] CSS below decides
+         which one shows. This is what keeps hydration clean: the SSG pass
+         bakes the light page (Node has no matchMedia), so a v-if on isDark
+         made every dark-preference visitor hydrate against DOM that didn't
+         match — "Hydration completed but contains mismatches" on every
+         page. Markup that is identical in both themes cannot mismatch, and
+         the pre-paint theme script in index.html has already set
+         data-theme, so the right icon is correct from first paint. -->
+    <svg
+      class="theme-icon icon-sun"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <!-- Sun icon -->
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg
+      class="theme-icon icon-moon"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <!-- Moon icon -->
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
   </button>
 </template>
 
@@ -66,9 +70,8 @@ const handleToggle = (): void => {
 <style scoped>
 .theme-toggle {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -95,31 +98,42 @@ const handleToggle = (): void => {
   transform: rotate(20deg) scale(0.95);
 }
 
+/* Both icons share the single grid cell (stacked, centered); opacity +
+   transform crossfade replaces the old <transition> swap, driven purely by
+   [data-theme] so no JS render depends on the theme. */
 .theme-icon {
+  grid-area: 1 / 1;
   width: 20px;
   height: 20px;
   color: var(--color-icon, #64748b);
-  transition: color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
-.theme-toggle:hover .theme-icon {
-  color: var(--color-primary, #2563eb);
-}
-
-/* Icon transition animations */
-.icon-fade-enter-active,
-.icon-fade-leave-active {
-  transition: all 0.3s ease;
-}
-
-.icon-fade-enter-from {
+.icon-sun {
   opacity: 0;
   transform: rotate(-90deg) scale(0.5);
 }
 
-.icon-fade-leave-to {
+.icon-moon {
+  opacity: 1;
+  transform: none;
+}
+
+[data-theme='dark'] .icon-sun {
+  opacity: 1;
+  transform: none;
+}
+
+[data-theme='dark'] .icon-moon {
   opacity: 0;
   transform: rotate(90deg) scale(0.5);
+}
+
+.theme-toggle:hover .theme-icon {
+  color: var(--color-primary, #2563eb);
 }
 
 /* Dark mode overrides. The base rule uses --color-border which already
@@ -159,9 +173,7 @@ const handleToggle = (): void => {
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .theme-toggle,
-  .theme-icon,
-  .icon-fade-enter-active,
-  .icon-fade-leave-active {
+  .theme-icon {
     transition: none;
   }
 

@@ -29,8 +29,13 @@
         ></div>
         <!-- Dark: seeded Canvas2D field (~2KB) — replaced the 122KB gzip
              three.js starfield whose output measured below perceptual
-             threshold. Renders a static frame under reduced motion. -->
-        <CanvasHeroField v-if="isDark" key="dark" />
+             threshold. Renders a static frame under reduced motion.
+             heroCanvasReady gates it to post-mount: the SSG pass bakes the
+             LIGHT page (no canvas), so v-if="isDark" alone made every
+             dark-preference client hydrate against unexpected DOM
+             ("Hydration completed but contains mismatches"). The CSS glow
+             above covers first paint either way. -->
+        <CanvasHeroField v-if="heroCanvasReady && isDark" key="dark" />
 
         <div
           class="relative z-[2] mx-auto grid w-full max-w-7xl items-center gap-12 px-6 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:px-12"
@@ -961,7 +966,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onServerPrefetch, nextTick, watch } from 'vue'
+import { computed, onMounted, onServerPrefetch, nextTick, ref, watch } from 'vue'
 import { usePortfolioStore } from '../stores/portfolio'
 import type { Company } from '../types'
 import NavBar from '../components/NavBar.vue'
@@ -984,6 +989,10 @@ import { writingPosts } from '../data/writing'
 import type { OssContribution } from '../types'
 
 const { isDark } = useTheme()
+
+// Flipped in onMounted below — see the CanvasHeroField comment in the
+// template for why the canvas must not render during hydration.
+const heroCanvasReady = ref(false)
 const { trackOutbound } = useOutboundTracking()
 
 // D3-FEAT-01: curated one-liner per merged PR; missing blurb -> title only
@@ -1167,6 +1176,8 @@ useHashAlignment()
 // hydration, so the prerendered DOM (and its static fallback content)
 // stays on screen while it runs.
 onMounted(() => {
+  heroCanvasReady.value = true
+
   // Refetch when the baked payload looks incomplete — not just fully
   // empty. Build-time fetches fail per-collection (a live deploy shipped
   // education/skills empty next to populated companies/projects), and a
