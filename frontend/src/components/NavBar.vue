@@ -412,8 +412,12 @@ onUnmounted(() => {
     left 0.25s ease;
 }
 
+/* --primary-600, not 500: #2f88e8 on the white scrolled navbar is 3.61:1
+   at 14px — the same WCAG AA hole the footer and global `a` rule had
+   (2026-09-05/06). The token gives light #1a6ad1 (5.2:1); the dark
+   override below already forces --primary-400 and is unaffected. */
 .nav-link:hover {
-  color: var(--primary-500, #3b82f6);
+  color: var(--primary-600, #1a6ad1);
 }
 
 .nav-link:hover::after {
@@ -427,7 +431,7 @@ onUnmounted(() => {
 }
 
 .nav-link.active {
-  color: var(--primary-500, #3b82f6);
+  color: var(--primary-600, #1a6ad1);
   font-weight: 600;
 }
 

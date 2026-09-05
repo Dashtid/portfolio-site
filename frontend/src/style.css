@@ -142,16 +142,23 @@
      opt in locally (e.g. a .prose-style rule). */
 
   /* Links. Underline appears on hover only; content links can opt out with
-     the `no-underline` utility (utilities layer always wins over base). */
+     the `no-underline` utility (utilities layer always wins over base).
+     Color is --primary-600, NOT --color-primary: primary-500 #2f88e8 is
+     3.61:1 on white — a WCAG AA fail at body sizes that cost a Lighthouse
+     deploy gate on 2026-09-05 (the footer got explicit classes then; this
+     closes the same hole for every bare <a>). The token swaps per theme:
+     light #1a6ad1 (5.2:1 on white), dark #2f88e8 (5.2:1 on slate-950 —
+     dark mode renders exactly as before). Hover steps one shade further
+     down the same ladder; its dark value #93c7f9 is also unchanged. */
   a {
-    color: var(--color-primary);
+    color: var(--primary-600);
     text-decoration: none;
     text-underline-offset: 2px;
     transition: color var(--transition-fast);
   }
 
   a:hover {
-    color: var(--color-primary-dark);
+    color: var(--primary-700);
     text-decoration: underline;
   }
 
