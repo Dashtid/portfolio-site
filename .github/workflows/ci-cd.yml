@@ -45,6 +45,10 @@ jobs:
               - 'frontend/**'
               - 'package*.json'
               - '.github/workflows/ci-cd.yml'
+              # cv/ is public-by-scrubbing: the cvPublicScrub vitest guard
+              # must run on any commit that touches it, and without this
+              # entry a cv-only commit runs NO jobs at all.
+              - 'cv/**'
             backend:
               - 'backend/**'
               - 'requirements*.txt'
