@@ -106,20 +106,25 @@ page.on('console', m => {
 })
 
 for (const route of routes) {
-  await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(500)
+  // domcontentloaded + hydration marker, NOT networkidle/load: the
+  // experience pages embed third-party iframes (YouTube, Maps) whose
+  // network activity never goes idle on a slow runner — the first CI run
+  // of this harness timed out exactly there. CSP violations accumulate in
+  // the listener as resources process; waiting for the navbar toggle
+  // (client hydration) plus a settle window is what the checks need.
+  await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' })
+  await page.waitForSelector('[data-testid="theme-toggle"]', { timeout: 20000 })
+  await page.waitForTimeout(800)
 
   // Flip the theme twice: useDark() injects its transition-guard <style>
   // on every flip, and that injection must stay covered by its pinned
   // hash. A VueUse upgrade that rewords the constant fails HERE (and in
   // cspHashes.spec.ts) instead of silently un-styling production flips.
   const toggle = page.locator('[data-testid="theme-toggle"]')
-  if ((await toggle.count()) > 0) {
-    await toggle.click()
-    await page.waitForTimeout(400)
-    await toggle.click()
-    await page.waitForTimeout(400)
-  }
+  await toggle.click()
+  await page.waitForTimeout(400)
+  await toggle.click()
+  await page.waitForTimeout(400)
 
   const violations = await page.evaluate(() => window.__cspViolations)
   check(
@@ -136,7 +141,8 @@ for (const route of routes) {
 
 // Hero stagger: the nth-of-type CSS that replaced the style attributes
 // (e1ee743) must keep producing five distinct animation delays.
-await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
+await page.waitForSelector('.trace-nodes .trace-node', { timeout: 20000 })
 const delays = await page.$$eval('.trace-nodes .trace-node', els =>
   els.map(el => getComputedStyle(el).animationDelay)
 )
