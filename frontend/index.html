@@ -20,11 +20,13 @@
 
     <!-- Security headers (CSP, X-Frame-Options, HSTS, ...) come from the
          Vercel edge — frontend/vercel.json "headers" — NOT the backend.
-         script-src/style-src keep 'unsafe-inline' deliberately: vite-ssg
-         injects a build-varying inline window.__INITIAL_STATE__ script, and
-         adding hashes for the static inline blocks would make browsers
-         ignore 'unsafe-inline' entirely and break hydration. Revisit if the
-         SSG state transfer ever moves out of an inline script. -->
+         script-src AND style-src are hash-locked: 'self' plus pinned
+         SHA-256 hashes, no 'unsafe-inline' anywhere. The build-varying
+         __INITIAL_STATE__ that once forced 'unsafe-inline' is now a
+         non-executing JSON data block (vite.config onFinished, D3-SEC-03),
+         so no per-build hash is ever needed. Each hash has a named owner in
+         tests/unit/cspHashes.spec.ts — change an inline block and that
+         suite tells you the new hash. -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <!-- Open Graph / Facebook -->
