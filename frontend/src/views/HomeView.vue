@@ -115,23 +115,23 @@
                 pathLength="1"
               />
               <g class="trace-nodes">
-                <g class="trace-node" style="--node-i: 0">
+                <g class="trace-node">
                   <rect x="36" y="325" width="10" height="10" rx="2" class="node-box" />
                   <text x="41" y="352" text-anchor="middle" class="node-label">Threat model</text>
                 </g>
-                <g class="trace-node" style="--node-i: 1">
+                <g class="trace-node">
                   <rect x="166" y="270" width="10" height="10" rx="2" class="node-box" />
                   <text x="171" y="297" text-anchor="middle" class="node-label">Secure SDLC</text>
                 </g>
-                <g class="trace-node" style="--node-i: 2">
+                <g class="trace-node">
                   <rect x="296" y="215" width="10" height="10" rx="2" class="node-box" />
                   <text x="301" y="242" text-anchor="middle" class="node-label">Fuzzing</text>
                 </g>
-                <g class="trace-node" style="--node-i: 3">
+                <g class="trace-node">
                   <rect x="426" y="160" width="10" height="10" rx="2" class="node-box" />
                   <text x="431" y="187" text-anchor="middle" class="node-label">SBOM</text>
                 </g>
-                <g class="trace-node" style="--node-i: 4">
+                <g class="trace-node">
                   <circle cx="512" cy="124" r="5" class="node-end" />
                   <text x="518" y="106" text-anchor="end" class="node-label node-label-end">
                     Clearance
@@ -1285,6 +1285,27 @@ watch(
   opacity: 0;
   animation: trace-node-in 0.5s ease-out forwards;
   animation-delay: calc(0.45s + var(--node-i) * 0.28s);
+}
+
+/* The stagger index used to be an inline style="--node-i: n" on each <g>,
+   which was the ONLY styled markup in the whole baked site and the sole
+   reason style-src still carried 'unsafe-inline'. Source order is the
+   animation order, so nth-of-type expresses the same fact without an
+   attribute — and the CSP drops inline styles entirely. */
+.trace-nodes > .trace-node:nth-of-type(1) {
+  --node-i: 0;
+}
+.trace-nodes > .trace-node:nth-of-type(2) {
+  --node-i: 1;
+}
+.trace-nodes > .trace-node:nth-of-type(3) {
+  --node-i: 2;
+}
+.trace-nodes > .trace-node:nth-of-type(4) {
+  --node-i: 3;
+}
+.trace-nodes > .trace-node:nth-of-type(5) {
+  --node-i: 4;
 }
 
 .node-box {

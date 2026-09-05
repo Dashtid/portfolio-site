@@ -129,11 +129,18 @@ describe('ColophonView claims still match the shipped CSP', () => {
     expect(directive('form-action')).toBe("'self'")
   })
 
-  it('the admitted style-src gap is still real, so the admission is not itself stale', () => {
-    // Deliberately asserts the WEAKNESS. If inline styles are ever removed
-    // from the policy this fails, which is the prompt to delete the "Where it
-    // falls short" section rather than leave the site apologising for a gap
-    // it has already closed.
-    expect(directive('style-src')).toContain('unsafe-inline')
+  it('styles really are hash-locked, as the page now claims', () => {
+    // This test used to assert the OPPOSITE — that style-src still carried
+    // 'unsafe-inline', so the page's admission of the gap stayed true. The
+    // gap was closed on 2026-09-04 (that failing test is what forced the
+    // "Where it falls short" rewrite), and the assertion now guards the new
+    // claim: stylesheet files from this origin plus exactly two pinned
+    // hashes (offline.html's block and VueUse's theme-flip transition
+    // guard — each owned by a named test in cspHashes.spec.ts), and no
+    // blanket inline allowance.
+    const styleSrc = directive('style-src')
+    expect(styleSrc).not.toContain('unsafe-inline')
+    expect(styleSrc).toContain("'self'")
+    expect(styleSrc.match(/'sha256-[^']+'/g) ?? []).toHaveLength(2)
   })
 })

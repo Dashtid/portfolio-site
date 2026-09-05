@@ -240,3 +240,37 @@
     min-height: 0 !important;
   }
 }
+
+/* Pre-mount loading skeleton (index.html). Dev-only in practice: vite-ssg
+   replaces the #app contents at build time, so production pages never carry
+   it. The rules live here rather than inline because the baked site ships
+   ZERO style attributes — that is what lets the CSP's style-src drop
+   'unsafe-inline' (2026-09-04), and tests/unit/cspHashes.spec.ts fails if a
+   style attribute ever returns to index.html. */
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+.app-loading-title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.app-loading-tagline {
+  opacity: 0.7;
+  font-size: 1rem;
+}

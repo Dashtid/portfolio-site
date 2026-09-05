@@ -65,7 +65,36 @@ if (!/ExperienceDetail-[A-Za-z0-9_-]+\.js/.test(sw)) {
   fail('ExperienceDetail chunk missing from the SW precache — offline navigations will dead-end')
 }
 
+// 3. CSP: style-src is hash-locked (no 'unsafe-inline' since 2026-09-04), so
+//    the BAKED output must ship zero style attributes and no <style> element
+//    beyond offline.html's single hashed block. The unit suite guards the
+//    SOURCE files; this guards what a build actually emits — vite-ssg, the
+//    admin-shell emitter, or any plugin could inject styling the sources
+//    never had, and in production that fails silently as unstyled markup.
+const walkHtml = dir =>
+  fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => {
+    const full = path.join(dir, e.name)
+    return e.isDirectory() ? walkHtml(full) : e.name.endsWith('.html') ? [full] : []
+  })
+
+for (const file of walkHtml(dist)) {
+  const html = fs.readFileSync(file, 'utf-8')
+  const rel = path.relative(dist, file)
+  if (/<[^>]+\sstyle="/i.test(html)) {
+    fail(`style attribute in baked ${rel} — style-src has no 'unsafe-inline' to cover it`)
+  }
+  const styleBlocks = html.match(/<style[\s>]/gi) ?? []
+  const allowed = rel === 'offline.html' ? 1 : 0
+  if (styleBlocks.length !== allowed) {
+    fail(
+      `${styleBlocks.length} <style> block(s) in baked ${rel} (allowed: ${allowed}) — ` +
+        'each needs its hash in style-src or it will not apply'
+    )
+  }
+}
+
 console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
-    `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache`
+    `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
+    'baked HTML free of unhashed styling'
 )

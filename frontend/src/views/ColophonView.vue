@@ -54,20 +54,22 @@
           </dl>
         </section>
 
-        <!-- An engineering page that lists only strengths is marketing. The
-             known gap is stated because a reader who checks the headers will
-             find it anyway, and finding it unmentioned is worse than reading
-             it here. -->
+        <!-- An engineering page that lists only strengths is marketing, so
+             this section names the limits that are real. When a listed gap
+             gets closed (the inline-style allowance, 4 Sep 2026), the entry
+             is replaced, not silently deleted — a test in ColophonView.spec
+             fails if the policy and this prose ever diverge. -->
         <section class="mt-12">
           <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
             Where it falls short
           </h2>
           <p class="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">
-            The policy still permits inline <span class="font-mono text-sm">style</span> attributes
-            — the utility-CSS build emits them, so removing that allowance means changing how the
-            styles are generated, not editing a header. Scripts carry no such exemption, which is
-            where the risk actually sits. It is a real gap, and it is open deliberately rather than
-            unnoticed.
+            One person builds, reviews and deploys this site. There is no second reviewer, so review
+            pressure comes from the pipeline — tests, scanners, budgets — rather than from another
+            human, and the dependency chain ultimately rests on trusting GitHub, PyPI and npm, as
+            everyone's does. Those are the honest limits of a personal site. An earlier version of
+            this section also admitted that the style policy still allowed inline styles; that gap
+            was closed on 4 September 2026, which is the outcome this section exists to force.
           </p>
         </section>
 
@@ -161,12 +163,12 @@ const sections: Section[] = [
       {
         term: 'Content Security Policy',
         detail:
-          'Scripts may load only from this origin, plus two SHA-256 hashes covering the only two inline scripts the site ships. Inline event handlers are refused outright, as are plugins, framing, and any attempt to rewrite the document base or post a form elsewhere.'
+          'Scripts may load only from this origin, plus two SHA-256 hashes covering the only two inline scripts the site ships. Styles are locked the same way — stylesheet files from this origin plus two pinned hashes, one for the offline page and one for the theme switcher’s transition guard, with no blanket inline allowance for either. Inline event handlers are refused outright, as are plugins, framing, and any attempt to rewrite the document base or post a form elsewhere.'
       },
       {
         term: 'Hash drift',
         detail:
-          'Those two hashes are recomputed from the source on every test run. A reformatted script or a new inline block fails the build instead of silently breaking the policy in production, which is the usual way hash-based policies rot.'
+          'Every hash in the policy is recomputed from the source on each test run, and the built pages are scanned for styling the policy would not cover. A reformatted script, an edited style block or a stray style attribute fails the build instead of silently breaking the page in production, which is the usual way hash-based policies rot.'
       },
       {
         term: 'Transport',

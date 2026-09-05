@@ -75,6 +75,60 @@ describe('CSP script hashes (D3-SEC-03)', () => {
     expect(directive('script-src-attr')).toBe("'none'")
   })
 
+  // style-src went hash-locked on 2026-09-04 (the /colophon work): the only
+  // <style> block the site ships is offline.html's, and the only styled
+  // markup (HomeView's --node-i stagger attrs) moved into the stylesheet.
+  // These three keep that closed. NOTE for future inline styling: a hash
+  // only covers <style> ELEMENTS — a style="" ATTRIBUTE needs
+  // 'unsafe-hashes' or a refactor to classes; prefer the refactor.
+  it('style-src carries the hash of the offline.html style block', () => {
+    const match = read('public/offline.html').match(/<style\s*>([\s\S]*?)<\/style\s*>/i)
+    if (!match) throw new Error('no <style> block found in offline.html')
+    expect(directive('style-src')).toContain(cspHash(match[1]))
+  })
+
+  it('style-src has no unsafe-inline', () => {
+    expect(directive('style-src')).not.toContain('unsafe-inline')
+  })
+
+  it("style-src carries the hash of VueUse's transition-disable style", () => {
+    // useDark() (src/composables/useTheme.ts) injects a transient <style>
+    // on every theme change to suppress transitions during the flip. The
+    // CSS is a hardcoded constant inside @vueuse/core, so it is hashed
+    // rather than allowed wholesale. Read the constant from the INSTALLED
+    // package: a VueUse upgrade that rewords it fails here with a clear
+    // message instead of silently un-guarding theme flips in production
+    // (the failure there is cosmetic and invisible — transitions animate
+    // during the flip — which is exactly why CI has to be the one to see it).
+    const vueuse = readFileSync(
+      resolve(FRONTEND_ROOT, 'node_modules/@vueuse/core/dist/index.js'),
+      'utf-8'
+    )
+    const match = vueuse.match(/\*,\*::before,\*::after\{[^}]*transition:none[^}]*\}/)
+    if (!match) {
+      throw new Error(
+        'transition-disable constant not found in @vueuse/core — ' +
+          'if useDark no longer injects styles, drop its hash from style-src'
+      )
+    }
+    expect(directive('style-src')).toContain(cspHash(match[0]))
+  })
+
+  it('style-src carries exactly the two hashes with a documented owner', () => {
+    // offline.html's block + VueUse's transition guard. A third hash with
+    // no test naming its source is how allowances go feral.
+    expect(directive('style-src').match(/'sha256-[^']+'/g) ?? []).toHaveLength(2)
+  })
+
+  it('the static HTML entry points carry no style attributes or extra style blocks', () => {
+    // index.html: zero of both (its styles are all in the built stylesheet).
+    // offline.html: exactly the one hashed block above, no attributes.
+    expect(read('index.html')).not.toMatch(/<[^>]+\sstyle="/i)
+    expect(read('index.html')).not.toMatch(/<style[\s>]/i)
+    expect(read('public/offline.html')).not.toMatch(/<[^>]+\sstyle="/i)
+    expect(read('public/offline.html').match(/<style[\s>]/gi) ?? []).toHaveLength(1)
+  })
+
   it('index.html has exactly one executable inline script (theme-init)', () => {
     // A second bare <script> would need its own hash — force the author
     // through this file. Scripts with src/type attributes don't count
