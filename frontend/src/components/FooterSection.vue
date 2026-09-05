@@ -58,13 +58,18 @@
       </div>
 
       <!-- D3-CNT-03: text links close the page usefully; the full-width
-           border-t below replaces the orphaned 64px hairline gradient -->
+           border-t below replaces the orphaned 64px hairline gradient.
+           text-primary-600 (NOT the inherited global `a` primary-500):
+           #2f88e8 on white is 3.61:1 at 14px — a WCAG AA fail Lighthouse
+           flagged on all seven links. primary-600/#1a6ad1 is 5.2:1; dark
+           uses primary-400 on slate-950 (7.5:1), the site's standard
+           accessible link pair (same as the colophon's). -->
       <nav aria-label="Footer">
         <ul class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
           <li v-for="link in footerLinks" :key="link.href">
             <a
               :href="link.href"
-              class="transition-colors hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:hover:text-primary-400"
+              class="text-primary-600 transition-colors hover:text-primary-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
             >
               {{ link.name }}
             </a>
@@ -82,7 +87,12 @@
       </p>
       <!-- Provenance, quietly: the deployed commit and bake date, injected
            by vite.config `define`. Hidden (visibility) in visual baselines
-           via tests/e2e/screenshot.css — the text changes every deploy. -->
+           via tests/e2e/screenshot.css — the text changes every deploy.
+           The link is surrounding-colored + permanently underlined, NOT
+           blue: the global `a` primary-500 at 12px fails WCAG AA contrast
+           outright AND link-in-text-block (1.31:1 against the slate prose
+           around it, no distinguishing styling). The underline is what
+           marks it as a link; slate-500/white is 4.76:1. -->
       <p
         v-if="buildCommit"
         class="build-stamp mt-1 font-mono text-xs text-slate-500 dark:text-slate-400"
@@ -92,7 +102,7 @@
           :href="`https://github.com/Dashtid/portfolio-site/commit/${buildCommit}`"
           target="_blank"
           rel="noopener noreferrer"
-          class="underline-offset-4 transition-colors hover:text-primary-600 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:hover:text-primary-400"
+          class="text-slate-500 underline underline-offset-4 transition-colors hover:text-primary-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-slate-400 dark:hover:text-primary-400"
           >{{ buildCommit }}</a
         >
         &middot; {{ buildDate }}
