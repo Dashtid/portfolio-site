@@ -21,7 +21,10 @@ export default defineConfig({
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.01, // Allow 1% pixel difference for anti-aliasing
       threshold: 0.2,
-      animations: 'disabled'
+      animations: 'disabled',
+      // Neutralize per-commit content (the footer build stamp) in every
+      // screenshot comparison — see the css file for why visibility.
+      stylePath: './tests/e2e/screenshot.css'
     }
   },
   use: {

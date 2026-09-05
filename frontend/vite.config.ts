@@ -17,6 +17,25 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 // deleted before deploy by filesToDeleteAfterUpload.
 const SENTRY_UPLOAD_ENABLED = Boolean(process.env.SENTRY_AUTH_TOKEN)
 
+// Footer build stamp: which commit is deployed and when the bundle was
+// baked. VITE_APP_VERSION is the GITHUB_SHA the deploy job forwards into
+// Vercel's build env (D3-INF-03); GITHUB_SHA covers Actions-built dists
+// (e2e, lighthouse); local builds fall back to git. Empty means "no
+// provenance available" and FooterSection hides the line entirely.
+const BUILD_COMMIT = (() => {
+  const fromEnv = process.env.VITE_APP_VERSION ?? process.env.GITHUB_SHA ?? ''
+  if (/^[0-9a-f]{7,40}$/i.test(fromEnv)) return fromEnv.slice(0, 7).toLowerCase()
+  try {
+    return execFileSync('git', ['rev-parse', '--short=7', 'HEAD'], {
+      cwd: import.meta.dirname,
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim()
+  } catch {
+    return ''
+  }
+})()
+
 // https://vite.dev/config/
 export default defineConfig({
   // Use temp directory to avoid OneDrive path issues with spaces
@@ -469,6 +488,12 @@ export default defineConfig({
         }
       })
   ],
+  // Compile-time constants (declared in src/vite-env.d.ts; vitest.config.ts
+  // pins its own test values since Vitest never reads this file).
+  define: {
+    __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10))
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src')

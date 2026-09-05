@@ -1,0 +1,11 @@
+/* Applied to every toHaveScreenshot comparison via
+   playwright.config.ts expect.toHaveScreenshot.stylePath.
+
+   The footer build stamp carries the deployed commit SHA and bake date —
+   text that legitimately changes on every push, which would invalidate
+   every footer-bearing baseline per commit. visibility (not display) so
+   the space the line occupies stays in the layout and the baselines still
+   pin its presence and height. */
+.build-stamp {
+  visibility: hidden;
+}

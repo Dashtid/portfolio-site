@@ -20,3 +20,9 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+// Build stamp constants injected by vite.config.ts `define` (rendered in
+// FooterSection). An empty commit means no provenance was available at
+// build time and the footer hides the stamp line.
+declare const __BUILD_COMMIT__: string
+declare const __BUILD_DATE__: string

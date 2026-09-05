@@ -17,7 +17,11 @@ export default defineConfig({
   define: {
     'import.meta.env.VITE_ERROR_TRACKING_ENABLED': JSON.stringify('true'),
     'import.meta.env.VITE_METRICS_ENABLED': JSON.stringify('true'),
-    'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:8001')
+    'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:8001'),
+    // Deterministic build-stamp values (vite.config.ts derives real ones;
+    // Vitest never reads that file, so pin test doubles here).
+    __BUILD_COMMIT__: JSON.stringify('abc1234'),
+    __BUILD_DATE__: JSON.stringify('2026-01-01')
   },
   test: {
     globals: true,

@@ -80,6 +80,23 @@
       <p class="footer-copyright text-xs text-slate-500 dark:text-slate-400">
         &copy; {{ currentYear }} David Dashti. All rights reserved.
       </p>
+      <!-- Provenance, quietly: the deployed commit and bake date, injected
+           by vite.config `define`. Hidden (visibility) in visual baselines
+           via tests/e2e/screenshot.css — the text changes every deploy. -->
+      <p
+        v-if="buildCommit"
+        class="build-stamp mt-1 font-mono text-xs text-slate-500 dark:text-slate-400"
+      >
+        Build
+        <a
+          :href="`https://github.com/Dashtid/portfolio-site/commit/${buildCommit}`"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline-offset-4 transition-colors hover:text-primary-600 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:hover:text-primary-400"
+          >{{ buildCommit }}</a
+        >
+        &middot; {{ buildDate }}
+      </p>
     </div>
   </footer>
 </template>
@@ -91,6 +108,11 @@ import { useOutboundTracking } from '@/composables/useOutboundTracking'
 const { trackOutbound } = useOutboundTracking()
 
 const currentYear = computed<number>(() => new Date().getFullYear())
+
+// Build stamp (vite.config `define`): commit short-SHA + bake date. Empty
+// commit = no provenance available at build time; the line is hidden then.
+const buildCommit = __BUILD_COMMIT__
+const buildDate = __BUILD_DATE__
 
 const footerLinks = [
   { name: 'Experience', href: '/#experience' },

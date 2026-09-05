@@ -42,7 +42,10 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
-        ...globals.vitest
+        ...globals.vitest,
+        // Compile-time constants from vite.config `define` (build stamp).
+        __BUILD_COMMIT__: 'readonly',
+        __BUILD_DATE__: 'readonly'
       }
     },
     plugins: {

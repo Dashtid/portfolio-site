@@ -46,4 +46,16 @@ describe('FooterSection', () => {
     expect(links[0].attributes('aria-label')).toContain('LinkedIn')
     expect(links[1].attributes('aria-label')).toContain('GitHub')
   })
+
+  it('renders the build stamp linking to the exact deployed commit', () => {
+    // __BUILD_COMMIT__/__BUILD_DATE__ are pinned in vitest.config.ts define.
+    const wrapper = mount(FooterSection)
+    const stamp = wrapper.find('.build-stamp')
+    expect(stamp.exists()).toBe(true)
+    expect(stamp.text()).toContain('abc1234')
+    expect(stamp.text()).toContain('2026-01-01')
+    const link = stamp.find('a')
+    expect(link.attributes('href')).toBe('https://github.com/Dashtid/portfolio-site/commit/abc1234')
+    expect(link.attributes('rel')).toBe('noopener noreferrer')
+  })
 })
