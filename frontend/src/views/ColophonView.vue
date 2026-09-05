@@ -171,7 +171,7 @@ const sections: Section[] = [
       {
         term: 'Transport',
         detail:
-          'Strict transport security for a year, covering subdomains. The header carries the preload directive and the domain meets the preload list requirements, but it has not been submitted to that list — so today the guarantee starts at a visitor’s first request rather than before it.'
+          'Strict transport security for a year, covering subdomains. The domain was submitted to the browser preload list on 4 September 2026 and is pending inclusion; once it ships, a browser that has never been here will refuse plaintext before the first request is ever made.'
       },
       {
         term: 'The rest',
