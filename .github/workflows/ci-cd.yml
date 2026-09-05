@@ -239,6 +239,13 @@ jobs:
         # exclusion is gone — those tests were deleted outright (Lighthouse
         # owns the budgets as hard errors), so the full suite runs.
         run: npx playwright test --project=chromium
+
+      - name: Enforced-CSP check
+        # Serves the downloaded dist with the REAL vercel.json CSP attached
+        # and drives the pages (theme flips included) in a browser — the only
+        # place the actual policy meets the actual bundle before production.
+        # This is the run that caught VueUse's injected <style> (e1ee743).
+        run: npm run verify:csp
         env:
           HOME: /root
 
