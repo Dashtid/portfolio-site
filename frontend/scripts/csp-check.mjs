@@ -50,12 +50,22 @@ const TYPES = {
   '.xml': 'application/xml'
 }
 
+// Resolve a request path to a file INSIDE dist/, or null. The server only
+// ever binds an ephemeral localhost port for one test run, but a traversal
+// is a traversal (CodeQL js/path-injection): resolve first, then require
+// the dist prefix before any filesystem call. Anything escaping falls back
+// to index.html like any other unknown route.
+const containedInDist = rel => {
+  const abs = path.resolve(DIST, `.${rel.startsWith('/') ? rel : `/${rel}`}`)
+  return abs === DIST || abs.startsWith(DIST + path.sep) ? abs : null
+}
+
 const server = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split('?')[0])
-  let file = path.join(DIST, rel)
-  if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-    const asHtml = path.join(DIST, `${rel}.html`)
-    file = fs.existsSync(asHtml) ? asHtml : path.join(DIST, 'index.html')
+  let file = containedInDist(rel)
+  if (!file || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+    const asHtml = containedInDist(`${rel}.html`)
+    file = asHtml && fs.existsSync(asHtml) ? asHtml : path.join(DIST, 'index.html')
   }
   const ext = path.extname(file)
   if (ext === '.html') res.setHeader('Content-Security-Policy', CSP)
