@@ -19,7 +19,16 @@ export default defineConfig({
   ],
   expect: {
     toHaveScreenshot: {
-      maxDiffPixelRatio: 0.01, // Allow 1% pixel difference for anti-aliasing
+      // Absolute cap, not a ratio. maxDiffPixelRatio 0.01 scaled with image
+      // area: on a full-page shot "1%" was ~100k pixels, enough to hide an
+      // entire changed nav row — which is exactly what happened, three
+      // times (footer/CV link, projects/offensive-toolkit card, hero/OSS
+      // nav item each stayed stale for ~6 weeks while the suite passed).
+      // The environment is pinned (one Docker image, one browser build), so
+      // legitimate variance is anti-aliasing at the 3-5 px scale; 100 px
+      // absorbs that on every shot size while any real content change —
+      // a word of text is hundreds of pixels — fails loudly.
+      maxDiffPixels: 100,
       threshold: 0.2,
       animations: 'disabled',
       // Neutralize per-commit content (the footer build stamp) in every
