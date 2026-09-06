@@ -23,8 +23,11 @@ The backend normalises `postgres://` URLs (Fly's default scheme) to
 
 ## Migrations
 
-Alembic is initialised under `backend/alembic/` and runs from CI on every
-backend deploy via `flyctl deploy`. Generate a new revision with:
+Alembic is initialised under `backend/alembic/` and runs on every backend
+deploy via `fly.toml`'s `release_command = 'python -m scripts.migrate'` —
+a Fly release machine applies migrations before new app machines start,
+so a failed migration never replaces the running version. Generate a new
+revision with:
 
 ```bash
 cd backend
