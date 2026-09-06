@@ -43,4 +43,12 @@ jobs:
       # the standard. Move it here and in the local installs together.
       - run: python -m pip install pre-commit==4.6.0
 
+      # SKIP lists hooks that CANNOT work in a fresh CI checkout - not hooks
+      # that are merely inconvenient. The only case so far is a linter whose
+      # config resolves its own imports out of the repo's node_modules, which a
+      # clean clone does not have. Each name here needs a comment in CI_SKIP
+      # saying what covers it instead, because a silently skipped hook is a
+      # gate that lies.
       - run: pre-commit run --all-files --show-diff-on-failure --color=always
+        env:
+          SKIP: eslint
