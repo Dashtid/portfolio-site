@@ -8,7 +8,15 @@ checked every proposal against the career-plan defensible-claims register:
 - Hermes #2: leading verb aligned to the same voice; the register-exact
   content (manual, artifact-level SBOM/SCA, no CI claim) is untouched.
 - Hermes #3: three ideas untangled, ~15 words shorter, every claim kept
-  (advocated — not gated; introduced fuzzing — no ownership claim).
+  (advocated — not gated; dynamic testing introduced — no ownership claim).
+
+[!] 2026-09-06: the Hermes ("2024-05") entry was REMOVED from _PACK below, and
+this docstring's description of it is retained only as history. Both halves of
+that tuple named the employer's imaging protocol beside the dynamic-testing
+technique — the banned public-surface pair — on rows that render publicly next
+to the employer's name. The approved September copy is now seeded directly by
+c9e2f7a4b681, and deployed databases are corrected by a later forward migration;
+this entry had nothing left to do and could only carry the strings forward.
 - Philips: pair merged into one bullet and "Spearheaded" removed — a cliché
   AND an overclaim for L1 support. "IIG" (unexplained acronym) dropped;
   under-claiming scope is the safe direction. Support work stays support
@@ -54,30 +62,7 @@ depends_on: str | Sequence[str] | None = None
 
 # start month (YYYY-MM) -> (exact current bullets, replacement bullets).
 _PACK: dict[str, tuple[list[str], list[str]]] = {
-    "2024-05": (
-        [
-            "Extending STRIDE-based threat models with product-specific threats and "
-            "translating them into actionable, traceable security requirements for "
-            "medical software.",
-            "Conducting SBOM-based SCA by manually compiling SBOMs from SOUP lists and "
-            "analyzing with Grype; triaging vulnerabilities and feeding results into risk "
-            "assessments and post-market monitoring.",
-            "Improving secure development practices by advocating Roslyn-based static "
-            "analysis (rules tailored to a desktop DICOM viewer) and introducing DICOM "
-            "fuzzing as dynamic security testing, supporting FDA premarket cybersecurity "
-            "guidance and IEC 81001-5-1 documentation needs.",
-        ],
-        [
-            "Extend STRIDE threat models with product-specific threats and translate "
-            "them into traceable security requirements for regulated medical software.",
-            "Conduct SBOM-based SCA by manually compiling SBOMs from SOUP lists and "
-            "analyzing them with Grype; triage vulnerabilities and feed results into "
-            "risk assessments and post-market monitoring.",
-            "Advocated Roslyn static analysis with rules tailored to a desktop DICOM "
-            "viewer, and introduced DICOM protocol fuzzing as dynamic security testing "
-            "— evidence supporting FDA premarket cybersecurity (524B) and IEC 81001-5-1.",
-        ],
-    ),
+    # "2024-05" (Hermes) removed 2026-09-06 - see the note in the module docstring.
     "2022-03": (
         [
             "Spearheaded Level 1 support for image processing systems in healthcare IT "

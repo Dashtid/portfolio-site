@@ -59,8 +59,9 @@
             <p
               class="custom-hero-lead mt-6 max-w-xl text-balance text-base font-light leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400"
             >
-              Securing medical software from design through market clearance — and, increasingly,
-              the AI moving into the devices themselves — at Hermes Medical Solutions, Stockholm.
+              Securing regulated medical software from design through market clearance — and, as a
+              second regulatory regime, EU AI Act readiness. QA/RA &amp; Security Specialist at
+              Hermes Medical Solutions, Stockholm.
             </p>
 
             <div class="mt-8 flex flex-wrap items-center gap-3">
@@ -130,7 +131,12 @@
                 </g>
                 <g class="trace-node">
                   <rect x="296" y="215" width="10" height="10" rx="2" class="node-box" />
-                  <text x="301" y="242" text-anchor="middle" class="node-label">Fuzzing</text>
+                  <!-- Names the testing category, never the technique. This page also names
+                       the employer (:63, :288) and its product category (:290, :860); the
+                       technique name beside those is the banned public-surface pair. -->
+                  <text x="301" y="242" text-anchor="middle" class="node-label">
+                    Dynamic testing
+                  </text>
                 </g>
                 <g class="trace-node">
                   <rect x="426" y="160" width="10" height="10" rx="2" class="node-box" />
@@ -285,9 +291,10 @@
                 <p
                   class="company-description mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  QA/RA &amp; Security Specialist at Hermes Medical Solutions, leading product
-                  security and premarket cybersecurity — threat modeling, security risk management,
-                  and regulatory clearance — for nuclear-medicine imaging software.
+                  QA/RA &amp; Security Specialist at Hermes Medical Solutions. I author the product
+                  cybersecurity evidence supporting regulatory submissions — threat models, security
+                  risk assessments and premarket security documentation — for regulated medical
+                  software.
                 </p>
               </article>
               <article
@@ -853,17 +860,18 @@
               <p
                 class="text-balance text-lg font-medium leading-relaxed text-slate-800 dark:text-slate-100"
               >
-                Product and application security for regulated medical software. I build security
-                into medical devices from design through premarket submission.
+                Product and application security for regulated medical software. I write the
+                cybersecurity documentation that a medical device has to bring to a regulator.
               </p>
               <p class="mt-5 leading-relaxed">
-                I'm a biomedical engineer working as a QA/RA &amp; Security Specialist at Hermes
-                Medical Solutions, where I secure nuclear-medicine imaging software and help clear
-                it for market — premarket cybersecurity, threat modeling, and security risk
-                management, grounded in FDA premarket guidance and IEC 81001-5-1. As AI moves into
-                these devices, I've started an early gap analysis against the EU AI Act to
-                understand what it will ask of us. I also build my own tools — in-house security
-                tooling and tests.
+                I'm a QA/RA &amp; Security Specialist at Hermes Medical Solutions, where I author
+                the product cybersecurity evidence that goes into regulatory submissions — threat
+                models, security risk assessments and the premarket security documentation itself —
+                inside an ISO 13485 quality system, against IEC 81001-5-1 and FDA premarket
+                cybersecurity requirements (FD&amp;C Act section 524B). EU AI Act readiness is the
+                other named half of the role, and the applicability and gap assessment has started.
+                Article 15 asks for accuracy, robustness and cybersecurity in one sentence, which is
+                where the Act extends work I already do rather than starting something separate.
               </p>
               <div class="mt-6">
                 <p

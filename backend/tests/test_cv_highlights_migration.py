@@ -102,12 +102,17 @@ class TestCvHighlightsBackfill:
             conn.commit()
 
         got = _highlights(engine)
-        # Counts match the owner's real CV exactly (cv/resume.json).
-        assert len(got["Hermes Medical Solutions"]) == 3
+        # Counts match the owner's real CV exactly (cv/resume.json). Hermes went
+        # 3 -> 8 on 2026-09-06 with the approved September copy.
+        hermes = got["Hermes Medical Solutions"]
+        assert len(hermes) == 8
         assert len(got["Philips Healthcare"]) == 2
         assert len(got["Finnish Defence Forces"]) == 3
         assert len(got["Scania Group"]) == 1
-        assert "STRIDE" in got["Hermes Medical Solutions"][0]
+        # The authorship claim leads - it was the August audit's defect #1 and it
+        # must never slip back down the list.
+        assert hermes[0].startswith("Author product cybersecurity documentation")
+        assert any("STRIDE" in bullet for bullet in hermes)
 
     def test_unknown_role_left_null_so_export_falls_back(self):
         """A role added after this migration must not be blanked."""

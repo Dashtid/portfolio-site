@@ -40,17 +40,32 @@ depends_on: str | Sequence[str] | None = None
 
 # start month (YYYY-MM) -> curated CV bullets, verbatim from cv/resume.json.
 _CURATED: dict[str, list[str]] = {
+    # Rewritten 2026-09-06 to the approved September copy. The original third bullet
+    # named the employer's imaging protocol beside the dynamic-testing technique - the
+    # banned public-surface pair - on rows that render publicly beside the employer's
+    # name. Editing this applied migration only cleans the tracked text; the deployed
+    # row is rewritten by a later forward migration.
     "2024-05": [
-        "Extending STRIDE-based threat models with product-specific threats and "
-        "translating them into actionable, traceable security requirements for "
-        "medical software.",
-        "Conducting SBOM-based SCA by manually compiling SBOMs from SOUP lists and "
-        "analyzing with Grype; triaging vulnerabilities and feeding results into risk "
-        "assessments and post-market monitoring.",
-        "Improving secure development practices by advocating Roslyn-based static "
-        "analysis (rules tailored to a desktop DICOM viewer) and introducing DICOM "
-        "fuzzing as dynamic security testing, supporting FDA premarket cybersecurity "
-        "guidance and IEC 81001-5-1 documentation needs.",
+        "Author product cybersecurity documentation supporting regulatory submissions "
+        "- threat models, security risk assessments and premarket security evidence - "
+        "inside an ISO 13485 quality system.",
+        "Build and present every product STRIDE threat model, and translate them into "
+        "traceable, product-specific security requirements.",
+        "Run gap analyses against IEC 81001-5-1 and FDA premarket cybersecurity "
+        "requirements (FD&C Act section 524B), and drive the secure-SDLC improvements "
+        "that come out of them.",
+        "Compile SBOMs by hand from SOUP lists and shipped artifacts, at artifact level "
+        "and on demand, and analyze them with Grype; triage findings into risk "
+        "assessments and post-market surveillance.",
+        "Authored the product's build-time security analyzer ruleset (Roslyn CA rules, "
+        "warning-level), derived from the threat model so that every enabled rule "
+        "traces to a modelled threat.",
+        "Introduced black-box dynamic security testing into the product verification approach.",
+        "EU AI Act readiness is the other named half of the role: the applicability and "
+        "gap assessment has started, and Article 15 - accuracy, robustness, "
+        "cybersecurity - is where it extends the product-security work.",
+        "Began the organization's ISO 27001-aligned ISMS build-out, extending the remit "
+        "from product security to the organization around it.",
     ],
     "2022-03": [
         "Spearheaded Level 1 support for image processing systems in healthcare IT "

@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
     "name": "David Dashti",
-    "label": "Product & Application Security Engineer — Regulated Medical Software",
+    "label": "Product & Application Security Engineer — Regulated Medical Software (FDA 524B, IEC 81001-5-1, EU AI Act)",
     "image": "",
     "email": "",
     "phone": "",
     "url": "https://dashti.se",
-    "summary": "Biomedical Engineer focused on product cybersecurity for regulated medical software. Experienced in extending STRIDE-based threat models into concrete, product-specific security requirements and supporting vulnerability evaluation using SBOM-driven SCA. Comfortable translating FDA premarket cybersecurity guidance (Section 524B) and IEC 81001-5-1 expectations into structured security evidence and SDLC improvements.",
+    "summary": "Security specialist in regulated medical software. Since 2024 I have authored the product cybersecurity evidence inside a medical-device manufacturer's ISO 13485 quality system — threat models, security risk assessments and the premarket security documentation — against FDA premarket cybersecurity requirements (FD&C Act section 524B) and IEC 81001-5-1. EU AI Act readiness is the other named half of the role, and the applicability and gap assessment has started: Article 15's accuracy, robustness and cybersecurity requirements extend the same evidence work to a second regulatory regime.",
     "focus": "CI/CD and workload-identity security (OIDC trust policies) and secure SDLC for regulated software",
     "location": {
       "city": "Stockholm",
@@ -35,9 +35,14 @@
       "startDate": "2024-05",
       "endDate": "",
       "highlights": [
-        "Extend STRIDE threat models with product-specific threats and translate them into traceable security requirements for regulated medical software.",
-        "Conduct SBOM-based SCA by manually compiling SBOMs from SOUP lists and analyzing them with Grype; triage vulnerabilities and feed results into risk assessments and post-market monitoring.",
-        "Advocated Roslyn static analysis with rules tailored to a desktop DICOM viewer, and introduced DICOM protocol fuzzing as dynamic security testing — evidence supporting FDA premarket cybersecurity (524B) and IEC 81001-5-1."
+        "Author product cybersecurity documentation supporting regulatory submissions — threat models, security risk assessments and premarket security evidence — inside an ISO 13485 quality system.",
+        "Build and present every product STRIDE threat model, and translate them into traceable, product-specific security requirements.",
+        "Run gap analyses against IEC 81001-5-1 and FDA premarket cybersecurity requirements (FD&C Act section 524B), and drive the secure-SDLC improvements that come out of them.",
+        "Compile SBOMs by hand from SOUP lists and shipped artifacts, at artifact level and on demand, and analyze them with Grype; triage findings into risk assessments and post-market surveillance.",
+        "Authored the product's build-time security analyzer ruleset (Roslyn CA rules, warning-level), derived from the threat model so that every enabled rule traces to a modelled threat.",
+        "Introduced black-box dynamic security testing into the product verification approach.",
+        "EU AI Act readiness is the other named half of the role: the applicability and gap assessment has started, and Article 15 — accuracy, robustness, cybersecurity — is where it extends the product-security work.",
+        "Began the organization's ISO 27001-aligned ISMS build-out, extending the remit from product security to the organization around it."
       ]
     },
     {
@@ -182,6 +187,9 @@
         "FDA Premarket Cybersecurity (524B)",
         "IEC 81001-5-1",
         "IEC 62304",
+        "MDR",
+        "EU AI Act",
+        "ISO 13485",
         "GAMP 5",
         "NIS 2"
       ]
@@ -219,6 +227,6 @@
   "meta": {
     "canonical": "https://dashti.se",
     "version": "v1.0.0",
-    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the Övrigt/Other logistics lines (B-körkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06); accuracy pass 2026-08-22 pruned repo-unbacked terms (Django/React/Azure/Security Auditing/FHIR/AWS/Terraform) and mirrored the DB's category grouping."
+    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the Övrigt/Other logistics lines (B-körkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06); accuracy pass 2026-08-22 pruned repo-unbacked terms (Django/React/Azure/Security Auditing/FHIR/AWS/Terraform) and mirrored the DB's category grouping. 2026-09-06: label, summary and the Hermes highlights replaced with the approved September copy (career-plan applications/copy-pack-2026-09.md rev 2) — the summary gains the authorship claim it never carried, the AI Act enters as one clause and four keywords, and the old third Hermes bullet was removed for naming the employer's imaging protocol beside the dynamic-testing technique. Deployed rows are converged by migration b41f7ac2e905; the tree-wide guard is frontend/tests/unit/cvPublicScrub.spec.ts."
   }
 }

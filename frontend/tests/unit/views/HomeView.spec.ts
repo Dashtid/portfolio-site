@@ -344,7 +344,20 @@ describe('HomeView', () => {
 
       const lead = wrapper.find('.custom-hero-lead')
       expect(lead.exists()).toBe(true)
-      expect(lead.text()).toContain('Securing medical software')
+      expect(lead.text()).toContain('Securing regulated medical software')
+    })
+
+    it('does not claim the employer builds AI devices', async () => {
+      // The lead used to read "and, increasingly, the AI moving into the devices
+      // themselves - at Hermes Medical Solutions". That attributes an AI product
+      // portfolio to a named employer, which is the employer's disclosure to make
+      // and is barred by the owner's register. The AI Act belongs here as a
+      // regime the ROLE covers, never as a claim about the products.
+      const wrapper = await createWrapper()
+
+      const lead = wrapper.find('.custom-hero-lead').text()
+      expect(lead).toContain('EU AI Act')
+      expect(lead).not.toMatch(/AI moving into the devices/i)
     })
   })
 

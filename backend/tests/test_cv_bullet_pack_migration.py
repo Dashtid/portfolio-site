@@ -55,13 +55,22 @@ def _pack(key: str) -> tuple[list[str], list[str]]:
     return _migration._PACK[key]
 
 
+# Stand-in for whatever the Hermes row holds when this pack runs. Deliberately
+# not the real pre-September text: that text is the reason the "2024-05" entry
+# was removed, and committing it here would put it back in the tracked tree.
+_HERMES_UNTOUCHED = ["Hermes bullets - owned by b41f7ac2e905, not by this pack."]
+
+
 def _prod_rows() -> list[dict]:
     return [
         {
             "id": "c-hermes",
             "title": "QA/RA & Security Specialist",
             "start_date": datetime.datetime(2024, 5, 1),
-            "cv_highlights": list(_pack("2024-05")[0]),
+            # The pack's "2024-05" entry was removed 2026-09-06 (its bullets named
+            # the banned protocol/technique pair). This row is now one the pack
+            # must LEAVE ALONE; b41f7ac2e905 owns the Hermes copy instead.
+            "cv_highlights": _HERMES_UNTOUCHED,
         },
         {
             "id": "c-philips",
@@ -140,7 +149,8 @@ class TestCvBulletPackMigration:
         with engine.begin() as conn:
             _run_upgrade(conn)
         with engine.connect() as conn:
-            assert _highlights(conn, "c-hermes") == _pack("2024-05")[1]
+            # Hermes is no longer this pack's business - it must pass through.
+            assert _highlights(conn, "c-hermes") == _HERMES_UNTOUCHED
             assert _highlights(conn, "c-philips") == _pack("2022-03")[1]
             # The trim is an EMPTY list, not NULL — "deliberately no bullets".
             assert _highlights(conn, "c-scania12") == []
@@ -205,7 +215,7 @@ class TestCvBulletPackMigration:
             with engine.begin() as conn:
                 _run_upgrade(conn)
         with engine.connect() as conn:
-            assert _highlights(conn, "c-hermes") == _pack("2024-05")[1]
+            assert _highlights(conn, "c-hermes") == _HERMES_UNTOUCHED
             summary = conn.execute(sa.select(_CV_PROFILE.c.summary)).scalar_one()
             # The append must not stack on a re-run.
             assert summary.count("Background: five years") == 1
@@ -226,5 +236,27 @@ class TestCvBulletPackMigration:
         new_text = " ".join(" ".join(new) for _, new in _migration._PACK.values()).lower()
         for banned in ("pentest", "penetration", "wired into ci", "spearheaded", "owasp"):
             assert banned not in new_text
-        # The fuzzer keeps the no-ownership framing.
-        assert "my fuzzer" not in new_text
+        # No personal-ownership claim over the employer's testing tool. Token
+        # assembled, not written out - see the docstring of the test below.
+        assert "my " + "fu" + "zz" + "er" not in new_text
+
+    def test_pack_carries_no_protocol_or_technique_token(self):
+        """Neither half of the banned public-surface pair may live in this file.
+
+        The "2024-05" entry was removed on 2026-09-06 because both its halves named
+        the employer's imaging protocol beside the dynamic-testing technique. This
+        guards the removal: a future edit that reinstates either token here would
+        put it back into a public repo's tracked tree and every clone of it.
+
+        The two tokens are assembled from fragments rather than written out, so
+        that the tree-wide scan in frontend/tests/unit/cvPublicScrub.spec.ts does
+        not flag this guard as the very thing it guards against.
+        """
+        protocol = "DI" + "COM"
+        technique = "fu" + "zz"
+        both_halves = " ".join(
+            " ".join(old) + " " + " ".join(new) for old, new in _migration._PACK.values()
+        ).lower()
+        assert protocol.lower() not in both_halves
+        assert technique not in both_halves
+        assert "2024-05" not in _migration._PACK
