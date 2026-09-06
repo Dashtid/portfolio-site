@@ -17,6 +17,13 @@
  *    ExperienceDetail chunk (offline navigations fall back to the shell,
  *    which needs that chunk to render the retry UI instead of dead-ending
  *    in the stale-chunk reload loop — see the workbox globIgnores comment).
+ * 3. No <style> block or style attribute the CSP does not cover.
+ * 4. No off-portfolio repo name and no scrubbed credential may appear in the
+ *    baked pages. This is the only check that sees CMS/DB CONTENT: the SSG
+ *    bake inlines the API payload into __INITIAL_STATE__, so a claim typed
+ *    into the admin panel reaches production without passing a single test.
+ *    A 2026-09-06 content audit found exactly that class of miss — text that
+ *    exists in no source file, only in the database and the baked output.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -93,8 +100,61 @@ for (const file of walkHtml(dist)) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 4. Banned content in the BAKED pages (visible text + __INITIAL_STATE__).
+//
+// Everything else in CI reads source files. CMS content never appears in a
+// source file: it is typed into the admin panel, stored in Postgres, and
+// inlined into these pages at build time. So this is the only gate standing
+// between the database and production for the two classes of text that must
+// never be published.
+//
+// [!] Deliberately NOT in this list yet: 'ISMS'. The 2026-09-06 content audit
+// found it live in the Hermes entry's CMS copy ("Compliance & ISMS"), where
+// the records make ISO 27001 / ISMS site-excluded and ask-before-adding. It
+// is a DB edit, not a code edit, so adding the term here today would turn CI
+// red and block deploys for a fix only the owner can apply. Add it in the
+// same change that lands the CMS correction.
+// ---------------------------------------------------------------------------
+const BANNED_IN_BAKED_PAGES = [
+  // Repos held off the public portfolio (employer-IP / brand). The backend
+  // allowlist (services/github_service.py PUBLIC_REPO_ALLOWLIST) is the
+  // primary control; this is the backstop that also covers CMS-authored
+  // prose mentioning them.
+  'dicom-fuzzer',
+  'sbom-sentinel',
+  'medtech-ai-security',
+  'defensive-toolkit',
+  'offensive-toolkit',
+  // Credential claims scrubbed 2026-07-22: never earned, and they had hidden
+  // in two places at once. Security+ is the only real certification.
+  'AZ-500',
+  'Certified Ethical Hacker',
+  'ISO 27001 Lead Implementer',
+  // The standards claim-gate: ISO 27001 is a LinkedIn-only skill by owner
+  // ruling; the site and CV exclude it.
+  'ISO 27001',
+  'ISO/IEC 27001'
+]
+
+for (const file of walkHtml(dist)) {
+  const rel = path.relative(dist, file).replace(/\\/g, '/')
+  const html = fs.readFileSync(file, 'utf-8')
+  for (const term of BANNED_IN_BAKED_PAGES) {
+    // Case-insensitive: the point is the claim, not its capitalisation.
+    if (new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(html)) {
+      fail(
+        `baked page ${rel} contains "${term}" — this text must not be published. ` +
+          'If it came from the CMS, fix the record and rebake; if from source, remove it. ' +
+          'See the BANNED_IN_BAKED_PAGES comment for why each entry is listed.'
+      )
+    }
+  }
+}
+
 console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
-    'baked HTML free of unhashed styling'
+    'baked HTML free of unhashed styling, ' +
+    `${BANNED_IN_BAKED_PAGES.length} banned terms absent from baked content`
 )

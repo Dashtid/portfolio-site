@@ -13,6 +13,33 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+PUBLIC_REPO_ALLOWLIST: frozenset[str] = frozenset(
+    {
+        "subvectors",
+        "subcheck",
+        "portfolio-site",
+        "sysadmin-toolkit",
+    }
+)
+"""Repos allowed to appear as project cards on the PUBLIC homepage.
+
+SECURITY CONTROL, mirroring ``oss_queries.TRACKED_REPOS`` — not a display
+preference. ``get_user_stats`` fed the Projects section straight from the
+GitHub API: pinned items when available, otherwise the six most recently
+updated non-fork repos. Only ``fork`` was filtered, so nothing stopped an
+unintended repo from rendering on the homepage. That fallback is reached
+silently whenever the pinned-items GraphQL query fails (it needs an
+authenticated token; an unset or expired one returns an empty list rather
+than raising), and archived-but-public repos are still returned by the
+REST endpoint the fallback uses.
+
+Several repos are deliberately off the public portfolio for employer-IP
+and brand reasons. An allowlist fails CLOSED — a repo renders only if it
+is named here — where the old name-agnostic filter failed open. Adding an
+entry is a deliberate act: ``tests/test_github_allowlist.py`` pins the
+set, so the test must be updated in the same change.
+"""
+
 # Timeout configuration for external API calls
 DEFAULT_TIMEOUT = httpx.Timeout(timeout=10.0, pool=5.0)
 
@@ -389,22 +416,28 @@ class GitHubService:
         top_languages = sorted(languages.items(), key=lambda x: x[1], reverse=True)[:5]
         total_bytes = sum(languages.values())
 
-        # Pinned repos (fetched concurrently above) or recent as fallback
-        featured_repos = (
-            pinned
-            if pinned
-            else [
-                {
-                    "name": r["name"],
-                    "description": r.get("description"),
-                    "stars": r.get("stargazers_count", 0),
-                    "forks": r.get("forks_count", 0),
-                    "language": r.get("language"),
-                    "html_url": r.get("html_url"),
-                }
-                for r in owned_repos[:6]
-            ]
-        )
+        # Featured repos: pinned when available, otherwise the most recently
+        # updated owned repos — BOTH filtered through PUBLIC_REPO_ALLOWLIST.
+        # See that constant: this is a security control, not a preference.
+        featured_repos = [
+            r
+            for r in (
+                pinned
+                if pinned
+                else [
+                    {
+                        "name": r["name"],
+                        "description": r.get("description"),
+                        "stars": r.get("stargazers_count", 0),
+                        "forks": r.get("forks_count", 0),
+                        "language": r.get("language"),
+                        "html_url": r.get("html_url"),
+                    }
+                    for r in owned_repos
+                ]
+            )
+            if r.get("name") in PUBLIC_REPO_ALLOWLIST
+        ][:6]
 
         stats = {
             "username": username,

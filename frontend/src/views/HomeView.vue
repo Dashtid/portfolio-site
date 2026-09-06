@@ -442,7 +442,18 @@
                     <p
                       class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                     >
+                      <!-- start_date is when the certification was EARNED,
+                           end_date when it EXPIRES. Rendering end_date alone
+                           printed "Jan 2029" on a credential awarded in
+                           January 2026 — an unlabelled future year sitting
+                           in the slot where every other card shows a range,
+                           so it read as the award date and disagreed with
+                           both the CV and the GitHub profile. The CV export
+                           had already fixed this (api/v1/cv.py); the public
+                           page had not. Labelled, because a bare range on a
+                           certification reads as a period of study. -->
                       <template v-if="edu.is_certification && edu.end_date">
+                        Issued {{ formatDate(edu.start_date) }} &middot; valid to
                         {{ formatDate(edu.end_date) }}
                       </template>
                       <template v-else>
@@ -519,7 +530,7 @@
                   <p
                     class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Jan 2026 — Jan 2029
+                    Issued Jan 2026 &middot; valid to Jan 2029
                   </p>
                 </header>
                 <p
