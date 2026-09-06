@@ -33,9 +33,10 @@ describe('logger utility', () => {
   })
 
   describe('Logger class', () => {
-    it('exports default logger instance', async () => {
-      const { default: logger } = await import('@/utils/logger')
-      expect(logger).toBeDefined()
+    it('exports the named logger instance and no default (dead-export prune, 2026-09-06)', async () => {
+      const mod = await import('@/utils/logger')
+      expect(mod.logger).toBeDefined()
+      expect('default' in mod).toBe(false)
     })
 
     it('exports pre-configured loggers', async () => {

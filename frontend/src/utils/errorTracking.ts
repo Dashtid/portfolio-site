@@ -225,5 +225,3 @@ export const errorTracker = new ErrorTracker()
 // Convenience export
 export const trackError = (error: Error | string, context?: Record<string, unknown>): void =>
   errorTracker.trackError(error, context)
-
-export default errorTracker

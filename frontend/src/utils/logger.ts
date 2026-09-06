@@ -108,5 +108,3 @@ export const errorLogger = new Logger({ prefix: 'Error' })
 
 // Factory function for creating custom loggers
 export const createLogger = (prefix: string): Logger => new Logger({ prefix })
-
-export default logger

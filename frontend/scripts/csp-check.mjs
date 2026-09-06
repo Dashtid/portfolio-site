@@ -20,8 +20,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 
+// @playwright/test is the declared dependency (bare 'playwright' only
+// resolves through hoisting) and re-exports the same chromium launcher.
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright')
+const { chromium } = require('@playwright/test')
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const DIST = path.join(ROOT, 'dist')

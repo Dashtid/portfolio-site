@@ -86,5 +86,3 @@ export function useToast(): UseToastReturn {
     clear
   }
 }
-
-export default useToast
