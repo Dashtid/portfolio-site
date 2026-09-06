@@ -149,4 +149,36 @@ describe('GitHubStats', () => {
     expect(wrapper.find('.error-message').exists()).toBe(false)
     expect(wrapper.find('.stats-container').exists()).toBe(true)
   })
+
+  describe('exclude prop (curated-card de-duplication)', () => {
+    // The backend allowlist and the curated project list are the SAME four
+    // repos, so without this filter every project rendered twice on the
+    // homepage — once with reviewed copy, once with its GitHub blurb.
+    it('drops repos already shown as curated cards', async () => {
+      mockedAxios.get.mockResolvedValue({ data: mockStats })
+      const wrapper = mount(GitHubStats, { props: { exclude: ['cool-repo'] } })
+      await flushPromises()
+      expect(wrapper.text()).not.toContain('cool-repo')
+    })
+
+    it('matches across the two naming styles the sources use', async () => {
+      // The CMS says "Sysadmin Toolkit"; GitHub says "sysadmin-toolkit".
+      mockedAxios.get.mockResolvedValue({
+        data: {
+          ...mockStats,
+          featured_repos: [{ ...mockStats.featured_repos[0], name: 'sysadmin-toolkit' }]
+        }
+      })
+      const wrapper = mount(GitHubStats, { props: { exclude: ['Sysadmin Toolkit'] } })
+      await flushPromises()
+      expect(wrapper.text()).not.toContain('sysadmin-toolkit')
+    })
+
+    it('keeps repos that are not curated', async () => {
+      mockedAxios.get.mockResolvedValue({ data: mockStats })
+      const wrapper = mount(GitHubStats, { props: { exclude: ['something-else'] } })
+      await flushPromises()
+      expect(wrapper.text()).toContain('cool-repo')
+    })
+  })
 })

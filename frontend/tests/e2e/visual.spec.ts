@@ -175,6 +175,41 @@ const FIXTURE_EDUCATION = [
   }
 ]
 
+// The Projects section renders these SERVER-SIDE (2026-09-06 content audit:
+// it used to ship as a heading over a client-only widget). The fixture stubbed
+// projects as `[]` when it was added, so the whole section had ZERO visual
+// coverage — a regression that emptied it would have produced a zero-pixel
+// diff, which is the same blind spot the OSS strip fixture below exists to
+// close. Two entries: one with technologies, one without, so both card shapes
+// are pinned.
+const FIXTURE_PROJECTS = [
+  {
+    id: 'fixture-subvectors',
+    name: 'subvectors',
+    description:
+      'Cited, versioned conformance vectors for CI/CD OIDC trust decisions — the answer key for whether a workload-identity trust condition actually matches.',
+    detailed_description: null,
+    technologies: ['Python', 'OIDC', 'GitHub Actions'],
+    github_url: 'https://github.com/Dashtid/subvectors',
+    live_url: null,
+    image_url: null,
+    featured: true,
+    order_index: 1
+  },
+  {
+    id: 'fixture-no-tech',
+    name: 'Fixture Project',
+    description: 'A featured project with no technology tags — pins the chip-less card shape.',
+    detailed_description: null,
+    technologies: [],
+    github_url: 'https://github.com/Dashtid/portfolio-site',
+    live_url: null,
+    image_url: null,
+    featured: true,
+    order_index: 2
+  }
+]
+
 const FIXTURE_DOCUMENTS = [
   {
     id: 'fixture-thesis-msc',
@@ -289,7 +324,7 @@ function useHermeticHome() {
     await page.route('**/api/v1/education', route => route.fulfill({ json: FIXTURE_EDUCATION }))
     await page.route('**/api/v1/documents', route => route.fulfill({ json: FIXTURE_DOCUMENTS }))
     await page.route('**/api/v1/skills', route => route.fulfill({ json: [] }))
-    await page.route('**/api/v1/projects', route => route.fulfill({ json: [] }))
+    await page.route('**/api/v1/projects', route => route.fulfill({ json: FIXTURE_PROJECTS }))
     // D3-FEAT-01: two fixture PRs so the Open Source strip renders in
     // every home baseline (S7 lesson: never leave a new section with
     // zero visual coverage).

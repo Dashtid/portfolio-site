@@ -705,8 +705,33 @@
             </h2>
           </header>
 
-          <!-- GitHub Stats with Featured Projects -->
-          <GitHubStats username="Dashtid" @loaded="projectCardAnimation.refresh()" />
+          <!-- Curated projects, PRERENDERED. These come from the database
+               via the store, so vite-ssg bakes them into the HTML: they are
+               present for crawlers, for readers without JS, and before any
+               scroll. That matters because the GitHubStats block below is
+               client-only AND gated behind an IntersectionObserver, so until
+               this existed the section shipped with a heading and nothing
+               under it — the flagship IP-clean work was in the page's baked
+               JSON state but rendered nowhere (2026-09-06 content audit).
+               Curated copy also beats the GitHub API's repo blurbs, and the
+               backend allowlist (PUBLIC_REPO_ALLOWLIST) governs what the
+               live cards may show. -->
+          <div
+            v-if="featuredProjects.length"
+            class="projects-grid grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            <ProjectCard v-for="project in featuredProjects" :key="project.id" :project="project" />
+          </div>
+
+          <!-- GitHub Stats with Featured Projects — progressive enhancement
+               layered on top of the prerendered cards above, never the sole
+               source of this section's content. -->
+          <GitHubStats
+            username="Dashtid"
+            :exclude="featuredProjects.map(p => p.name)"
+            :class="featuredProjects.length ? 'mt-10' : ''"
+            @loaded="projectCardAnimation.refresh()"
+          />
         </div>
       </section>
 
@@ -985,6 +1010,7 @@ import FooterSection from '../components/FooterSection.vue'
 import BackToTop from '../components/BackToTop.vue'
 import DocumentCard from '../components/DocumentCard.vue'
 import GitHubStats from '../components/GitHubStats.vue'
+import ProjectCard from '../components/ProjectCard.vue'
 // D3-DSN-03: the Canvas2D field is ~2KB and dependency-free, so it ships
 // in the home chunk directly — no async-component/error-boundary
 // scaffolding needed (that machinery existed for the 122KB three.js
@@ -1098,6 +1124,14 @@ const education = computed(() => {
 // D3-UX-02); the skeleton shows only while a live fetch is actually pending
 // with nothing baked to show.
 const documents = computed(() => portfolioStore.documents || [])
+
+// Curated, admin-managed projects — ordered as the CMS orders them, so the
+// flagship leads. Baked at SSG time (see the Projects section comment).
+const featuredProjects = computed(() =>
+  [...(portfolioStore.featuredProjects || [])].sort(
+    (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)
+  )
+)
 const ossContributions = computed(() => portfolioStore.ossContributions || [])
 const documentsLoading = computed(() => portfolioStore.loading && documents.value.length === 0)
 

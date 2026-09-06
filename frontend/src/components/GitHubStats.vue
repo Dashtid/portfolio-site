@@ -1,6 +1,13 @@
 <template>
   <div ref="sectionRef" class="github-stats">
-    <div v-if="loading" class="loading-spinner" role="status" aria-live="polite">
+    <!-- `hydrated` keeps the spinner OUT of the prerendered HTML. The fetch
+         is client-only and observer-gated, so a baked "Loading GitHub
+         stats..." can never resolve: crawlers and no-JS readers were served
+         a spinner that spins forever. Nothing is lost by waiting for mount —
+         that is the earliest the fetch could start anyway. Found once the
+         curated project cards moved above this block and the dead spinner
+         became visible under real content (2026-09-06 content audit). -->
+    <div v-if="hydrated && loading" class="loading-spinner" role="status" aria-live="polite">
       <div class="spinner"></div>
       <p>Loading GitHub stats...</p>
     </div>
@@ -60,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import axios from 'axios'
 import { apiLogger } from '../utils/logger'
@@ -84,22 +91,46 @@ interface GitHubStatsData {
 
 interface Props {
   username?: string
+  /**
+   * Repo/project names already rendered as curated cards above this block.
+   * The backend allowlist and the curated project list are the SAME four
+   * repos, so without this every project appeared twice on the homepage —
+   * once with reviewed copy, once with its GitHub blurb. Matching is
+   * normalised because the two sources spell them differently
+   * ("Sysadmin Toolkit" vs "sysadmin-toolkit").
+   */
+  exclude?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  username: config.github.username
+  username: config.github.username,
+  exclude: () => []
 })
 
 const emit = defineEmits<{ loaded: [] }>()
 
 const stats = ref<GitHubStatsData | null>(null)
+// False during the SSG render — see the spinner's template comment.
+// (Distinct from the `isMounted` flag below, which guards async callbacks
+// against a unmounted component; this one is about prerendered output.)
+const hydrated = ref<boolean>(false)
+onMounted(() => {
+  hydrated.value = true
+})
 const loading = ref<boolean>(true)
 const error = ref<boolean>(false)
 
 let isMounted = false
 let abortController: AbortController | null = null
 
-const featuredRepos = computed<Repository[]>(() => stats.value?.featured_repos ?? [])
+const normaliseRepoName = (name: string): string => name.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+const featuredRepos = computed<Repository[]>(() => {
+  const excluded = new Set(props.exclude.map(normaliseRepoName))
+  return (stats.value?.featured_repos ?? []).filter(
+    r => !excluded.has(normaliseRepoName(r.name ?? ''))
+  )
+})
 const topLanguages = computed<Language[]>(() => stats.value?.top_languages ?? [])
 const hasContent = computed<boolean>(
   () => featuredRepos.value.length > 0 || topLanguages.value.length > 0

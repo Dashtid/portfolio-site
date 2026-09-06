@@ -152,9 +152,31 @@ for (const file of walkHtml(dist)) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 5. The Projects section must ship with actual projects in it.
+//
+// It shipped as a bare heading over a client-only, IntersectionObserver-gated
+// widget: crawlers, no-JS readers and anyone who did not scroll got a section
+// title and nothing else, while the curated projects sat in the page's baked
+// JSON state, rendered by no component (2026-09-06 content audit). Nothing
+// failed loudly — the section simply had no content, which is exactly the
+// kind of regression that survives review. The bake is a pure function of the
+// API response, so an empty grid here means either the fetch degraded or the
+// rendering was dropped; both should stop the build.
+// ---------------------------------------------------------------------------
+const homeCards = (indexHtml.match(/class="[^"]*\bproject-card\b/g) ?? []).length
+if (homeCards === 0) {
+  fail(
+    'baked index.html renders no project cards — the Projects section would ship ' +
+      'as a heading over an empty client-only widget. Check that the projects API ' +
+      'responded during the bake and that HomeView still renders featuredProjects.'
+  )
+}
+
 console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
     'baked HTML free of unhashed styling, ' +
-    `${BANNED_IN_BAKED_PAGES.length} banned terms absent from baked content`
+    `${BANNED_IN_BAKED_PAGES.length} banned terms absent from baked content, ` +
+    `${homeCards} project cards prerendered`
 )
