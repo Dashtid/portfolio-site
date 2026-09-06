@@ -607,10 +607,10 @@
                 <p
                   class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
-                  Master of Science - MS
+                  Master of Science
                 </p>
                 <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                  Biomedical Engineering - Computer Science
+                  Biomedical Engineering &ndash; Computer Science
                 </p>
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
@@ -637,7 +637,7 @@
                 <p
                   class="education-degree mt-5 text-balance text-sm font-medium text-slate-900 dark:text-slate-100"
                 >
-                  Bachelor of Science - BS
+                  Bachelor of Science
                 </p>
                 <p class="education-field mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                   Biomedical Engineering
