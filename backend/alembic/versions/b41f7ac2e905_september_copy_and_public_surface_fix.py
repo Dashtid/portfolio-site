@@ -14,6 +14,11 @@ Applies the copy approved in career-plan `applications/copy-pack-2026-09.md`
 3. `cv_profile.label` and `cv_profile.summary` — the September rewrite. The
    summary gains the authorship claim it never had (the August audit's defect
    #1) and the EU AI Act clause; the label gains the standards string.
+4. `skills` — MDR, ISO 13485 and EU AI Act are added to Regulatory & Standards
+   Compliance, and GAMP 5 / NIS 2 / DICOM / HL7 are renumbered to keep the
+   group ordered. The generated CV assembles from THIS table; cv/resume.json is
+   a reference copy that never reaches the document, so a keyword added only
+   there would never appear on anything he sends.
 
 [!] The Hermes row is updated UNCONDITIONALLY, which deliberately breaks this
 repo's guard-on-the-exact-current-value convention (see c9a4e7b21f83 and
@@ -38,6 +43,7 @@ Create Date: 2026-09-06
 
 """
 
+import uuid
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -122,6 +128,29 @@ _cv_profile = sa.table(
     sa.column("summary", sa.Text()),
 )
 
+_skills = sa.table(
+    "skills",
+    sa.column("id", sa.String()),
+    sa.column("name", sa.String()),
+    sa.column("category", sa.String()),
+    sa.column("proficiency_level", sa.Integer()),
+    sa.column("years_of_experience", sa.Float()),
+    sa.column("order_index", sa.Integer()),
+)
+
+_REGULATORY = "Regulatory & Standards Compliance"
+
+# Each tuple is name, proficiency level, years of experience, order index.
+_NEW_SKILLS = [
+    ("MDR", 80, 2.0, 14),
+    ("ISO 13485", 80, 2.0, 15),
+    ("EU AI Act", 60, 1.0, 16),
+]
+
+# Existing rows shift down so the regulatory group stays in strength order and
+# Healthcare IT stays last.
+_RENUMBERED = {"GAMP 5": 17, "NIS 2": 18, "DICOM": 19, "HL7": 20}
+
 
 def upgrade() -> None:
     """Upgrade schema (data-only)."""
@@ -143,6 +172,25 @@ def upgrade() -> None:
     bind.execute(
         _cv_profile.update().where(_cv_profile.c.label == _LABEL_OLD).values(label=_LABEL_NEW)
     )
+
+    # Skills: insert-if-absent, so a re-run and an owner who already added one
+    # by hand both converge instead of colliding on the unique name.
+    existing = {row[0] for row in bind.execute(sa.select(_skills.c.name)).fetchall()}
+    for name, proficiency, years, order_index in _NEW_SKILLS:
+        if name in existing:
+            continue
+        bind.execute(
+            _skills.insert().values(
+                id=str(uuid.uuid4()),
+                name=name,
+                category=_REGULATORY,
+                proficiency_level=proficiency,
+                years_of_experience=years,
+                order_index=order_index,
+            )
+        )
+    for name, order_index in _RENUMBERED.items():
+        bind.execute(_skills.update().where(_skills.c.name == name).values(order_index=order_index))
 
 
 def downgrade() -> None:

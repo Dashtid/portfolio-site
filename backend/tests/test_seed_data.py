@@ -129,12 +129,17 @@ class TestSeedSkills:
 
     @pytest.mark.asyncio
     async def test_seed_skills_creates_correct_count(self, db_session):
-        """Test that seed_skills creates exactly 17 skills (2026-09-03 quiz set)."""
+        """Test that seed_skills creates exactly 20 skills.
+
+        17 -> 20 on 2026-09-06: MDR, ISO 13485 and EU AI Act joined the
+        regulatory group. The generated CV assembles from this table, so a
+        keyword missing here is a keyword missing from the document.
+        """
         await seed_skills(db_session)
 
         result = await db_session.execute(select(Skill))
         skills = result.scalars().all()
-        assert len(skills) == 17
+        assert len(skills) == 20
 
     @pytest.mark.asyncio
     async def test_seed_skills_keyword_policy(self, db_session):
@@ -338,7 +343,7 @@ class TestSeedDataIntegration:
 
         assert len(companies) == 8
         assert len(projects) == 4
-        assert len(skills) == 17
+        assert len(skills) == 20
         assert len(education) == 4
 
     @pytest.mark.asyncio
@@ -397,7 +402,7 @@ class TestSeedDataMain:
         async with TestSessionLocal() as session:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
             assert len((await session.execute(select(Project))).scalars().all()) == 4
-            assert len((await session.execute(select(Skill))).scalars().all()) == 17
+            assert len((await session.execute(select(Skill))).scalars().all()) == 20
             assert len((await session.execute(select(Education))).scalars().all()) == 4
 
     @pytest.mark.asyncio

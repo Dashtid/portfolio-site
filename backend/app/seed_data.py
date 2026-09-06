@@ -355,7 +355,7 @@ async def seed_skills(session: AsyncSession):
             "category": "Regulatory & Standards Compliance",
             "proficiency_level": 75,
             "years_of_experience": 2,
-            "order_index": 15,
+            "order_index": 18,
         },
         {
             "name": "IEC 62304",
@@ -371,26 +371,53 @@ async def seed_skills(session: AsyncSession):
             "years_of_experience": 3,
             "order_index": 12,
         },
+        # Added 2026-09-06. These three are named in the role and in the copy the
+        # CV now carries, and the export reads THIS table - resume.json is a
+        # reference copy and does not reach the generated document. MDR and
+        # ISO 13485 are the regimes the evidence is written inside; the AI Act is
+        # the second named half of the role. They sit above GAMP 5 and NIS 2,
+        # which are the weakest claims in the group.
+        {
+            "name": "MDR",
+            "category": "Regulatory & Standards Compliance",
+            "proficiency_level": 80,
+            "years_of_experience": 2,
+            "order_index": 14,
+        },
+        {
+            "name": "ISO 13485",
+            "category": "Regulatory & Standards Compliance",
+            "proficiency_level": 80,
+            "years_of_experience": 2,
+            "order_index": 15,
+        },
+        {
+            "name": "EU AI Act",
+            "category": "Regulatory & Standards Compliance",
+            "proficiency_level": 60,
+            "years_of_experience": 1,
+            "order_index": 16,
+        },
         {
             "name": "GAMP 5",
             "category": "Regulatory & Standards Compliance",
             "proficiency_level": 80,
             "years_of_experience": 3,
-            "order_index": 14,
+            "order_index": 17,
         },
         {
             "name": "DICOM",
             "category": "Healthcare IT",
             "proficiency_level": 85,
             "years_of_experience": 5,
-            "order_index": 16,
+            "order_index": 19,
         },
         {
             "name": "HL7",
             "category": "Healthcare IT",
             "proficiency_level": 75,
             "years_of_experience": 4,
-            "order_index": 17,
+            "order_index": 20,
         },
         {
             "name": "FDA Premarket Cybersecurity (524B)",
