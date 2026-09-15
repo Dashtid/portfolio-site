@@ -694,13 +694,30 @@ onMounted(async (): Promise<void> => {
 /* Margins live HERE, not on the document element: element padding applies to
    the first page only, so putting them there let text run to the very top
    edge of pages 2 and 3. @page repeats them on every sheet. Values match the
-   reference CV (37px top, 62px sides, 27px bottom at 96dpi).
+   reference CV (62px sides, 27px bottom at 96dpi).
 
-   Chrome's own header/footer (date, title, URL, "1/6") is NOT CSS and cannot
-   be suppressed from here — untick "Headers and footers" in the print dialog. */
+   TOP MARGIN IS 28px AND MUST STAY <= 31px. Chrome draws its own header (the
+   date and the page <title>) INSIDE the top page margin, and only when that
+   margin is big enough to hold it. Measured 2026-09-15 by printing a two-page
+   document through Chromium's printToPDF at one-pixel margin steps and
+   diffing the rendered output: the header appears at 32px and vanishes at
+   31px or less (~8mm, which matches what others report). The reference 37px
+   therefore stamped "9/15/26, 4:21 PM" and "CV Export | David Dashti" across
+   the top of every exported CV, and no @media print rule could remove it — an
+   earlier comment here concluded it was unfixable in CSS and told the reader
+   to untick "Headers and footers" in the dialog on every single export. It is
+   fixable: starve the margin and Chrome has nowhere to draw. Costs 9px of top
+   whitespace.
+
+   The bottom margin (27px) was already under the threshold, which is why the
+   footer — URL and "1/2" — never appeared. cvPrintMargins.spec.ts pins both.
+
+   Assumes the print dialog's Margins setting is "Default" (it takes the
+   margin from here). Picking "None" or a Custom value overrides this rule,
+   and then only the "Headers and footers" tickbox will do it. */
 @page {
   size: A4;
-  margin: 37px 62px 27px;
+  margin: 28px 62px 27px;
 }
 
 @media print {
