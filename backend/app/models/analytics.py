@@ -18,7 +18,8 @@ class PageView(Base):
     page_path: Mapped[str] = mapped_column(String(500), nullable=False)
     referrer: Mapped[str | None] = mapped_column(String(500))
     user_agent: Mapped[str | None] = mapped_column(Text)
-    # Hashed IP (SHA-256 truncated to 16 hex chars)
+    # Pseudonymised IP: HMAC-SHA256 keyed off SECRET_KEY, truncated to 16 hex
+    # chars. See app/utils/ip_hash.py — the key is what defeats a rainbow table.
     ip_address: Mapped[str | None] = mapped_column(String(64))
     country: Mapped[str | None] = mapped_column(String(2))  # ISO country code
     city: Mapped[str | None] = mapped_column(String(100))

@@ -22,14 +22,23 @@ import pytest
 
 from app.services.github_service import PUBLIC_REPO_ALLOWLIST, GitHubService
 
-# Names that must never reach a public project card. Kept as literals rather
-# than imported from anywhere: this list is the assertion.
-OFF_PORTFOLIO_REPOS = (
-    "dicom-fuzzer",
-    "sbom-sentinel",
-    "medtech-ai-security",
-    "defensive-toolkit",
-    "offensive-toolkit",
+# Names that must never reach a public project card. Deliberately NOT imported
+# from application code: this list is the assertion, and importing it would
+# make the test agree with whatever the code currently says.
+#
+# Assembled from fragments rather than written out. This repository is public,
+# so a file whose purpose is to keep a set of names off the site should not be
+# the place those names are published in clear text; the same fragment trick is
+# used by the tracked-tree guard in frontend/tests/unit/cvPublicScrub.spec.ts.
+OFF_PORTFOLIO_REPOS = tuple(
+    "".join(parts)
+    for parts in (
+        ("di", "com", "-fu", "zzer"),
+        ("sb", "om-sen", "tinel"),
+        ("med", "tech-ai-", "security"),
+        ("defen", "sive-tool", "kit"),
+        ("offen", "sive-tool", "kit"),
+    )
 )
 
 
@@ -111,7 +120,7 @@ class TestAllowlistIsEnforced:
             service,
             monkeypatch,
             repos=[_repo("subvectors")],
-            pinned=[_pinned("subvectors"), _pinned("offensive-toolkit")],
+            pinned=[_pinned("subvectors"), _pinned(OFF_PORTFOLIO_REPOS[4])],
         )
         names = {r["name"] for r in stats["featured_repos"]}
         assert names == {"subvectors"}

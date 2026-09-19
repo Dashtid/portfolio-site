@@ -1,16 +1,17 @@
 """September 2026 CV copy — and a public-surface confidentiality fix
 
 Applies the copy approved in career-plan `applications/copy-pack-2026-09.md`
-(revision 2, 2026-09-06) to the deployed database. Three things change:
+(revision 2, 2026-09-06) to the deployed database. Four things change:
 
-1. `companies.cv_highlights` for the Hermes role — the three-bullet set is
-   replaced by the approved eight. The bullet it removes named the employer's
-   imaging protocol beside the dynamic-testing technique, which is the pair the
-   owner's public-surface rule exists to prevent, on a row that renders next to
-   the employer's name.
-2. `companies.description` for the same row — "regulated nuclear-medicine
-   software" becomes "regulated medical software". The product category is not
-   the owner's to publish, and it renders on the same page as the testing work.
+1. `companies.cv_highlights` for the current-employer role — the three-bullet
+   set is replaced by the approved eight. The bullet it drops broke the owner's
+   public-surface rule: the imaging protocol must never be published on the
+   same line as the weakness class tested against it. The tracked-tree guard in
+   `frontend/tests/unit/cvPublicScrub.spec.ts` enforces the same rule on source.
+2. `companies.description` for the same row — the description is rewritten to
+   name the domain generically ("regulated medical software"). The specific
+   product category is not the owner's to publish, and this string renders on
+   the public homepage.
 3. `cv_profile.label` and `cv_profile.summary` — the September rewrite. The
    summary gains the authorship claim it never had (the August audit's defect
    #1) and the EU AI Act clause; the label gains the standards string.
@@ -20,7 +21,7 @@ Applies the copy approved in career-plan `applications/copy-pack-2026-09.md`
    a reference copy that never reaches the document, so a keyword added only
    there would never appear on anything he sends.
 
-[!] The Hermes row is updated UNCONDITIONALLY, which deliberately breaks this
+[!] The current-employer row is updated UNCONDITIONALLY, deliberately breaking this
 repo's guard-on-the-exact-current-value convention (see c9a4e7b21f83 and
 f3d8b17c6e42 for the normal pattern). The convention exists so an owner edit
 made through /admin/cv is never trampled. It cannot be followed here: writing

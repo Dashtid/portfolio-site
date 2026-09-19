@@ -73,29 +73,31 @@ describe('cv/ public-repo scrub guard', () => {
 })
 
 /**
- * Tree-wide banned-term guard — added 2026-09-06.
+ * Tree-wide banned-term guard.
  *
- * The suite above scans cv/ for PII only. That is why the employer's imaging
- * protocol and the dynamic-testing technique survived every earlier audit in
- * four other tracked files, including a VISIBLE LABEL rendered on the site's
- * own homepage, next to the employer's name and its product category. A
- * scrubber that inspects one directory and a clean repo are different claims.
+ * The suite above scans cv/ for PII only. A scrubber that inspects one
+ * directory and a clean COMMITTED tree are different claims, so this guard
+ * scans every tracked text file instead.
  *
- * The rule being enforced is the owner's public-surface rule: never publish the
- * employer's product category alongside the weakness class tested against it.
- * So the gate is ADJACENCY, not zero-match. The bare protocol name is a
- * load-bearing medtech ATS keyword and is deliberately KEPT (resume.json
- * skills, seed_data.py skills taxonomy, the Philips and Sodersjukhuset role
- * descriptions); a literal zero-match rule would either fail forever or get
- * "fixed" by deleting a keyword worth keeping.
+ * Two rules, and they are deliberately different shapes:
  *
- * Tokens are assembled from fragments so this guard never matches itself.
+ * 1. The dynamic-testing technique name is zero-match anywhere in the tree,
+ *    once the one repository identifier below has been masked out of each line.
+ * 2. The imaging protocol may never share a line with a weakness class. That
+ *    one is an ADJACENCY gate, not zero-match, because the bare protocol name
+ *    is a load-bearing medtech ATS keyword that is deliberately KEPT (the
+ *    resume.json skills list, the seed_data.py skills taxonomy, earlier role
+ *    descriptions). A literal zero-match rule there would either fail forever
+ *    or get "fixed" by deleting a keyword worth keeping.
+ *
+ * Tokens are assembled from fragments so this guard never matches itself, and
+ * so that the file stating the rule does not publish the terms it bans.
  */
 const PROTOCOL = 'DI' + 'COM'
 const TECHNIQUE = 'fu' + 'zz'
-// The tool repository's own name. It is an identifier, not CV copy, and it
-// appears in two allowlist files. Removed from each line before testing so the
-// pair test cannot be tripped by a repo name that legitimately contains both.
+// One repository identifier happens to contain both tokens. It is an
+// identifier, not CV copy, so it is masked out of every line before testing:
+// an off-portfolio allowlist that has to name it must not trip the pair test.
 const REPO_IDENTIFIER = `${PROTOCOL.toLowerCase()}-${TECHNIQUE}er`
 
 // A line naming the protocol AND any of these is the banned pair.

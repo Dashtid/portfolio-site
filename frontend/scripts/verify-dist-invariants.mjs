@@ -109,23 +109,30 @@ for (const file of walkHtml(dist)) {
 // between the database and production for the two classes of text that must
 // never be published.
 //
-// [!] Deliberately NOT in this list yet: 'ISMS'. The 2026-09-06 content audit
-// found it live in the Hermes entry's CMS copy ("Compliance & ISMS"), where
-// the records make ISO 27001 / ISMS site-excluded and ask-before-adding. It
-// is a DB edit, not a code edit, so adding the term here today would turn CI
-// red and block deploys for a fix only the owner can apply. Add it in the
-// same change that lands the CMS correction.
+// [!] Deliberately NOT in this list yet: 'ISMS'. It is site-excluded, like
+// ISO 27001 above. The term reaches the pages through CMS
+// records rather than through source, so listing it here before those records
+// are corrected would turn CI red and block deploys for a fix only the owner
+// can apply. Add it in the same change that lands the CMS correction.
 // ---------------------------------------------------------------------------
+// Repositories held off the public portfolio. The backend allowlist
+// (services/github_service.py PUBLIC_REPO_ALLOWLIST) is the primary control;
+// this is the backstop that also covers CMS-authored prose mentioning them.
+//
+// Assembled from fragments, not written out: this repository is public, so the
+// backstop that keeps a set of names off the site must not be where those names
+// get published. Same approach as the tracked-tree guard in
+// frontend/tests/unit/cvPublicScrub.spec.ts.
+const OFF_PORTFOLIO_REPOS = [
+  ['di', 'com', '-fu', 'zzer'],
+  ['sb', 'om-sen', 'tinel'],
+  ['med', 'tech-ai-', 'security'],
+  ['defen', 'sive-tool', 'kit'],
+  ['offen', 'sive-tool', 'kit']
+].map(parts => parts.join(''))
+
 const BANNED_IN_BAKED_PAGES = [
-  // Repos held off the public portfolio (employer-IP / brand). The backend
-  // allowlist (services/github_service.py PUBLIC_REPO_ALLOWLIST) is the
-  // primary control; this is the backstop that also covers CMS-authored
-  // prose mentioning them.
-  'dicom-fuzzer',
-  'sbom-sentinel',
-  'medtech-ai-security',
-  'defensive-toolkit',
-  'offensive-toolkit',
+  ...OFF_PORTFOLIO_REPOS,
   // Credential claims scrubbed 2026-07-22: never earned, and they had hidden
   // in two places at once. Security+ is the only real certification.
   'AZ-500',

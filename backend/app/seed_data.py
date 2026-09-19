@@ -56,8 +56,9 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Hermes Medical Solutions",
             "title": "QA/RA & Security Specialist",
-            # "regulated medical software", never the employer's specific product category:
-            # this string renders publicly beside the dynamic-testing node on the homepage.
+            # Public-surface rule: describe the domain generically ("regulated
+            # medical software"). The specific product category is not ours to
+            # publish, and this string renders on the public homepage.
             "description": "Product security for regulated medical software: threat modeling, FDA premarket security documentation, IEC 81001-5-1 secure-lifecycle work, SBOM and vulnerability management — alongside QA/RA responsibility for V&V and market clearance.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2024, 5, 1),

@@ -1,36 +1,33 @@
-# CV — single source of truth (FEAT-001 seed)
+# CV — the public reference copy
 
-This folder is the starting point for **FEAT-001** (see `../BACKLOG.md`): one structured
-CV that renders to both a PDF and the site's `/cv` route, replacing the paid CV builder.
+This folder holds the scrubbed, public JSON Resume record. It is **not** what the CV
+export renders from: the generated CV assembles from the database the admin CMS curates
+(`companies`, `education`, `skills`, `cv_profile`), via the admin-only
+`/api/v1/admin/cv/export` endpoint and the `/admin/cv` screen. A keyword added only here never reaches a document
+that gets sent anywhere.
+
+There is no public `/cv` route — the site itself is the CV.
 
 ## Files
 
-- **`resume.json`** — the source of truth, in [JSON Resume](https://jsonresume.org/) schema.
-  Transcribed from the existing PDF (Jun 2026). Edit this; everything else is generated.
-- **`source/`** — the original `cv-david-dashti.pdf`, kept locally as a reference.
-  **Git-ignored on purpose** (see `.gitignore`) — see the PII note below.
+- **`resume.json`** — the scrubbed public record, in [JSON Resume](https://jsonresume.org/)
+  schema. Hand-maintained; keep it in step with the CMS when the two drift.
+- **`source/`**, **`exports/`** — the original PDF and the printed exports, kept locally
+  only. **Git-ignored on purpose** (`.gitignore`) — see the PII note below.
 
 ## PII / public-repo note (read before committing)
 
 This repository is **public** (it powers dashti.se). So:
 
-- `source/` (the raw PDF) is git-ignored — it contains a phone number, personal email,
-  and a photo that should not be published to a public git history.
-- `resume.json` deliberately leaves **`basics.phone` blank**. Keep it that way in the
-  committed file. If you want the phone on the *PDF*, inject it at render time from a
-  local/private overlay rather than committing it here.
-- `basics.email` is included (it is already on your public CV/site) — your call.
-- The public `/cv` route should render contact via the site's existing form, not expose
-  phone/address.
-
-## Building (when FEAT-001 is implemented)
-
-Recommended renderer: [RenderCV](https://github.com/rendercv/rendercv) (Python, matches the
-FastAPI backend) or any JSON Resume theme. Sketch:
-
-1. `resume.json` → PDF via the chosen renderer (wire as a `scripts/` step + CI artifact).
-2. `/cv` route fetches the same `resume.json` and renders it, so PDF and site never drift.
-3. LinkedIn stays a **manual mirror** — its 2026 API has no profile-write; do not automate.
+- `source/` and `exports/` are git-ignored: they carry a phone number, a personal email
+  and a photo that must not enter a public git history.
+- `resume.json` leaves **`basics.email` and `basics.phone` empty**, and
+  `frontend/tests/unit/cvPublicScrub.spec.ts` asserts both stay that way, that `cv/`
+  tracks exactly three files (`.gitignore`, `README.md`, `resume.json`), and that no
+  string in `resume.json` looks like an email, a phone number or a personnummer. There is
+  no contact form: contact is LinkedIn, and `security.txt` for security reports.
+- If you want contact details on a rendered PDF, inject them at render time from a local
+  overlay rather than committing them here.
 
 ## Note on content
 

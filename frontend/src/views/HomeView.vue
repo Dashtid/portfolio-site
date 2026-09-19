@@ -131,9 +131,8 @@
                 </g>
                 <g class="trace-node">
                   <rect x="296" y="215" width="10" height="10" rx="2" class="node-box" />
-                  <!-- Names the testing category, never the technique. This page also names
-                       the employer (:63, :288) and its product category (:290, :860); the
-                       technique name beside those is the banned public-surface pair. -->
+                  <!-- Public-surface rule: name the testing category, never the
+                       technique. This label renders on the public homepage. -->
                   <text x="301" y="242" text-anchor="middle" class="node-label">
                     Dynamic testing
                   </text>

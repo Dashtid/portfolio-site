@@ -69,8 +69,8 @@ rides the frontend lane for the CV scrub guard):
 
 | Job                 | What it does                                                                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend-quality`  | ESLint, vue-tsc, 610 vitest unit tests with coverage floors, vite-ssg build + dist invariants, Codecov                                      |
-| `backend-quality`   | ruff lint + format, mypy, 977 pytest tests with an 83% coverage floor, Codecov                                                              |
+| `frontend-quality`  | ESLint, vue-tsc, the vitest unit suite (628 cases on 2026-09-14) with coverage floors, vite-ssg build + dist invariants, Codecov              |
+| `backend-quality`   | ruff lint + format, mypy, the pytest suite (988 collected on 2026-09-14) with an 83% coverage floor, Codecov                                  |
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
 | `lighthouse`        | LHCI with assertion budgets (performance and accessibility are hard errors)                                                                 |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary) + secret scan of the diff                                                                  |

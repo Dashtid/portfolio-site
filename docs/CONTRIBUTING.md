@@ -29,7 +29,7 @@ npm run dev
 ## Testing
 
 ```bash
-# Backend (977 tests, 83% coverage floor)
+# Backend (988 tests collected on 2026-09-14, 83% coverage floor)
 cd backend && uv run pytest
 
 # Frontend unit (610 tests)
