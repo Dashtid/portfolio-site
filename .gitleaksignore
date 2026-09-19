@@ -1,0 +1,52 @@
+# Findings the full-history secret scan raises that are NOT secrets.
+#
+# Each line is a gitleaks FINGERPRINT - commit:file:rule:line - so it suppresses
+# exactly one finding in exactly one historical commit. No rule is disabled and
+# no forward blind spot is created: the same rule firing on a new commit, or on
+# a different line, is a new fingerprint and still fails.
+#
+# WHY THERE ARE ENTRIES HERE AT ALL. The CI secret scan was decorative until
+# 2026-09-14 (it ran gitleaks with --staged on a checkout that stages nothing,
+# so every run reported "0 commits scanned"). Its first real pass over main
+# raised ten findings, all in unit-test fixtures, all absent from the current
+# tree. Decoded before being listed here - a token was never pasted into this
+# file, only read from the historical blob and its claims inspected:
+#
+# * frontend/tests/unit/stores/auth.spec.ts, rule jwt, four commits between
+#   2025-12-05 and 2025-12-26 (lines 139/141/166 then 538/540). Two distinct
+#   tokens. One decodes to header {alg HS256} payload {sub "1234567890"} - the
+#   jwt.io demo token, signed with its published demo secret. The other decodes
+#   to payload {sub "refresh"} with an 18-character signature, which no real
+#   HS256 token can have (43). Both were hand-built to exercise the auth store's
+#   decode/expiry paths; neither ever authenticated to anything.
+# * frontend/tests/unit/schemas/api.schemas.spec.ts:299, rule generic-api-key,
+#   2025-12-03: a 36-character JWT-shaped string in a schema-validation fixture
+#   (a real JWT is over 100). Fixture.
+#
+# [!] TWO FINDINGS FROM THE SAME SCAN ARE DELIBERATELY NOT IN THIS FILE, AND
+# MUST NOT BE ADDED. DEPLOYMENT_STATUS.md, commits of 2025-11-06 and
+# 2025-11-26 on main, carried a production database password under a heading
+# that said so. That is a real credential in public history. The code-two
+# policy for a real credential is ROTATE FIRST - a fingerprint here would make
+# the gate green while the password stayed live, which is the exact failure
+# this scan exists to prevent. Those two fingerprints may be added only after
+# the rotation is done and recorded, in the form the estate used for the Brave
+# keys: "revoked <date>", never "not a secret". Until then this repo's gate is
+# red for exactly one reason, and that reason is correct.
+#
+# [!] Before adding any line here, decide which kind it is. This file says
+# "this was never a secret" or "this secret is dead"; it never says "this
+# secret is handled".
+
+80394904afcc3452de6042ae08572b78da0a245e:frontend/tests/unit/stores/auth.spec.ts:jwt:538
+80394904afcc3452de6042ae08572b78da0a245e:frontend/tests/unit/stores/auth.spec.ts:jwt:540
+15f3952508b01b0b7fd0bf41f4f57ba9ac4f5e9a:frontend/tests/unit/stores/auth.spec.ts:jwt:538
+15f3952508b01b0b7fd0bf41f4f57ba9ac4f5e9a:frontend/tests/unit/stores/auth.spec.ts:jwt:540
+f31701c7624cd89965a19a7e230c6a0004260559:frontend/tests/unit/stores/auth.spec.ts:jwt:139
+f31701c7624cd89965a19a7e230c6a0004260559:frontend/tests/unit/stores/auth.spec.ts:jwt:141
+f31701c7624cd89965a19a7e230c6a0004260559:frontend/tests/unit/stores/auth.spec.ts:jwt:166
+d5aed4d051b189bc4e46e5c30ceffd00a7b14c18:frontend/tests/unit/stores/auth.spec.ts:jwt:139
+d5aed4d051b189bc4e46e5c30ceffd00a7b14c18:frontend/tests/unit/stores/auth.spec.ts:jwt:141
+d5aed4d051b189bc4e46e5c30ceffd00a7b14c18:frontend/tests/unit/stores/auth.spec.ts:jwt:166
+d5aed4d051b189bc4e46e5c30ceffd00a7b14c18:frontend/tests/unit/schemas/api.schemas.spec.ts:generic-api-key:299
+4fa65065a94c7b49890d1f9752114916e298703f:frontend/tests/unit/schemas/api.schemas.spec.ts:generic-api-key:299
