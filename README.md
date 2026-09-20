@@ -4,7 +4,7 @@
 [![CodeQL](https://github.com/Dashtid/portfolio-site/actions/workflows/codeql.yml/badge.svg)](https://github.com/Dashtid/portfolio-site/security/code-scanning)
 [![codecov](https://codecov.io/gh/Dashtid/portfolio-site/branch/main/graph/badge.svg)](https://codecov.io/gh/Dashtid/portfolio-site)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Dashtid/portfolio-site/badge)](https://scorecard.dev/viewer/?uri=github.com/Dashtid/portfolio-site)
-[![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey.svg)](LICENSE)
+[![License](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
 
 My personal portfolio site. Vue 3 + FastAPI, deployed to Vercel and Fly.io.
 Live at **[dashti.se](https://dashti.se)**.
@@ -43,7 +43,7 @@ A few decisions in the build that aren't obvious from the dependency list:
 - **HMAC-keyed IP pseudonymisation.** Visitor IPs are hashed with HMAC-SHA256 keyed off `SECRET_KEY` before storage — rainbow-table resistant across the IPv4 space without a second secret to manage.
 - **Strict production posture.** `/api/docs`, `/api/redoc` and `/openapi.json` are disabled in production (the API has no third-party consumers); framing denied, MIME sniffing off, HSTS with the domain submitted to the browser preload list.
 - **A 2 KB canvas instead of a 122 KB library.** The dark-mode hero animation used to be a three.js starfield; measured against a seeded Canvas2D implementation the visual difference sat below perceptual threshold, so the library went and ~120 KB gzip of JavaScript went with it.
-- **CI as a real gate.** Frontend lint + type-check + the vitest unit suite (628 cases, `npx vitest list`, 2026-09-14) + Playwright e2e and visual regression against pixel-pinned baselines. Backend ruff + mypy + the pytest suite (988 collected, `pytest --collect-only -q`, 2026-09-14) with an enforced 83% coverage floor. Lighthouse runs every push with assertion-level budgets that fail CI on regressions, and a post-deploy smoke asserts the production security headers — including the hash-locked CSP — after every deploy. Deploy jobs are gated on the quality jobs; no broken commit ships.
+- **CI as a real gate.** Frontend lint + type-check + the vitest unit suite (643 cases, `npx vitest list`, 2026-09-20) + Playwright e2e and visual regression against pixel-pinned baselines. Backend ruff + mypy + the pytest suite (988 collected, `pytest --collect-only -q`, 2026-09-20) with an enforced 83% coverage floor. Lighthouse runs every push with assertion-level budgets that fail CI on regressions, and a post-deploy smoke asserts the production security headers — including the hash-locked CSP — after every deploy. Deploy jobs are gated on the quality jobs; no broken commit ships.
 - **Supply chain treated as an attack surface.** Every GitHub Action is SHA-pinned (not version-tagged), and a pipeline script re-checks each pin against the version comment beside it. Every Python package installs only if its hash matches the committed lockfile — including pip itself. Trivy is downloaded directly with a checksum check rather than via the (once-compromised) upstream action.
 
 ## Run locally
@@ -72,5 +72,10 @@ Frontend: `http://localhost:3000` — API: `http://localhost:8000/api/docs`
 
 ## License
 
-See [LICENSE](LICENSE). All Rights Reserved — code is published for portfolio
-viewing only, not licensed for reuse.
+Split, deliberately — see [LICENSE](LICENSE) for the exact scope:
+
+- **Code is MIT.** It is published to be read and judged, so take it.
+- **Site content is not**: page copy, role descriptions, the colophon, CV data
+  (`cv/resume.json`), seed content and photographs are All Rights Reserved.
+- **Company and university logos** under `frontend/public/images/` belong to
+  their owners and are not the author's to license. Remove them if you fork.

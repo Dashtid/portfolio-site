@@ -1,20 +1,87 @@
 Copyright (c) 2026 David Dashti
 
-All Rights Reserved.
+This repository contains two different kinds of material, under two different
+terms. Read both.
 
-This repository and its contents are made publicly available for portfolio
-and showcase purposes only. The source code is provided "as is" to demonstrate
-the author's work; it is not licensed for use, copying, modification, merger,
-publication, distribution, sublicensing, or sale, in whole or in part.
+===============================================================================
+1. SOURCE CODE — MIT License
+===============================================================================
 
-No permission is granted to:
-  - copy or fork this code into another project,
-  - reuse any portion of this code in derivative works,
-  - redistribute this code in source or binary form,
-  - use this code for commercial or non-commercial purposes,
+Applies to the source code of this project: everything under backend/,
+frontend/src/, frontend/scripts/, frontend/tests/, scripts/, .github/, and the
+build, lint, test and deployment configuration at any level of the tree.
 
-without prior written permission from the author.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Reading the code in this repository to learn from it is welcome.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-For licensing inquiries, contact: dashti.dat@gmail.com
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+===============================================================================
+2. SITE CONTENT AND PERSONAL DATA — All Rights Reserved
+===============================================================================
+
+NOT covered by the MIT grant above, and not licensed for reuse:
+
+  - The written content of the site: prose, page copy, project and role
+    descriptions, the colophon, the writing/ directory, and the seed content in
+    backend/app/seed_data.py.
+  - Curriculum vitae and biographical data, including cv/resume.json and every
+    field it contains.
+  - Photographs and likenesses of the author.
+  - The visual design as an expression: the specific layout, colour system and
+    typographic treatment of dashti.se as a whole. (The CSS implementing it is
+    code, and is MIT above. This clause is about copying the design wholesale
+    and passing it off as your own site, not about reading how it was done.)
+  - The name "David Dashti" and the dashti.se domain, which are neither a
+    licence to imply endorsement nor a trademark grant.
+
+Quotation for commentary, review, teaching and similar purposes is unaffected
+by this section; ordinary copyright law governs it, as it always did.
+
+===============================================================================
+3. THIRD-PARTY MATERIAL — not the author's to license at all
+===============================================================================
+
+This repository includes material that belongs to other parties. Neither
+section above grants any right to it, because those rights were never the
+author's to grant:
+
+  - Company, university and certification logos under frontend/public/images/
+    (including but not limited to Hermes Medical Solutions, Philips, Karolinska,
+    SoftPro Medical, Södersjukhuset, Scania, KTH, Lund University, CompTIA).
+    These are the trademarks of their respective owners and appear here solely
+    to identify the organisations described in the author's work history —
+    nominative use, no affiliation or endorsement implied. If you fork this
+    repository, remove them.
+  - Academic PDFs under backend/static/documents/, which have co-authors.
+  - Every third-party dependency, under its own licence as declared in
+    package-lock.json and requirements.txt.
+
+===============================================================================
+Notes
+===============================================================================
+
+Why this replaced a blanket "All Rights Reserved" (2026-09-20): the previous
+text forbade forking, which is not a restriction this repository can impose.
+Publishing a repository publicly on GitHub grants every GitHub user the right to
+view and fork it under GitHub's Terms of Service (section D.5). A licence whose
+headline term is void on the platform hosting it is worse than no licence for a
+repository whose purpose is to be read as a work sample — the code is published
+to be judged, so the code is now MIT. What actually needed protecting was never
+the code: it was the personal and biographical content, and that is section 2.
+
+For anything not covered here, or for use of section 2 or 3 material:
+dashti.dat@gmail.com
