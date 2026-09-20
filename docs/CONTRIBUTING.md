@@ -29,10 +29,10 @@ npm run dev
 ## Testing
 
 ```bash
-# Backend (988 tests collected on 2026-09-14, 83% coverage floor)
+# Backend (988 tests collected on 2026-09-20, 83% coverage floor)
 cd backend && uv run pytest
 
-# Frontend unit (610 tests)
+# Frontend unit (643 tests on 2026-09-20)
 cd frontend && npm test
 
 # Frontend e2e — run via Docker for parity with CI, which runs the
