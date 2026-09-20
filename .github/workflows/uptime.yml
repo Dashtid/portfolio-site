@@ -1,4 +1,4 @@
-# External uptime + database-health monitor.
+# Uptime + database-health monitor (SECOND opinion, not the only one).
 #
 # The June 2026 incident: Postgres was down for 21 hours and nothing
 # noticed, because the Fly health check hit a shallow /health that never
@@ -6,13 +6,24 @@
 # /health/ready (DB SELECT 1), and this workflow adds an external probe:
 # when a check fails, the job fails, and GitHub emails the repo owner.
 #
-# Deliberately zero-dependency: no external uptime service, no secrets.
+# [!] Two earlier claims in this header were retired 2026-09-20. This is NOT
+# "the only uptime alerting" and it is NOT the only "external" probe: an
+# UptimeRobot account has watched dashti.se and HEAD /api/v1/health/ready
+# since 2026-08-13 (c13a46c made the health routes answer HEAD for exactly
+# that). Two overlapping channels is fine; two NOISY channels is not, which
+# is why the interval below is hourly rather than every 15 minutes. Zero
+# secrets and zero third-party dependencies is still true of this file, and
+# is still the reason to keep it: it survives an UptimeRobot account lapse.
 name: Uptime Check
 
 on:
   schedule:
-    # Every 15 minutes. GitHub cron is best-effort; expect some jitter.
-    - cron: '*/15 * * * *'
+    # Hourly at :17. Was '*/15 * * * *', which cost ~13 notifications a day
+    # for no marginal signal: GitHub throttles scheduled runs under load, so
+    # the observed spacing was already ~110 min, not 15. Detection is
+    # therefore unchanged in practice while run volume drops ~4x. Off-the-hour
+    # because :00 is GitHub's busiest cron slot and gets delayed hardest.
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
