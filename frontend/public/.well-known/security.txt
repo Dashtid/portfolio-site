@@ -1,15 +1,27 @@
 # Security Policy for dashti.se
 # RFC 9116 compliant security.txt
 
-Contact: mailto:security@dashti.se
+# Preferred: GitHub private vulnerability reporting. Private by default, gives
+# you a thread rather than a mail you cannot tell arrived, and it is enabled on
+# the repository (verified 2026-09-20).
+Contact: https://github.com/Dashtid/portfolio-site/security/advisories/new
 Contact: https://www.linkedin.com/in/david-dashti/
 Expires: 2026-12-31T23:59:59.000Z
 Preferred-Languages: en, sv
 Canonical: https://dashti.se/.well-known/security.txt
+Policy: https://github.com/Dashtid/portfolio-site/blob/main/SECURITY.md
+
+# [!] `mailto:security@dashti.se` was listed here until 2026-09-20 and it
+# BOUNCED for the whole time: dashti.se publishes no MX record and no SPF
+# (checked against Google Public DNS — NOERROR with an empty MX answer set), so
+# nothing was ever able to receive mail at that domain. A dead contact address
+# on a security policy is worse than no address: it silently loses exactly the
+# report you most want. Do not re-add a dashti.se mailbox here before the MX
+# actually exists and a test message has been delivered to it.
 
 # Policy
 # This is a personal portfolio website. If you discover a security
-# vulnerability, please report it responsibly using the contact above.
+# vulnerability, please report it responsibly using the contacts above.
 # I appreciate your efforts to improve security.
 
 # Acknowledgments

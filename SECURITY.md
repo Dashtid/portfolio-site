@@ -2,10 +2,20 @@
 
 ## Reporting a Vulnerability
 
-If you believe you have found a security vulnerability in this project,
-please report it privately. Do not open a public GitHub issue.
+Please report privately. Do not open a public GitHub issue.
 
-**Contact:** <dashti.dat@gmail.com>
+**Preferred — GitHub private vulnerability reporting:**
+[open a draft advisory](https://github.com/Dashtid/portfolio-site/security/advisories/new).
+It is enabled on this repository, it is private until published, and it gives
+you a thread you can see rather than a mail you cannot tell arrived.
+
+**Alternative:** a direct message on
+[LinkedIn](https://www.linkedin.com/in/david-dashti/), or
+<dashti.dat@gmail.com> if you would rather use email.
+
+> [!] Do not use `security@dashti.se`. It was published in this repository's
+> `security.txt` until 2026-09-20 and it bounced the whole time — the domain has
+> no MX record. Both files now point at the channels above.
 
 Include in your report:
 
@@ -43,38 +53,68 @@ Only the current `main` branch is supported. Older versions are not patched.
 
 ## Accepted Dependency-Audit Residuals
 
-Known `npm audit` findings that are consciously accepted rather than fixed,
-reviewed 2026-08-07:
+Reviewed **2026-09-20**, superseding the 2026-08-07 list (which had gone stale
+in both directions — see the note at the end).
 
-- **js-yaml quadratic CPU on `!!omap` (GHSA-5p4m-2wfm-xmqj, CVE-2026-59870)**
-  via a single dev-only chain: `@lhci/cli@0.15.1` → `@lhci/utils` →
-  `js-yaml@3.15.0`. The fix exists only in js-yaml 5.x and was explicitly NOT
-  backported to 3.x or 4.x, and 4.x already removed the `safeLoad`-era API that
-  `@lhci/utils` calls — so an `overrides` pin to 5.x would break Lighthouse CI
-  rather than patch it. Exposure: js-yaml here parses `lighthouserc` config
-  from this repo during CI only. The input is not attacker-controlled and the
-  package never reaches the deployed frontend (`npm audit --omit=dev` reports
-  0 vulnerabilities). Re-check when `@lhci/cli` moves off js-yaml 3.x.
+`npm audit` currently reports **7 high entries, which are 3 advisories**: npm
+counts one advisory once per dependency node, so the entry count is not a
+finding count. `npm audit --omit=dev` reports **0** — none of this reaches the
+deployed frontend or the backend.
 
-- **brace-expansion OOM DoS (GHSA-mh99-v99m-4gvg)** in nested dev-only copies
-  (1.1.18 / 2.1.4). `npm audit` reports this as 15 high-severity entries, but
-  they are ONE advisory counted once per node along three chains:
-  - `@lhci/cli` → `chrome-launcher` → `rimraf` → `glob` → `minimatch`
-  - `@vue/test-utils` → `js-beautify` → `editorconfig` / `glob` → `minimatch`
-  - `vite-plugin-pwa` → `workbox-build` →
-    `@trickfilm400/rollup-plugin-off-main-thread` → `ejs` → `jake` →
-    `filelist` → `minimatch`
+### extract-zip — arbitrary file write / symlink path traversal (accepted)
 
-  The advisory is patched only in 5.0.8+ with no 1.x/2.x backports, so the
-  offered "fix" is a breaking-major downgrade of dev tooling. Exposure: the
-  vulnerable code runs only in local dev / CI / build time against
-  repo-controlled glob patterns — never in the deployed frontend or backend.
-  Re-check when `@lhci/cli`, `js-beautify`, or `workbox-build` move off
-  legacy `minimatch`/`jake` majors.
+- [GHSA-jmr9-qjv8-65gv](https://github.com/advisories/GHSA-jmr9-qjv8-65gv) and
+  [GHSA-7pqw-9j4j-h8q3](https://github.com/advisories/GHSA-7pqw-9j4j-h8q3),
+  both high, both with **no patched version of `extract-zip` at any release**.
+- One dev-only chain: `@lhci/cli` → `lighthouse` → `puppeteer-core` →
+  `@puppeteer/browsers@2.13.0` → `extract-zip@2.0.1`. It runs when Lighthouse
+  CI downloads a Chrome build, over an archive fetched from Google's own
+  storage — not attacker-controlled input, and never in the deployed site.
+- **A fix exists in the parent and it was tried and reverted.**
+  `@puppeteer/browsers` 3.x drops `extract-zip` entirely, so an override to
+  `^3.2.2` would have removed the package rather than patched it. It broke the
+  Vercel deploy and nothing else: 3.x declares `proxy-agent >=8.0.1` as a
+  **peer**, `@lhci/cli` in the same tree requires `proxy-agent ^6.4.0`, and that
+  peer is unsatisfiable. npm locally and in Actions both install a lockfile with
+  the peer unmet; Vercel rebuilds the ideal tree and fails `npm ci` with
+  "Missing: proxy-agent@8.0.2 from lock file". Reverted in `9da88ff`.
+  `npm audit fix` is worse still — it proposes walking `@lhci/cli` *backwards*
+  from 0.15.1 to 0.12.0.
+- **Re-check trigger:** `@lhci/cli` moving off `proxy-agent` 6.x. That project
+  has been dormant since 2025-06, so do not expect it soon, and do not retry the
+  override before checking `npm view @puppeteer/browsers@<v> peerDependencies`.
 
-  When re-checking, confirm the count still decomposes to this single
-  advisory (`npm audit --json` grouped by `via`) rather than assuming a
-  changed number means new exposure.
+### js-yaml — CPU exhaustion on empty merge sources (being fixed, not accepted)
 
-Everything else reported by `npm audit` at review time was fixed in-range
-(`body-parser`, `fast-uri`, top-level `brace-expansion`).
+- [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh),
+  high, via the same dev-only chain: `@lhci/cli` → `@lhci/utils` →
+  `js-yaml@3.15.1`.
+- Unlike the 2026-08 entry this one **has a 3.x patch**: 3.15.2. Dependabot
+  PR #180 carries it. This is a residual only until that merges.
+- [i] This replaced a different js-yaml advisory
+  ([GHSA-5p4m-2wfm-xmqj](https://github.com/advisories/GHSA-5p4m-2wfm-xmqj),
+  CVE-2026-59870), which genuinely had no 3.x backport and was accepted here for
+  that reason. Same package, different advisory, opposite conclusion — which is
+  the argument for dating these entries.
+
+### Standing `overrides` that must not be pruned
+
+`frontend/package.json` pins `tmp ^0.2.7`, `uuid ^11.1.1`, `qs ^6.16.0`,
+`fflate ^0.8.3` and aliases `sourcemap-codec`. They look unrelated to each other
+and are all in the same dormant `@lhci/cli` tree; dropping any of them reopens an
+advisory that `1be42ba` / `bd4f762` closed. **Re-check trigger:** an `@lhci/cli`
+release above 0.15.1 whose published deps no longer name `tmp ^0.1.0`.
+
+### What changed since 2026-08-07, and the lesson
+
+- **brace-expansion (GHSA-mh99-v99m-4gvg)** — the old list's "15 high entries,
+  one advisory" item is **gone**, fixed in-range. It is not accepted any more; it
+  no longer exists.
+- **extract-zip** was never listed, despite being the repository's only open code
+  scanning alert and the one with no patch at all.
+
+So the previous list simultaneously accepted something already fixed and omitted
+something still open. When re-checking, group `npm audit --json` by `via` rather
+than trusting the entry count, confirm each advisory ID is still the same one,
+and record the *real* blocker (here: an unsatisfiable peer) — otherwise the next
+reader cannot tell a considered acceptance from an unexamined one.
