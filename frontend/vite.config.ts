@@ -492,7 +492,15 @@ export default defineConfig({
   // pins its own test values since Vitest never reads this file).
   define: {
     __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
-    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10))
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+    // Sentry's own build-time flags. Its published bundles ship every debug
+    // log guarded by `typeof __SENTRY_DEBUG__ === 'undefined' || __SENTRY_DEBUG__`,
+    // so leaving the flag undefined — as this config did until 2026-09-20 —
+    // keeps ALL of it: 12 unreplaced references were measured in the deployed
+    // chunk. Defining it false lets the minifier drop those branches.
+    // Tracing is deliberately left alone (we use browserTracingIntegration);
+    // do not add __SENTRY_TRACING__: false without removing that integration.
+    __SENTRY_DEBUG__: 'false'
   },
   resolve: {
     alias: {

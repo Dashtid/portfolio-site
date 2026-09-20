@@ -18,7 +18,7 @@ import './style.css'
 import App from './App.vue'
 import analyticsService from './services/analytics'
 import { errorTracker } from './utils/errorTracking'
-import { initSentry, captureException, isSentryInitialized } from './utils/sentry'
+import { initSentry, captureException } from './utils/sentry'
 
 // D3-SEC-03: vite-ssg hardcodes its state transport as an EXECUTABLE
 // inline script (`<script>window.__INITIAL_STATE__="..."</script>`) whose
@@ -137,14 +137,16 @@ export const createApp = ViteSSG(
         analyticsService.trackPageView(to.path, to.name as string | undefined)
       })
 
-      // Initialize Sentry lazily (only loads ~100KB bundle if DSN is configured)
-      initSentry(app, router).catch(error => {
-        if (import.meta.env.DEV) {
-          console.warn('[Sentry] Lazy init failed:', error)
-        }
-      })
+      // Schedule Sentry: no-op without a DSN, otherwise the bundle loads on the
+      // first idle slot rather than here, so it stops competing with hydration.
+      // Synchronous and self-contained — it buffers its own pre-load errors and
+      // swallows its own failures, so there is nothing to await or catch.
+      initSentry(app, router)
 
-      // Initialize error tracking (custom implementation, works alongside Sentry)
+      // Initialize error tracking (custom implementation, works alongside Sentry).
+      // [!] Inert in production: VITE_ERROR_TRACKING_ENABLED is not among the
+      // vars ci-cd.yml forwards to the Vercel build, so `enabled` is false there
+      // and Sentry is production's only error capture.
       errorTracker.init()
 
       // Global error handler for Vue
@@ -160,12 +162,13 @@ export const createApp = ViteSSG(
 
         errorTracker.handleVueError(error, instance, info)
 
-        if (isSentryInitialized()) {
-          captureException(error, {
-            componentName: (instance as { $options?: { name?: string } })?.$options?.name,
-            errorInfo: info
-          })
-        }
+        // Unconditional: captureException buffers while Sentry is still loading.
+        // Gating on isSentryInitialized() here would silently drop every Vue
+        // error thrown during the idle window — the window this defer created.
+        captureException(error, {
+          componentName: (instance as { $options?: { name?: string } })?.$options?.name,
+          errorInfo: info
+        })
       }
 
       // Global warning handler (development only)
