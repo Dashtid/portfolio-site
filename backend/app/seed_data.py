@@ -67,8 +67,6 @@ async def seed_companies(session: AsyncSession):
             "order_index": 1,
             "video_url": "https://www.youtube.com/embed/bdbevZrjdtU",
             "video_title": "Hermes Medical Solutions - HERMIA Imaging Platform",
-            "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d23019.922985510006!2d17.999845284557612!3d59.338079926240894!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f77fcd4b7b5e1%3A0xf7dcf06b9ce62c50!2sHermes%20Medical%20Solutions%20AB!5e0!3m2!1ssv!2sse!4v1749928857261!5m2!1ssv!2sse",
-            "map_title": "Hermes Medical Solutions Location - Stockholm, Sweden",
         },
         {
             "name": "Philips Healthcare",
