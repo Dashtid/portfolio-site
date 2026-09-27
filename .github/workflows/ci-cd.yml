@@ -95,7 +95,7 @@ jobs:
         # Reporting nicety must never block the gate (D3-CI-01): a missing
         # summary file killed every frontend PR before Codecov/SSG/artifact.
         continue-on-error: true
-        uses: davelosert/vitest-coverage-report-action@8b157684c6a6b259b97d45e72b44242865c0f6a5 # v2.12.2
+        uses: davelosert/vitest-coverage-report-action@c4bbc33a89b7ace0e63d35f1f7d4bcee31155a73 # v2.13.0
         with:
           working-directory: ./frontend
           # vitest writes to .coverage/ (vitest.config.ts:33), not coverage/.
@@ -107,7 +107,7 @@ jobs:
       - name: Upload coverage to Codecov
         # vitest writes to .coverage/ (per frontend/vitest.config.ts:33),
         # not coverage/ — keep these in sync if the directory ever moves.
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./frontend/.coverage/lcov.info
           flags: frontend
@@ -180,13 +180,13 @@ jobs:
 
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
-        uses: MishaKav/pytest-coverage-comment@ce64cfb4332195faa36733a0364dda8849109f70 # v1.11.2
+        uses: MishaKav/pytest-coverage-comment@432ac90e8d345c93e1d90ee0838b35913abc9c9b # v1.12.2
         with:
           pytest-xml-coverage-path: ./backend/coverage.xml
           junitxml-path: ./backend/pytest-report.xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./backend/coverage.xml
           flags: backend
@@ -306,7 +306,7 @@ jobs:
           trivy fs --severity CRITICAL,HIGH --format sarif --output trivy-results.sarif .
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -321,7 +321,7 @@ jobs:
         run: python3 scripts/verify_action_pins.py
 
       - name: Check for secrets
-        uses: trufflesecurity/trufflehog@20652fbbdefffcdaa493a5bf57ab2ac6b1db715b # v3.97.1
+        uses: trufflesecurity/trufflehog@a5f3de55cc2065ae4dde8fee24076f137fd62fcf # v3.97.8
         with:
           path: ./
           # On pull_request events github.event.before does not exist, which
