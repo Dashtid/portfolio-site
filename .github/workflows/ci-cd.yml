@@ -285,6 +285,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history, for the TruffleHog step: it scans base..head, and at
+          # the default depth of 1 the base commit is not in the clone. Every
+          # sampled run that passed a base (pushes back to 2026-07-27, PRs
+          # since 2026-08-16) logged "unable to resolve commit: object not
+          # found", then "chunks: 0, bytes: 0", and passed.
+          # Trivy's input is unchanged: its fs walker skips .git.
+          fetch-depth: 0
+          # No step below uses git credentials (the pin audit takes
+          # GITHUB_TOKEN from env), so none are left behind after checkout.
+          persist-credentials: false
 
       - name: Install Trivy CLI
         # Avoids aquasecurity/trivy-action which had a supply chain compromise in March 2026
@@ -329,19 +340,35 @@ jobs:
         uses: trufflesecurity/trufflehog@4dd8831c5f12599465d4d45c3c447b4018a34c85 # v3.97.9
         with:
           path: ./
-          # On pull_request events github.event.before does not exist, which
-          # silently degraded the diff scan into a FULL scan on every PR.
-          # Use the PR base SHA there. On push, github.event.before is the
-          # all-zeros SHA on force-push and branch-creation — an invalid base
-          # that errors the diff scan. Fall back to an empty base (= full
-          # scan at head) there.
-          base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '') }}
+          # The scan covers base..head. On pull_request events
+          # github.event.before does not exist, which silently turned every
+          # PR's diff scan into a scan of the head commit's tree until
+          # 2026-08-16, so use the PR base SHA there. On push,
+          # github.event.before is the ref's tip before the push: the
+          # all-zeros SHA when the push created the branch, and on a
+          # force-push the old tip, which no fetched ref reaches any more.
+          # Both fall back to an empty base (= full-history scan at head), as
+          # does merge_group, which has no before at all.
+          base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || (!github.event.forced && github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '') }}
           head: ${{ github.sha }}
+          # The scanner itself. The action runs `docker run
+          # ghcr.io/trufflesecurity/trufflehog:<version>` and version defaults
+          # to `latest`, so the SHA pin above fixes only the wrapper script.
+          # Tag plus digest, and Docker runs the digest. It MUST move with the
+          # action tag, in the same commit: Dependabot bumps the SHA and its
+          # comment but cannot see this input. scripts/verify_action_pins.py
+          # fails this job when the two disagree or the digest is not the
+          # tag's. Resolve a new one with
+          #   docker buildx imagetools inspect ghcr.io/trufflesecurity/trufflehog:<X.Y.Z>
+          version: 3.97.9@sha256:52e67fef4d054ecff5c2ce4b4ae376626d1ef54aa0898b53cac19c25e92e14db
+          # --fail-on-scan-errors: a base commit missing from the clone is a
+          # scan error, and without this flag TruffleHog still exits 0 - which
+          # is how the depth-1 checkout passed while scanning nothing.
           # --exclude-detectors=lob: TruffleHog's Lob detector "verifies"
           # ordinary pytest fixture strings (confirmed false positive
           # 2026-08-16, full local scan: no real secrets). Lob is a print/
           # mail API this project will never use.
-          extra_args: --only-verified --exclude-detectors=lob
+          extra_args: --only-verified --fail-on-scan-errors --exclude-detectors=lob
 
   # Dependency Review - blocks PRs with vulnerable dependencies
   dependency-review:
