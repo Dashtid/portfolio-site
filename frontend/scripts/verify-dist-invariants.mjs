@@ -24,6 +24,12 @@
  *    into the admin panel reaches production without passing a single test.
  *    A 2026-09-06 content audit found exactly that class of miss — text that
  *    exists in no source file, only in the database and the baked output.
+ * 5. The baked homepage must render project cards: the Projects section once
+ *    shipped as a bare heading over an empty client-only widget.
+ * 6. Every CSS rule that uses backdrop-filter must ship both the standard and
+ *    the -webkit- form: Vite 8's Lightning CSS minifier collapsed the
+ *    navbar's pair to the -webkit- form alone, which Chromium and Firefox
+ *    ignore.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -180,10 +186,73 @@ if (homeCards === 0) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// 6. backdrop-filter must ship in BOTH forms, in every rule that uses it.
+//
+// Lightning CSS, Vite 8's minifier under build.cssMinify, treats
+// backdrop-filter and -webkit-backdrop-filter as ONE property: a second
+// declaration replaces the first, and only an unprefixed one is expanded to
+// the prefixes the targets need. NavBar.vue declared the standard form, then
+// the -webkit- form, so from the vite-8 sprint on the build shipped
+// -webkit-backdrop-filter alone. Chromium and Firefox ignore that form, and
+// the glass navbar lost its blur everywhere but Safari. The visual suite
+// could not see it: its per-pixel colour threshold absorbs a blur that soft.
+// Upstream treats declaration order as the author's job
+// (parcel-bundler/lightningcss #785, #1327), so the output is what gets
+// checked, in both directions:
+//   - -webkit- without the standard form: Chromium and Firefox get no blur.
+//   - the standard form without -webkit-: Safari before 18 gets none. The CSS
+//     targets reach Safari 16.4 (build.target es2022, which Vite maps to its
+//     minify targets). If that floor is ever raised past Safari 17, the
+//     prefix rightly disappears and this half of the check goes with it.
+// ---------------------------------------------------------------------------
+const cssDir = path.join(dist, 'assets', 'css')
+let backdropRules = 0
+let navbarGlass = false
+for (const file of fs.readdirSync(cssDir).filter(f => f.endsWith('.css'))) {
+  const css = fs.readFileSync(path.join(cssDir, file), 'utf-8')
+  // Every declaration block is `prelude{body}` with no brace inside; blocks
+  // nested in @media/@layer match on their own, without the wrapper.
+  for (const [, prelude, body] of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+    const props = new Set(
+      body.split(';').map(decl => {
+        const colon = decl.indexOf(':')
+        return colon === -1 ? '' : decl.slice(0, colon).trim().toLowerCase()
+      })
+    )
+    const standard = props.has('backdrop-filter')
+    const webkit = props.has('-webkit-backdrop-filter')
+    if (!standard && !webkit) continue
+    backdropRules++
+    const where = `${file}: ${prelude.trim().slice(0, 80)}`
+    if (!standard) {
+      fail(
+        `${where} ships -webkit-backdrop-filter without backdrop-filter, so Chromium and ` +
+          'Firefox render no blur. Declare only the standard property and let the build ' +
+          'add the prefix (see invariant 6).'
+      )
+    }
+    if (!webkit) {
+      fail(
+        `${where} ships backdrop-filter without -webkit-backdrop-filter, so Safari before 18 ` +
+          'renders no blur. Check the CSS targets (see invariant 6).'
+      )
+    }
+    if (/\.navbar-custom(?![\w-])/.test(prelude)) navbarGlass = true
+  }
+}
+if (!navbarGlass) {
+  fail(
+    'no .navbar-custom rule with backdrop-filter in dist CSS, so invariant 6 has gone ' +
+      'vacuous (NavBar.vue renamed the class or dropped the glass): update the check'
+  )
+}
+
 console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
     'baked HTML free of unhashed styling, ' +
     `${BANNED_IN_BAKED_PAGES.length} banned terms absent from baked content, ` +
-    `${homeCards} project cards prerendered`
+    `${homeCards} project cards prerendered, ` +
+    `${backdropRules} backdrop-filter rules carry both forms`
 )

@@ -356,8 +356,15 @@ onUnmounted(() => {
 
 .navbar-custom {
   background: var(--navbar-bg);
+  /* The standard property only. The build adds -webkit-backdrop-filter for
+     Safari before 18 from its CSS targets (build.target es2022 reaches
+     Safari 16.4), so do not hand-write the prefixed line: Lightning CSS,
+     Vite 8's CSS minifier, treats the two as one property and the LAST
+     declaration replaces the first. With -webkit- written second, the build
+     shipped the prefixed form alone; Chromium and Firefox ignore it, and the
+     glass lost its blur everywhere but Safari (parcel-bundler/lightningcss
+     #785, #1327). scripts/verify-dist-invariants.mjs checks both forms. */
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid transparent;
   padding-block: 1rem;
 }
