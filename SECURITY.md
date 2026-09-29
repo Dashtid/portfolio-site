@@ -53,23 +53,42 @@ Only the current `main` branch is supported. Older versions are not patched.
 
 ## Accepted Dependency-Audit Residuals
 
-Reviewed **2026-09-20**, superseding the 2026-08-07 list (which had gone stale
-in both directions — see the note at the end).
+Reviewed **2026-09-29**, superseding the 2026-09-20 review and the 2026-08-07
+list before it (see the notes at the end).
 
-`npm audit` currently reports **7 high entries, which are 3 advisories**: npm
+`npm audit` currently reports **6 high entries, which are 2 advisories**: npm
 counts one advisory once per dependency node, so the entry count is not a
 finding count. `npm audit --omit=dev` reports **0** — none of this reaches the
 deployed frontend or the backend.
 
 ### extract-zip — arbitrary file write / symlink path traversal (accepted)
 
+Re-checked **2026-09-27**.
+
 - [GHSA-jmr9-qjv8-65gv](https://github.com/advisories/GHSA-jmr9-qjv8-65gv) and
   [GHSA-7pqw-9j4j-h8q3](https://github.com/advisories/GHSA-7pqw-9j4j-h8q3),
-  both high, both with **no patched version of `extract-zip` at any release**.
+  both high, both with **no patched version of `extract-zip` at any release**
+  (2.0.1 is still the newest; nothing has been published since). Dependabot
+  alerts #187 and #200 are dismissed with this entry as the reason.
 - One dev-only chain: `@lhci/cli` → `lighthouse` → `puppeteer-core` →
-  `@puppeteer/browsers@2.13.0` → `extract-zip@2.0.1`. It runs when Lighthouse
-  CI downloads a Chrome build, over an archive fetched from Google's own
-  storage — not attacker-controlled input, and never in the deployed site.
+  `@puppeteer/browsers@2.13.0` → `extract-zip@2.0.1`. **It is installed, never
+  executed.** `@puppeteer/browsers` loads `extract-zip` only through a dynamic
+  `import()` inside `unpackArchive()`, and only its browser-download
+  `install()` calls that. `puppeteer-core` never imports `install`, Lighthouse
+  CI finds an installed Chrome through `chrome-launcher` and downloads nothing,
+  and nothing here runs the package's `browsers` CLI. Checked by replacing
+  `extract-zip`'s entry point with a tripwire in a scratch install of this
+  lockfile: a direct `unpackArchive()` call set it off; a full `lhci autorun`
+  did not.
+- [!] Until 2026-09-27 this entry said the code "runs when Lighthouse CI
+  downloads a Chrome build". It never did — no step in this repository
+  downloads Chrome.
+- **CI does not run this copy either.** The `lighthouse` job uses
+  `treosh/lighthouse-ci-action`, whose committed `node_modules` carries its own
+  `@lhci/cli` 0.15.1 and the same `extract-zip@2.0.1`; the job log resolves
+  `lhci` from `_actions/treosh/…`. The devDependency serves only the local
+  `npm run lighthouse` scripts. Dropping it would close the alert and leave the
+  same unused code on the runner, inside the action.
 - **A fix exists in the parent and it was tried and reverted.**
   `@puppeteer/browsers` 3.x drops `extract-zip` entirely, so an override to
   `^3.2.2` would have removed the package rather than patched it. It broke the
@@ -79,23 +98,13 @@ deployed frontend or the backend.
   the peer unmet; Vercel rebuilds the ideal tree and fails `npm ci` with
   "Missing: proxy-agent@8.0.2 from lock file". Reverted in `9da88ff`.
   `npm audit fix` is worse still — it proposes walking `@lhci/cli` *backwards*
-  from 0.15.1 to 0.12.0.
-- **Re-check trigger:** `@lhci/cli` moving off `proxy-agent` 6.x. That project
-  has been dormant since 2025-06, so do not expect it soon, and do not retry the
-  override before checking `npm view @puppeteer/browsers@<v> peerDependencies`.
-
-### js-yaml — CPU exhaustion on empty merge sources (being fixed, not accepted)
-
-- [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh),
-  high, via the same dev-only chain: `@lhci/cli` → `@lhci/utils` →
-  `js-yaml@3.15.1`.
-- Unlike the 2026-08 entry this one **has a 3.x patch**: 3.15.2. Dependabot
-  PR #180 carries it. This is a residual only until that merges.
-- [i] This replaced a different js-yaml advisory
-  ([GHSA-5p4m-2wfm-xmqj](https://github.com/advisories/GHSA-5p4m-2wfm-xmqj),
-  CVE-2026-59870), which genuinely had no 3.x backport and was accepted here for
-  that reason. Same package, different advisory, opposite conclusion — which is
-  the argument for dating these entries.
+  from 0.15.1 to 0.12.0 (Lighthouse 10).
+- **Re-check trigger:** an `@lhci/cli` release above 0.15.1, or a
+  `lighthouse-ci-action` release, whose tree reaches `@puppeteer/browsers` 3.x
+  without `proxy-agent` 6.x. On 2026-09-27 every 3.x release up to 3.2.3 still
+  declares the `proxy-agent >=8.0.1` peer, and `@lhci/cli` has not published
+  since 2025-06-25. Do not retry the override before checking
+  `npm view @puppeteer/browsers@<v> peerDependencies`.
 
 ### Standing `overrides` that must not be pruned
 
@@ -112,6 +121,13 @@ release above 0.15.1 whose published deps no longer name `tmp ^0.1.0`.
   no longer exists.
 - **extract-zip** was never listed, despite being the repository's only open code
   scanning alert and the one with no patch at all.
+- **js-yaml (GHSA-2883-xcg3-v3hh)**, listed on 2026-09-20 as "being fixed", is
+  **gone**: `4085646` moved the `@lhci/utils` copy to the patched 3.15.2
+  (superseding Dependabot PR #180). It had replaced a different js-yaml advisory
+  ([GHSA-5p4m-2wfm-xmqj](https://github.com/advisories/GHSA-5p4m-2wfm-xmqj),
+  CVE-2026-59870), which genuinely had no 3.x backport and was accepted here for
+  that reason. Same package, different advisory, opposite conclusion — which is
+  the argument for dating these entries.
 
 So the previous list simultaneously accepted something already fixed and omitted
 something still open. When re-checking, group `npm audit --json` by `via` rather

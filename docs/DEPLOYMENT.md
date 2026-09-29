@@ -72,7 +72,7 @@ rides the frontend lane for the CV scrub guard):
 | `frontend-quality`  | ESLint, vue-tsc, the vitest unit suite (643 cases on 2026-09-20) with coverage floors, vite-ssg build + dist invariants, Codecov              |
 | `backend-quality`   | ruff lint + format, mypy, the pytest suite (988 collected on 2026-09-20) with an 83% coverage floor, Codecov                                  |
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
-| `lighthouse`        | LHCI with assertion budgets (performance and accessibility are hard errors)                                                                 |
+| `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary) + secret scan of the diff                                                                  |
 | `dependency-review` | Blocks PRs introducing vulnerable or denied-licence dependencies                                                                            |
 | `deploy-frontend`   | Vercel CLI deploy, gated on quality + e2e + lighthouse, then a post-deploy smoke asserting the live security headers                        |
