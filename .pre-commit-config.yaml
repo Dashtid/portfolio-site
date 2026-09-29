@@ -211,28 +211,32 @@ repos:
   # stable releases. The executed prettier version stays pinned by
   # additional_dependencies either way.
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.6
+    rev: v3.9.8
     hooks:
       - id: prettier
         files: ^frontend/.*\.(js|ts|vue|json|css|scss|md)$
         additional_dependencies:
-          - prettier@3.9.6
+          - prettier@3.9.8
 
-  # Versions kept in lockstep with frontend/package.json - a hook/CI eslint skew
-  # lints with different rules than the gate that blocks the merge.
+  # Read these from frontend/package-lock.json, NOT from package.json. A hook
+  # installs one exact version, so a RANGE is not something it can match: on
+  # 2026-09-29 package.json asked for @typescript-eslint/parser ^8.48.0 while the
+  # lock resolved 8.70.1, and this file was pinning 8.64.0 - three different
+  # answers, and the hook was linting with a different parser than the gate that
+  # blocks the merge. Pin what the lock holds at the moment of the re-roll.
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.8.0
+    rev: v10.11.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|ts|vue)$
         exclude: ^frontend/public/sw\.js$
         args: ['--fix', '--config', 'frontend/eslint.config.js']
         additional_dependencies:
-          - eslint@10.8.0
+          - eslint@10.11.0
           - '@eslint/js@10.0.1'
-          - '@typescript-eslint/eslint-plugin@8.65.0'
-          - '@typescript-eslint/parser@8.64.0'
-          - eslint-plugin-vue@10.10.0
+          - '@typescript-eslint/eslint-plugin@8.70.1'
+          - '@typescript-eslint/parser@8.70.1'
+          - eslint-plugin-vue@10.11.0
           - eslint-plugin-prettier@5.5.6
           - eslint-config-prettier@10.1.8
           - vue-eslint-parser@10.4.0
