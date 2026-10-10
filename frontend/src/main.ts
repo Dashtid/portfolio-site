@@ -145,8 +145,8 @@ export const createApp = ViteSSG(
 
       // Initialize error tracking (custom implementation, works alongside Sentry).
       // [!] Inert in production: VITE_ERROR_TRACKING_ENABLED is not among the
-      // vars ci-cd.yml forwards to the Vercel build, so `enabled` is false there
-      // and Sentry is production's only error capture.
+      // vars ci-cd.yml and rebake-frontend.yml forward to the Vercel build, so
+      // `enabled` is false there and Sentry is production's only error capture.
       errorTracker.init()
 
       // Global error handler for Vue
