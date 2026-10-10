@@ -17,7 +17,7 @@ Configured in `backend/fly.toml`:
 | --------------- | --------------------------------------------------- |
 | App name        | `dashti-portfolio-backend`                          |
 | Region          | `arn` (Stockholm)                                   |
-| Memory / CPU    | 1 GB, 1 shared                                      |
+| Memory / CPU    | 512 MB, 1 shared                                    |
 | Port            | 8000                                                |
 | Release command | `python -m scripts.migrate` (Alembic, every deploy) |
 

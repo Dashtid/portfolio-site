@@ -61,8 +61,13 @@ primary_region = 'arn'
     method = 'GET'
     path = '/api/v1/health/ready'
 
+# 512 MB, down from 1 GB on 2026-10-11. Measured 10.9 days after a deploy:
+# uvicorn (one process) peaked at 123 MB RSS (VmHWM), the whole VM used
+# 164 MB with 677 MB available, and /proc/vmstat showed zero OOM kills.
+# 1 GB was the first deploy's default and cost $3.90/mo in extra RAM.
+# Re-measure the peak before raising it; uploads are capped at 25 MB.
 [[vm]]
-  memory = '1gb'
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
 
