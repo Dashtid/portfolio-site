@@ -25,9 +25,10 @@ Migrations run in a Fly release machine before new app machines start, so
 a deploy whose migration fails never replaces the running version.
 
 Secrets (set once via `fly secrets set`): `SECRET_KEY`,
-`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `SENTRY_DSN`,
-`GITHUB_OSS_DASHBOARD_PAT`, and `DATABASE_URL` (written by
-`flyctl postgres attach`).
+`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_OSS_DASHBOARD_PAT`,
+and `DATABASE_URL` (written by `flyctl postgres attach`). `SENTRY_DSN`
+is optional and unset as of 2026-10-10, so backend Sentry is off (see
+Monitoring).
 
 Operational commands:
 
@@ -105,11 +106,19 @@ Supporting workflows:
   `/api/v1/health` every 30 s; `/api/v1/health/ready` adds a DB
   round-trip and is what the uptime workflow watches.
 - **Uptime**: the `uptime.yml` workflow, every 15 minutes from Actions.
-- **Sentry**: active on the **backend** (`SENTRY_DSN` Fly secret; tracing
-  at a 10% sample). The frontend ships Sentry init code, but the whole
-  init is dead-code-eliminated at build unless `VITE_SENTRY_DSN` is
-  provided to the Vercel build — that secret has never been set, so
-  frontend Sentry is currently **inactive by default**, not silently on.
+- **Sentry**: live on the **frontend**. The `VITE_SENTRY_DSN` GitHub
+  secret (set 2026-08-16) is forwarded with `--build-env` by `ci-cd.yml`
+  and `rebake-frontend.yml`; without it the whole init is
+  dead-code-eliminated at build. Release `portfolio-frontend@<sha12>`,
+  tracing at a 10% sample, no session replay, and a `beforeSend` that
+  drops errors raised only by code the site never shipped (browser
+  automation, extensions, userscripts; see
+  `frontend/src/utils/sentryForeignCode.ts`). Stack traces arrive
+  minified: no `SENTRY_AUTH_TOKEN` secret is set, so no sourcemaps are
+  uploaded. The **backend** is **not** reporting: the Fly app has no
+  `SENTRY_DSN` secret (checked 2026-10-10 with `fly secrets list`), and
+  `backend/app/main.py` starts Sentry only when `SENTRY_DSN` is set and
+  `ERROR_TRACKING_ENABLED` is true (its default).
 - **Metrics**: `/api/v1/metrics/*` (admin-gated) returns request counts,
   response times and error rates per endpoint.
 
