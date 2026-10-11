@@ -241,6 +241,14 @@ repos:
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|ts|vue)$
+        # The mirror's own manifest sets types: [javascript], and pre-commit ANDs
+        # that with `files`. identify tags .ts as [text, ts] and .vue as
+        # [text, vue], so until 2026-10-11 this hook linted .js only and a .ts or
+        # .vue commit printed "(no files to check)Skipped". types: [file] replaces
+        # the manifest filter and leaves the choice to `files`. types_or alone
+        # does NOT fix it - the manifest's types still applies on top (tested in
+        # a scratch repo: js only with types_or, js+ts+vue with types: [file]).
+        types: [file]
         exclude: ^frontend/public/sw\.js$
         args: ['--fix', '--config', 'frontend/eslint.config.js']
         additional_dependencies:

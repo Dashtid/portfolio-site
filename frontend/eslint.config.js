@@ -7,9 +7,22 @@ import vueParser from 'vue-eslint-parser'
 import prettierConfig from 'eslint-config-prettier'
 import prettierPlugin from 'eslint-plugin-prettier'
 
+// [!] This file's own blocks anchor their patterns and the tsconfig path to
+// THIS directory (basePath, tsconfigRootDir), not to wherever eslint runs.
+// `npm run lint` runs in frontend/, but the pre-commit eslint hook runs from
+// the repository root with `--config frontend/eslint.config.js`, and eslint
+// resolves a --config file's patterns against the working directory. Without
+// the anchors that run cannot read ./tsconfig.json (a parse error on every
+// .ts file), lints the *.config.ts files ignored below and loses the tests
+// override. A new block with a path pattern needs `basePath: here` as well.
+// The vue and prettier presets below need none: their only patterns are
+// *.vue and **/*.vue.
+const here = import.meta.dirname
+
 export default [
   // Global ignores
   {
+    basePath: here,
     ignores: [
       'dist/**',
       'node_modules/**',
@@ -32,6 +45,7 @@ export default [
 
   // Base JavaScript/TypeScript configuration
   {
+    basePath: here,
     files: ['**/*.{js,mjs,cjs,ts,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
@@ -63,13 +77,15 @@ export default [
 
   // TypeScript configuration
   {
+    basePath: here,
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: './tsconfig.json'
+        project: './tsconfig.json',
+        tsconfigRootDir: here
       }
     },
     plugins: {
@@ -94,6 +110,7 @@ export default [
 
   // Test files - allow non-null assertions (common pattern in tests)
   {
+    basePath: here,
     files: ['tests/**/*.ts', 'tests/**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off'
@@ -103,6 +120,7 @@ export default [
   // Vue configuration
   ...vuePlugin.configs['flat/recommended'],
   {
+    basePath: here,
     files: ['**/*.vue'],
     languageOptions: {
       parser: vueParser,
