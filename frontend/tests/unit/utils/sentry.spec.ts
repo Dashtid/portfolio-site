@@ -243,6 +243,13 @@ describe('utils/sentry', () => {
           requested()
           return importOriginal()
         })
+        // Vitest 5 applies queued doMocks during the next module load, and a
+        // load that starts while they are being applied does not wait for
+        // them. loadSentry() asks for both chunks in the same tick, so the
+        // SDK import would still get the earlier, ungated mock. Load a fresh
+        // copy of the module under test first: that import applies both mocks.
+        vi.resetModules()
+        sentry = await import('@/utils/sentry')
 
         sentry.initSentry(fakeApp, fakeRouter)
         ;(idle.mock.calls[0][0] as () => void)()
