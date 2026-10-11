@@ -77,12 +77,12 @@ class TestSeedProjects:
 
     @pytest.mark.asyncio
     async def test_seed_projects_creates_correct_count(self, db_session):
-        """Test that seed_projects creates exactly 4 projects."""
+        """Test that seed_projects creates exactly 3 projects."""
         await seed_projects(db_session)
 
         result = await db_session.execute(select(Project))
         projects = result.scalars().all()
-        assert len(projects) == 4
+        assert len(projects) == 3
 
     @pytest.mark.asyncio
     async def test_every_seeded_project_advertises_an_openable_repo(self, db_session):
@@ -342,7 +342,7 @@ class TestSeedDataIntegration:
         education = (await db_session.execute(select(Education))).scalars().all()
 
         assert len(companies) == 8
-        assert len(projects) == 4
+        assert len(projects) == 3
         assert len(skills) == 20
         assert len(education) == 4
 
@@ -401,7 +401,7 @@ class TestSeedDataMain:
 
         async with TestSessionLocal() as session:
             assert len((await session.execute(select(Company))).scalars().all()) == 8
-            assert len((await session.execute(select(Project))).scalars().all()) == 4
+            assert len((await session.execute(select(Project))).scalars().all()) == 3
             assert len((await session.execute(select(Skill))).scalars().all()) == 20
             assert len((await session.execute(select(Education))).scalars().all()) == 4
 

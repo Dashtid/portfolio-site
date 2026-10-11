@@ -18,7 +18,6 @@ PUBLIC_REPO_ALLOWLIST: frozenset[str] = frozenset(
         "subvectors",
         "subcheck",
         "portfolio-site",
-        "sysadmin-toolkit",
     }
 )
 """Repos allowed to appear as project cards on the PUBLIC homepage.

@@ -69,8 +69,8 @@ def _pinned(name: str) -> dict[str, Any]:
 
 
 class TestAllowlistContents:
-    def test_allowlist_is_exactly_the_four_public_projects(self) -> None:
-        expected = frozenset({"subvectors", "subcheck", "portfolio-site", "sysadmin-toolkit"})
+    def test_allowlist_is_exactly_the_three_public_projects(self) -> None:
+        expected = frozenset({"subvectors", "subcheck", "portfolio-site"})
         assert expected == PUBLIC_REPO_ALLOWLIST  # noqa: SIM300 - constant is the contract
 
     @pytest.mark.parametrize("repo", OFF_PORTFOLIO_REPOS)

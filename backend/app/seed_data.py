@@ -245,15 +245,6 @@ async def seed_projects(session: AsyncSession):
             "featured": True,
             "order_index": 3,
         },
-        {
-            "name": "Sysadmin Toolkit",
-            "description": "System administration automation for Windows and Linux: maintenance, monitoring, backup and hardening scripts.",
-            "technologies": ["PowerShell", "Bash", "Python", "Windows Server", "Linux"],
-            "github_url": "https://github.com/Dashtid/sysadmin-toolkit",
-            "live_url": None,
-            "featured": False,
-            "order_index": 4,
-        },
     ]
 
     for project_data in projects:
