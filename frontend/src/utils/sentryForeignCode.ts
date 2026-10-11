@@ -49,8 +49,9 @@
  *
  * An event is dropped only when it has at least one FOREIGN frame and no OWN
  * frame. Everything else is kept: events with no frames at all (non-Error
- * rejections, network TypeErrors with an empty stack, captureMessage),
- * native-only stacks, and mixed stacks. Mixed stacks get the tag
+ * rejections, network TypeErrors with an empty stack; since SDK 11 a
+ * captureMessage carries its call site's stack instead), native-only
+ * stacks, and mixed stacks. Mixed stacks get the tag
  * foreign_code=mixed, so an extension wrapping site code stays visible and
  * searchable. In short, the hook keeps every error whose SDK-parsed stack
  * contains a frame from this origin.
@@ -107,7 +108,8 @@
  *
  * Fail-open: no http(s) origin to compare against (prerender, opaque origin)
  * and any exception inside the hook both return the event unchanged. A hook
- * that throws would make the SDK replace or silently drop the event instead.
+ * that throws would cost the event instead: SDK 11 drops it and records only
+ * a `callback_error` client discard.
  * A chunk that fails to load is fail-open too, and so is one that is slow:
  * loadSentry() never waits for it, and an event raised before it arrives is
  * held at most 5 s, then sent unfiltered (unless the page exits first; see

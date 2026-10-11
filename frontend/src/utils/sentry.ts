@@ -80,6 +80,9 @@ const FALLBACK_DELAY_MS = 1200
 /** Cap on pre-init errors held in memory. A page throwing more than this is not short of signal. */
 const MAX_BUFFERED_ERRORS = 10
 
+/** SDK 10's deny list for header and query-parameter names that carry a visitor's address or user. */
+const PII_NAME_SNIPPETS = ['forwarded', '-ip', 'remote-', 'via', '-user']
+
 /**
  * How long an event may wait for the foreign-code filter's chunk before it is
  * sent unfiltered. Sentry itself never waits for that chunk.
@@ -231,7 +234,11 @@ async function initWebVitals(): Promise<void> {
     const reportVital = (metric: { name: string; value: number; rating: string }): void => {
       if (!sentry) return
 
-      // Report as Sentry measurement
+      // [!] Sends nothing since SDK 11: it streams spans by default, and only
+      // its static (transaction) lifecycle carries measurements. Checked
+      // 2026-10-11 against 11.4.0: a static transaction held the value, a
+      // streamed span did not. The SDK reports LCP, CLS and INP itself
+      // either way.
       sentry.setMeasurement(metric.name, metric.value, 'millisecond')
 
       // Also set as context for debugging
@@ -264,11 +271,12 @@ async function initWebVitals(): Promise<void> {
 
 async function loadSentry(app: App, router: Router, dsn: string): Promise<void> {
   try {
-    // The foreign-code filter, in its own small lazy chunk. Requested first,
-    // so it downloads beside the SDK's chunk, and never awaited before init()
-    // (see deferredForeignCodeFilter). Fail-open: a chunk that cannot load
-    // costs the filter, and Sentry still starts on time; what events raised
-    // while it is pending risk is listed there.
+    // The foreign-code filter, in its own small lazy chunk. Requested in the
+    // same tick as the SDK's chunks, so they download side by side, and
+    // never awaited before init() (see deferredForeignCodeFilter).
+    // Fail-open: a chunk that cannot load costs the filter, and Sentry still
+    // starts on time; what events raised while it is pending risk is listed
+    // there.
     // [!] The failure handler is the second argument of THIS .then, not a
     // .catch: the build moves this .then inside Vite's preload wrapper, so a
     // failed load is settled before the wrapper sees it. A rejection that
@@ -312,7 +320,11 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
         // the wrapper's own detail: its frame, the mechanism data (handler,
         // target) and the callback arguments it attached as extra.arguments.
         // The SDK's fetch, XHR and History instrumentation is separate and
-        // stays on; sentryForeignCode.ts lists what that still lets through.
+        // stays on, and so does the breadcrumbs integration's DOM hook: it
+        // still replaces EventTarget.prototype.addEventListener and
+        // removeEventListener, but passes the caller's listener through
+        // unwrapped. sentryForeignCode.ts lists what all that still lets
+        // through.
         browserApiErrorsIntegration({
           setTimeout: false,
           setInterval: false,
@@ -325,6 +337,28 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
       ],
       tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
       tracePropagationTargets: ['localhost', /^https:\/\/dashti\.se/, /^https:\/\/api\.dashti\.se/],
+      // [!] Left unset, SDK 11's dataCollection collects every category,
+      // where SDK 10 (sendDefaultPii unset) collected none of the personal
+      // ones. In this browser setup the one that bites is userInfo: true has
+      // Sentry infer and store each visitor's IP address (infer_ip "auto" on
+      // every event, "{{auto}}" on sessions). The backend keeps visitor IPs
+      // only as keyed hashes and runs its own Sentry with
+      // send_default_pii=False, so this is the migration guide's "keep the
+      // v10 default behavior" set, verbatim.
+      dataCollection: {
+        userInfo: false,
+        cookies: false,
+        httpHeaders: {
+          request: { deny: PII_NAME_SNIPPETS },
+          response: { deny: PII_NAME_SNIPPETS }
+        },
+        httpBodies: [],
+        urlQueryParams: { deny: PII_NAME_SNIPPETS },
+        genAI: { inputs: false, outputs: false },
+        databaseQueryData: false,
+        queues: false,
+        graphQL: { document: false, variables: false }
+      },
       // CefSharp-based hosts, such as the link scanner behind Outlook Safe
       // Links, reject with this exact text when they open a mailed link. The
       // site never produces it.

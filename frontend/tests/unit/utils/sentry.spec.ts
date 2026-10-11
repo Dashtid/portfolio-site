@@ -1,12 +1,14 @@
 /**
- * Guards the three properties that make the lazy-Sentry setup a net win rather
- * than a regression:
+ * Guards the properties that make the lazy-Sentry setup a net win rather than
+ * a regression:
  *
  *  - no `replayIntegration` (it was ~60% of a 150 KB gzip chunk on every
  *    public page),
  *  - no error lost in the idle window the deferral opens, which matters
  *    because `VITE_ERROR_TRACKING_ENABLED` is not forwarded to the Vercel
- *    build, so Sentry is production's ONLY error capture, and
+ *    build, so Sentry is production's ONLY error capture,
+ *  - no visitor IP address stored: SDK 11 has Sentry infer one unless
+ *    dataCollection says otherwise, and
  *  - no error from code the site never shipped reaching Sentry: init() wires
  *    the real foreign-code beforeSend (its rule is pinned against the SDK's
  *    real stack parser in sentryForeignCode.spec.ts) and turns off the SDK's
@@ -18,8 +20,9 @@
  *
  * All are invisible in a browser: a replay integration that quietly comes
  * back costs bytes nobody measures, errors dropped before init simply never
- * appear in a dashboard nobody is watching at that second, and a filter that
- * is unwired or undermined mails the next bot's error as a new issue.
+ * appear in a dashboard nobody is watching at that second, an IP address is
+ * stored on Sentry's side where no page shows it, and a filter that is
+ * unwired or undermined mails the next bot's error as a new issue.
  */
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -144,6 +147,28 @@ describe('utils/sentry', () => {
     expect(options.replaysSessionSampleRate).toBeUndefined()
     expect(options.replaysOnErrorSampleRate).toBeUndefined()
     expect(sentry.isSentryInitialized()).toBe(true)
+  })
+
+  it("keeps SDK 10's data-collection baseline, so no visitor IP address is stored", async () => {
+    sentry.initSentry(fakeApp, fakeRouter)
+    await runIdleAndSettle(idle)
+
+    // Left unset, SDK 11 collects every category, and in the browser that has
+    // Sentry infer and store each visitor's IP address. Exact equality: the
+    // migration guide's v10 set, nothing dropped and nothing added.
+    const options = init.mock.calls[0][0] as { dataCollection?: unknown }
+    const deny = { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] }
+    expect(options.dataCollection).toEqual({
+      userInfo: false,
+      cookies: false,
+      httpHeaders: { request: deny, response: deny },
+      httpBodies: [],
+      urlQueryParams: deny,
+      genAI: { inputs: false, outputs: false },
+      databaseQueryData: false,
+      queues: false,
+      graphQL: { document: false, variables: false }
+    })
   })
 
   it('does nothing at all when no DSN is configured', () => {
