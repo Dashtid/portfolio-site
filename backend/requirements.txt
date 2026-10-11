@@ -256,9 +256,9 @@ fastapi==0.136.3 \
     # via
     #   portfolio-backend (pyproject.toml)
     #   sentry-sdk
-filelock==4.0.4 \
-    --hash=sha256:0df72be195ca7892216d16f2edce8d9b93a571f02402972020a8cff84c594c7b \
-    --hash=sha256:90999ed63a26ccf86b93b959ab10cf1017f422d816be454ed54cbed263e71ab5
+filelock==4.0.10 \
+    --hash=sha256:00d6a81f976a6332551c2c10f39e12b4abb7e01c64d4c497b81a615bc9186f1f \
+    --hash=sha256:698048d158dc3c9e18cc5e88b3efdd4bd0e77d76686b22adb4511cc4b2c2f0db
     # via portfolio-backend (pyproject.toml)
 githubkit==0.16.1 \
     --hash=sha256:a791e0eb57ec80824a711321376c5816aa1cd204e6982e4ad5ddce6c87490863 \
