@@ -211,13 +211,25 @@ repos:
   # stable releases. The executed prettier version stays pinned by
   # additional_dependencies either way.
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.8
+    rev: v3.9.9
     hooks:
       - id: prettier
         files: ^frontend/.*\.(js|ts|vue|json|css|scss|md)$
         additional_dependencies:
-          - prettier@3.9.8
+          - prettier@3.9.9
 
+  # LOCAL PREREQUISITE: run `npm ci` in frontend/ before your first commit that
+  # touches a .vue, .ts or .js file. frontend/eslint.config.js imports @eslint/js
+  # relative to itself, so Node resolves it out of frontend/node_modules - which a
+  # fresh clone does not have, and which additional_dependencies below CANNOT
+  # supply, because those install into pre-commit's own node env. Without it the
+  # hook dies with ERR_MODULE_NOT_FOUND on any eslint version. CI does not paper
+  # over this: rollout.py's CI_SKIP drops the hook from the pre-commit workflow
+  # and ci-cd.yml lints the frontend for real, with `npm ci` and then
+  # `npm run --if-present lint`. Verified 2026-09-29 that the lint script exists
+  # on origin/main - with --if-present, a missing script would have made that a
+  # gate that lies.
+  #
   # Read these from frontend/package-lock.json, NOT from package.json. A hook
   # installs one exact version, so a RANGE is not something it can match: on
   # 2026-09-29 package.json asked for @typescript-eslint/parser ^8.48.0 while the
@@ -236,7 +248,7 @@ repos:
           - '@eslint/js@10.0.1'
           - '@typescript-eslint/eslint-plugin@8.70.1'
           - '@typescript-eslint/parser@8.70.1'
-          - eslint-plugin-vue@10.11.0
+          - eslint-plugin-vue@10.11.1
           - eslint-plugin-prettier@5.5.6
           - eslint-config-prettier@10.1.8
           - vue-eslint-parser@10.4.0
