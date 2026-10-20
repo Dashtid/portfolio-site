@@ -30,15 +30,17 @@ const mockedUseHead = vi.mocked(useHead)
 
 const FRONTEND_ROOT = resolve(__dirname, '../../..')
 
-const directive = (name: string): string => {
+const vercelHeader = (key: string): string => {
   const vercel = JSON.parse(readFileSync(resolve(FRONTEND_ROOT, 'vercel.json'), 'utf-8')) as {
     headers: { headers: { key: string; value: string }[] }[]
   }
-  const header = vercel.headers
-    .flatMap(h => h.headers)
-    .find(h => h.key === 'Content-Security-Policy')
-  if (!header) throw new Error('no Content-Security-Policy header in vercel.json')
-  const match = header.value.match(new RegExp(`(?:^|; )${name} ([^;]*)`))
+  const header = vercel.headers.flatMap(h => h.headers).find(h => h.key === key)
+  if (!header) throw new Error(`no ${key} header in vercel.json`)
+  return header.value
+}
+
+const directive = (name: string): string => {
+  const match = vercelHeader('Content-Security-Policy').match(new RegExp(`(?:^|; )${name} ([^;]*)`))
   if (!match) throw new Error(`no ${name} directive in the CSP`)
   return match[1]
 }
@@ -142,5 +144,27 @@ describe('ColophonView claims still match the shipped CSP', () => {
     expect(styleSrc).not.toContain('unsafe-inline')
     expect(styleSrc).toContain("'self'")
     expect(styleSrc.match(/'sha256-[^']+'/g) ?? []).toHaveLength(2)
+  })
+})
+
+describe('ColophonView transport claim', () => {
+  it('matches the HSTS header the site sends', () => {
+    // The page: "Strict transport security for a year, covering subdomains,
+    // and the domain is on the browser preload list". A different max-age or
+    // a dropped includeSubDomains makes the first half wrong, and a header
+    // without `preload` makes the domain eligible for removal from the list
+    // (hstspreload.org's continued requirements), so the second half would
+    // stop holding.
+    expect(vercelHeader('Strict-Transport-Security')).toBe(
+      'max-age=31536000; includeSubDomains; preload'
+    )
+  })
+
+  it('says where the preload status can be checked, and when it was', async () => {
+    const wrapper = await mountView()
+    expect(wrapper.text()).toMatch(
+      /preloaded by hstspreload\.org when checked on \d{1,2} \w+ \d{4}/
+    )
+    expect(wrapper.text()).not.toContain('pending inclusion')
   })
 })

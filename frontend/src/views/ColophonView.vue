@@ -173,7 +173,7 @@ const sections: Section[] = [
       {
         term: 'Transport',
         detail:
-          'Strict transport security for a year, covering subdomains. The domain was submitted to the browser preload list on 4 September 2026 and is pending inclusion; once it ships, a browser that has never been here will refuse plaintext before the first request is ever made.'
+          'Strict transport security for a year, covering subdomains, and the domain is on the browser preload list: submitted on 4 September 2026, and shown as preloaded by hstspreload.org when checked on 20 October 2026. A browser that carries the list refuses plaintext here even on its very first visit, before a single request is made.'
       },
       {
         term: 'The rest',
