@@ -81,6 +81,17 @@ updates:
       # npx vue-tsc --noEmit) and typescript-eslint widens its peer range.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # @sentry/vue stays on 10.x by owner decision (2026-10-20). A verified
+      # 11.4.0 commit sits on branch hold/sentry-11 (8728a32), held because
+      # SDK 11 changes what Sentry records: it stores visitor IP addresses
+      # unless dataCollection says otherwise, names every pageload "Pageload"
+      # and makes setMeasurement() a no-op under its default span streaming,
+      # cuts Web Vitals per soft navigation, and puts 12.6% more JavaScript in
+      # front of init(). 10.x keeps getting patches through the npm-minor
+      # group. Lift this with a deliberate 11.x commit, never a Dependabot
+      # major PR.
+      - dependency-name: "@sentry/vue"
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7
 
