@@ -24,11 +24,15 @@ Configured in `backend/fly.toml`:
 Migrations run in a Fly release machine before new app machines start, so
 a deploy whose migration fails never replaces the running version.
 
-Secrets (set once via `fly secrets set`): `SECRET_KEY`,
-`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_OSS_DASHBOARD_PAT`,
-and `DATABASE_URL` (written by `flyctl postgres attach`). `SENTRY_DSN`
-is optional and unset as of 2026-10-10, so backend Sentry is off (see
-Monitoring).
+Secrets (set via `fly secrets set`; names only, as `fly secrets list -a
+dashti-portfolio-backend` showed them on 2026-10-10): `SECRET_KEY`,
+`ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `GITHUB_CLIENT_ID`,
+`GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URI`, `ADMIN_GITHUB_ID`,
+`GITHUB_OSS_DASHBOARD_PAT`, `GITHUB_TOKEN`, `CORS_ORIGINS`,
+`FRONTEND_URL`, `ENVIRONMENT`, `DEBUG`, and `DATABASE_URL` (written by
+`flyctl postgres attach`). Each `fly secrets set` restarts the machine,
+so it is a deploy. `SENTRY_DSN` is optional and unset, so backend Sentry
+is off (see Monitoring).
 
 Operational commands:
 
@@ -48,7 +52,8 @@ CI env vars only reach that remote build when forwarded explicitly with
 footer build stamp and the Sentry release tag), and the `SENTRY_*` trio
 powers sourcemap upload when set.
 
-Security headers (hash-locked CSP, HSTS with preload submitted,
+Security headers (hash-locked CSP, HSTS on the browser preload list,
+which hstspreload.org reported as `preloaded` on 2026-10-20,
 X-Content-Type-Options, X-Frame-Options, Permissions-Policy,
 Referrer-Policy) live in `frontend/vercel.json` and are served by the
 Vercel edge — the backend never sets them for the static site. The CSP's
@@ -71,7 +76,7 @@ rides the frontend lane for the CV scrub guard):
 | Job                 | What it does                                                                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `frontend-quality`  | ESLint, vue-tsc, the vitest unit suite (643 cases on 2026-09-20) with coverage floors, vite-ssg build + dist invariants, Codecov              |
-| `backend-quality`   | ruff lint + format, mypy, the pytest suite (988 collected on 2026-09-20) with an 83% coverage floor, Codecov                                  |
+| `backend-quality`   | hash-pinned install, ruff lint + format, the pytest suite (988 collected on 2026-09-20) with an 83% coverage floor, Codecov; mypy runs in `pre-commit.yml` |
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
 | `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary), action-pin audit, TruffleHog scan of the pushed or PR commits for live-verified secrets   |

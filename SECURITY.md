@@ -53,13 +53,15 @@ Only the current `main` branch is supported. Older versions are not patched.
 
 ## Accepted Dependency-Audit Residuals
 
-Reviewed **2026-09-29**, superseding the 2026-09-20 review and the 2026-08-07
-list before it (see the notes at the end).
+Reviewed **2026-10-20**, superseding the 2026-09-29 and 2026-09-20 reviews and
+the 2026-08-07 list before them (see the notes at the end).
 
-`npm audit` currently reports **6 high entries, which are 2 advisories**: npm
-counts one advisory once per dependency node, so the entry count is not a
-finding count. `npm audit --omit=dev` reports **0** — none of this reaches the
-deployed frontend or the backend.
+`npm audit` currently reports **13 entries (10 high, 3 moderate), which are 4
+advisories**: extract-zip twice, basic-ftp and sprintf-js. npm counts one
+advisory once per dependency node, so the entry count is not a finding count.
+`npm audit --omit=dev` reports **0** — none of this reaches the deployed
+frontend or the backend. All four sit in the dormant `@lhci/cli` 0.15.1 tree,
+and none has a fix that tree can take.
 
 ### extract-zip — arbitrary file write / symlink path traversal (accepted)
 
@@ -106,6 +108,43 @@ Re-checked **2026-09-27**.
   since 2025-06-25. Do not retry the override before checking
   `npm view @puppeteer/browsers@<v> peerDependencies`.
 
+### sprintf-js — denial of service through unbounded precision (accepted)
+
+Checked **2026-10-20**.
+
+- [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c)
+  (CVE-2026-97058), moderate: sprintf-js through 1.1.3 passes unbounded
+  precision values to `toFixed`, `toExponential` and `toPrecision`, so whoever
+  controls a FORMAT STRING can make it throw. **No patched version exists**:
+  1.1.3 is the newest release. Dependabot alert #223 is dismissed with this
+  entry as the reason.
+- One dev-only chain: `@lhci/cli` → `@lhci/utils` → `js-yaml@3.15.2` →
+  `argparse@1.0.10` → `sprintf-js@1.0.3`. **It is installed, never executed.**
+  js-yaml requires `argparse` only in its own command-line tool
+  (`bin/js-yaml.js`); `@lhci/utils` loads js-yaml as a library, and nothing
+  here runs the js-yaml CLI. Even inside argparse, the format strings are
+  argparse's own, not input.
+- **Re-check trigger:** an `@lhci/cli` release above 0.15.1 (a move to js-yaml
+  4 brings argparse 2, which has no dependencies), or a sprintf-js release
+  above 1.1.3.
+
+### basic-ftp — quadratic-time FTP directory-listing parse (accepted)
+
+Checked **2026-10-20**.
+
+- [GHSA-c475-qrg2-pj4r](https://github.com/advisories/GHSA-c475-qrg2-pj4r)
+  (CVE-2026-102990), high: `Client.list()` parses a Unix directory listing
+  with a regex that backtracks quadratically, so a hostile FTP server can burn
+  CPU. Fixed in basic-ftp 6.2.1, which is outside the `^5` range `get-uri`
+  requires, so it cannot be taken in place. No Dependabot alert is open for it.
+- One dev-only chain: `@lhci/cli` → `proxy-agent@6.5.0` →
+  `pac-proxy-agent@7.2.0` → `get-uri@6.0.5` → `basic-ftp@5.3.1`. `get-uri`
+  uses basic-ftp only to fetch `ftp://` URLs, and `pac-proxy-agent` fetches a
+  proxy auto-config file only when a PAC proxy is configured. Nothing here
+  configures one, so no FTP listing is ever parsed.
+- **Re-check trigger:** the same `@lhci/cli` release that moves it off
+  `proxy-agent` 6.x (see extract-zip above).
+
 ### Standing `overrides` that must not be pruned
 
 `frontend/package.json` pins `tmp ^0.2.7`, `uuid ^11.1.1`, `qs ^6.16.0`,
@@ -116,6 +155,12 @@ release above 0.15.1 whose published deps no longer name `tmp ^0.1.0`.
 
 ### What changed since 2026-08-07, and the lesson
 
+- **2026-10-12:** brace-expansion
+  ([GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr))
+  was fixed in-range in all three copies (`cbf49af`), and compression,
+  fast-uri, postcss-selector-parser, proxy-addr and source-map-js were moved to
+  patched releases (`a24986e`). source-map-js was the only finding that had
+  reached `npm audit --omit=dev`.
 - **brace-expansion (GHSA-mh99-v99m-4gvg)** — the old list's "15 high entries,
   one advisory" item is **gone**, fixed in-range. It is not accepted any more; it
   no longer exists.

@@ -57,7 +57,7 @@ jobs:
 
           ### 1. Postgres dump
           - [ ] Download the newest `pg-backup-*` artifact from the DB Backup workflow
-          - [ ] `unzip` it, then `age -d -i age-backup-key.txt portfolio-YYYYMMDD.dump.age > portfolio.dump`
+          - [ ] `unzip` it, then `age -d -i <age identity file> portfolio-YYYYMMDD.dump.age > portfolio.dump`
           - [ ] `pg_restore --list portfolio.dump` lists the expected tables
           - [ ] Restore into a scratch database and confirm row counts on
                 `companies`, `education`, `skills`, `documents`, `cv_profile`
@@ -65,17 +65,22 @@ jobs:
 
           ### 2. Uploads volume
           - [ ] Download the newest `uploads-backup-*` artifact
-          - [ ] `age -d -i age-backup-key.txt uploads-YYYYMMDD.tar.gz.age > uploads.tar.gz`
-          - [ ] `tar -tzf uploads.tar.gz` lists every PDF currently linked from the site
-          - [ ] Open one extracted PDF and confirm it renders
+          - [ ] `age -d -i <age identity file> uploads-YYYYMMDD.tar.gz.age > uploads.tar.gz`
+          - [ ] `tar -tzf uploads.tar.gz` lists every runtime-uploaded file. It may
+                legitimately be empty: the two thesis PDFs are git-tracked under
+                `backend/static/documents/` and served from the image, not the volume
+          - [ ] If it holds any PDF, open one and confirm it renders
 
           ### 3. Cross-check
-          - [ ] Every `documents.file_path` in the restored DB exists in the uploads tar
-                (a DB row pointing at a missing file is the failure mode this pair exists to catch)
+          - [ ] Every `documents.file_path` in the restored DB is either git-tracked under
+                `backend/static/documents/` or present in the uploads tar. A path in
+                neither is the failure mode this pair exists to catch
 
           ### 4. Key custody
           - [ ] The age private key is still readable from the password manager
-          - [ ] Its recipient still matches the one in `db-backup.yml`
+          - [ ] Its recipient still matches the one in `db-backup.yml`:
+                `age-keygen -y <age identity file> > recipient.txt`, then compare.
+                Redirect the output: on a malformed file the error quotes the key
 
           If any step fails, that is a real incident: fix the backup path before
           closing this issue.
