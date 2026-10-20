@@ -149,11 +149,12 @@ jobs:
           cache: 'pip'
           cache-dependency-path: backend/requirements*.txt
 
-      - name: Check uv.lock matches the requirements files
+      - name: Check uv.lock matches pyproject.toml and the requirements files
         # The installs below read only requirements*.txt, so nothing else in
         # CI reads backend/uv.lock: a bump that skips `uv lock` leaves it
         # stale in silence until the next `uv export` (gen-dev-requirements.py
-        # runs one) surfaces the drift as a large unrelated diff. Standard
+        # runs one) surfaces the drift as a large unrelated diff. The guard
+        # also holds pyproject.toml's exact pins to the lock. Standard
         # library only, so it runs before anything is installed.
         working-directory: .
         run: python scripts/check-lock-parity.py backend
@@ -161,12 +162,15 @@ jobs:
       - name: Install dependencies
         # Every install below runs under --require-hashes, including the pip
         # bootstrap itself: a version pin alone still trusts whatever artifact
-        # the index serves for that version. Regenerate the three files with
+        # the index serves for that version. Regenerate the lock and the
+        # requirements files together, in backend/:
+        #   uv lock
         #   uv pip compile pyproject.toml -o requirements.txt --generate-hashes
         #     --python-platform x86_64-unknown-linux-gnu --python-version 3.14
         #   (the platform flags are not optional: without them the file is
         #    resolved for whoever ran the command, and a Windows run silently
         #    drops uvloop from the image that actually serves this app)
+        # then, from the repository root:
         #   python scripts/gen-dev-requirements.py backend
         #   (requirements-pip.txt: see the refresh command in its header)
         # requirements-dev.txt is only the delta over requirements.txt, so it

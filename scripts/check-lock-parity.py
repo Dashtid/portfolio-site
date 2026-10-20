@@ -1,4 +1,4 @@
-"""Fail when backend/uv.lock disagrees with the hash-pinned requirements files.
+"""Fail when backend/uv.lock disagrees with pyproject.toml or the requirements files.
 
 CI installs the backend from requirements.txt and requirements-dev.txt under
 --require-hashes, and nothing else in CI reads uv.lock. A bump that moves
@@ -9,10 +9,13 @@ scripts/gen-dev-requirements.py does).
 
 This guard needs nothing but the standard library (tomllib, Python 3.11+), so
 CI runs it before installing anything. It fails when any package pinned in
-either requirements file is absent from uv.lock or locked at another version.
-It reads only the pins: hashes are pip's job at install time, and lock entries
-the requirements files do not pin (the project itself, packages for other
-platforms) are not its concern.
+either requirements file, or pinned exactly (`name==version`) in
+pyproject.toml's dependencies or optional dependencies, is absent from uv.lock
+or locked at another version. A pyproject.toml range such as `>=2.7.0` is not
+checked: it names no single version, and comparing ranges needs a version
+parser the standard library does not have. It reads only the pins: hashes are
+pip's job at install time, and lock entries nothing pins (the project itself,
+packages for other platforms) are not its concern.
 
 Usage, from the repository root:
     python scripts/check-lock-parity.py [backend-dir]
@@ -32,6 +35,13 @@ REQUIREMENT_FILES = ("requirements.txt", "requirements-dev.txt")
 #     colorama==0.4.6 ; sys_platform == 'win32' \
 # Extras are tolerated (`name[extra]==1.0`) although uv does not emit them.
 PIN_RE = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?==([^\s;\\]+)")
+
+# An exact pin in pyproject.toml, e.g. "uvicorn[standard]==0.54.0", with an
+# optional environment marker. Anything else (a range, several specifiers, a
+# URL) does not match and is not an exact pin.
+PYPROJECT_PIN_RE = re.compile(
+    r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(?:\[[^\]]*\])?\s*==\s*([^\s;,]+)\s*(?:;.*)?$"
+)
 
 REGENERATE = """\
 Regenerate the lock and both requirements files together. In backend/:
@@ -58,14 +68,43 @@ def read_pins(path: Path) -> list[tuple[int, str, str]]:
     pins: list[tuple[int, str, str]] = []
     for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         stripped = line.strip()
-        # Blank lines, comments, and the indented `--hash` / `# via`
-        # continuation lines that belong to the pin above them.
-        if not stripped or stripped.startswith("#") or line[0].isspace():
+        if not stripped or stripped.startswith("#"):
             continue
+        if line[0].isspace():
+            # The `--hash` continuation lines that belong to the pin above.
+            # Any other indented line is NOT harmless: pip reads an indented
+            # `pkg==1.0` as a requirement of its own, so skipping it would
+            # let an unlocked package through.
+            if stripped.startswith("--hash="):
+                continue
+            raise SystemExit(
+                f"[-] {path}:{lineno}: indented line that is not a --hash continuation: {line!r}"
+            )
         match = PIN_RE.match(line)
         if match is None:
             raise SystemExit(f"[-] {path}:{lineno}: not an exact `name==version` pin: {line!r}")
         pins.append((lineno, normalise(match.group(1)), match.group(2)))
+    return pins
+
+
+def read_pyproject_pins(path: Path) -> list[tuple[str, str, str]]:
+    """Return (table, normalised name, version) for every exact pin in pyproject.toml.
+
+    Reads [project] dependencies and every [project.optional-dependencies]
+    group. Requirements that are not exact pins are skipped (see the module
+    docstring).
+    """
+    with path.open("rb") as fh:
+        project = tomllib.load(fh).get("project", {})
+    groups: list[tuple[str, list[str]]] = [("dependencies", project.get("dependencies", []))]
+    for group, requirements in project.get("optional-dependencies", {}).items():
+        groups.append((f"optional-dependencies.{group}", requirements))
+    pins: list[tuple[str, str, str]] = []
+    for table, requirements in groups:
+        for requirement in requirements:
+            match = PYPROJECT_PIN_RE.match(requirement)
+            if match is not None:
+                pins.append((table, normalise(match.group(1)), match.group(2)))
     return pins
 
 
@@ -90,7 +129,9 @@ def main() -> int:
     backend = Path(sys.argv[1]) if len(sys.argv) > 1 else default_backend
 
     lock_path = backend / "uv.lock"
-    missing = [p for p in (lock_path, *(backend / f for f in REQUIREMENT_FILES)) if not p.is_file()]
+    pyproject_path = backend / "pyproject.toml"
+    expected = (lock_path, pyproject_path, *(backend / f for f in REQUIREMENT_FILES))
+    missing = [p for p in expected if not p.is_file()]
     if missing:
         print(f"[-] missing: {', '.join(str(p) for p in missing)}")
         return 1
@@ -117,8 +158,22 @@ def main() -> int:
                 have = ", ".join(sorted(versions))
                 problems.append(f"{path}:{lineno}: {name}=={version} but uv.lock has {have}")
 
+    pyproject_pins = read_pyproject_pins(pyproject_path)
+    if not pyproject_pins:
+        problems.append(f"{pyproject_path}: no exact `name==version` pins found")
+    counts.append(f"{len(pyproject_pins)} in pyproject.toml")
+    for table, name, version in pyproject_pins:
+        versions = locked.get(name)
+        if versions is None:
+            problems.append(
+                f"{pyproject_path} [{table}]: {name}=={version} is not in uv.lock at all"
+            )
+        elif version not in versions:
+            have = ", ".join(sorted(versions))
+            problems.append(f"{pyproject_path} [{table}]: {name}=={version} but uv.lock has {have}")
+
     if problems:
-        print(f"[-] {lock_path} does not match the requirements files:")
+        print(f"[-] {lock_path} does not match pyproject.toml or the requirements files:")
         for problem in problems:
             print(f"    {problem}")
         print()
