@@ -26,13 +26,12 @@
  *    same reason (see loadSentry).
  *
  * [!] Deferring would normally open a window in which errors are lost, and
- * here that window is not covered by anything else: `VITE_ERROR_TRACKING_ENABLED`
- * is NOT forwarded to the Vercel build (ci-cd.yml and rebake-frontend.yml
- * forward VITE_APP_VERSION and VITE_SENTRY_DSN as the only VITE_* values, plus
- * the SENTRY_AUTH_TOKEN/ORG/PROJECT upload trio), so `utils/errorTracking` is
- * inert in production and Sentry is the ONLY capture there. Hence the buffer
- * below: window `error` and `unhandledrejection` listeners go up synchronously,
- * and everything they catch is replayed into Sentry the moment it initialises.
+ * here that window is not covered by anything else: Sentry is the frontend's
+ * ONLY error capture. (A second, home-grown tracker, `utils/errorTracking`,
+ * shipped switched off in production because its flag was never forwarded to
+ * the Vercel build, and was removed on 2026-10-20.) Hence the buffer below:
+ * window `error` and `unhandledrejection` listeners go up synchronously, and
+ * everything they catch is replayed into Sentry the moment it initialises.
  * Do not remove the buffer while keeping the deferral.
  */
 

@@ -15,7 +15,6 @@ export default defineConfig({
     })
   ],
   define: {
-    'import.meta.env.VITE_ERROR_TRACKING_ENABLED': JSON.stringify('true'),
     'import.meta.env.VITE_METRICS_ENABLED': JSON.stringify('true'),
     'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:8001'),
     // Deterministic build-stamp values (vite.config.ts derives real ones;
@@ -28,7 +27,6 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./tests/setup.ts'],
     env: {
-      VITE_ERROR_TRACKING_ENABLED: 'true',
       VITE_METRICS_ENABLED: 'true',
       VITE_API_URL: 'http://localhost:8001'
     },

@@ -9,12 +9,6 @@ vi.mock('@/utils/logger', () => ({
   errorLogger: { error: vi.fn() }
 }))
 
-// errorTracker is enabled under Vitest and would post every caught error to
-// the API; its own spec covers it. Here only the Sentry path is under test.
-vi.mock('@/utils/errorTracking', () => ({
-  errorTracker: { handleVueError: vi.fn() }
-}))
-
 // The SDK chunk that utils/sentry loads on idle. captureException is the call
 // that puts an event on the wire, so it is what the reporting tests count.
 const sdk = vi.hoisted(() => ({ init: vi.fn(), captureException: vi.fn() }))
@@ -279,6 +273,26 @@ describe('ErrorBoundary reporting to Sentry', () => {
     ]
     expect(error).toBe(thrown)
     expect(hint.extra).toEqual({ componentName: 'ThrowingChild', errorInfo: expect.any(String) })
+    expect(appErrorHandler).not.toHaveBeenCalled()
+  })
+
+  it('reports a thrown non-Error value in a production build', async () => {
+    // A production bundle has DEV false, so the boundary never reads
+    // err.message for its details pane. Nothing else in the hook may read it
+    // either: the removed errorTracker did, inside the same try as
+    // captureException, so `throw null` lost its Sentry report.
+    vi.stubEnv('DEV', false)
+    thrown = null as unknown as Error
+    await loadSentry()
+    const appErrorHandler = vi.fn<AppErrorHandler>()
+
+    const wrapper = mountAroundThrowingChild(appErrorHandler)
+    await wrapper.vm.$nextTick()
+    await settle()
+
+    expect(wrapper.find('.error-boundary').exists()).toBe(true)
+    expect(sdk.captureException).toHaveBeenCalledTimes(1)
+    expect(sdk.captureException.mock.calls[0][0]).toBeNull()
     expect(appErrorHandler).not.toHaveBeenCalled()
   })
 })

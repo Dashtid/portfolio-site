@@ -5,8 +5,7 @@
  *  - no `replayIntegration` (it was ~60% of a 150 KB gzip chunk on every
  *    public page),
  *  - no error lost in the idle window the deferral opens, which matters
- *    because `VITE_ERROR_TRACKING_ENABLED` is not forwarded to the Vercel
- *    build, so Sentry is production's ONLY error capture, and
+ *    because Sentry is the frontend's ONLY error capture, and
  *  - no error from code the site never shipped reaching Sentry: init() wires
  *    the real foreign-code beforeSend (its rule is pinned against the SDK's
  *    real stack parser in sentryForeignCode.spec.ts) and turns off the SDK's

@@ -45,7 +45,6 @@
 import { ref, watch, onErrorCaptured, type ComponentPublicInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { errorLogger } from '@/utils/logger'
-import { errorTracker } from '@/utils/errorTracking'
 import { captureException } from '@/utils/sentry'
 
 interface Props {
@@ -112,7 +111,6 @@ onErrorCaptured((err: Error, instance: ComponentPublicInstance | null, info: str
   // idle window. Wrapped so reporting failures can't recurse into the
   // boundary.
   try {
-    errorTracker.handleVueError(err, instance, info)
     captureException(err, {
       componentName: (instance as { $options?: { name?: string } })?.$options?.name,
       errorInfo: info

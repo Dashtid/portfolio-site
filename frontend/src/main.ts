@@ -17,7 +17,6 @@ import './styles/tailwind.css'
 import './style.css'
 import App from './App.vue'
 import analyticsService from './services/analytics'
-import { errorTracker } from './utils/errorTracking'
 import { initSentry, captureException } from './utils/sentry'
 
 // D3-SEC-03: vite-ssg hardcodes its state transport as an EXECUTABLE
@@ -143,12 +142,6 @@ export const createApp = ViteSSG(
       // swallows its own failures, so there is nothing to await or catch.
       initSentry(app, router)
 
-      // Initialize error tracking (custom implementation, works alongside Sentry).
-      // [!] Inert in production: VITE_ERROR_TRACKING_ENABLED is not among the
-      // vars ci-cd.yml and rebake-frontend.yml forward to the Vercel build, so
-      // `enabled` is false there and Sentry is production's only error capture.
-      errorTracker.init()
-
       // Global error handler for Vue
       app.config.errorHandler = (
         err: unknown,
@@ -159,8 +152,6 @@ export const createApp = ViteSSG(
           console.error('Vue Error:', err)
         }
         const error = err instanceof Error ? err : new Error(String(err))
-
-        errorTracker.handleVueError(error, instance, info)
 
         // Unconditional: captureException buffers while Sentry is still loading.
         // Gating on isSentryInitialized() here would silently drop every Vue

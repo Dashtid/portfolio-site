@@ -30,7 +30,6 @@ from app.api.v1 import (
     cv,
     documents,
     education,
-    errors,
     github,
     health,
     metrics,
@@ -593,7 +592,6 @@ app.mount(
 )
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
 app.include_router(analytics.router, prefix="/api/v1")
-app.include_router(errors.router, prefix="/api/v1")
 
 
 # Root endpoint

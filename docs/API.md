@@ -27,7 +27,6 @@ since there are no third-party API consumers.
 | `/api/v1/admin/cv/profile`, `/api/v1/admin/cv/export`    | GET, PUT / GET         | Admin (CV profile + JSON Resume export)                                                                                                       |
 | `/api/v1/admin/oss/*`                                    | GET, POST              | Admin (OSS contribution dashboard + refresh)                                                                                                  |
 | `/api/v1/metrics/*`                                      | GET                    | Admin (performance counters)                                                                                                                  |
-| `/api/v1/errors`                                         | POST                   | Public (frontend error reports, rate-limited)                                                                                                 |
 | `/api/v1/health`, `/api/v1/health/{ready,live,detailed}` | GET                    | Public (`ready` probes the DB)                                                                                                                |
 
 ## Authentication
