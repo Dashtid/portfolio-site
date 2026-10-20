@@ -146,7 +146,7 @@ repos:
   # block, which is where Python tooling config lives; passing them here would
   # silently override a repository that meant something different.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.9
+    rev: v0.17.0
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix]
@@ -211,12 +211,12 @@ repos:
   # stable releases. The executed prettier version stays pinned by
   # additional_dependencies either way.
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.9
+    rev: v3.9.10
     hooks:
       - id: prettier
         files: ^frontend/.*\.(js|ts|vue|json|css|scss|md)$
         additional_dependencies:
-          - prettier@3.9.9
+          - prettier@3.9.10
 
   # LOCAL PREREQUISITE: run `npm ci` in frontend/ before your first commit that
   # touches a .vue, .ts or .js file. frontend/eslint.config.js imports @eslint/js
@@ -237,7 +237,7 @@ repos:
   # answers, and the hook was linting with a different parser than the gate that
   # blocks the merge. Pin what the lock holds at the moment of the re-roll.
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.11.0
+    rev: v10.12.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|ts|vue)$
@@ -252,21 +252,24 @@ repos:
         exclude: ^frontend/public/sw\.js$
         args: ['--fix', '--config', 'frontend/eslint.config.js']
         additional_dependencies:
-          - eslint@10.11.0
+          - eslint@10.12.0
           - '@eslint/js@10.0.1'
-          - '@typescript-eslint/eslint-plugin@8.70.1'
-          - '@typescript-eslint/parser@8.70.1'
+          - '@typescript-eslint/eslint-plugin@8.71.1'
+          - '@typescript-eslint/parser@8.71.1'
           - eslint-plugin-vue@10.11.1
           - eslint-plugin-prettier@5.5.6
           - eslint-config-prettier@10.1.8
           - vue-eslint-parser@10.4.0
           - typescript@5.9.3
 
-  # mypy is held at the 1.x line on purpose: 2.0 turns --strict-bytes and
-  # --local-partial-types on by default and WILL surface new errors on
-  # unchanged code. Moving to 2.x is a per-repo migration, not an autoupdate.
+  # mypy follows backend/pyproject.toml's dev pin (mypy==2.4.0 since
+  # 2026-10-20). This hook is the only mypy CI runs (pre-commit.yml), so a
+  # different version here makes CI and a local `mypy app` disagree. 2.0 turned
+  # --strict-bytes and --local-partial-types on by default; the backend passed
+  # both unchanged (2026-10-20: this hook at v2.4.0 over every backend file, and
+  # `mypy app` 2.4.0 in the full venv). Move this rev with the dev pin.
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.20.2
+    rev: v2.4.0
     hooks:
       - id: mypy
         files: ^backend/.*\.py$
