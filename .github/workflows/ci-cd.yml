@@ -53,6 +53,8 @@ jobs:
               - 'backend/**'
               - 'requirements*.txt'
               - '.github/workflows/ci-cd.yml'
+              # backend-quality runs this guard, so a change to it must too.
+              - 'scripts/check-lock-parity.py'
 
   # Frontend Quality Checks
   frontend-quality:
@@ -146,6 +148,15 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
           cache-dependency-path: backend/requirements*.txt
+
+      - name: Check uv.lock matches the requirements files
+        # The installs below read only requirements*.txt, so nothing else in
+        # CI reads backend/uv.lock: a bump that skips `uv lock` leaves it
+        # stale in silence until the next `uv export` (gen-dev-requirements.py
+        # runs one) surfaces the drift as a large unrelated diff. Standard
+        # library only, so it runs before anything is installed.
+        working-directory: .
+        run: python scripts/check-lock-parity.py backend
 
       - name: Install dependencies
         # Every install below runs under --require-hashes, including the pip
