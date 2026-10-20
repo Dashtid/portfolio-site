@@ -98,7 +98,6 @@ Supporting workflows:
 | `codeql.yml`          | push + schedule             | CodeQL SAST for JS/TS + Python                                       |
 | `scorecard.yml`       | push + weekly               | OpenSSF Scorecard                                                    |
 | `pre-commit.yml`      | push / PR                   | The shared pre-commit hook set against the full tree                 |
-| `uptime.yml`          | every 15 min                | Probes the live site and API                                         |
 | `db-backup.yml`       | nightly 03:30 UTC           | Postgres dump, encrypted to a public key before storage              |
 | `restore-drill.yml`   | quarterly (Jan/Apr/Jul/Oct) | Files a restore-checklist issue — backups are rehearsed, not assumed |
 | `rebake-frontend.yml` | manual                      | Re-runs the SSG bake so CMS edits reach the prerendered pages        |
@@ -107,10 +106,17 @@ Supporting workflows:
 
 ## Monitoring
 
-- **Fly health checks**: `[[http_service.checks]]` probes
-  `/api/v1/health` every 30 s; `/api/v1/health/ready` adds a DB
-  round-trip and is what the uptime workflow watches.
-- **Uptime**: the `uptime.yml` workflow, every 15 minutes from Actions.
+- **Fly health checks**: `[[http_service.checks]]` in `backend/fly.toml`
+  GETs `/api/v1/health/ready` every 30 s. It runs a `SELECT 1`, so a
+  database outage fails the check, not only a dead process.
+- **Uptime**: UptimeRobot watches `https://dashti.se` and
+  `HEAD /api/v1/health/ready` from outside Fly, and emails the owner on
+  DOWN and again on UP. It caught the 2026-10-16 Postgres crash, when the
+  API was not ready for about 16 minutes (DOWN 18:01, UP 18:17 UTC). The
+  repository's own
+  `uptime.yml` probe was retired on 2026-10-20: GitHub ran its hourly
+  schedule once between 17:00 and 20:00 UTC that day, so it never saw
+  that outage.
 - **Sentry**: live on the **frontend**. The `VITE_SENTRY_DSN` GitHub
   secret (set 2026-08-16) is forwarded with `--build-env` by `ci-cd.yml`
   and `rebake-frontend.yml`; without it the whole init is
