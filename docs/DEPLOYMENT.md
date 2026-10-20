@@ -75,8 +75,8 @@ rides the frontend lane for the CV scrub guard):
 
 | Job                 | What it does                                                                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend-quality`  | ESLint, vue-tsc, the vitest unit suite (643 cases on 2026-09-20) with coverage floors, vite-ssg build + dist invariants, Codecov              |
-| `backend-quality`   | hash-pinned install, ruff lint + format, the pytest suite (988 collected on 2026-09-20) with an 83% coverage floor, Codecov; mypy runs in `pre-commit.yml` |
+| `frontend-quality`  | ESLint, vue-tsc, the vitest unit suite (664 tests on 2026-10-20) with coverage floors, vite-ssg build + dist invariants, Codecov              |
+| `backend-quality`   | `scripts/check-lock-parity.py` (uv.lock against pyproject.toml's exact pins and both requirements files), hash-pinned install, ruff lint + format, the pytest suite (961 collected on 2026-10-20) with an 83% coverage floor, Codecov; mypy runs in `pre-commit.yml` |
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
 | `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary), action-pin audit, TruffleHog scan of the pushed or PR commits for live-verified secrets   |

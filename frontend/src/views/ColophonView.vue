@@ -90,7 +90,8 @@
 
         <div class="mt-12 border-t border-slate-200 pt-8 dark:border-slate-800">
           <p class="font-mono text-xs text-slate-500 dark:text-slate-400">
-            Claims on this page last verified against the live site on {{ VERIFIED_ON }}.
+            Claims on this page last verified against the live site on {{ VERIFIED_ON }}, unless a
+            claim gives its own date.
           </p>
           <router-link
             to="/"
