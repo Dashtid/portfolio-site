@@ -46,7 +46,7 @@ import { ref, watch, onErrorCaptured, type ComponentPublicInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { errorLogger } from '@/utils/logger'
 import { errorTracker } from '@/utils/errorTracking'
-import { captureException, isSentryInitialized } from '@/utils/sentry'
+import { captureException } from '@/utils/sentry'
 
 interface Props {
   title?: string
@@ -101,19 +101,22 @@ onErrorCaptured((err: Error, instance: ComponentPublicInstance | null, info: str
   hasError.value = true
   errorDetails.value = import.meta.env.DEV ? `${err.message}\n\nComponent: ${info}` : null
 
-  // Report here, NOT via propagation: `return false` below stops the error
-  // from reaching main.ts's app.config.errorHandler (the only other Sentry
-  // wiring), so without these calls every boundary-caught production error
-  // was invisible (D3-FE-02). Wrapped so reporting failures can't recurse
-  // into the boundary.
+  // Report here, NOT via propagation: `return false` below makes Vue return
+  // before app.config.errorHandler, so neither main.ts's handler nor the
+  // wrapper the Sentry SDK puts around it once loaded ever sees this error,
+  // and nothing reaches window.onerror either. Without this call every
+  // boundary-caught production error was invisible (D3-FE-02); with it, this
+  // is the error's one report. Unconditional, like main.ts's: captureException
+  // buffers while Sentry is still loading and sends the error once it is up.
+  // Gating it on isSentryInitialized() dropped every error caught in that
+  // idle window. Wrapped so reporting failures can't recurse into the
+  // boundary.
   try {
     errorTracker.handleVueError(err, instance, info)
-    if (isSentryInitialized()) {
-      captureException(err, {
-        componentName: (instance as { $options?: { name?: string } })?.$options?.name,
-        errorInfo: info
-      })
-    }
+    captureException(err, {
+      componentName: (instance as { $options?: { name?: string } })?.$options?.name,
+      errorInfo: info
+    })
   } catch {
     // Reporting must never take down the fallback UI
   }
