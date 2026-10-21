@@ -175,6 +175,12 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         async def counting_receive():
             nonlocal bytes_seen, oversize
             message = await original_receive()
+            # After the terminal frame below, ASGI allows only http.disconnect,
+            # so drop the rest of the body until it comes. Anything listening
+            # for the disconnect (starlette 1.8's FileResponse does) would
+            # otherwise get a body chunk, and BaseHTTPMiddleware raises on it.
+            while oversize and message.get("type") == "http.request":
+                message = await original_receive()
             if message.get("type") == "http.request":
                 body = message.get("body", b"")
                 bytes_seen += len(body)
