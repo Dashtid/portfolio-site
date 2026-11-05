@@ -19,8 +19,15 @@
  * back costs bytes nobody measures, errors dropped before init simply never
  * appear in a dashboard nobody is watching at that second, and a filter that
  * is unwired or undermined mails the next bot's error as a new issue.
+ *
+ * The ignoreErrors entries are pinned here too, one test each, and the
+ * service worker one also against the SDK's real inbound filter: its text
+ * reaches Sentry as whatever the SDK builds from Chrome's DOMException, and
+ * a pattern tested only against strings would test what the author believed
+ * that event looks like.
  */
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import type { ErrorEvent as SentryErrorEvent } from '@sentry/vue'
 
 const init = vi.fn()
 const captureExceptionSpy = vi.fn()
@@ -56,6 +63,44 @@ vi.mock('web-vitals', () => ({
 }))
 
 const DSN = 'https://publickey@o0.ingest.de.sentry.io/1'
+
+/*
+ * Chrome's service worker texts, as Chromium 156 rejected register() and
+ * update() with them on 2026-11-05 against a production build (its scope and
+ * script URLs swapped for the site's).
+ */
+const SW = "scope ('https://dashti.se/') with script ('https://dashti.se/sw.js')"
+const NEVER_ARRIVED = 'An unknown error occurred when fetching the script.'
+/** The 2026-11-05 alert's text. */
+const REGISTER_NEVER_ARRIVED = `Failed to register a ServiceWorker for ${SW}: ${NEVER_ARRIVED}`
+const UPDATE_NEVER_ARRIVED = `Failed to update a ServiceWorker for ${SW}: ${NEVER_ARRIVED}`
+const REGISTER_404 = `Failed to register a ServiceWorker for ${SW}: A bad HTTP response code (404) was received when fetching the script.`
+
+/**
+ * Node's own DOMException. happy-dom replaces the global with a plain Error
+ * subclass ("[object Error]", no legacy code), from which the SDK builds a
+ * different event than from Chrome's, so the platform class is taken from an
+ * API that throws one.
+ */
+const PlatformDOMException = ((): typeof DOMException => {
+  try {
+    structuredClone(() => {})
+  } catch (error) {
+    return (error as DOMException).constructor as typeof DOMException
+  }
+  throw new Error('structuredClone accepted a function')
+})()
+
+/**
+ * A DOMException as Chrome rejects register() with one: Chromium 156 gave the
+ * page an AbortError tagged [object DOMException], code 20, with NO stack
+ * property, which is why the SDK reports it as "Error: AbortError: ...".
+ */
+function chromeDomException(message: string, name: string): DOMException {
+  const exception = new PlatformDOMException(message, name)
+  delete (exception as { stack?: string }).stack
+  return exception
+}
 
 const fakeApp = {} as unknown as import('vue').App
 const fakeRouter = {} as unknown as import('vue-router').Router
@@ -182,7 +227,8 @@ describe('utils/sentry', () => {
       await runIdleAndSettle(idle)
 
       const options = init.mock.calls[0][0] as { ignoreErrors: RegExp[] }
-      expect(options.ignoreErrors).toHaveLength(1)
+      // Two entries, each pinned by a test of its own: a third needs one too.
+      expect(options.ignoreErrors).toHaveLength(2)
       const [scanner] = options.ignoreErrors
       expect(
         scanner.test(
@@ -355,6 +401,130 @@ describe('utils/sentry', () => {
         await vi.waitFor(() => expect(options.beforeSend(bot)).toBe(bot))
         expect(sentry.isSentryInitialized()).toBe(true)
       })
+    })
+  })
+
+  describe('service worker scripts the network never delivered', () => {
+    it("ignores Chrome's text for them, from register() and update(), and nothing else", async () => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+
+      const options = init.mock.calls[0][0] as { ignoreErrors: RegExp[] }
+      const neverArrived = options.ignoreErrors[1]
+      expect(neverArrived).toBeInstanceOf(RegExp)
+      // Every form the SDK tests: the event message, the exception value and
+      // its `type: value`.
+      for (const text of [
+        // The alert: an AbortError (a cancelled request) with no stack, sent
+        // as type Error with the name inside the value, and as the message.
+        `AbortError: ${REGISTER_NEVER_ARRIVED}`,
+        `Error: AbortError: ${REGISTER_NEVER_ARRIVED}`,
+        // Offline, a refused, reset or blocked connection, a truncated or
+        // undecodable body: a TypeError.
+        REGISTER_NEVER_ARRIVED,
+        `TypeError: ${REGISTER_NEVER_ARRIVED}`,
+        `TypeError: ${UPDATE_NEVER_ARRIVED}`,
+        `Error: AbortError: ${UPDATE_NEVER_ARRIVED}`,
+        // Any origin: a preview deployment, a local build.
+        `TypeError: Failed to register a ServiceWorker for scope ('http://localhost:4173/') with script ('http://localhost:4173/sw.js'): ${NEVER_ARRIVED}`
+      ]) {
+        expect(neverArrived.test(text), text).toBe(true)
+      }
+      for (const text of [
+        // The site's own failures, each with Chrome's text, still report.
+        `TypeError: ${REGISTER_404}`,
+        `TypeError: Failed to update a ServiceWorker for ${SW}: A bad HTTP response code (404) was received when fetching the script.`,
+        `Error: SecurityError: Failed to register a ServiceWorker for ${SW}: The script has an unsupported MIME type ('text/html').`,
+        `Error: SecurityError: Failed to register a ServiceWorker for ${SW}: The script does not have a MIME type.`,
+        `Error: SecurityError: Failed to register a ServiceWorker for ${SW}: The script resource is behind a redirect, which is disallowed.`,
+        `TypeError: Failed to update a ServiceWorker for ${SW}: The script resource is behind a redirect, which is disallowed.`,
+        `TypeError: Failed to register a ServiceWorker for ${SW}: ServiceWorker script evaluation failed`,
+        `Error: SecurityError: Failed to register a ServiceWorker for ${SW}: An SSL certificate error occurred when fetching the script.`,
+        "Error: SecurityError: Failed to register a ServiceWorker: The origin of the provided scriptURL ('https://other.example') does not match the current origin ('https://dashti.se').",
+        "TypeError: Failed to register a ServiceWorker: The URL protocol of the script ('data:text/javascript,1') is not supported.",
+        // Nor anything else: the sentence without the call that raised it,
+        // the sentence with more after it, a failed fetch.
+        NEVER_ARRIVED,
+        `${REGISTER_NEVER_ARRIVED} Retrying.`,
+        'TypeError: Failed to fetch'
+      ]) {
+        expect(neverArrived.test(text), text).toBe(false)
+      }
+    })
+
+    it("drops what the real SDK builds from Chrome's rejection, and keeps a 404's", async () => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+      const { ignoreErrors } = init.mock.calls[0][0] as { ignoreErrors: RegExp[] }
+
+      // The real SDK, unmocked: its event builder, and its inbound filter
+      // (the default integrations carry the same filter under its deprecated
+      // name, InboundFilters) fed this init's ignoreErrors.
+      const real = await vi.importActual<typeof import('@sentry/vue')>('@sentry/vue')
+      let built: SentryErrorEvent | undefined
+      let delivered = 0
+      const client = new real.BrowserClient({
+        dsn: DSN,
+        ignoreErrors,
+        sendClientReports: false,
+        stackParser: real.defaultStackParser,
+        integrations: [
+          // The event as built, then the filter.
+          {
+            name: 'Recorder',
+            processEvent: event => {
+              built = event as SentryErrorEvent
+              return event
+            }
+          },
+          real.eventFiltersIntegration()
+        ],
+        // Whatever gets this far passed the filter. Nothing is sent anywhere.
+        beforeSend: () => {
+          delivered++
+          return null
+        },
+        transport: () => ({ send: () => Promise.resolve({}), flush: () => Promise.resolve(true) })
+      })
+      client.init()
+      const capture = async (exception: unknown): Promise<SentryErrorEvent | undefined> => {
+        built = undefined
+        delivered = 0
+        client.captureException(exception)
+        await client.flush(2000)
+        return built
+      }
+
+      const alert = chromeDomException(REGISTER_NEVER_ARRIVED, 'AbortError')
+      expect([Object.prototype.toString.call(alert), alert.code, 'stack' in alert]).toEqual([
+        '[object DOMException]',
+        20,
+        false
+      ])
+      const alertEvent = await capture(alert)
+      // Exactly the alert's event, and dropped.
+      expect(alertEvent?.exception?.values?.[0]).toMatchObject({
+        type: 'Error',
+        value: `AbortError: ${REGISTER_NEVER_ARRIVED}`
+      })
+      expect(alertEvent?.tags).toEqual({ 'DOMException.code': '20' })
+      expect(delivered).toBe(0)
+
+      // Any other network failure: Chrome's TypeError, with a stack. Dropped.
+      expect(
+        (await capture(new TypeError(REGISTER_NEVER_ARRIVED)))?.exception?.values?.[0]
+      ).toMatchObject({ type: 'TypeError', value: REGISTER_NEVER_ARRIVED })
+      expect(delivered).toBe(0)
+
+      // A 404 is the site's own failure, kept as Chrome raises it and in the
+      // alert's shape alike: the text decides, not the type.
+      expect((await capture(new TypeError(REGISTER_404)))?.exception?.values?.[0]).toMatchObject({
+        type: 'TypeError',
+        value: REGISTER_404
+      })
+      expect(delivered).toBe(1)
+      await capture(chromeDomException(REGISTER_404, 'AbortError'))
+      expect(delivered).toBe(1)
     })
   })
 

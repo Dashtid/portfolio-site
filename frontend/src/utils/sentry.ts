@@ -324,10 +324,25 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
       ],
       tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
       tracePropagationTargets: ['localhost', /^https:\/\/dashti\.se/, /^https:\/\/api\.dashti\.se/],
-      // CefSharp-based hosts, such as the link scanner behind Outlook Safe
-      // Links, reject with this exact text when they open a mailed link. The
-      // site never produces it.
-      ignoreErrors: [/Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+/],
+      ignoreErrors: [
+        // CefSharp-based hosts, such as the link scanner behind Outlook Safe
+        // Links, reject with this exact text when they open a mailed link. The
+        // site never produces it.
+        /Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+/,
+        // Chrome rejects register() and update() with this exact text when
+        // the worker script never arrives intact: an AbortError when the
+        // request was cancelled (the 2026-11-05 alert), a TypeError when the
+        // network failed under it (offline, a refused or reset connection, a
+        // blocked request) or its body could not be read (truncated, or a
+        // Content-Encoding the body does not have). vite-plugin-pwa's
+        // registerSW.js has no catch, and nothing here could act on it: the
+        // worker is an offline cache the page works without. The cost: a
+        // transport failure on our side (an edge or header mistake on
+        // /sw.js) goes silent too. A bad status such as a 404, a wrong or
+        // missing MIME type, a redirect, a script that does not evaluate and
+        // a certificate error have texts of their own and still report.
+        /Failed to (?:register|update) a ServiceWorker for scope \('[^']*'\) with script \('[^']*'\): An unknown error occurred when fetching the script\.$/
+      ],
       // Errors raised only by code the site never shipped stop here.
       beforeSend
     })
