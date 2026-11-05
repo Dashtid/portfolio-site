@@ -5,7 +5,7 @@ head). This migration exists for the opposite case: converging an already
 POPULATED prod ``skills`` table (plus the CompTIA education row and the
 cv_profile focus line) onto the 2026-08-22 accuracy set that seed_data can
 never reach. These run the real upgrade() against sync in-memory SQLite and
-assert the pruning semantics — unbacked rows deleted, HL7/FHIR renamed, the
+assert the pruning semantics — the four listed rows deleted, HL7/FHIR renamed, the
 FDA row added exactly once, order_index deduplicated deterministically, an
 owner-edited focus never trampled, idempotent.
 """
@@ -57,8 +57,8 @@ _CV_PROFILE = sa.Table(
 _FOCUS_OLD = _migration._FOCUS_OLD
 _FOCUS_NEW = _migration._FOCUS_NEW
 
-# The live table as the 2026-08-22 prod dump showed it: the four unbacked
-# rows present, HL7/FHIR not yet renamed, and order_index 17/18/19 each
+# The live table as the 2026-08-22 prod dump showed it: the four rows in
+# _DELETE present, HL7/FHIR not yet renamed, and order_index 17/18/19 each
 # duplicated across the Security/Medical boundary.
 _PROD_SKILLS = [
     {"id": "s-py", "name": "Python", "category": "Programming", "order_index": 1},

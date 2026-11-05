@@ -1,46 +1,25 @@
-"""cv bullet pack — the owner-approved round-2 rewrites and trims
+"""cv bullet pack — rewrite CV bullets, the summary and education strings
 
-Approved by the owner 2026-08-22 ("apply it") from the round-2 audit, which
-checked every proposal against the career-plan defensible-claims register:
+Data-only. Every update is guarded on the EXACT current value (list or
+string), so a re-run, or a value edited in /admin/cv after this was written,
+is never trampled:
 
-- Hermes #1: filler "actionable" dropped (redundant beside "traceable");
-  simple present replaces the participle opener.
-- Hermes #2: leading verb aligned to the same voice; the register-exact
-  content (manual, artifact-level SBOM/SCA, no CI claim) is untouched.
-- Hermes #3: three ideas untangled, ~15 words shorter, every claim kept
-  (advocated — not gated; dynamic testing introduced — no ownership claim).
+- companies.cv_highlights, keyed by start month (YYYY-MM) in _PACK: a row is
+  rewritten only when its current list equals the old list exactly. Rows with
+  no start_date, or with a start month not in _PACK, are skipped. The 2012-06
+  replacement is an EMPTY list, which the export renders as no bullets
+  instead of falling back to the site's lists.
+- companies.title: "Master Thesis Student" -> "Master's Thesis Student".
+- education: the KTH and Lund degree, field_of_study and description strings
+  in _EDUCATION_FIXES (suffixes dropped, dash styles changed).
+- cv_profile.summary: _SUMMARY_OLD -> _SUMMARY_NEW (see the comment there).
 
-[!] 2026-09-06: the Hermes ("2024-05") entry was REMOVED from _PACK below, and
-this docstring's description of it is retained only as history. Both halves of
-that tuple named the employer's imaging protocol beside the dynamic-testing
-technique — the banned public-surface pair — on rows that render publicly next
-to the employer's name. The approved September copy is now seeded directly by
-c9e2f7a4b681, and deployed databases are corrected by a later forward migration;
-this entry had nothing left to do and could only carry the strings forward.
-- Philips: pair merged into one bullet and "Spearheaded" removed — a cliché
-  AND an overclaim for L1 support. "IIG" (unexplained acronym) dropped;
-  under-claiming scope is the safe direction. Support work stays support
-  work, per the register.
-- SoftPro: "Drove digital transformation" (the CV's worst cliché) replaced
-  with what actually happened; "inventory system" matches the site's own
-  description of Medusa.
-- FDF: the two command bullets collapse into one (both honest numbers
-  survive); officer training keeps its own line, de-filled.
-- Scania 2012: trimmed to title + dates — an EMPTY list, which the export
-  now honours as "deliberately no bullets" instead of falling back to the
-  site's lists. Bullet count 13 -> 10, weight shifted toward the security
-  role (support-era bullets no longer outnumber security-era 10:3).
-- Summary gains the two-clocks line, pre-empting the "only two years of
-  security?" ambush with the register's own framing — and "Experienced
-  extending" becomes "Experienced in extending" (final-sweep proofread).
-- Final-sweep copy polish: "Master's Thesis Student" (possessive), degree
-  strings drop their redundant " - MS"/" - BS" suffixes, and the document's
-  three competing dash styles converge (en dash inside the KTH field, em
-  dash before thesis titles, matching the header and Certificates line).
+_PACK has no "2024-05" entry. It was removed after this revision had been
+applied: c9e2f7a4b681 now carries that role's bullets, and deployed rows are
+rewritten by b41f7ac2e905.
 
-Every update is guarded on the EXACT current value (list or string), so an
-owner edit made after this was written is never trampled. Empty companies
-table -> no-op. Downgrade is a deliberate no-op.
+An empty companies table skips the bullet loop; the other updates still run,
+each with its exact-value guard. Downgrade is a deliberate no-op.
 
 Revision ID: f3d8b17c6e42
 Revises: e7c9d24a5b13
@@ -62,7 +41,7 @@ depends_on: str | Sequence[str] | None = None
 
 # start month (YYYY-MM) -> (exact current bullets, replacement bullets).
 _PACK: dict[str, tuple[list[str], list[str]]] = {
-    # "2024-05" (Hermes) removed 2026-09-06 - see the note in the module docstring.
+    # No "2024-05" entry - see the module docstring.
     "2022-03": (
         [
             "Spearheaded Level 1 support for image processing systems in healthcare IT "
@@ -114,8 +93,9 @@ _SUMMARY_OLD = (
     "guidance (Section 524B) and IEC 81001-5-1 expectations into structured security "
     "evidence and SDLC improvements."
 )
-# Two edits in one: the final-sweep proofread's "Experienced IN extending"
-# (standard collocation), and the two-clocks tail.
+# Two edits in one: "Experienced extending" becomes "Experienced in
+# extending", and a closing "Background: ..." sentence is appended
+# (c9a4e7b21f83 takes that sentence out again).
 _SUMMARY_NEW = (
     "Biomedical Engineer focused on product cybersecurity for regulated medical "
     "software. Experienced in extending STRIDE-based threat models into concrete, "
@@ -126,11 +106,10 @@ _SUMMARY_NEW = (
     "and healthcare IT, in a formal security role since 2024."
 )
 
-# Final-sweep copy polish, all exact-match guarded like everything above:
-# the SoftPro title gains its possessive, the degree strings drop their
-# redundant " - MS"/" - BS" suffixes, the KTH field's spaced hyphen becomes
-# an en dash, and the thesis prefixes use the document's em dash instead of
-# a spaced hyphen (the sweep found three dash styles doing one job).
+# Copy fixes, all exact-match guarded like everything above: the "Master
+# Thesis Student" title gains its possessive, the degree strings drop their
+# " - MS"/" - BS" suffixes, the KTH field's spaced hyphen becomes an en dash,
+# and the thesis prefixes use an em dash instead of a spaced hyphen.
 _TITLE_FIX = ("Master Thesis Student", "Master's Thesis Student")
 
 # Each entry reads: institution, column name, exact old value, new value.

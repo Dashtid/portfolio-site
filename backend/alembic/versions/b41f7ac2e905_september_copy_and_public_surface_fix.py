@@ -1,42 +1,40 @@
-"""September 2026 CV copy — and a public-surface confidentiality fix
+"""September 2026 CV copy and homepage description update
 
-Applies the copy approved in career-plan `applications/copy-pack-2026-09.md`
-(revision 2, 2026-09-06) to the deployed database. Four things change:
+Data-only. Four things change on the deployed database:
 
-1. `companies.cv_highlights` for the current-employer role — the three-bullet
-   set is replaced by the approved eight. The bullet it drops broke the owner's
-   public-surface rule: the imaging protocol must never be published on the
-   same line as the weakness class tested against it. The tracked-tree guard in
-   `frontend/tests/unit/cvPublicScrub.spec.ts` enforces the same rule on source.
-2. `companies.description` for the same row — the description is rewritten to
-   name the domain generically ("regulated medical software"). The specific
-   product category is not the owner's to publish, and this string renders on
-   the public homepage.
-3. `cv_profile.label` and `cv_profile.summary` — the September rewrite. The
-   summary gains the authorship claim it never had (the August audit's defect
-   #1) and the EU AI Act clause; the label gains the standards string.
-4. `skills` — MDR, ISO 13485 and EU AI Act are added to Regulatory & Standards
-   Compliance, and GAMP 5 / NIS 2 / DICOM / HL7 are renumbered to keep the
-   group ordered. The generated CV assembles from THIS table; cv/resume.json is
-   a reference copy that never reaches the document, so a keyword added only
-   there would never appear on anything he sends.
+1. `companies.cv_highlights` on the row named _HERMES is set to _HIGHLIGHTS.
+   The text it replaces is kept out of this file on purpose: the tracked-tree
+   guard in `frontend/tests/unit/cvPublicScrub.spec.ts` scans source for
+   text of that kind.
+2. `companies.description` on the same row is set to _DESCRIPTION, which
+   names the domain generically ("regulated medical software"); this string
+   renders on the public homepage.
+3. `cv_profile.summary` (_SUMMARY_OLD -> _SUMMARY_NEW) and `cv_profile.label`
+   (_LABEL_OLD -> _LABEL_NEW).
+4. `skills` — MDR, ISO 13485 and EU AI Act are inserted into Regulatory &
+   Standards Compliance when no row has that name, and GAMP 5 / NIS 2 /
+   DICOM / HL7 are renumbered (17-20) to keep the group ordered. The CV export
+   reads skills from THIS table; cv/resume.json is a reference copy that
+   never reaches the generated document.
 
-[!] The current-employer row is updated UNCONDITIONALLY, deliberately breaking this
+[!] The companies row is updated UNCONDITIONALLY, deliberately breaking this
 repo's guard-on-the-exact-current-value convention (see c9a4e7b21f83 and
-f3d8b17c6e42 for the normal pattern). The convention exists so an owner edit
-made through /admin/cv is never trampled. It cannot be followed here: writing
-the guard would mean committing the exact string this migration exists to
-remove, putting it back into a public repo's tracked tree and into every future
-clone. A confidentiality fix that preserves the text it is removing is not a
-fix. Trampling an admin edit is the accepted cost, and it is the correct
-direction — any admin edit descended from the old bullets carries the same
-problem.
+f3d8b17c6e42 for the normal pattern). The convention exists so an edit made
+through /admin/cv is never trampled. It cannot be followed here: writing the
+guard would mean committing the exact string this migration exists to
+remove, putting it back into a public repo's tracked tree and into every
+future clone. An admin edit to this row is overwritten; any edit descended
+from the old bullets would carry the same text.
 
-`cv_profile` keeps the normal guard: its current values contain nothing
-sensitive, so the exact-match guard is free.
+`cv_profile` keeps the normal guard: each update matches the exact previous
+value, so an edited summary or label is left alone. The skills inserts check
+names only, so a re-run, or a row an admin already added by hand, converges
+instead of colliding on the unique name.
 
-Empty tables -> no-op. Downgrade is a deliberate no-op: restoring the previous
-text would restore the disclosure.
+The companies and cv_profile updates match nothing on empty tables. There is
+no empty-table early return for skills: on an empty skills table the three
+rows are inserted. Downgrade is a deliberate no-op: the previous companies
+values are not recorded here, by design.
 
 Revision ID: b41f7ac2e905
 Revises: a7f3c81d9b24
@@ -148,8 +146,8 @@ _NEW_SKILLS = [
     ("EU AI Act", 60, 1.0, 16),
 ]
 
-# Existing rows shift down so the regulatory group stays in strength order and
-# Healthcare IT stays last.
+# Existing rows shift down so the three new rows (14-16) sit above GAMP 5 and
+# NIS 2, and Healthcare IT stays last.
 _RENUMBERED = {"GAMP 5": 17, "NIS 2": 18, "DICOM": 19, "HL7": 20}
 
 

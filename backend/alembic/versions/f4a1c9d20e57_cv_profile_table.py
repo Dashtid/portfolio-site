@@ -1,12 +1,17 @@
-"""cv_profile singleton table (Campaign 2026-08 Sprint 2)
+"""cv_profile singleton table
 
-Backs the admin-only CV export. A single-row table holding the CV prose
-(summary / label / focus / location), public links, languages, and the
-owner's private contact (email / phone / optional personnummer). The private
-columns are surfaced only through admin-authenticated endpoints.
+Creates cv_profile, the single-row table behind the admin-only CV export: the
+CV prose (name / label / summary / focus / location), public links,
+languages, and the private contact columns. The private columns are surfaced
+only through admin-authenticated endpoints.
 
 Guarded create_table because non-production environments may already carry
-the table via the create_all() bootstrap before this revision runs.
+the table via the create_all() bootstrap before this revision runs. When the
+table already exists, upgrade returns without inserting anything.
+
+When it creates the table, upgrade also inserts the singleton row with the
+public prose and links; the private contact columns stay blank. Downgrade
+drops the table when it exists.
 
 Revision ID: f4a1c9d20e57
 Revises: f2b8d61c4a93

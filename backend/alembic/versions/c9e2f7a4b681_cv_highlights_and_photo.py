@@ -2,24 +2,29 @@
 
 Two columns and one backfill.
 
-`companies.cv_highlights` exists because a CV bullet list is not the website's
-bullet list. The export used to concatenate `responsibilities` (terse, present
-tense) with `outcomes` (narrative, past tense) — two parallel descriptions of
-the same role, written months apart for the public detail page where they
-render as separate blocks. Concatenated, that produced 64 bullets across 8
-roles (11 for one job), with 21 of 25 outcomes restating a responsibility
-almost word for word, and a 6-page PDF where the owner's real CV is 3.
+`companies.cv_highlights` (JSON, nullable) holds the bullet list the CV
+export uses for a role. Before this column the export concatenated
+`responsibilities` and `outcomes`, two parallel descriptions of the same role
+written for the public detail page. A NULL value makes the export fall back
+to `outcomes`, then `responsibilities`, then the company description.
 
-The backfill seeds the curated list from `cv/resume.json`, the hand-edited
-JSON Resume the owner already sends out — 13 bullets total, matching the real
-CV exactly. Keyed on start month rather than company name: the DB and
+The backfill writes the lists in _CURATED, taken from `cv/resume.json` (the
+"2024-05" list was replaced on 2026-09-06; see the comment there), and only
+into rows whose `cv_highlights` is NULL:
+a re-run, or a row edited in /admin/cv since, is left alone. Rows with no
+start_date, or with a start month not in _CURATED, stay NULL. When no row
+has a NULL `cv_highlights` (an empty table, for example) the backfill does
+nothing. Keyed on start month rather than company name: the DB and
 resume.json disagree on names ("Philips Healthcare" vs "Philips",
 "Karolinska University Hospital" vs "Karolinska Universitetssjukhuset"),
 while start months are unique across all 8 roles.
 
-`cv_profile.photo` holds a `data:` URI rather than a path because this row is
-401-gated and both the repo and the host are public — a portrait under
-frontend/public/ would be world-readable.
+`cv_profile.photo` (Text, NOT NULL, server default "") holds a `data:` URI
+rather than a path because this row is 401-gated and both the repo and the
+host are public — a portrait under frontend/public/ would be world-readable.
+
+Each add_column is skipped when the column already exists. Downgrade drops
+both columns when they exist.
 
 Revision ID: c9e2f7a4b681
 Revises: b5d21e04c7a9
@@ -40,11 +45,9 @@ depends_on: str | Sequence[str] | None = None
 
 # start month (YYYY-MM) -> curated CV bullets, verbatim from cv/resume.json.
 _CURATED: dict[str, list[str]] = {
-    # Rewritten 2026-09-06 to the approved September copy. The original third bullet
-    # named the employer's imaging protocol beside the dynamic-testing technique - the
-    # banned public-surface pair - on rows that render publicly beside the employer's
-    # name. Editing this applied migration only cleans the tracked text; the deployed
-    # row is rewritten by a later forward migration.
+    # Edited 2026-09-06, after this revision had been applied. Editing an applied
+    # migration changes only the tracked text: deployed rows are rewritten by the
+    # later forward migration b41f7ac2e905.
     "2024-05": [
         "Author product cybersecurity documentation supporting regulatory submissions "
         "- threat models, security risk assessments and premarket security evidence - "

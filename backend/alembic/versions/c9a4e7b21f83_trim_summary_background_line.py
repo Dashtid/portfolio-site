@@ -1,15 +1,15 @@
-"""trim the summary's two-clocks tail — owner review verdict 2026-08-23
+"""trim the sentence the bullet pack appended to the CV summary
 
 The f3d8b17c6e42 pack appended "Background: five years across medical
 imaging and healthcare IT, in a formal security role since 2024." to the
-CV summary. On review the owner rejected exactly that sentence ("I dont
-like this part") and approved everything else, so this migration takes
-the tail back out and nothing more.
+CV summary. This migration sets cv_profile.summary to the same text without
+that sentence (_SUMMARY_TRIMMED) and changes nothing else.
 
-Guarded on the EXACT post-pack summary, so an owner edit made in
-/admin/cv after the pack landed is never trampled. Fresh databases are
-seeded with the trimmed text directly; this only converges databases the
-pack already touched. Downgrade is a deliberate no-op.
+Guarded on the EXACT post-pack summary (_SUMMARY_WITH_TAIL), so an edit made
+in /admin/cv after the pack landed is never trampled, and a re-run changes
+nothing. Fresh databases are seeded with the trimmed text directly; this
+only converges databases the pack already touched. Downgrade is a
+deliberate no-op.
 
 Revision ID: c9a4e7b21f83
 Revises: f3d8b17c6e42

@@ -196,7 +196,7 @@ class TestCvExportEndpoint:
 
 
 class TestCvOtherSection:
-    """Övrigt / logistics items (CV-generator requirements, 2026-08-06).
+    """Övrigt / logistics items.
 
     B-körkort must render as logistics info at the bottom of the CV and can
     NEVER appear in a certifications section. The structural guarantee is
@@ -248,7 +248,7 @@ class TestCvHighlightsPrecedence:
 
     `responsibilities` and `outcomes` describe the same role twice for the
     public detail page. Concatenating them for the CV produced 11 bullets for
-    one job where the owner's real CV carries 3.
+    one job.
     """
 
     def test_cv_highlights_win_over_both_lists(

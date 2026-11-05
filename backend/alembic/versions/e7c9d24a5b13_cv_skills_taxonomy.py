@@ -1,29 +1,21 @@
 """cv skills taxonomy — stop filing security standards under "Medical"
 
-Owner, 2026-08-22: "isn't a bunch of these medical ones also security
-frameworks? Feels weird calling them medical." He is right, and his own
-hand-made CV already had the honest split. The old "Medical" bucket mixed
-three different kinds of thing: security/lifecycle STANDARDS (IEC 81001-5-1
-is a health-software security standard, FDA 524B is statutory premarket
-cybersecurity, IEC 62304 lifecycle, GAMP 5 validation) and interoperability
-PROTOCOLS (DICOM, HL7). NIS 2 sat under "Security" but is a directive, not a
-practice. Regrouped:
+Data-only. When the skills table has rows, sets category and order_index for
+every name in _TAXONOMY, which regroups the table into five categories:
 
-- Programming            <- Programming + Frameworks merged (six items; a
-                            two-item "Frameworks" group earned its label
-                            nothing)
+- Programming            <- the former "Programming" and "Frameworks" rows
 - DevOps                 (unchanged)
-- Security Engineering   <- "Security" minus NIS 2: the hands-on practice
-                            areas only
-- Regulatory & Standards Compliance <- NIS 2 + IEC 62304 + IEC 81001-5-1 + GAMP 5 +
-                            FDA 524B (strongest first: the FDA/81001 pair is
-                            the core of the current role)
-- Healthcare IT          <- DICOM + HL7
+- Security Engineering   <- the former "Security" rows, minus NIS 2
+- Regulatory & Standards Compliance <- NIS 2, plus the standards formerly
+                            under "Medical" (IEC 81001-5-1, FDA 524B,
+                            IEC 62304, GAMP 5)
+- Healthcare IT          <- the interoperability protocols formerly under
+                            "Medical" (DICOM, HL7)
 
-Same pattern as d4b7a91c3e58: data-only, keyed on exact names, idempotent,
-EMPTY table -> no-op (seed_data.py carries the same set for fresh DBs),
-no-op downgrade. Rows this migration does not know by name keep their
-category and order untouched.
+Same pattern as d4b7a91c3e58: data-only, keyed on exact names, idempotent (a
+re-run writes the same values), EMPTY table -> no-op (fresh DBs are seeded by
+seed_data.py instead), no-op downgrade. Rows this migration does not know by
+name keep their category and order untouched.
 
 Revision ID: e7c9d24a5b13
 Revises: d4b7a91c3e58

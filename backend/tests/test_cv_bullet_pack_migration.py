@@ -1,6 +1,6 @@
 """Tests for the f3d8b17c6e42 cv-bullet-pack migration.
 
-Converges the owner-approved bullet rewrites/trims onto an already-populated
+Converges the bullet rewrites/trims onto an already-populated
 prod ``companies`` table. The load-bearing semantics: updates fire ONLY when
 the current value equals the exact pre-pack value (owner edits win), the
 Scania-2012 trim writes a genuinely EMPTY list (which the export renders as
@@ -56,8 +56,7 @@ def _pack(key: str) -> tuple[list[str], list[str]]:
 
 
 # Stand-in for whatever the Hermes row holds when this pack runs. Deliberately
-# not the real pre-September text: that text is the reason the "2024-05" entry
-# was removed, and committing it here would put it back in the tracked tree.
+# not the real earlier text, which is kept out of the tracked tree.
 _HERMES_UNTOUCHED = ["Hermes bullets - owned by b41f7ac2e905, not by this pack."]
 
 
@@ -67,9 +66,8 @@ def _prod_rows() -> list[dict]:
             "id": "c-hermes",
             "title": "QA/RA & Security Specialist",
             "start_date": datetime.datetime(2024, 5, 1),
-            # The pack's "2024-05" entry was removed 2026-09-06 (its bullets named
-            # the banned protocol/technique pair). This row is now one the pack
-            # must LEAVE ALONE; b41f7ac2e905 owns the Hermes copy instead.
+            # _PACK has no "2024-05" entry, so this is a row the pack must
+            # LEAVE ALONE; b41f7ac2e905 owns the Hermes copy instead.
             "cv_highlights": _HERMES_UNTOUCHED,
         },
         {
@@ -232,21 +230,18 @@ class TestCvBulletPackMigration:
             assert summary == _migration._SUMMARY_NEW
 
     def test_register_constraints_hold_in_new_bullets(self):
-        """The pack must never smuggle in a banned claim."""
+        """The replacement bullets contain none of the tokens listed below."""
         new_text = " ".join(" ".join(new) for _, new in _migration._PACK.values()).lower()
         for banned in ("pentest", "penetration", "wired into ci", "spearheaded", "owasp"):
             assert banned not in new_text
-        # No personal-ownership claim over the employer's testing tool. Token
-        # assembled, not written out - see the docstring of the test below.
+        # Token assembled, not written out - see the docstring of the test below.
         assert "my " + "fu" + "zz" + "er" not in new_text
 
     def test_pack_carries_no_protocol_or_technique_token(self):
-        """Neither half of the banned public-surface pair may live in this file.
+        """Neither token checked below may appear in _PACK, and "2024-05" is not a key.
 
-        The "2024-05" entry was removed on 2026-09-06 because both its halves named
-        the employer's imaging protocol beside the dynamic-testing technique. This
-        guards the removal: a future edit that reinstates either token here would
-        put it back into a public repo's tracked tree and every clone of it.
+        A future edit that adds either token here would put it into a public
+        repo's tracked tree and every clone of it.
 
         The two tokens are assembled from fragments rather than written out, so
         that the tree-wide scan in frontend/tests/unit/cvPublicScrub.spec.ts does

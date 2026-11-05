@@ -197,26 +197,12 @@ async def seed_projects(session: AsyncSession):
     if await _already_seeded(session, Project, "projects"):
         return
 
-    # Annotated because `technologies` is now a real list (it is a JSON column)
-    # while its siblings are str/bool/int, so the inferred value type widens to
+    # Annotated because `technologies` is a list (it is a JSON column) while
+    # its siblings are str/bool/int, so the inferred value type widens to
     # `object` and Project(**project_data) stops being a valid mapping unpack.
     #
-    # Every project here must be a repo a logged-out recruiter can OPEN.
-    #
-    # The previous seed listed five projects, four of which were inventions --
-    # "Medical Device Security Framework", "Vulnerability Scanner Dashboard",
-    # "DICOM Processing Pipeline", "Compliance Automation Tool" -- with no
-    # github_url and no corresponding repo anywhere, plus a fifth pointing at
-    # the pre-rename portfolio-migration. They also passed `technologies` as a
-    # comma-string into a JSON list column, so a fresh install stored a string
-    # where every reader expects a list. All four inventions are gone; the
-    # names below were verified to return 200 unauthenticated on 2026-08-05.
-    #
-    # Inclusion rule: a project is listed only if its github_url resolves 200
-    # unauthenticated. Advertising a repo behind a 404 proof link is worse for a
-    # security candidate than not advertising it at all. Repos that do not meet
-    # the bar are simply absent; this file does not name them or say why, because
-    # it is world-readable and the explanation would undo the omission.
+    # Every project listed here must have a github_url that resolves 200
+    # unauthenticated.
     projects: list[dict[str, Any]] = [
         {
             "name": "subvectors",
@@ -260,15 +246,9 @@ async def seed_skills(session: AsyncSession):
     if await _already_seeded(session, Skill, "skills"):
         return
 
-    # Canonical keyword set decided 2026-08-06 (career-plan session; applied
-    # 2026-08-13). One set across LinkedIn / CV / site. IN: NIS 2, GAMP 5,
-    # IEC 62304, IEC 81001-5-1, threat modeling, application security,
-    # software supply-chain security (SBOM), secure SDLC, vulnerability
-    # management, Kubernetes. OUT (claim-gated): ISO 27001, "OWASP Top 10",
-    # pentest wording, unearned certs. NIS 2 + GAMP 5 tier-map gate was
-    # signed off by the owner 2026-08-13. Categories mirror the live DB.
-    # proficiency_level / years are ADMIN-ONLY (public serializer strips
-    # them since 25ad158) and are never rendered anywhere public.
+    # Categories mirror the live DB. proficiency_level / years are ADMIN-ONLY
+    # (public serializer strips them since 25ad158) and are never rendered
+    # anywhere public.
     skills = [
         {
             "name": "Python",
@@ -361,12 +341,10 @@ async def seed_skills(session: AsyncSession):
             "years_of_experience": 3,
             "order_index": 12,
         },
-        # Added 2026-09-06. These three are named in the role and in the copy the
-        # CV now carries, and the export reads THIS table - resume.json is a
-        # reference copy and does not reach the generated document. MDR and
-        # ISO 13485 are the regimes the evidence is written inside; the AI Act is
-        # the second named half of the role. They sit above GAMP 5 and NIS 2,
-        # which are the weakest claims in the group.
+        # Added 2026-09-06; b41f7ac2e905 inserts the same three rows into
+        # existing databases. The CV export reads THIS table - resume.json is a
+        # reference copy and does not reach the generated document. Their
+        # order_index (14-16) places them above GAMP 5 and NIS 2.
         {
             "name": "MDR",
             "category": "Regulatory & Standards Compliance",
@@ -431,12 +409,9 @@ async def seed_education(session: AsyncSession):
         return
 
     education_items = [
-        # Reconciled with the live DB (/api/v1/education/, 2026-08-05). These
-        # rows had drifted into a different academic history than production:
-        # KTH 2017-2022 "M.Sc. Medical Engineering" with a thesis on "AI-driven
-        # diagnostic systems" that does not exist, and Lund as a 2020-2021
-        # exchange rather than the full 2015-2018 B.Sc. HomeView's static
-        # education fallback carried the same wrong values; both now match.
+        # Reconciled with the live DB (/api/v1/education/, 2026-08-05): these
+        # rows had drifted from production. HomeView's static education
+        # fallback carried the same wrong values; both now match.
         {
             "institution": "KTH Royal Institute of Technology",
             "degree": "Master of Science",
@@ -460,8 +435,8 @@ async def seed_education(session: AsyncSession):
             "order_index": 2,
         },
         {
-            # Honestly labelled as a course (is_certification=False): a
-            # completed short course, not a professional certification.
+            # Labelled as a course (is_certification=False): a completed
+            # short course, not a professional certification.
             "institution": "Företagsuniversitetet",
             "degree": "Cybersecurity Fundamentals (Course)",
             "field_of_study": "Information Security",
@@ -474,10 +449,8 @@ async def seed_education(session: AsyncSession):
             "order_index": 3,
         },
         {
-            # The one earned professional certification. Everything else on
-            # this list is a degree or a course — no unearned or offensive
-            # (CEH/pentest) certs are advertised; the public brand is
-            # defensive-first product security for regulated medtech.
+            # The only certification row (is_certification=True); the other
+            # rows are two degrees and a course.
             "institution": "CompTIA",
             "degree": "Security+",
             "field_of_study": "Cybersecurity",
@@ -485,8 +458,8 @@ async def seed_education(session: AsyncSession):
             # credly.com/api/v1/obi/v2/badge_assertions/450d4dcd-...:
             # issuedOn 2026-01-04, expires 2029-01-04 (exam SY0-701).
             # These were 2024-01-01 -> 2026-01-31, which was wrong in BOTH
-            # directions and made the site's only earned certification look
-            # EXPIRED as of 2026-01-31. It is valid for another three years.
+            # directions and made the certification look EXPIRED as of
+            # 2026-01-31. It is valid for another three years.
             "start_date": datetime(2026, 1, 4),
             "end_date": datetime(2029, 1, 4),
             "location": "Online",
@@ -528,9 +501,7 @@ async def seed_cv_profile(session: AsyncSession):
             "guidance (Section 524B) and IEC 81001-5-1 expectations into structured security "
             "evidence and SDLC improvements."
         ),
-        # Evidence-backed wording only: the OIDC trust-policy research is real
-        # (subvectors/subcheck); there is no AWS or Terraform work anywhere, so
-        # they do not belong even in a "focus" line (2026-08-22 accuracy pass).
+        # Same value d4b7a91c3e58 writes to existing databases (_FOCUS_NEW).
         focus=(
             "CI/CD and workload-identity security (OIDC trust policies) and "
             "secure SDLC for regulated software"
@@ -546,7 +517,7 @@ async def seed_cv_profile(session: AsyncSession):
             {"language": "English", "fluency": "Fluent"},
         ],
         # Övrigt / logistics — rendered at the BOTTOM of the CV, never under
-        # certificates (CV-generator requirements, 2026-08-06).
+        # certificates.
         other_items=["B-körkort (category B driving licence)"],
         # photo intentionally left empty: the headshot is personal data and is
         # uploaded through /admin/cv after deploy, exactly like email/phone, so

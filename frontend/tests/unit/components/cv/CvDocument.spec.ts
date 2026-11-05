@@ -192,7 +192,7 @@ describe('CvDocument', () => {
     const wrapper = make(fullResume())
     const headings = wrapper.findAll('h2').map(h => h.text())
     // Logistics items render at the bottom of the CV and never as a
-    // credential (CV-generator requirements, 2026-08-06).
+    // credential.
     expect(headings[headings.length - 1]).toBe('Other')
     expect(wrapper.text()).toContain('B-körkort (category B driving licence)')
     const certSection = wrapper

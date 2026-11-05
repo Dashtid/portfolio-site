@@ -74,8 +74,7 @@ export interface Project {
 }
 
 /** PUBLIC skill shape. No proficiency_level/years — the public API stopped
- *  serving those (see backend SkillResponse); nothing renders them and an
- *  unfalsifiable 0-100 self-rating is a liability, not proof. */
+ *  serving those (see backend SkillResponse), and nothing renders them. */
 export interface Skill {
   id: string
   name: string

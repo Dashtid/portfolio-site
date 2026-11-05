@@ -383,9 +383,8 @@ class TestSkillProficiencyIsNotPublic:
     Nothing on the public site renders proficiency_level or
     years_of_experience -- verified by diffing the live homepage against its
     own __INITIAL_STATE__ -- yet the public endpoint served them for all 19
-    rows, including 'Security Auditing: 95'. An unfalsifiable self-rating
-    nobody chose to display is a liability, not proof. The values stay in the
-    DB and stay editable; they just stop being published.
+    rows. The values stay in the DB and stay editable; they just stop being
+    published.
     """
 
     SKILL = {
@@ -412,7 +411,7 @@ class TestSkillProficiencyIsNotPublic:
         for row in rows:
             assert "proficiency_level" not in row
             assert "years_of_experience" not in row
-            # The honest, renderable fields survive.
+            # The renderable fields survive.
             assert "name" in row and "category" in row
 
     def test_public_detail_omits_proficiency_and_years(

@@ -1,13 +1,12 @@
-"""Tests for the a7f3c81d9b24 ten-minute-quiz skills migration.
+"""Tests for the a7f3c81d9b24 skills-pruning migration.
 
 test_migration_drift only proves the EMPTY-table path (a fresh DB upgrades to
 head). This migration exists for the opposite case: pruning an already
-POPULATED prod ``skills`` table that seed_data can never reach, so the site
-stops claiming four things the owner declined to claim on LinkedIn (2026-08-29)
-and on the CV (2026-09-03). These run the real upgrade() against sync in-memory
-SQLite and assert the semantics that matter — the four gone, the survivors
-renumbered contiguously without disturbing category order, owner-added rows
-left alone, empty table untouched, idempotent, downgrade a genuine no-op.
+POPULATED prod ``skills`` table that seed_data can never reach. These run the
+real upgrade() against sync in-memory SQLite and assert the semantics that
+matter — the four gone, the survivors renumbered contiguously without
+disturbing category order, owner-added rows left alone, empty table
+untouched, idempotent, downgrade a genuine no-op.
 """
 
 import importlib.util
@@ -118,7 +117,7 @@ class TestSkillsTenMinuteQuizMigration:
             names = _names(conn)
             assert _DROPPED.isdisjoint(names)
             assert len(names) == 17
-            # Programming survives as the honest pair rather than disappearing.
+            # Programming keeps two rows rather than disappearing.
             programming = set(
                 conn.execute(
                     sa.select(_SKILLS.c.name).where(_SKILLS.c.category == "Programming")

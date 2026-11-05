@@ -1,15 +1,11 @@
-"""skills keyword sync — converge an EXISTING skills table to the decided set
+"""skills keyword sync — converge an EXISTING skills table to the seed_data.py keywords
 
-The canonical keyword set (career-plan session 2026-08-06; NIS 2 + GAMP 5
-tier-map gate signed off by the owner 2026-08-13) was applied to
-seed_data.py, but seed_skills() early-returns on any populated table, so a
-plain deploy can never move existing prod off the old set — which still
-carries the claim-gated OUT terms "ISO 27001" and "OWASP". Surfaced by the
-2026-08-13 adversarial review; the fly-ssh alternative was unavailable
-(WireGuard tunnel down), and this migration reaches prod through the same
-release_command path as every schema change.
+seed_skills() early-returns on any populated table, so a deploy alone never
+changes the skills rows of an existing database. This migration applies the
+seed_data.py keyword changes to such a database; it reaches prod through the
+same release_command path as every schema change.
 
-Deliberately narrow so it can never trample owner-curated content (the
+Deliberately narrow so it can never trample admin-curated content (the
 migrate_data.py lesson): it only touches the rows named below, only when the
 table is already populated, and every operation is guarded:
 
@@ -19,12 +15,11 @@ table is already populated, and every operation is guarded:
   row's curated proficiency/order); if the new name already exists the old
   row is deleted instead (unique name constraint).
 - Delete "ISO 27001" and "OWASP" by exact name.
-- Insert the missing IN-keywords with the same values seed_data.py uses;
-  each insert is skipped when a row with that name exists.
+- Insert each row in _ADD with the values listed there; each insert is
+  skipped when a row with that name exists.
 
 Idempotent: a re-run finds nothing left to do. Downgrade is a deliberate
-no-op — restoring claim-gated terms is never a rollback anyone wants, and
-the pre-sync proficiency values of deleted rows are not recorded here.
+no-op: the pre-sync proficiency values of deleted rows are not recorded here.
 
 Revision ID: b5d21e04c7a9
 Revises: a7c3e58d19f4

@@ -1,19 +1,21 @@
 """cv_profile.other_items — Övrigt/Other logistics lines on the CV
 
-CV-generator data requirements (career-plan session 2026-08-06, applied
-2026-08-13): "B-körkort" must render as a one-line logistics item at the
-BOTTOM of the CV, and must never appear in any certifications section. It
-gets its own column — a flat JSON list of strings rendered under "Other" —
-so no assembly step can ever classify it as a credential.
+Adds cv_profile.other_items: a flat JSON list of strings, NOT NULL, with
+server default '[]'. The CV export returns it under "other", which the CV
+renders as its last section. It is a column of its own, apart from the
+education rows, so these lines can never land in the certificates section.
 
 Guarded add_column because non-production environments may already carry the
-column via the create_all() bootstrap before this revision runs.
+column via the create_all() bootstrap before this revision runs. When the
+column already exists, upgrade returns without changing anything.
 
-The backfill sets the singleton row's value only in the branch where the
-column was just added: every row then holds the server default '[]', so the
-update cannot clobber owner-entered data. Existing prod reaches this via the
-release_command upgrade path (the seed script is NOT re-run there); fresh
-DBs get the same value from seed_cv_profile() instead.
+The backfill sets the singleton row (id 1) to _DEFAULT_OTHER_ITEMS only in
+the branch where the column was just added: every row then holds the server
+default '[]', so the update cannot clobber admin-entered data. Existing prod
+reaches this via the release_command upgrade path (the seed script is NOT
+re-run there); fresh DBs get the same value from seed_cv_profile() instead.
+
+Downgrade drops the column when it exists.
 
 Revision ID: a7c3e58d19f4
 Revises: f4a1c9d20e57

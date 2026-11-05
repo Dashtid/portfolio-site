@@ -84,10 +84,8 @@ describe('HomeView static fallback parity with seed_data', () => {
   })
 
   it('no fallback card claims a credential seed_data does not list', () => {
-    // The fabricated-certification class of bug (CEH / AZ-500 / ISO 27001-LI,
-    // removed 2026-07-22) hid in BOTH seed_data and this fallback. Security+
-    // is the only earned certification; anything else appearing here must be
-    // labelled a course, and must exist in seed_data either way.
+    // Every fallback degree other than the two Science degrees must also
+    // exist verbatim in seed_data.
     const degrees = staticTextsFor('education-degree')
     const certLike = degrees.filter(d => !/^(Master|Bachelor) of Science$/.test(d))
     for (const cert of certLike) {

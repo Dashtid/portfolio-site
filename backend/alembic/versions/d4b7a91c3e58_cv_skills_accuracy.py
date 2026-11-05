@@ -1,35 +1,28 @@
-"""cv skills accuracy — prune claims the owner's work cannot back
+"""cv skills accuracy — delete, rename and add skills rows; update two strings
 
-Owner directive 2026-08-22: "be more accurate with my skills — we really
-don't want to overclaim; less is more." Every row was checked against the
-owner's actual repositories and the career-plan defensible-claims register
-before this migration was written:
+Data-only. When the skills table has rows:
 
-- DELETE Django and React: no code in any repo, personal or public — the
-  frameworks actually in use are FastAPI and Vue.js, which stay.
-- DELETE Azure: no Azure workload anywhere (the OIDC corpus covers Azure
-  federated-credential *trust semantics*, offline — that is not "Azure").
-  This also empties the Cloud category, which then disappears from the CV.
-- DELETE Security Auditing: the vaguest term in the table at the highest
-  self-rating; the register's approved framing is "regulatory cybersecurity
-  documentation and gap analyses", which lives in the experience bullets.
-- RENAME HL7/FHIR -> HL7: the Karolinska integration work was HL7; nothing
-  anywhere demonstrates FHIR.
-- ADD FDA Premarket Cybersecurity (524B): Tier-1 work-with (core of the
-  Hermes role, already claimed verbatim in the CV summary and the owner's
-  hand-made CV) — the strongest claim was the one missing from the table.
+- DELETE by exact name: Django, React, Azure, Security Auditing. Deleting
+  Azure leaves the Cloud category empty, so it drops off the CV.
+- RENAME "HL7/FHIR" -> "HL7"; if "HL7" already exists the old row is deleted
+  instead (unique name constraint).
+- ADD "FDA Premarket Cybersecurity (524B)" with the values in _ADD, unless a
+  row with that name exists.
+- Set order_index to each name's position (1-21) in _ORDER, for the names
+  present (see the comment there). Names not listed are untouched.
+
+Whatever the skills table holds:
+
 - education: degree "Security+ Certification" -> "Security+" on the CompTIA
-  row (the CV renders it under a "Certificates" heading; the suffix was
-  tautological there and on the admin table).
-- cv_profile.focus: drop "(OIDC/IAM, AWS/Terraform)" for the evidence-backed
-  OIDC wording — there is no AWS or Terraform work anywhere, while the OIDC
-  trust-policy research is real and current. Guarded on the exact previous
-  string so an owner-edited focus is never trampled.
+  row, matched on institution and the exact old degree (the CV renders it
+  under a "Certificates" heading, where the suffix only repeated it).
+- cv_profile.focus: _FOCUS_OLD -> _FOCUS_NEW. Guarded on the exact previous
+  string, so an edited focus is never trampled.
 
 Same shape as b5d21e04c7a9 (skills keyword sync): data-only, narrow,
-idempotent, EMPTY table -> no-op (fresh DBs belong to seed_data.py, which
-carries the same set). Downgrade is a deliberate no-op — re-adding unbacked
-claims is never a rollback anyone wants.
+idempotent, EMPTY skills table -> no skills changes (fresh DBs are seeded by
+seed_data.py instead). Downgrade is a deliberate no-op: the deleted rows and
+the previous order_index values are not recorded here.
 
 Revision ID: d4b7a91c3e58
 Revises: c9e2f7a4b681

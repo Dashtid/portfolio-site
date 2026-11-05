@@ -34,11 +34,8 @@ class SkillResponse(BaseModel):
     homepage against its own __INITIAL_STATE__: the skill names appear only
     inside the baked state blob, never in visible markup), yet the public
     endpoint served a 0-100 self-rating for all 19 rows to anyone who curled
-    it -- including 'Security Auditing: 95', the joint-highest number on a
-    site whose one earned certification is Security+. An unfalsifiable rating
-    nobody chose to display is a liability, not proof. The values still exist
-    in the DB and stay editable in /admin/skills via SkillAdminResponse; the
-    site simply stops publishing them.
+    it. The values still exist in the DB and stay editable in /admin/skills
+    via SkillAdminResponse; the site simply stops publishing them.
     """
 
     id: str

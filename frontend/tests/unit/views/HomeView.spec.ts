@@ -348,11 +348,8 @@ describe('HomeView', () => {
     })
 
     it('does not claim the employer builds AI devices', async () => {
-      // The lead used to read "and, increasingly, the AI moving into the devices
-      // themselves - at Hermes Medical Solutions". That attributes an AI product
-      // portfolio to a named employer, which is the employer's disclosure to make
-      // and is barred by the owner's register. The AI Act belongs here as a
-      // regime the ROLE covers, never as a claim about the products.
+      // The lead names the EU AI Act as a regime the role covers, and the
+      // earlier "AI moving into the devices" wording must not come back.
       const wrapper = await createWrapper()
 
       const lead = wrapper.find('.custom-hero-lead').text()

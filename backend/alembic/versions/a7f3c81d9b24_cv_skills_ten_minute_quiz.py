@@ -1,35 +1,20 @@
-"""skills: apply the owner's ten-minute-quiz rule to the site
+"""skills: delete four Programming rows and renumber the rest
 
-Owner rule, set 2026-08-29 during the LinkedIn alignment and recorded in
-cv/source/linkedin-alignment-2026-08-29.txt: a skill is listed only if the
-owner would be comfortable being quizzed on it for ten minutes. He applied it
-to LinkedIn himself that day and did NOT list SQL, JavaScript, TypeScript,
-FastAPI or Vue.js. The CV followed on 2026-09-03 (01bbb99). This migration is
-the third and last surface — the site's skills table — so the three no longer
-disagree.
+Data-only, on the skills table, and only when it already has rows:
 
-DELETE: JavaScript/TypeScript, SQL, FastAPI, Vue.js.
-Programming is left with Python and Bash/PowerShell, which is the honest set.
+- DELETE by exact name: JavaScript/TypeScript, SQL, FastAPI, Vue.js.
+- Renumber: order_index is renumbered 1..17 over the names in _ORDER, the
+  surviving rows in their existing relative order, because the CV export
+  derives CATEGORY order from the first row it meets per category after
+  ORDER BY order_index. Leaving four holes would not break that, but a
+  contiguous set is what every previous skills migration has left behind and
+  drift here is invisible until the CV reorders itself. Names not listed are
+  untouched.
 
-What deliberately does NOT change, because it is a different kind of claim:
-the "Portfolio Site" project row keeps `technologies` = Vue.js, TypeScript,
-FastAPI, PostgreSQL, Docker, CI/CD, and its description still says the site is
-built with Vue 3 + TypeScript and FastAPI + PostgreSQL. That is a fact about
-the artifact, not a claim about the author, and the owner ruled it stays
-(2026-08-29, restated 2026-09-03). Deleting a skill row does not hide how the
-site is built; it stops the stack being sold as expertise.
-
-Renumbering: order_index is renumbered 1..17 over the surviving rows in their
-existing relative order, because the CV export derives CATEGORY order from the
-first row it meets per category after ORDER BY order_index. Leaving four holes
-would not break that, but a contiguous set is what every previous skills
-migration has left behind and drift here is invisible until the CV reorders
-itself. Names not listed (future owner additions) are untouched.
-
-Same shape as b5d21e04c7a9 and d4b7a91c3e58: data-only, narrow, idempotent,
-EMPTY table -> no-op (fresh DBs belong to seed_data.py, which carries the same
-set). Downgrade is a deliberate no-op — re-adding claims the owner declined to
-make is not a rollback anyone wants.
+No other table changes. Same shape as b5d21e04c7a9 and d4b7a91c3e58:
+data-only, narrow, idempotent, EMPTY table -> no-op (fresh DBs are seeded by
+seed_data.py instead). Downgrade is a deliberate no-op: the deleted rows are
+not recorded here.
 
 Revision ID: a7f3c81d9b24
 Revises: c9a4e7b21f83
@@ -106,8 +91,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema — deliberate no-op.
 
-    The upgrade removes claims the owner declined to make about himself.
-    Restoring them would re-publish an overclaim, which is never the rollback
-    anyone actually wants; the order_index renumbering is cosmetic and its
-    previous values carried duplicate-tie problems of their own.
+    The deleted rows are not recorded here, so there is nothing to restore
+    them from; the order_index renumbering is cosmetic and its previous
+    values carried duplicate-tie problems of their own.
     """

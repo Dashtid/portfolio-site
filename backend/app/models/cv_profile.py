@@ -50,9 +50,9 @@ class CvProfile(Base):
     languages: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
     # Övrigt / logistics one-liners (e.g. "B-körkort (category B driving
     # licence)") rendered at the BOTTOM of the CV under "Other". Deliberately
-    # its own column, not an education/certification row: the CV-generator
-    # requirements (2026-08-06) forbid logistics facts from ever being
-    # classified as credentials, and a separate column makes that structural.
+    # its own column, not an education/certification row: logistics facts must
+    # never be classified as credentials, and a separate column makes that
+    # structural.
     other_items: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
 
     # Private contact — admin-only. NEVER surfaced on a public serializer, the

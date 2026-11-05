@@ -139,13 +139,11 @@ const OFF_PORTFOLIO_REPOS = [
 
 const BANNED_IN_BAKED_PAGES = [
   ...OFF_PORTFOLIO_REPOS,
-  // Credential claims scrubbed 2026-07-22: never earned, and they had hidden
-  // in two places at once. Security+ is the only real certification.
+  // Certifications with no education row: Security+ is the only certification row.
   'AZ-500',
   'Certified Ethical Hacker',
   'ISO 27001 Lead Implementer',
-  // The standards claim-gate: ISO 27001 is a LinkedIn-only skill by owner
-  // ruling; the site and CV exclude it.
+  // Standards with no skills row: neither the site nor the CV lists them as skills.
   'ISO 27001',
   'ISO/IEC 27001'
 ]

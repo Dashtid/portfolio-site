@@ -1,9 +1,8 @@
 """Tests for the c9a4e7b21f83 summary-trim migration.
 
-The owner's 2026-08-23 review rejected exactly one sentence of the
-bullet-pack summary — the "Background: five years ..." tail — and
-approved the rest. The migration removes that tail from a summary that
-still matches the post-pack text verbatim, and touches nothing else.
+The migration removes one sentence of the bullet-pack summary — the
+"Background: five years ..." tail — from a summary that still matches
+the post-pack text verbatim, and touches nothing else.
 """
 
 import importlib.util
@@ -63,7 +62,7 @@ class TestCvSummaryTrimMigration:
         assert "Background: five years" not in _summary(engine)
 
     def test_trimmed_is_the_pack_summary_minus_only_the_tail(self):
-        """Everything before the rejected sentence survives verbatim."""
+        """Everything before the removed sentence survives verbatim."""
         assert _migration._SUMMARY_WITH_TAIL.startswith(_migration._SUMMARY_TRIMMED)
         tail = _migration._SUMMARY_WITH_TAIL[len(_migration._SUMMARY_TRIMMED) :]
         assert tail == (

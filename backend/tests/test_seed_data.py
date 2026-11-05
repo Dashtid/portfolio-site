@@ -86,16 +86,8 @@ class TestSeedProjects:
 
     @pytest.mark.asyncio
     async def test_every_seeded_project_advertises_an_openable_repo(self, db_session):
-        """A project record without a working github_url is an unfalsifiable
-        claim on a security portfolio.
-
-        The old seed shipped four inventions with github_url=None ("Medical
-        Device Security Framework", "Vulnerability Scanner Dashboard", ...) and
-        production separately accumulated three links to repos that 404 for a
-        logged-out visitor. Both are the same defect: named deliverables whose
-        proof cannot be checked. Every seeded project must point at a real
-        Dashtid repo, and technologies must be a LIST (the column is JSON --
-        the old seed passed comma-strings).
+        """Every seeded project must point at a Dashtid repo on GitHub, and
+        technologies must be a LIST (the column is JSON).
         """
         await seed_projects(db_session)
         projects = (await db_session.execute(select(Project))).scalars().all()
@@ -143,16 +135,10 @@ class TestSeedSkills:
 
     @pytest.mark.asyncio
     async def test_seed_skills_keyword_policy(self, db_session):
-        """The seeded skills enforce the decided keyword set (2026-08-06).
+        """The seeded skills carry the required names and none of the excluded ones.
 
-        One set across LinkedIn / CV / site. The IN terms below were decided
-        in the career-plan session; NIS 2 + GAMP 5 additionally carried a
-        tier-map gate that the owner signed off 2026-08-13. The OUT terms are
-        claim-gated (unverifiable or unearned) and must never reappear.
         Existing prod is converged by the b5d21e04c7a9 data migration (the
-        seed alone cannot reach a populated table). Changing this list is a
-        content decision, not a refactor: update it only alongside the
-        owner's keyword set.
+        seed alone cannot reach a populated table).
         """
         await seed_skills(db_session)
 
@@ -175,10 +161,8 @@ class TestSeedSkills:
         }
         assert required <= names, f"IN keywords missing from seed: {required - names}"
 
-        # First four: claim-gated OUT terms. The rest were pruned in the
-        # 2026-08-22 accuracy pass — no repo or role backs them (Django/React/
-        # Azure have zero code anywhere; "Security Auditing" is not the
-        # register's approved framing; the HL7 work was HL7, never FHIR).
+        # Substring match on lower-cased names: none of these may appear in
+        # any seeded skill name.
         lowered = {n.lower() for n in names}
         for banned in (
             "iso 27001",
@@ -195,13 +179,10 @@ class TestSeedSkills:
                 f"claim-gated OUT term '{banned}' present in seeded skills"
             )
 
-        # Excluded 2026-08-29 by the owner's ten-minute-quiz rule (a skill is
-        # listed only if he would be comfortable being quizzed on it for ten
-        # minutes) and removed from the site by a7f3c81d9b24. Matched exactly,
+        # Removed from existing databases by a7f3c81d9b24. Matched exactly,
         # not as substrings: "SQL" would otherwise ban PostgreSQL, which is a
-        # legitimate future entry. dashti.se still states it is BUILT with
-        # Vue 3 + TypeScript + FastAPI via the Portfolio Site project row --
-        # that is a fact about the artifact, and this guard must not reach it.
+        # legitimate future entry. The Portfolio Site project row still lists
+        # the stack the site is built with; this check reads skills rows only.
         quiz_excluded = {"JavaScript/TypeScript", "SQL", "FastAPI", "Vue.js"}
         assert quiz_excluded.isdisjoint(names), (
             f"ten-minute-quiz exclusions back in the seed: {quiz_excluded & names}"
@@ -257,9 +238,7 @@ class TestSeedEducation:
 
         result = await db_session.execute(select(Education))
         education_items = result.scalars().all()
-        # Two degrees (KTH, Lund) + one course + the one earned cert
-        # (Security+). No unearned/offensive certs (CEH, AZ-500, ISO 27001
-        # Lead Implementer) are seeded — defensive-first public brand.
+        # Two degrees (KTH, Lund) + one course + one certification (Security+).
         assert len(education_items) == 4
 
     @pytest.mark.asyncio

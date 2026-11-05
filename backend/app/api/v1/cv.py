@@ -245,6 +245,6 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
         "languages": profile.languages or [],
         # Övrigt / logistics one-liners (B-körkort etc.). A separate section
         # rendered LAST by CvDocument — structurally incapable of landing in
-        # certificates, per the CV-generator requirements (2026-08-06).
+        # certificates.
         "other": list(profile.other_items or []),
     }
