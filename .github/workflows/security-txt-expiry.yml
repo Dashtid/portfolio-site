@@ -1,0 +1,126 @@
+# Weekly check of the two security.txt files production serves (RFC 9116).
+#
+# backend/tests/test_security_txt.py and frontend/tests/unit/securityTxt.spec.ts
+# fail 30 days before Expires, but only when ci-cd.yml runs them: its quality
+# jobs are path-filtered, it has no schedule, and on a Dependabot pip PR the
+# uv.lock parity step stops backend-quality before pytest. So a quiet month
+# could let both copies go stale with CI green. This job reads the live copies
+# every Monday and fails once either has 60 days or less left, which gives
+# about four weekly warnings before the unit tests' 30-day limit. GitHub sends
+# a scheduled run's notifications to the user who last modified its cron line.
+name: security.txt expiry
+
+on:
+  schedule:
+    # 06:00 UTC every Monday.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only this job runs the keepalive, so the workflow-enable scope lives
+    # here rather than at top level (Scorecard TokenPermissions scores a
+    # top-level 'actions: write' as 0 - every job would inherit it).
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      # Same 60-day auto-disable trap as db-backup.yml: in a public repository
+      # GitHub turns scheduled workflows off after 60 days without repository
+      # activity, and a disabled check just stops, with no failure to notice.
+      # Re-enabling on every run resets that clock.
+      - name: Keepalive (reset the 60-day auto-disable clock)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/security-txt-expiry.yml/enable"
+
+      - name: Check both live copies
+        run: |
+          python3 - <<'PY'
+          import re
+          import sys
+          import urllib.request
+          from datetime import datetime, timedelta, timezone
+
+          URLS = ("https://dashti.se/.well-known/security.txt",
+                  "https://api.dashti.se/.well-known/security.txt")
+          # The unit tests' RFC 3339 rule: upper-case T and Z only, ASCII digits,
+          # an offset's hours 00-23 and minutes 00-59.
+          RFC3339 = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})", re.ASCII)
+          OFFSET = re.compile(r"Z|[+-]([01]\d|2[0-3]):[0-5]\d")
+          FIX = ("renew frontend/public/.well-known/security.txt and backend/app/main.py"
+                 " (SECURITY_TXT_CONTENT) together, then deploy both")
+
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None  # report a redirect as an HTTP error instead of following it
+
+
+          def fields(text, name):
+              # Field names are case-insensitive (RFC 9116 section 2); "#" starts a comment.
+              values = []
+              for line in re.split(r"\r?\n", text):
+                  key, sep, value = line.partition(":")
+                  if sep and not line.startswith("#") and key.strip().lower() == name:
+                      values.append(value.strip())
+              return values
+
+
+          def time_left(expires, now):
+              # None unless there is exactly one RFC 3339 Expires that names a real time.
+              shape = RFC3339.fullmatch(expires[0]) if len(expires) == 1 else None
+              if not shape or not OFFSET.fullmatch(shape[2]):
+                  return None
+              try:
+                  parsed = datetime.fromisoformat(expires[0])
+              except ValueError:  # e.g. 2027-02-30
+                  return None
+              # It must read back as written: Python 3.14 reads T24:00:00 as the next midnight.
+              if parsed.isoformat()[:19] != expires[0][:19]:
+                  return None
+              return parsed - now
+
+
+          now = datetime.now(timezone.utc)
+          opener = urllib.request.build_opener(NoRedirect)
+          errors, copies = [], []
+          for url in URLS:
+              request = urllib.request.Request(url, headers={"User-Agent": "security-txt-expiry"})
+              try:
+                  with opener.open(request, timeout=15) as response:
+                      status, text = response.status, response.read().decode("utf-8")
+              except Exception as exc:  # network, HTTP (redirects included) and decode errors
+                  errors.append(f"{url}: {exc}")
+                  continue
+              if status != 200:
+                  errors.append(f"{url}: HTTP {status}, not 200")
+              if "mailto:" in text.lower():
+                  errors.append(f"{url}: contains mailto:")
+              expires = fields(text, "expires")
+              left = time_left(expires, now)
+              if left is None:
+                  errors.append(f"{url}: needs exactly one RFC 3339 Expires"
+                                f" (upper-case T and Z), has {expires}")
+              else:
+                  print(f"{url}: Expires {expires[0]}, {left / timedelta(days=1):.2f} days left")
+                  if left <= timedelta(days=60):
+                      errors.append(f"{url}: Expires {expires[0]} leaves 60 days or less")
+              copies.append((expires, fields(text, "contact")))
+          if len(copies) == 2:
+              (site_expires, site_contacts), (api_expires, api_contacts) = copies
+              if site_expires != api_expires:
+                  errors.append(f"Expires differs: {site_expires} (site), {api_expires} (API)")
+              if site_contacts != api_contacts:
+                  errors.append(f"Contact differs: {site_contacts} (site), {api_contacts} (API)")
+          for error in errors:
+              print(f"::error::{error} - {FIX}")
+          sys.exit(1 if errors else 0)
+          PY

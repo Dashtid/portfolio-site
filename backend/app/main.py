@@ -20,7 +20,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
 
 from app.api.v1 import (
     admin_panel,
@@ -612,27 +612,43 @@ async def root():
     }
 
 
-# Security.txt endpoint (RFC 9116)
+# Security.txt endpoint (RFC 9116). Kept in step with the site's copy,
+# frontend/public/.well-known/security.txt: every field but Canonical is the
+# same, so a renewal changes both files. tests/test_security_txt.py fails 30
+# days before Expires, and the weekly workflow
+# .github/workflows/security-txt-expiry.yml checks both live copies.
 SECURITY_TXT_CONTENT = """# Security Policy for dashti.se API
 # RFC 9116 compliant security.txt
 
-Contact: mailto:security@dashti.se
+# Preferred: GitHub private vulnerability reporting.
+Contact: https://github.com/Dashtid/portfolio-site/security/advisories/new
 Contact: https://www.linkedin.com/in/david-dashti/
-Expires: 2026-12-31T23:59:59.000Z
+Expires: 2027-10-31T23:59:59.000Z
 Preferred-Languages: en, sv
 Canonical: https://api.dashti.se/.well-known/security.txt
+Policy: https://github.com/Dashtid/portfolio-site/blob/main/SECURITY.md
 
 # Policy
 # This is the API backend for dashti.se portfolio.
-# If you discover a security vulnerability, please report it responsibly.
+# If you discover a security vulnerability, please report it responsibly
+# using the contacts above.
 """
 
 
 @app.get("/.well-known/security.txt", include_in_schema=False)
-@app.get("/security.txt", include_in_schema=False)
 async def security_txt():
     """Serve security.txt for responsible disclosure (RFC 9116)"""
     return PlainTextResponse(SECURITY_TXT_CONTENT, media_type="text/plain")
+
+
+# RFC 9116 section 3 lets the legacy top-level path redirect to /.well-known/.
+# Serving the file there as well would fail section 2.5.2: its only Canonical
+# field names the /.well-known/ URI, so a copy fetched from /security.txt
+# "SHOULD NOT be trusted".
+@app.get("/security.txt", include_in_schema=False)
+async def security_txt_legacy():
+    """Redirect the legacy path to /.well-known/security.txt (RFC 9116 section 3)"""
+    return RedirectResponse("/.well-known/security.txt", status_code=301)
 
 
 if __name__ == "__main__":

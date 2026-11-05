@@ -13,9 +13,10 @@ you a thread you can see rather than a mail you cannot tell arrived.
 [LinkedIn](https://www.linkedin.com/in/david-dashti/), or
 <dashti.dat@gmail.com> if you would rather use email.
 
-> [!] Do not use `security@dashti.se`. It was published in this repository's
-> `security.txt` until 2026-09-20 and it bounced the whole time — the domain has
-> no MX record. Both files now point at the channels above.
+> [!] Do not use `security@dashti.se`. The site's `security.txt` listed it
+> until 2026-09-20 and the API's copy at `api.dashti.se` until 2026-11-06,
+> and it bounced the whole time — the domain has no MX record. Both
+> `security.txt` copies now list the GitHub and LinkedIn channels above.
 
 Include in your report:
 
