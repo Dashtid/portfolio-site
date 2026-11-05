@@ -229,7 +229,11 @@ jobs:
       # rebaseline render with the same bytes; re-resolve it on every version move
       # (never copy it from anywhere else) with:
       #   docker buildx imagetools inspect mcr.microsoft.com/playwright:vX.Y.Z-noble
-      image: mcr.microsoft.com/playwright:v1.64.0-noble@sha256:06a9939e57531807f8d5fd76ce44b53165ffb7d7501d87ab10e285c20b1e971f
+      # [!] This v1.64.1 pin is the tag's index of 2026-10-23 (Node 24), not
+      # the rebuild the tag serves since 2026-11-01 (sha256:2f05f8a7..., Node
+      # 26), which was inside the 7-day cooldown when the pin was set on
+      # 2026-11-05. Drop this note with the next version move.
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
       options: --ipc=host
     defaults:
       run:
