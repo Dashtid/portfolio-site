@@ -255,22 +255,22 @@ repos:
         additional_dependencies:
           - eslint@10.13.0
           - '@eslint/js@10.0.1'
-          - '@typescript-eslint/eslint-plugin@8.72.0'
-          - '@typescript-eslint/parser@8.72.0'
-          - eslint-plugin-vue@10.11.1
+          - '@typescript-eslint/eslint-plugin@8.72.1'
+          - '@typescript-eslint/parser@8.72.1'
+          - eslint-plugin-vue@10.12.0
           - eslint-plugin-prettier@5.5.7
           - eslint-config-prettier@10.1.8
           - vue-eslint-parser@10.4.0
           - typescript@5.9.3
 
-  # mypy follows backend/pyproject.toml's dev pin (mypy==2.4.0 since
-  # 2026-10-20). This hook is the only mypy CI runs (pre-commit.yml), so a
+  # mypy follows backend/pyproject.toml's dev pin (mypy==2.4.1 since
+  # 2026-11-08, 2.4.0 before). This hook is the only mypy CI runs (pre-commit.yml), so a
   # different version here makes CI and a local `mypy app` disagree. 2.0 turned
   # --strict-bytes and --local-partial-types on by default; the backend passed
   # both unchanged (2026-10-20: this hook at v2.4.0 over every backend file, and
   # `mypy app` 2.4.0 in the full venv). Move this rev with the dev pin.
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.4.0
+    rev: v2.4.1
     hooks:
       - id: mypy
         files: ^backend/.*\.py$
@@ -280,5 +280,5 @@ repos:
         # python-jose stubs went on 2026-11-06: the backend uses pyjwt now.
         additional_dependencies:
           - fastapi==0.136.3
-          - pydantic==2.14.1
+          - pydantic==2.14.2
           - starlette==1.10.0
