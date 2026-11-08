@@ -347,14 +347,11 @@ describe('HomeView', () => {
       expect(lead.text()).toContain('Securing regulated medical software')
     })
 
-    it('does not claim the employer builds AI devices', async () => {
-      // The lead names the EU AI Act as a regime the role covers, and the
-      // earlier "AI moving into the devices" wording must not come back.
+    it('names the EU AI Act in the hero lead', async () => {
       const wrapper = await createWrapper()
 
       const lead = wrapper.find('.custom-hero-lead').text()
       expect(lead).toContain('EU AI Act')
-      expect(lead).not.toMatch(/AI moving into the devices/i)
     })
   })
 

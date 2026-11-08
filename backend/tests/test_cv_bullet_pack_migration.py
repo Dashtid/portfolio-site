@@ -55,8 +55,7 @@ def _pack(key: str) -> tuple[list[str], list[str]]:
     return _migration._PACK[key]
 
 
-# Stand-in for whatever the Hermes row holds when this pack runs. Deliberately
-# not the real earlier text, which is kept out of the tracked tree.
+# Stand-in value for the Hermes row; _PACK has no entry for that row.
 _HERMES_UNTOUCHED = ["Hermes bullets - owned by b41f7ac2e905, not by this pack."]
 
 
@@ -229,12 +228,12 @@ class TestCvBulletPackMigration:
             summary = conn.execute(sa.select(_CV_PROFILE.c.summary)).scalar_one()
             assert summary == _migration._SUMMARY_NEW
 
-    def test_register_constraints_hold_in_new_bullets(self):
+    def test_new_bullets_contain_no_listed_token(self):
         """The replacement bullets contain none of the tokens listed below."""
         new_text = " ".join(" ".join(new) for _, new in _migration._PACK.values()).lower()
         for banned in ("pentest", "penetration", "wired into ci", "spearheaded", "owasp"):
             assert banned not in new_text
-        # Token assembled, not written out - see the docstring of the test below.
+        # Assembled from fragments, like the tokens in the test below.
         assert "my " + "fu" + "zz" + "er" not in new_text
 
     def test_pack_carries_no_protocol_or_technique_token(self):

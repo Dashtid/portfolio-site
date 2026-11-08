@@ -176,16 +176,16 @@ class TestSeedSkills:
             "fhir",
         ):
             assert not any(banned in n for n in lowered), (
-                f"claim-gated OUT term '{banned}' present in seeded skills"
+                f"excluded term '{banned}' present in seeded skills"
             )
 
         # Removed from existing databases by a7f3c81d9b24. Matched exactly,
         # not as substrings: "SQL" would otherwise ban PostgreSQL, which is a
         # legitimate future entry. The Portfolio Site project row still lists
         # the stack the site is built with; this check reads skills rows only.
-        quiz_excluded = {"JavaScript/TypeScript", "SQL", "FastAPI", "Vue.js"}
-        assert quiz_excluded.isdisjoint(names), (
-            f"ten-minute-quiz exclusions back in the seed: {quiz_excluded & names}"
+        exact_excluded = {"JavaScript/TypeScript", "SQL", "FastAPI", "Vue.js"}
+        assert exact_excluded.isdisjoint(names), (
+            f"exactly-matched exclusions back in the seed: {exact_excluded & names}"
         )
 
     @pytest.mark.asyncio
