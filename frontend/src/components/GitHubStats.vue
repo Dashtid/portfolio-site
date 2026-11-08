@@ -95,7 +95,7 @@ interface Props {
    * repos, so without this every project appeared twice on the homepage —
    * once with reviewed copy, once with its GitHub blurb. Matching is
    * normalised because the two sources spell them differently
-   * ("Sysadmin Toolkit" vs "sysadmin-toolkit").
+   * ("Example Tool" vs "example-tool").
    */
   exclude?: string[]
 }

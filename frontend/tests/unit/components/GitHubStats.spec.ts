@@ -162,16 +162,16 @@ describe('GitHubStats', () => {
     })
 
     it('matches across the two naming styles the sources use', async () => {
-      // The CMS says "Sysadmin Toolkit"; GitHub says "sysadmin-toolkit".
+      // The CMS writes "Example Tool"; GitHub writes "example-tool".
       mockedAxios.get.mockResolvedValue({
         data: {
           ...mockStats,
-          featured_repos: [{ ...mockStats.featured_repos[0], name: 'sysadmin-toolkit' }]
+          featured_repos: [{ ...mockStats.featured_repos[0], name: 'example-tool' }]
         }
       })
-      const wrapper = mount(GitHubStats, { props: { exclude: ['Sysadmin Toolkit'] } })
+      const wrapper = mount(GitHubStats, { props: { exclude: ['Example Tool'] } })
       await flushPromises()
-      expect(wrapper.text()).not.toContain('sysadmin-toolkit')
+      expect(wrapper.text()).not.toContain('example-tool')
     })
 
     it('keeps repos that are not curated', async () => {
