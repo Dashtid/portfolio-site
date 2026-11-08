@@ -912,8 +912,8 @@
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Application security — secure SDLC, SAST/SCA and CI/CD hardening (OIDC workload
-                    identity) for regulated software
+                    Application security — secure SDLC, SAST/SCA and CI/CD hardening for regulated
+                    software
                   </li>
                 </ul>
               </div>
