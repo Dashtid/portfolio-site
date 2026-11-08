@@ -32,6 +32,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { bakedTexts } from './bakedText.mjs'
 import { EXCLUDED_REPO_DIGESTS, digest, findTerms } from './hashedTerms.mjs'
 
 const dist = path.resolve(import.meta.dirname, '..', 'dist')
@@ -133,19 +134,38 @@ const BANNED_IN_BAKED_PAGES = [
   'ISO/IEC 27001'
 ]
 
+// Both lists are matched against the raw page and against every key and
+// string value of its state block and JSON-LD blocks, decoded by
+// ./bakedText.mjs; its header says why the raw page alone is not enough.
+let decodedStates = 0
+let decodedLdJson = 0
 for (const file of walkHtml(dist)) {
   const rel = path.relative(dist, file).replace(/\\/g, '/')
   const html = fs.readFileSync(file, 'utf-8')
+  let baked
+  try {
+    baked = bakedTexts(html)
+  } catch (error) {
+    fail(`baked page ${rel}: ${error.message} — update scripts/bakedText.mjs to match`)
+  }
+  if (baked.state) decodedStates++
+  else if (rel === 'index.html') {
+    fail('index.html carries no __INITIAL_STATE__ block — the decoded half of check 4 is vacuous')
+  }
+  decodedLdJson += baked.ldJson
   for (const term of BANNED_IN_BAKED_PAGES) {
     // Case-insensitive: the point is the term, not its capitalisation.
-    if (new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(html)) {
+    const pattern = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+    if (baked.texts.some(text => pattern.test(text))) {
       fail(
         `baked page ${rel} contains "${term}" — this text must not be published. ` +
           'If it came from the CMS, fix the record and rebake; if from source, remove it.'
       )
     }
   }
-  const excluded = findTerms(html, EXCLUDED_REPO_DIGESTS)
+  const excluded = [
+    ...new Set(baked.texts.flatMap(text => findTerms(text, EXCLUDED_REPO_DIGESTS)))
+  ].sort()
   if (excluded.length > 0) {
     fail(
       `baked page ${rel} names ${excluded.length} excluded repository name(s), digest ` +
@@ -244,7 +264,8 @@ console.log(
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
     'baked HTML free of unhashed styling, ' +
     `${BANNED_IN_BAKED_PAGES.length} banned terms and ${EXCLUDED_REPO_DIGESTS.size} ` +
-    'excluded repository names absent from baked content, ' +
+    'excluded repository names absent from baked content ' +
+    `(${decodedStates} state and ${decodedLdJson} JSON-LD blocks decoded), ` +
     `${homeCards} project cards prerendered, ` +
     `${backdropRules} backdrop-filter rules carry both forms`
 )
