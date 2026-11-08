@@ -118,6 +118,7 @@ const formattedDate = computed(() => {
   const date = new Date(props.document.published_date)
   // Check for Invalid Date (NaN) before formatting
   if (isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+  // timeZone UTC: date-only strings parse as UTC midnight (see HomeView)
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' })
 })
 </script>

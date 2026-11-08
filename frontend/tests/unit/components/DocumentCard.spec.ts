@@ -87,4 +87,19 @@ describe('DocumentCard', () => {
     const wrapper = mount(DocumentCard, { props: { document: baseDoc } })
     expect(wrapper.text()).toMatch(/June 2024/)
   })
+
+  it('keeps the month of a first-of-month date in a UTC-negative time zone', () => {
+    const previous = process.env.TZ
+    process.env.TZ = 'America/New_York'
+    try {
+      const wrapper = mount(DocumentCard, {
+        props: { document: { ...baseDoc, published_date: '2024-06-01' } }
+      })
+      expect(wrapper.text()).toMatch(/June 2024/)
+      expect(wrapper.text()).not.toMatch(/May 2024/)
+    } finally {
+      if (previous === undefined) delete process.env.TZ
+      else process.env.TZ = previous
+    }
+  })
 })

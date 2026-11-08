@@ -50,7 +50,7 @@
         v-if="topLanguages.length"
         class="languages-section mt-8 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/50"
       >
-        <h3>Top Languages</h3>
+        <h3>Languages in my public repositories</h3>
         <div class="language-bars">
           <LanguageBar
             v-for="lang in topLanguages"
