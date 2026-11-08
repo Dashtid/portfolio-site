@@ -56,8 +56,7 @@ _PATTERNS: dict[str, re.Pattern[str]] = {
 # label -> digests of lowercased terms, matched against every docstring and
 # comment block.
 _HASHED: dict[str, frozenset[str]] = {
-    "repository name": hashed_terms.EXCLUDED_REPO_DIGESTS
-    | frozenset({"13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411"}),
+    "repository name": hashed_terms.EXCLUDED_REPO_DIGESTS | hashed_terms.OTHER_REPO_DIGESTS,
     "listed phrase": frozenset(
         {
             "05edab2681bdf16b426847c04372fa0d96cb9e33d334128b066b11135e9eb7b3",

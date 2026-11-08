@@ -2,6 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import {
+  EXCLUDED_REPO_DIGESTS,
+  OTHER_REPO_DIGESTS,
+  digest,
+  findTerms
+} from '../../scripts/hashedTerms.mjs'
 
 /**
  * cv/ sits in a PUBLIC repo but is fed from PII-carrying local files
@@ -76,13 +82,17 @@ describe('cv/ public-repo scrub guard', () => {
  * directory and a clean COMMITTED tree are different claims, so this guard
  * scans every tracked text file instead.
  *
- * Two rules, and they are deliberately different shapes:
+ * Three rules, and the second is deliberately a different shape:
  *
  * 1. The TECHNIQUE token is zero-match anywhere in the tree.
  * 2. The PROTOCOL token may not share a line with any of the WEAKNESS_TERMS.
  *    That one is an ADJACENCY gate, not zero-match: the protocol name itself
  *    appears in the skills lists of resume.json and seed_data.py, and the
  *    last test below pins that it stays in resume.json.
+ * 3. The repository names listed in scripts/hashedTerms.mjs
+ *    (EXCLUDED_REPO_DIGESTS and OTHER_REPO_DIGESTS) are zero-match anywhere in
+ *    the tree too. They are matched by SHA-256 digest, so a failure prints the
+ *    file, the line and a digest prefix.
  *
  * Tokens are assembled from fragments so this guard never matches itself.
  */
@@ -122,9 +132,9 @@ const trackedTextFiles = (): string[] =>
     .filter(Boolean)
     .filter(f => !SKIP_EXT.has(path.extname(f).toLowerCase()))
 
-/** Every line of every tracked text file. */
-const scanLines = (): Array<{ file: string; line: number; text: string }> => {
-  const out: Array<{ file: string; line: number; text: string }> = []
+/** Every tracked text file and its content. */
+const trackedTexts = (): Array<{ file: string; raw: string }> => {
+  const out: Array<{ file: string; raw: string }> = []
   for (const file of trackedTextFiles()) {
     const abs = path.join(REPO_ROOT, file)
     let raw: string
@@ -134,12 +144,16 @@ const scanLines = (): Array<{ file: string; line: number; text: string }> => {
       continue // unreadable or deleted-but-tracked; not this guard's business
     }
     if (raw.includes('\u0000')) continue // binary
-    raw.split('\n').forEach((text, i) => {
-      out.push({ file, line: i + 1, text })
-    })
+    out.push({ file, raw })
   }
   return out
 }
+
+/** Every line of every tracked text file. */
+const scanLines = (): Array<{ file: string; line: number; text: string }> =>
+  trackedTexts().flatMap(({ file, raw }) =>
+    raw.split('\n').map((text, i) => ({ file, line: i + 1, text }))
+  )
 
 describe('tracked-tree banned-term guard', () => {
   it('names the dynamic-testing technique nowhere in the tracked tree', () => {
@@ -159,6 +173,17 @@ describe('tracked-tree banned-term guard', () => {
       .map(({ file, line, text }) => `${file}:${line}: ${text.trim().slice(0, 160)}`)
     expect(hits, `Banned pair found in tracked files:\n${hits.join('\n')}`).toEqual([])
   })
+
+  it('names no listed repository anywhere in the tracked tree', () => {
+    const digests = new Set([...EXCLUDED_REPO_DIGESTS, ...OTHER_REPO_DIGESTS])
+    const hits = trackedTexts().flatMap(({ file, raw }) =>
+      findTerms(raw, digests).map(term => {
+        const line = raw.split('\n').findIndex(text => findTerms(text, digests).includes(term))
+        return `${file}:${line + 1 || '?'}: digest ${digest(term).slice(0, 12)}`
+      })
+    )
+    expect(hits, `Listed repository names found in tracked files:\n${hits.join('\n')}`).toEqual([])
+  }, 60_000)
 
   it('keeps the bare protocol name, which is a load-bearing medtech keyword', () => {
     // Asserts the gate is adjacency and not zero-match. If this ever fails,

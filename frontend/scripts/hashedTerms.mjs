@@ -11,8 +11,8 @@
  * prefix and before a `.git` suffix, but not inside a longer word.
  *
  * backend/tests/hashed_terms.py runs the same algorithm and carries the same
- * EXCLUDED_REPO_DIGESTS; tests/unit/hashedTerms.spec.ts checks that the two
- * lists agree.
+ * EXCLUDED_REPO_DIGESTS and OTHER_REPO_DIGESTS; tests/unit/hashedTerms.spec.ts
+ * checks that each pair agrees.
  */
 import { createHash } from 'node:crypto'
 
@@ -29,6 +29,15 @@ export const EXCLUDED_REPO_DIGESTS = new Set([
   '8f452d3012fe2f0d1e4deb459db896dd2124b242ea3e1b43f99ba0353fa0ba4a',
   'cada8352d32b8c4bb62c801b1cfb46d7d6c9e03c9107caf4dce40d1c3c52a633',
   'dadded746f1d20cb34cc7eb59726ec80cac6d273bc12394b5ab491d2cefdb645'
+])
+
+/**
+ * Digest of one more repository name. It is not a dashboard entry, so the
+ * baked pages are not checked for it; tests/unit/cvPublicScrub.spec.ts checks
+ * the tracked tree for it and for EXCLUDED_REPO_DIGESTS.
+ */
+export const OTHER_REPO_DIGESTS = new Set([
+  '13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411'
 ])
 
 /** SHA-256 hex digest of a term, lowercased. */

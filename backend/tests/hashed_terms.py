@@ -10,7 +10,8 @@ hyphenated or dotted token, after an ``owner/`` prefix and before a ``.git``
 suffix, but not inside a longer word.
 
 frontend/scripts/hashedTerms.mjs runs the same algorithm over the baked pages
-and carries the same ``EXCLUDED_REPO_DIGESTS``.
+and the tracked tree, and carries the same ``EXCLUDED_REPO_DIGESTS`` and
+``OTHER_REPO_DIGESTS``.
 """
 
 import hashlib
@@ -33,6 +34,11 @@ EXCLUDED_REPO_DIGESTS: frozenset[str] = frozenset(
     }
 )
 """Digests of the repository names excluded from the public dashboard."""
+
+OTHER_REPO_DIGESTS: frozenset[str] = frozenset(
+    {"13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411"}
+)
+"""Digest of one more repository name, which is not a dashboard entry."""
 
 
 def digest(term: str) -> str:
