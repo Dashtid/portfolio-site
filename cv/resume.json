@@ -226,7 +226,6 @@
   ],
   "meta": {
     "canonical": "https://dashti.se",
-    "version": "v1.0.0",
-    "note": "IP-clean public reference copy of the CV facts. The public /cv route was retired 2026-07 (the site IS the CV); the generator of record is the admin-only /api/v1/admin/cv/export assembled from the DB. Contact is LinkedIn-only by design; private contact and the Övrigt/Other logistics lines (B-körkort) live in the DB cv_profile, outside this file. Keyword set synced 2026-08-13 (career-plan decision 2026-08-06); accuracy pass 2026-08-22 pruned repo-unbacked terms (Django/React/Azure/Security Auditing/FHIR/AWS/Terraform) and mirrored the DB's category grouping. 2026-09-06: label, summary and the Hermes highlights replaced with the approved September copy (career-plan applications/copy-pack-2026-09.md rev 2) — the summary gains the authorship claim it never carried, the AI Act enters as one clause and four keywords, and the old third Hermes bullet was removed for naming the employer's imaging protocol beside the dynamic-testing technique. Deployed rows are converged by migration b41f7ac2e905; the tree-wide guard is frontend/tests/unit/cvPublicScrub.spec.ts."
+    "version": "v1.0.0"
   }
 }

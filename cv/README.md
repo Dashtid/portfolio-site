@@ -31,11 +31,5 @@ This repository is **public** (it powers dashti.se). So:
 
 ## Note on content
 
-The `projects` section was **added** (it is not on the source PDF), then **trimmed Jul 2026**.
-
-**Inclusion rule: a project appears here only if it is public, independently authored, and safe to
-link.** Anything that fails one of those is simply absent — from this file, from `resume.json`, and
-from the seed data. Next addition: **oidc-reach**, once v0.1 ships.
-
-Deliberately not recorded here: which projects were removed, or why. This file is world-readable,
-and an explanation of an omission re-publishes the thing the omission exists to keep out of it.
+The `projects` section is not on the source PDF. Every project listed in it links to a public
+repository.
