@@ -2,10 +2,10 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { scrollBehavior } from '@/router'
 import type { RouteLocationNormalized } from 'vue-router'
 
-// scrollBehavior contract (owner-reported navbar-cut bug, 2026-07-28):
-// route changes must jump to top INSTANTLY (no smooth animation to race the
-// page transition), smooth stays reserved for in-page anchors, and exotic
-// URL-bar hashes must never throw through querySelector.
+// scrollBehavior contract: route changes must jump to top INSTANTLY (no
+// smooth animation to race the page transition), smooth stays reserved for
+// in-page anchors, and exotic URL-bar hashes must never throw through
+// querySelector.
 
 const route = (hash = ''): RouteLocationNormalized =>
   ({ hash, path: '/', fullPath: `/${hash}` }) as RouteLocationNormalized

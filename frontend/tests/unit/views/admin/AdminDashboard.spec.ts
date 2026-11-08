@@ -191,7 +191,7 @@ describe('AdminDashboard', () => {
       // Sprint 5: Skills + Education + Metrics joined the nav (ADMIN-01/02/03).
       // Sprint 6: Documents joined (ADMIN-04).
       // OSS dashboard Phase 3: OSS joined.
-      // Campaign 2026-08 Sprint 2: CV (admin-only CV export) joined.
+      // CV (admin-only CV export) joined last.
       expect(navLinks.length).toBe(10)
 
       const linkTexts = navLinks.map(link => link.text())

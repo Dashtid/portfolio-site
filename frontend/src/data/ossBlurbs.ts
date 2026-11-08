@@ -5,8 +5,7 @@
  * PR title alone when a blurb is missing, so an unsynced new PR
  * degrades gracefully.
  *
- * Register note: blurbs describe the upstream change on its own terms —
- * they never tie a contribution to employer work or internal tooling.
+ * Each blurb describes the upstream change itself.
  */
 export const OSS_BLURBS: Record<string, string> = {
   'Efferent-Health/fo-dicom.Codecs#190':

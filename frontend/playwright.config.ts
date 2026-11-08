@@ -22,8 +22,8 @@ export default defineConfig({
       // Absolute cap, not a ratio. maxDiffPixelRatio 0.01 scaled with image
       // area: on a full-page shot "1%" was ~100k pixels, enough to hide an
       // entire changed nav row — which is exactly what happened, three
-      // times (footer/CV link, projects/offensive-toolkit card, hero/OSS
-      // nav item each stayed stale for ~6 weeks while the suite passed).
+      // times (a footer link, a projects card and a hero nav item each
+      // stayed stale for ~6 weeks while the suite passed).
       // The environment is pinned (one Docker image, one browser build), so
       // legitimate variance is anti-aliasing at the 3-5 px scale; 100 px
       // absorbs that on every shot size while any real content change —

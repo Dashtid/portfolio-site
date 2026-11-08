@@ -102,9 +102,9 @@
           </div>
 
           <!-- Light-mode motif: self-drawing signal trace through labeled
-               lifecycle gates (audit-approved direction). CSS animates the
-               draw once on load; fully drawn under reduced motion. lg-only
-               — mobile and dark mode each keep a single quiet backdrop. -->
+               lifecycle gates. CSS animates the draw once on load; fully
+               drawn under reduced motion. lg-only — mobile and dark mode
+               each keep a single quiet backdrop. -->
           <div class="relative hidden lg:col-span-5 lg:block dark:lg:hidden" aria-hidden="true">
             <svg
               class="signal-trace w-full text-slate-300"
@@ -131,8 +131,6 @@
                 </g>
                 <g class="trace-node">
                   <rect x="296" y="215" width="10" height="10" rx="2" class="node-box" />
-                  <!-- Public-surface rule: name the testing category, never the
-                       technique. This label renders on the public homepage. -->
                   <text x="301" y="242" text-anchor="middle" class="node-label">
                     Dynamic testing
                   </text>
@@ -317,10 +315,8 @@
                 <p
                   class="company-description mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  <!-- Was "Remote Service Engineer providing ..." — a SECOND job title,
-                       contradicting the "Incident Support Specialist, Nordics" heading
-                       directly above it. Mirrors the live DB description now.
-                       Philips spells the products IntelliSpace, not Intellispace. -->
+                  <!-- Mirrors the description stored on this companies row. The
+                       product names are spelled IntelliSpace. -->
                   Level 1 support for IntelliSpace Portal and IntelliSpace Cardiovascular across the
                   Nordics and UK/Ireland — full incident lifecycle, upgrade assessment, and
                   cross-regional knowledge sharing.
@@ -512,18 +508,10 @@
             </template>
             <template v-else>
               <!-- Static fallback — rendered when the SSG build fetched no
-                   education rows.
-
-                   MUST mirror the LIVE DB, not seed_data alone. This block had
-                   drifted into a third, wrong version of the CV: KTH as
-                   "Aug 2017 — Jun 2022 / M.Sc. Medical Engineering / Thesis on
-                   AI-driven diagnostic systems" (no such thesis exists — the
-                   real one is printed in the Publications section of this same
-                   page) and Lund demoted from a full B.Sc. to a 2020-2021
-                   "(Exchange)". A build that could not reach the API therefore
-                   published an academic history that contradicts both the
-                   database and the rest of the page. Verified against
-                   /api/v1/education/ 2026-08-05; seed_data.py updated to match. -->
+                   education rows. It mirrors the education rows in the
+                   database, which seed_data.py carries as well;
+                   tests/unit/views/HomeFallbackParity.spec.ts checks the
+                   fallback's text values against seed_data.py. -->
               <article
                 class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-surface-1 dark:hover:border-primary-400/40 dark:hover:bg-surface-2"
               >
@@ -714,14 +702,12 @@
           <!-- Curated projects, PRERENDERED. These come from the database
                via the store, so vite-ssg bakes them into the HTML: they are
                present for crawlers, for readers without JS, and before any
-               scroll. That matters because the GitHubStats block below is
-               client-only AND gated behind an IntersectionObserver, so until
-               this existed the section shipped with a heading and nothing
-               under it — the flagship IP-clean work was in the page's baked
-               JSON state but rendered nowhere (2026-09-06 content audit).
-               Curated copy also beats the GitHub API's repo blurbs, and the
-               backend allowlist (PUBLIC_REPO_ALLOWLIST) governs what the
-               live cards may show. -->
+               scroll. The GitHubStats block below is client-only AND gated
+               behind an IntersectionObserver, so without this grid the
+               section would prerender as a heading with nothing under it.
+               The curated copy is shown instead of the GitHub API's repo
+               blurbs, and the backend allowlist (PUBLIC_REPO_ALLOWLIST)
+               governs what the live cards may show. -->
           <div
             v-if="featuredProjects.length"
             class="projects-grid grid gap-6 sm:grid-cols-2 lg:grid-cols-3"

@@ -39,11 +39,11 @@ const FIXTURE_COMPANIES = [
     end_date: null,
     location: 'Stockholm, Sweden',
     website: 'https://example.com',
-    // Media leads every experience page (owner call, cbc54b8) — the primary
-    // fixture carries BOTH embeds so the baselines cover the two-column
-    // media grid. URLs must satisfy useEmbedValidator (www host + embed
-    // path); the iframe loads themselves are fulfilled blank in
-    // useHermeticHome so third-party player chrome never enters a baseline.
+    // Media leads every experience page — the primary fixture carries BOTH
+    // embeds so the baselines cover the two-column media grid. URLs must
+    // satisfy useEmbedValidator (www host + embed path); the iframe loads
+    // themselves are fulfilled blank in useHermeticHome so third-party player
+    // chrome never enters a baseline.
     video_url: 'https://www.youtube-nocookie.com/embed/fixture-video',
     video_title: 'Fixture Product Video',
     map_url: 'https://www.google.com/maps/embed?pb=fixture-location',
@@ -175,13 +175,11 @@ const FIXTURE_EDUCATION = [
   }
 ]
 
-// The Projects section renders these SERVER-SIDE (2026-09-06 content audit:
-// it used to ship as a heading over a client-only widget). The fixture stubbed
-// projects as `[]` when it was added, so the whole section had ZERO visual
-// coverage — a regression that emptied it would have produced a zero-pixel
-// diff, which is the same blind spot the OSS strip fixture below exists to
-// close. Two entries: one with technologies, one without, so both card shapes
-// are pinned.
+// The Projects section renders these SERVER-SIDE. With projects stubbed as
+// `[]` the whole section has ZERO visual coverage — a regression that emptied
+// it would produce a zero-pixel diff, which is the same blind spot the OSS
+// strip fixture below exists to close. Two entries: one with technologies,
+// one without, so both card shapes are pinned.
 const FIXTURE_PROJECTS = [
   {
     id: 'fixture-subvectors',

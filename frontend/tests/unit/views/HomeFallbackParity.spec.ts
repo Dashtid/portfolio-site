@@ -10,12 +10,6 @@ import path from 'node:path'
  * sees it in review, and the pages that DO show it are exactly the pages
  * nobody is looking at.
  *
- * It has now drifted twice. In Aug 2026 it carried an invented KTH thesis
- * and demoted Lund to an exchange term. In Sep 2026 it carried LinkedIn-style
- * degree suffixes ("Master of Science - MS") that matched neither the live
- * API nor seed_data. Both were "cosmetic" until you notice the site was
- * publishing a third, contradictory version of the owner's CV.
- *
  * seed_data.py is the committed representation of the database (kept in
  * sync with it, and itself asserted by backend tests), so it is the
  * checkable proxy here: every hard-coded fallback value must appear in it

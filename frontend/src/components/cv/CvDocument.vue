@@ -19,9 +19,9 @@
             <dt>Email</dt>
             <dd>{{ resume.basics.email }}</dd>
           </template>
-          <!-- Bare text, no anchors: recruiters need the LinkedIn/GitHub/site
-               identity lines, but a printed document has nothing to click and
-               link styling only adds noise (owner call, 2026-08-22). -->
+          <!-- Bare text, no anchors: the LinkedIn/GitHub/site identity lines
+               are printed, and a printed document has nothing to click, so
+               link styling would only add noise. -->
           <template v-if="linkedInUrl">
             <dt>LinkedIn</dt>
             <dd>{{ stripProtocol(linkedInUrl) }}</dd>
@@ -226,10 +226,10 @@ const dateRange = (start: string, end?: string): string => {
 
 <style scoped>
 /* ---------------------------------------------------------------------------
-   Geometry is taken from the owner's reference CV, measured out of the PDF:
-   A4 794x1123px @96dpi, 62px side margins, a 670px content column, a 168px
-   meta rail, and a 17px vertical grid. Sizes are px (not rem) because the
-   sheet is a fixed-size document and must not inherit the admin shell's scale.
+   Geometry: A4 794x1123px @96dpi, 62px side margins, a 670px content column,
+   a 168px meta rail, and a 17px vertical grid. Sizes are px (not rem) because
+   the sheet is a fixed-size document and must not inherit the admin shell's
+   scale.
 
    Two colours only: #000 for structure, #3d3d3d for prose.
 --------------------------------------------------------------------------- */

@@ -224,12 +224,10 @@
           </div>
         </aside>
 
-        <!-- Main content column. Media leads (owner call 2026-07-27: at the
-             bottom it was easily missed), then Outcomes and the role
+        <!-- Main content column: Media first, then Outcomes and the role
              content. -->
         <div class="mt-12 lg:col-start-1 lg:row-start-2 lg:mt-14">
-          <!-- Media — first in the column so it's seen (owner: "otherwise
-               it is easily missed"). -->
+          <!-- Media — first in the column. -->
           <section v-if="company.video_url || company.map_url" class="experience-section mb-12">
             <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
               Media

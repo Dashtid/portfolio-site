@@ -1,5 +1,5 @@
 /**
- * Shared CV types for the admin-only export (Campaign 2026-08 Sprint 2).
+ * Shared CV types for the admin-only export.
  *
  * `CvResume` mirrors the JSON Resume payload assembled by the backend
  * GET /api/v1/admin/cv/export endpoint. `CvProfile` mirrors the editable

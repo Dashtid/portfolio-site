@@ -1,6 +1,5 @@
 """
-Tests for the admin-only CV profile + export endpoints
-(Campaign 2026-08 Sprint 2).
+Tests for the admin-only CV profile + export endpoints.
 
 The public site is the CV; this feature is admin-only and its payload carries
 the owner's private contact, so authorization is the first thing asserted.

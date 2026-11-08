@@ -4,8 +4,8 @@ import CvDocument from '@/components/cv/CvDocument.vue'
 import type { CvResume } from '@/types/cv'
 
 // CvDocument is the presentational, print-ready CV used by the admin export
-// page (Campaign 2026-08 Sprint 2). It is pure — a `resume` prop in, DOM out —
-// so it is exercised directly here.
+// page. It is pure — a `resume` prop in, DOM out — so it is exercised
+// directly here.
 
 const fullResume = (): CvResume => ({
   basics: {
@@ -115,8 +115,7 @@ describe('CvDocument', () => {
 
   it('renders profiles and private contact as plain text — never as anchors', () => {
     // A printed document has nothing to click: the LinkedIn/GitHub/site lines
-    // stay (recruiters retype them) but carry no hyperlink, per the owner's
-    // 2026-08-22 no-links call. The bare-text form drops protocol and www.
+    // stay but carry no hyperlink. The bare-text form drops protocol and www.
     const wrapper = make(fullResume())
     expect(wrapper.findAll('a')).toHaveLength(0)
     const text = wrapper.text()

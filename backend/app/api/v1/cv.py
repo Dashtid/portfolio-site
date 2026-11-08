@@ -1,5 +1,5 @@
 """
-Admin-only CV export (Campaign 2026-08 Sprint 2).
+Admin-only CV export.
 
 The public site IS the CV; there is no public /cv page. This router lets the
 owner (admin-authenticated) edit the CV profile prose + private contact and
@@ -145,12 +145,11 @@ async def export_cv(db: DbSession, current_user: AdminUser) -> dict[str, Any]:
         # CV produced 64 bullets across 8 roles — 11 for one job — with 21 of 25
         # outcomes restating a responsibility almost word for word.
         #
-        # `cv_highlights` is the curated CV list: 0-3 bullets per role, the ones
-        # the owner actually sends out. None means "not curated yet" and falls
-        # back through outcomes (the better written of the two) to
-        # responsibilities, then the summary paragraph. An EMPTY list is a
-        # deliberate curation — title and dates only (early-career stints) —
-        # and must never resurrect the site's bullets.
+        # `cv_highlights` is the curated CV list: 0-3 bullets per role. None
+        # means "not curated yet" and falls back through outcomes (the better
+        # written of the two) to responsibilities, then the summary paragraph.
+        # An EMPTY list is a deliberate curation — title and dates only
+        # (early-career stints) — and must never resurrect the site's bullets.
         if c.cv_highlights is not None:
             highlights = list(c.cv_highlights)
         else:

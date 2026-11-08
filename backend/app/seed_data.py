@@ -56,9 +56,7 @@ async def seed_companies(session: AsyncSession):
         {
             "name": "Hermes Medical Solutions",
             "title": "QA/RA & Security Specialist",
-            # Public-surface rule: describe the domain generically ("regulated
-            # medical software"). The specific product category is not ours to
-            # publish, and this string renders on the public homepage.
+            # Renders on the public homepage.
             "description": "Product security for regulated medical software: threat modeling, FDA premarket security documentation, IEC 81001-5-1 secure-lifecycle work, SBOM and vulnerability management — alongside QA/RA responsibility for V&V and market clearance.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2024, 5, 1),
@@ -519,9 +517,8 @@ async def seed_cv_profile(session: AsyncSession):
         # Övrigt / logistics — rendered at the BOTTOM of the CV, never under
         # certificates.
         other_items=["B-körkort (category B driving licence)"],
-        # photo intentionally left empty: the headshot is personal data and is
-        # uploaded through /admin/cv after deploy, exactly like email/phone, so
-        # it never lives in this public repo.
+        # photo stays empty here; it is set through /admin/cv after deploy,
+        # like email and phone.
     )
     session.add(profile)
     await session.commit()

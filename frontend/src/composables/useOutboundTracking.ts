@@ -1,7 +1,7 @@
 import analytics from '@/services/analytics'
 
 /**
- * Outbound-click tracking (Campaign 2026-08 Sprint 3).
+ * Outbound-click tracking.
  *
  * Wires the site's conversion links — LinkedIn, GitHub, merged OSS PRs — into
  * the existing analytics pipeline so the owner can see click-through, not just

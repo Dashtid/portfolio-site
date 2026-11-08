@@ -2,11 +2,9 @@
   <div ref="sectionRef" class="github-stats">
     <!-- `hydrated` keeps the spinner OUT of the prerendered HTML. The fetch
          is client-only and observer-gated, so a baked "Loading GitHub
-         stats..." can never resolve: crawlers and no-JS readers were served
+         stats..." could never resolve: crawlers and no-JS readers would get
          a spinner that spins forever. Nothing is lost by waiting for mount —
-         that is the earliest the fetch could start anyway. Found once the
-         curated project cards moved above this block and the dead spinner
-         became visible under real content (2026-09-06 content audit). -->
+         that is the earliest the fetch could start anyway. -->
     <div v-if="hydrated && loading" class="loading-spinner" role="status" aria-live="polite">
       <div class="spinner"></div>
       <p>Loading GitHub stats...</p>

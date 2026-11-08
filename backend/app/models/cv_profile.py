@@ -1,12 +1,11 @@
 """
 CV profile (singleton) model.
 
-Backs the admin-only "Export CV" feature (Campaign 2026-08 Sprint 2). The
-public site IS the CV — there is no public /cv page. The downloadable CV is
-assembled from the DB the owner already curates through the admin CMS
-(companies = experience, education, skills) PLUS the prose and contact that
-have no other home: summary, headline, focus, languages, and the owner's
-private contact details.
+Backs the admin-only "Export CV" feature. The public site IS the CV — there
+is no public /cv page. The downloadable CV is assembled from the DB the owner
+already curates through the admin CMS (companies = experience, education,
+skills) PLUS the prose and contact that have no other home: summary,
+headline, focus, languages, and the owner's private contact details.
 
 This table is the ONLY place the owner's private contact (email / phone,
 optional personnummer) is stored, and it is exposed solely through

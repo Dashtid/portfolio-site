@@ -1,5 +1,5 @@
 """
-Schemas for the admin-only CV profile (Campaign 2026-08 Sprint 2).
+Schemas for the admin-only CV profile.
 
 These schemas serve ONLY admin-authenticated endpoints, so the response
 intentionally includes the private contact fields (email / phone /

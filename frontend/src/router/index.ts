@@ -53,8 +53,7 @@ export const routes: RouteRecordRaw[] = [
   },
   {
     // D3-FEAT-03: writing surface — index + per-article routes. Unlinked
-    // from the nav until the first article is owner-approved; the index
-    // carries noindex while empty.
+    // from the nav; the index carries noindex while empty.
     path: '/writing',
     name: 'writing',
     component: WritingIndexView,
@@ -136,7 +135,7 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         // Admin-only CV export: edit profile prose + private contact and
-        // download a CV assembled from the DB (Campaign 2026-08 Sprint 2).
+        // download a CV assembled from the DB.
         path: 'cv',
         name: 'admin-cv',
         component: AdminCv,
@@ -219,9 +218,9 @@ export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) =
   // Route changes jump to top INSTANTLY — smooth is for in-page anchors only.
   // A smooth scroll-to-top here races the page transition and is cancelled by
   // any wheel/trackpad input mid-animation, landing the new page partway down
-  // with its header half-hidden under the fixed navbar (owner-reported on the
-  // experience pages, 2026-07-28). 'instant' must be EXPLICIT: html has
-  // `scroll-behavior: smooth` (style.css), and an omitted/auto behavior
-  // defers to that CSS, silently re-animating the jump (measured ~700ms).
+  // with its header half-hidden under the fixed navbar. 'instant' must be
+  // EXPLICIT: html has `scroll-behavior: smooth` (style.css), and an
+  // omitted/auto behavior defers to that CSS, silently re-animating the jump
+  // (measured ~700ms).
   return { top: 0, behavior: 'instant' }
 }

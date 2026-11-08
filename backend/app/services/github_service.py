@@ -32,11 +32,11 @@ authenticated token; an unset or expired one returns an empty list rather
 than raising), and archived-but-public repos are still returned by the
 REST endpoint the fallback uses.
 
-Several repos are deliberately off the public portfolio for employer-IP
-and brand reasons. An allowlist fails CLOSED — a repo renders only if it
-is named here — where the old name-agnostic filter failed open. Adding an
-entry is a deliberate act: ``tests/test_github_allowlist.py`` pins the
-set, so the test must be updated in the same change.
+Repositories not listed here are excluded from the public dashboard. An
+allowlist fails CLOSED — a repo renders only if it is named here — where the
+old name-agnostic filter failed open. Adding an entry is a deliberate act:
+``tests/test_github_allowlist.py`` pins the set, so the test must be updated
+in the same change.
 """
 
 # Timeout configuration for external API calls

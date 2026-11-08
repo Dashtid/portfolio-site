@@ -378,10 +378,10 @@ export default defineConfig({
         // network, not the SPA shell — without this denylist an
         // offline-capable SW could answer a click on such a link with
         // index.html. Extension-suffixed paths are never SPA routes here.
-        // /cv is denylisted too: the public page was retired (Campaign
-        // 2026-08 Sprint 2), so a returning visitor's SW must let /cv reach
-        // the Vercel edge 301 (-> home) instead of serving the cached shell,
-        // which would client-side 404 on the now-removed route.
+        // /cv is denylisted too: the route was removed, so a returning
+        // visitor's SW must let /cv reach the Vercel edge 301 (-> home)
+        // instead of serving the cached shell, which would client-side 404
+        // on the removed route.
         // /admin is denylisted so the SW never answers an admin navigation
         // with the precached homepage shell — it must reach the Vercel edge,
         // which rewrites /admin/* to the bare admin.html (empty app div, no

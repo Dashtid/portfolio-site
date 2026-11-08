@@ -41,13 +41,9 @@
           </li>
         </ul>
 
-        <!-- Honest empty state. The article programme was closed 2026-08-29
-             (no publish cadence, no article backlog, nothing gated on a
-             piece shipping), so this no longer announces a forthcoming
-             article — an unkept promise reads worse than absence. The
-             surface itself stays: dormant, unlinked from the nav, and
-             noindex while empty via the reactive robots meta below. It is
-             ready if a one-off piece or talk write-up ever warrants it. -->
+        <!-- Empty state, shown while no article is published. The surface
+             is unlinked from the nav, and noindex while empty via the
+             reactive robots meta below. -->
         <p v-else class="mt-10 text-slate-500 dark:text-slate-400">
           Nothing published yet. The public record is in the work itself — open-source projects and
           upstream contributions, linked from the portfolio.

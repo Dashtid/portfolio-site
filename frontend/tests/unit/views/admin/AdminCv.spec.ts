@@ -5,9 +5,9 @@ import { createRouter, createWebHistory, type Router } from 'vue-router'
 import AdminCv from '@/views/admin/AdminCv.vue'
 import api from '@/api/client'
 
-// AdminCv (Campaign 2026-08 Sprint 2) edits the admin-only CV profile + private
-// contact, previews the assembled CV, and prints / downloads it. The backend is
-// mocked at the api-client boundary.
+// AdminCv edits the admin-only CV profile + private contact, previews the
+// assembled CV, and prints / downloads it. The backend is mocked at the
+// api-client boundary.
 
 vi.mock('@/api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() }

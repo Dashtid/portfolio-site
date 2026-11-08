@@ -5,8 +5,8 @@ test_migration_drift only proves the EMPTY-table path (fresh DB upgrades to
 head); this migration exists for the opposite case — converging an already
 POPULATED prod table that seed_skills() can never reach. These tests run the
 real upgrade() against a sync in-memory SQLite DB carrying a prod-like old
-set and assert the convergence semantics: OUT terms deleted, the rename
-preserves curated values, IN terms inserted, unrelated curated rows
+set and assert the convergence semantics: listed rows deleted, the rename
+preserves curated values, listed rows inserted, unrelated curated rows
 untouched, and the whole thing idempotent.
 """
 
@@ -141,7 +141,7 @@ class TestSkillsKeywordMigration:
         with engine.connect() as conn:
             rows = {r.name: r for r in conn.execute(sa.select(_SKILLS)).all()}
 
-        # OUT terms gone; every IN keyword present.
+        # Deleted rows gone; every inserted keyword present.
         assert "ISO 27001" not in rows
         assert "OWASP" not in rows
         assert "Vulnerability Assessment" not in rows
