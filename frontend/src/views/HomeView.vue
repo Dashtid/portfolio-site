@@ -59,9 +59,8 @@
             <p
               class="custom-hero-lead mt-6 max-w-xl text-balance text-base font-light leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400"
             >
-              Securing regulated medical software from design through market clearance — and, as a
-              second regulatory regime, EU AI Act readiness. QA/RA &amp; Security Specialist at
-              Hermes Medical Solutions, Stockholm.
+              Securing regulated medical software from design through market clearance. QA/RA &amp;
+              Security Specialist at Hermes Medical Solutions, Stockholm.
             </p>
 
             <div class="mt-8 flex flex-wrap items-center gap-3">
@@ -288,10 +287,10 @@
                 <p
                   class="company-description mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  QA/RA &amp; Security Specialist at Hermes Medical Solutions. I author the product
-                  cybersecurity evidence supporting regulatory submissions — threat models, security
-                  risk assessments and premarket security documentation — for regulated medical
-                  software.
+                  Product security for regulated medical software: threat modeling, FDA premarket
+                  security documentation, IEC 81001-5-1 secure-lifecycle work, SBOM and
+                  vulnerability management — alongside QA/RA work on V&amp;V and regulatory
+                  submissions.
                 </p>
               </article>
               <article
@@ -319,7 +318,7 @@
                        product names are spelled IntelliSpace. -->
                   Level 1 support for IntelliSpace Portal and IntelliSpace Cardiovascular across the
                   Nordics and UK/Ireland — full incident lifecycle, upgrade assessment, and
-                  cross-regional knowledge sharing.
+                  cross-regional knowledge sharing for enterprise imaging informatics.
                 </p>
               </article>
               <article
@@ -343,8 +342,9 @@
                 <p
                   class="company-description mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  First-line support for imaging equipment fleet, incident management for RIS/PACS
-                  systems, working with GE, Philips, and Siemens solutions.
+                  First-line support for one of Europe's largest imaging-equipment fleets: RIS/PACS
+                  incident management, DICOM/HL7 integration work, and multi-vendor coordination
+                  across GE, Philips, and Siemens systems.
                 </p>
               </article>
             </template>
@@ -546,7 +546,7 @@
                   target="_blank"
                   rel="noopener noreferrer"
                   class="certificate-link mt-auto pt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-                  aria-label="View Security+ certificate from CompTIA (opens in new tab)"
+                  aria-label="View certificate for Security+ from CompTIA (opens in new tab)"
                 >
                   View certificate
                   <svg
@@ -575,7 +575,7 @@
                   <p
                     class="education-dates mt-1 font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
-                    Dec 2024
+                    Oct 2024 — Dec 2024
                   </p>
                 </header>
                 <p
@@ -593,6 +593,27 @@
                   systematic information security work, incident response and digital forensics,
                   SCADA/ICS security, and secure software development.
                 </p>
+                <a
+                  href="https://foretagsuniversitetet-yh.trueoriginal.com/utbildningsbevis-226768-datacourse-select-title-4436/?ref=linkedin-profile&amp;lang=en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="certificate-link mt-auto pt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                  aria-label="View certificate for Cybersecurity Fundamentals (Course) from Företagsuniversitetet (opens in new tab)"
+                >
+                  View certificate
+                  <svg
+                    class="external-icon h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
               </article>
               <article
                 class="education-card flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-surface-1 dark:hover:border-primary-400/40 dark:hover:bg-surface-2"
@@ -620,7 +641,7 @@
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Master's Thesis - 'Improving Quality Assurance of Radiology Equipment Using
+                  Master's Thesis — 'Improving Quality Assurance of Radiology Equipment Using
                   Process Modelling and Multi-actor System Analysis'
                 </p>
               </article>
@@ -650,7 +671,7 @@
                 <p
                   class="education-description mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                 >
-                  Bachelor's Thesis - 'Development of a User-friendly Method of Processing Data from
+                  Bachelor's Thesis — 'Development of a User-friendly Method of Processing Data from
                   Ergonomics Measurements Utilizing Inclinometers'
                 </p>
               </article>
@@ -742,8 +763,10 @@
               Open-Source Security Contributions
             </h2>
             <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">
-              Merged upstream contributions — supply-chain tooling, DICOM infrastructure, and
-              LLM-security scanning. Each entry links to the pull request itself.
+              Merged upstream pull requests in open-source security tools: SBOM generation and
+              vulnerability matching (Syft, Grype and their container-image library, Stereoscope),
+              DefectDojo report parsers and AWS IAM trust graphs (Cartography). Also merged: pull
+              requests to other open-source libraries. Each entry links to the pull request itself.
             </p>
           </header>
 
@@ -833,7 +856,7 @@
                 <source srcset="/images/optimized/cropped.webp" type="image/webp" />
                 <img
                   src="/images/optimized/cropped.png"
-                  alt="David Dashti - product security specialist for medical software"
+                  alt="Portrait of David Dashti"
                   class="mx-auto h-auto w-[260px] rounded-2xl object-cover ring-1 ring-slate-200 lg:mx-0 lg:w-full dark:ring-slate-800"
                   width="280"
                   height="326"
@@ -853,10 +876,8 @@
                 the product cybersecurity evidence that goes into regulatory submissions — threat
                 models, security risk assessments and the premarket security documentation itself —
                 inside an ISO 13485 quality system, against IEC 81001-5-1 and FDA premarket
-                cybersecurity requirements (FD&amp;C Act section 524B). EU AI Act readiness is the
-                other named half of the role, and the applicability and gap assessment has started.
-                Article 15 asks for accuracy, robustness and cybersecurity in one sentence, which is
-                where the Act extends work I already do rather than starting something separate.
+                cybersecurity requirements (FD&amp;C Act section 524B). The role also covers EU AI
+                Act readiness.
               </p>
               <div class="mt-6">
                 <p
@@ -891,16 +912,8 @@
                       class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
                       aria-hidden="true"
                     ></span>
-                    Securing the AI now entering medical devices — an early EU AI Act gap analysis,
-                    underway
-                  </li>
-                  <li class="flex gap-3 leading-relaxed">
-                    <span
-                      class="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500"
-                      aria-hidden="true"
-                    ></span>
-                    Application security — secure SDLC, SAST/SCA and CI/CD hardening (OIDC workload
-                    identity) for regulated software
+                    Application security — secure SDLC and SAST/SCA for regulated software, and
+                    CI/CD hardening (OIDC workload identity)
                   </li>
                 </ul>
               </div>
@@ -916,8 +929,7 @@
               </div>
               <p class="mt-6 leading-relaxed">
                 I care about making healthcare technology safer and more trustworthy — protecting
-                patients by making sure the software, and increasingly the AI, inside their care is
-                secure by design.
+                patients by making sure the software inside their care is secure by design.
               </p>
               <!-- The site as its own work sample. Every claim here is checkable in
                    the repo README: script-src 'self' CSP, a post-deploy smoke test
@@ -1055,7 +1067,7 @@ useHead({
     {
       name: 'description',
       content:
-        'Medical device cybersecurity, application and cloud security in Stockholm — FDA 524B premarket, threat modeling and secure SDLC for regulated medical software.'
+        'Medical device cybersecurity and application security in Stockholm: FDA 524B premarket documentation, threat modeling, SBOM and secure SDLC.'
     }
   ],
   link: [{ rel: 'canonical', href: 'https://dashti.se/' }]

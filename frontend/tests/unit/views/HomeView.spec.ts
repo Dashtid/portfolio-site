@@ -347,11 +347,11 @@ describe('HomeView', () => {
       expect(lead.text()).toContain('Securing regulated medical software')
     })
 
-    it('names the EU AI Act in the hero lead', async () => {
+    it('names the role and employer in the hero lead', async () => {
       const wrapper = await createWrapper()
 
       const lead = wrapper.find('.custom-hero-lead').text()
-      expect(lead).toContain('EU AI Act')
+      expect(lead).toContain('QA/RA & Security Specialist at Hermes Medical Solutions, Stockholm.')
     })
   })
 

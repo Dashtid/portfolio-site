@@ -261,8 +261,7 @@ export default defineConfig({
       manifest: {
         name: 'David Dashti',
         short_name: 'David Dashti',
-        description:
-          'Product security for medical software — securing medical devices and the AI moving into healthcare',
+        description: 'Product security for medical software — securing medical devices',
         theme_color: '#2f88e8',
         background_color: '#f8fafc',
         display: 'standalone',
