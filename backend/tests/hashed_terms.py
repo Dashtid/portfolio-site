@@ -36,9 +36,12 @@ EXCLUDED_REPO_DIGESTS: frozenset[str] = frozenset(
 """Digests of the repository names excluded from the public dashboard."""
 
 OTHER_REPO_DIGESTS: frozenset[str] = frozenset(
-    {"13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411"}
+    {
+        "13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411",
+        "74a101de23165892589d74647e0423eb2ae50265920554e747248cb148d8cbe3",
+    }
 )
-"""Digest of one more repository name, which is not a dashboard entry."""
+"""Digests of two more repository names, which are not dashboard entries."""
 
 
 def digest(term: str) -> str:

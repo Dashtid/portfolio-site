@@ -32,12 +32,13 @@ export const EXCLUDED_REPO_DIGESTS = new Set([
 ])
 
 /**
- * Digest of one more repository name. It is not a dashboard entry, so the
- * baked pages are not checked for it; tests/unit/cvPublicScrub.spec.ts checks
- * the tracked tree for it and for EXCLUDED_REPO_DIGESTS.
+ * Digests of two more repository names. They are not dashboard entries, so
+ * the baked pages are not checked for them; tests/unit/cvPublicScrub.spec.ts
+ * checks the tracked tree for them and for EXCLUDED_REPO_DIGESTS.
  */
 export const OTHER_REPO_DIGESTS = new Set([
-  '13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411'
+  '13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411',
+  '74a101de23165892589d74647e0423eb2ae50265920554e747248cb148d8cbe3'
 ])
 
 /** SHA-256 hex digest of a term, lowercased. */

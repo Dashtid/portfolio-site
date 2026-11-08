@@ -35,9 +35,9 @@ const backendList = (name: string): Set<string> => {
 }
 
 describe('hashedTerms digest lists', () => {
-  it('hold five and one SHA-256 digests, with no digest in both', () => {
+  it('hold five and two SHA-256 digests, with no digest in both', () => {
     expect(EXCLUDED_REPO_DIGESTS.size).toBe(5)
-    expect(OTHER_REPO_DIGESTS.size).toBe(1)
+    expect(OTHER_REPO_DIGESTS.size).toBe(2)
     for (const d of [...EXCLUDED_REPO_DIGESTS, ...OTHER_REPO_DIGESTS]) {
       expect(d).toMatch(/^[0-9a-f]{64}$/)
     }

@@ -62,7 +62,7 @@ _PATTERNS: dict[str, re.Pattern[str]] = {
 }
 
 # label -> digests of lowercased terms, matched against every docstring and
-# comment block. The repository names gain one spelling: the name in
+# comment block. The repository names gain one spelling: one name in
 # OTHER_REPO_DIGESTS with a space or a line break in place of its hyphen.
 _HASHED: dict[str, frozenset[str]] = {
     "repository name": hashed_terms.EXCLUDED_REPO_DIGESTS

@@ -85,8 +85,8 @@ to file/upstream but hasn't yet. Each entry is a small dict with
 merges them into the LATER bucket in the GET response.
 
 Empty for v1; add entries inline when there's queued work worth
-surfacing on the dashboard (or move to a ``queued/`` folder in the
-oss-contributions tracker repo if the list grows past ~5).
+surfacing on the dashboard (or move them to a ``queued/`` folder in the
+separate tracker repository if the list grows past ~5).
 """
 
 DONE_WINDOW_DAYS: int = 30
