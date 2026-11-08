@@ -1,92 +1,87 @@
-"""Docstrings and comments describe the change, not who decided it or why a claim went.
+"""Docstrings and comments describe the change, not where it came from.
 
 A style rule for the files where planning notes tend to collect: every
-migration under alembic/versions, every module under app/ and the test suite. A
-docstring or comment there says what the code does to which tables, columns
+migration under alembic/versions, every module under app/ and the test suite.
+A docstring or comment there says what the code does to which tables, columns
 and rows, and which guard conditions make it safe to re-run. It does not
-record who signed off on a change, cite planning notes or their sessions,
-quote anyone, or argue why a professional claim was kept, reworded or
-dropped. That belongs in private notes; this repository is public.
+credit a change to a person, put a date on a person or a session, cite notes
+kept outside this repository, or name a repository whose digest is listed
+below.
 
 Only comments (tokenize) and docstrings (ast) are scanned. Code, string data
 and identifiers are out of scope, so test data never trips the rule. Each
-pattern is a plain phrase whose only quantifiers sit on single tokens (no
-nested quantifiers), so matching stays linear in the size of a file. Words
-are joined by \\s+, so a phrase that wraps onto the next line still matches.
+docstring and each block of consecutive comment lines meets two kinds of check:
+
+- ``_PATTERNS``: two regular expressions, matched case-insensitively. Their
+  only quantifiers sit on single tokens or on one bounded group, so matching
+  stays linear in the size of a file, and words are joined by ``\\s+`` or
+  ``[\\s-]+``, so a phrase that wraps onto the next line still matches.
+- ``_HASHED``: SHA-256 digests of lowercased terms, found with
+  ``tests.hashed_terms``. Only the digests are kept in this repository.
 """
 
 import ast
 import io
 import re
 import tokenize
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from tests import hashed_terms
+
 _BACKEND = Path(__file__).resolve().parents[1]
 _SELF = Path(__file__).resolve()
 
-# label -> pattern, matched case-insensitively against every docstring and
-# every block of consecutive comment lines.
-_RULES: dict[str, str] = {
-    # Provenance: planning notes outside this repository, and their sessions.
-    "planning-repo reference": r"\bcareer[\s-]+plan\b",
-    "dated session citation": r"\bsession\s+\d{4}-\d{2}-\d{2}\b",
-    "planning session": r"\bplanning\s+session\b",
-    "dated requirements citation": r"\brequirements,?\s+\(?\d{4}-\d{2}-\d{2}\b",
-    # Provenance: who decided.
-    "decision credited to the owner": (
-        r"\b(?:approved|signed[\s-]+off|declined|rejected|ruled|decided|chosen)"
-        r"\s+by\s+the\s+owner\b"
+_DECISION = (
+    r"(?:approv(?:e|ed|al)|decid(?:e|ed)|decision|rul(?:e|ed|ing)|cho(?:se|sen|ice)"
+    r"|reject(?:ed)?|declin(?:e|ed)|signed[\s-]+off|signed|sign-off|verdict|directive"
+    r"|call|review|reported|said)"
+)
+
+_PATTERNS: dict[str, re.Pattern[str]] = {
+    # The owner, then up to three words, then a decision word; or a decision
+    # word, then "by (the) owner".
+    "decision credited to the owner": re.compile(
+        rf"\bowner(?:['\u2019]s)?[\s-]+(?:[\w'\u2019-]+\s+){{0,3}}?{_DECISION}\b"
+        rf"|\b{_DECISION}\s+by\s+(?:the\s+)?owner\b",
+        re.IGNORECASE,
     ),
-    "the owner deciding": (
-        r"\bthe\s+owner\s+(?:approved|signed|declined|rejected|ruled|chose|decided|said)\b"
+    "date on the owner or a session": re.compile(
+        r"\b(?:owner(?:['\u2019]s|,)?|session)\s+\d{4}-\d{2}-\d{2}\b", re.IGNORECASE
     ),
-    "owner-approved": r"\bowner-(?:approved|decided|ruled|chosen)\b",
-    "owner ruling": r"\bowner\s+(?:rule|ruling|directive|decision|verdict|review|call)\b",
-    "owner's ruling": (
-        r"\bowner['\u2019]s\s+"
-        r"(?:review|verdict|directive|decision|ruling|register|keyword\s+set)\b"
-    ),
-    "owner's named rule": r"\bowner['\u2019]s\s+[\w-]+\s+rule\b",
-    "dated owner attribution": r"\bowner(?:['\u2019]s|,)?\s+\d{4}-\d{2}-\d{2}\b",
-    "review verdict": r"\breview\s+verdict\b",
-    "sign-off": r"\bsigned[\s-]+off\b",
-    "approved copy": r"\bthe\s+approved\b",
-    # Claim review: registers, gates and the vocabulary of auditing a CV.
-    "claims register": r"\b(?:defensible[\s-]+claims?|claims?\s+register)\b",
-    "register reference": r"\b(?:register['\u2019]s|register-exact|per\s+the\s+register)\b",
-    "tier map": r"\btier[\s-]+map\b",
-    "claim gate": r"\bclaim[\s-]+gat(?:e|ed|ing)\b",
-    "over- or under-claiming": r"\b(?:over|under)[\s-]?claim",
-    "unbacked or unearned": r"\b(?:unbacked|unearned|unfalsifiable)\b",
-    "named claim": r"\b(?:banned|authorship|ownership|strongest)\s+claim\b",
-    "claim ranking": r"\b(?:strength\s+order|weakest\s+claims?)\b",
-    "honest subset": r"\bhonest\s+(?:set|pair|split)\b",
-    "audit judgement": r"\b(?:vaguest|safe\s+direction)\b",
-    "evidence census": r"\b(?:work|workload|code)\s+anywhere\b",
-    "audit defect number": r"\bdefect\s+#\d",
-    "quiz rule": r"\bquiz",
-    # Facts about a CV kept outside this repository.
-    "real CV": r"\b(?:real|hand-made)\s+CV\b",
-    "page count": r"\b\d+-page\b",
-    # Third-person narration about a person.
-    "third-person narration": r"\b(?:himself|his\s+own)\b",
 }
 
-# Migrations add one more: their docstrings describe schema, not the private
-# contact fields by name.
-_MIGRATION_DOCSTRING_RULES: dict[str, str] = {
-    "private contact field named in a migration docstring": r"\bpersonnummer\b",
+# label -> digests of lowercased terms, matched against every docstring and
+# comment block.
+_HASHED: dict[str, frozenset[str]] = {
+    "repository name": hashed_terms.EXCLUDED_REPO_DIGESTS
+    | frozenset({"13c59540372a16e775ade0189e39462ad2a91e1c43e3f2d806d8eed980150411"}),
+    "listed phrase": frozenset(
+        {
+            "05edab2681bdf16b426847c04372fa0d96cb9e33d334128b066b11135e9eb7b3",
+            "21af263d01f94887492818e28cd0b3dd0dafaa280e98be0aed029d200e202700",
+            "3fd00a42816b40e446d851b4fb0397b32e049863b038eb9ecc6d13a27ff81f7f",
+            "598de6843395d5293ee07107bb8da3552bfe2be35b665f023db9922aeca6ba95",
+            "97303992b996ede0d37e3b874855569a630d6e0d68d645af81c37c9c2e8ac561",
+            "9d98ce221dd52eccf27cad6a01bcd49b14d3d718a9eeeb3be94f0e231a5787ae",
+            "a7c4c0f437e2c720199c4d405263870bfc829ef628ab4324b6434d0e7404c25d",
+            "ae5666bb418906e0e2b2f98a4891edebf524aec334d70a35e1d74469e92628c0",
+            "ca13786620feb8a855ed4cc5dc1dd9f36f604369ac525d69a947560763bbf811",
+            "dd09065a1f077850496ff4451e1c6b0d90bde2fac12cab92d38a3f0ecff0fc13",
+            "e67e0a4c6e1bd9a7739ad4899cbe3d014f04df2019de7db77c2fb2a6ac9dcedc",
+            "fcac9e6a55ff02190279692da1b7811cbbfb7af6676a923b7c5175937319f63b",
+        }
+    ),
 }
 
-
-def _compile(rules: dict[str, str]) -> tuple[tuple[str, re.Pattern[str]], ...]:
-    return tuple((label, re.compile(pattern, re.IGNORECASE)) for label, pattern in rules.items())
-
-
-_COMPILED = _compile(_RULES)
-_COMPILED_MIGRATION = _compile(_MIGRATION_DOCSTRING_RULES)
+# Migration docstrings describe schema; they add one more list.
+_HASHED_MIGRATION_DOCSTRING: dict[str, frozenset[str]] = {
+    "listed field name": frozenset(
+        {"5f1260f685647378e07be184a82a71b59418ac89b904a56e05fd3deccabd15bb"}
+    ),
+}
 
 
 def _docstrings(tree: ast.Module) -> list[tuple[int, str]]:
@@ -133,7 +128,35 @@ def _line(start: int, text: str, offset: int) -> int:
     return start + text.count("\n", 0, offset)
 
 
-def scan(path: Path, base: Path = _BACKEND) -> list[str]:
+def _offset(text: str, term: str) -> int:
+    """Offset of a hashed-term match in `text`; a space in `term` matches any whitespace."""
+    found = re.search(r"\s+".join(map(re.escape, term.split(" "))), text, re.IGNORECASE)
+    return found.start() if found else 0
+
+
+def _unit_hits(text: str, hashed: dict[str, frozenset[str]]) -> list[tuple[str, int, str]]:
+    """(label, offset, matched text) for every rule hit in one docstring or comment block."""
+    hits = [
+        (label, match.start(), match.group(0))
+        for label, pattern in _PATTERNS.items()
+        for match in pattern.finditer(text)
+    ]
+    spans = {span: hashed_terms.digest(span) for span in set(hashed_terms.candidates(text))}
+    hits.extend(
+        (label, _offset(text, span), span)
+        for label, digests in hashed.items()
+        for span, digest in sorted(spans.items())
+        if digest in digests
+    )
+    return hits
+
+
+def scan(
+    path: Path,
+    base: Path = _BACKEND,
+    hashed: dict[str, frozenset[str]] = _HASHED,
+    migration_hashed: dict[str, frozenset[str]] = _HASHED_MIGRATION_DOCSTRING,
+) -> list[str]:
     """Every rule hit in the comments and docstrings of one file, as file:line lines."""
     source = path.read_text(encoding="utf-8")
     rel = path.relative_to(base).as_posix()
@@ -142,11 +165,10 @@ def scan(path: Path, base: Path = _BACKEND) -> list[str]:
     units += [("comment", line, text) for line, text in _comment_blocks(source)]
     hits: list[str] = []
     for kind, start, text in units:
-        rules = _COMPILED + (_COMPILED_MIGRATION if is_migration and kind == "docstring" else ())
+        lists = {**hashed, **(migration_hashed if is_migration and kind == "docstring" else {})}
         hits.extend(
-            f"{rel}:{_line(start, text, match.start())}: {kind}: {label}: {match.group(0)!r}"
-            for label, pattern in rules
-            for match in pattern.finditer(text)
+            f"{rel}:{_line(start, text, offset)}: {kind}: {label}: {term!r}"
+            for label, offset, term in _unit_hits(text, lists)
         )
     return sorted(hits)
 
@@ -167,8 +189,9 @@ def _ids(path: Path) -> str:
 def test_docstrings_and_comments_describe_the_change(path: Path) -> None:
     hits = scan(path)
     assert not hits, (
-        "A docstring or comment records who decided a change or why a claim went. "
-        "Describe the change and its guards instead:\n" + "\n".join(hits)
+        "A docstring or comment credits a change to a person, dates a person or a "
+        "session, or carries a listed term. Describe the change and its guards "
+        "instead:\n" + "\n".join(hits)
     )
 
 
@@ -176,56 +199,53 @@ def test_scope_covers_migrations_seed_data_and_tests() -> None:
     rels = {_ids(path) for path in scoped_files()}
     assert "app/seed_data.py" in rels
     assert "app/api/v1/cv.py" in rels
+    assert "tests/hashed_terms.py" in rels
     assert any(rel.startswith("alembic/versions/") for rel in rels)
     assert any(rel.startswith("tests/") for rel in rels)
     assert "tests/test_docstring_provenance.py" not in rels
 
 
-def _hit(text: str, migration: bool = False) -> bool:
-    rules = _COMPILED + (_COMPILED_MIGRATION if migration else ())
-    return any(pattern.search(text) for _, pattern in rules)
+def test_hashed_lists_hold_sha256_digests() -> None:
+    lists = {**_HASHED, **_HASHED_MIGRATION_DOCSTRING}
+    assert {label: len(digests) for label, digests in lists.items()} == {
+        "repository name": 6,
+        "listed phrase": 12,
+        "listed field name": 1,
+    }
+    for digests in lists.values():
+        assert all(len(d) == 64 and set(d) <= set("0123456789abcdef") for d in digests)
 
 
-# Synthetic phrasings of each kind of note the rule keeps out.
-_FLAGGED = (
-    "Applied after the career-plan review.",
-    "Decided in the planning session of 2020-01-01.",
-    "See the review session 2020-01-01 notes.",
-    "Per the data requirements (2020-01-01).",
-    "Signed off by the owner.",
-    "Approved by the owner before release.",
-    "The owner rejected the draft.",
-    "An owner-approved rewrite.",
-    "Owner directive: be brief.",
-    "Owner, 2020-01-01: keep it short.",
-    "The owner's 2020-01-01 review.",
-    "Per the owner's decision.",
-    "Apply the owner's two-line rule here.",
-    "Final review verdict.",
-    "Uses the approved wording.",
-    "Checked against the claims register.",
-    "The register's preferred framing.",
-    "Gated by the tier map.",
-    "A claim-gated term.",
-    "This was an overclaim.",
-    "Under-claiming is fine.",
-    "Unbacked rows are deleted.",
-    "Drops the unearned items.",
-    "Shows an unfalsifiable number.",
-    "Lists the strongest claim first.",
-    "Sorted by strength order.",
-    "Keeps an honest pair.",
-    "Pick the vaguest label.",
-    "No work anywhere backs the term.",
-    "Fixes defect #7.",
-    "See the quiz notes.",
-    "Compare it with the real CV.",
-    "Fits a 2-page layout.",
-    "The reviewer ran it himself.",
+def _flags(text: str) -> bool:
+    return any(pattern.search(text) for pattern in _PATTERNS.values())
+
+
+@pytest.mark.parametrize(
+    "word", ["approved", "decision", "ruling", "call", "signed off", "reported"]
 )
+def test_a_credited_decision_is_flagged_in_either_word_order(word: str) -> None:
+    assert _flags(f"owner {word}")
+    assert _flags(f"owner's {word}")
+    assert _flags(f"owner-{word}")
+    assert _flags(f"{word} by the owner")
+    assert _flags(f"{word}\n    by the\n    owner")
 
-# Engineering notes the rule must leave alone, including the kinds of owner
-# mention this repository keeps on purpose.
+
+def test_up_to_three_words_may_sit_between_the_owner_and_the_decision() -> None:
+    assert _flags("owner's alpha beta gamma call")
+    assert not _flags("owner's alpha beta gamma delta call")
+
+
+def test_a_date_on_the_owner_or_a_session_is_flagged() -> None:
+    day = date(2000, 1, 1).isoformat()
+    assert _flags(f"owner, {day}")
+    assert _flags(f"owner's {day}")
+    assert _flags(f"session {day}")
+    assert not _flags(f"measured {day}")
+
+
+# Engineering notes the rules must leave alone, including the operational kind
+# of owner mention this repository keeps.
 _ALLOWED = (
     "Guarded on the exact previous value, so an admin edit is never trampled.",
     "Keyed on start month because the DB and the JSON disagree on company names.",
@@ -235,28 +255,51 @@ _ALLOWED = (
     "If the owner already created the row by hand, the owner's row wins.",
     "Blank by default; the owner fills email/phone through the admin CV form.",
     "A visitor hits the owner's entry -> LRU bump.",
-    "Public-surface rule: describe the domain generically.",
-    "Regression for the 2026-07 S2 review.",
-    "Verified public 2026-08-29 with an unauthenticated call.",
     "Downgrade is a deliberate no-op: the deleted rows are not recorded here.",
+    "A rule with no match is skipped; the decision table is read once per request.",
+    "The session cookie is set by the login route.",
 )
 
 
-@pytest.mark.parametrize("text", _FLAGGED)
-def test_rule_flags_provenance_and_claim_review_phrasing(text: str) -> None:
-    assert _hit(text), f"no rule matched: {text!r}"
-
-
 @pytest.mark.parametrize("text", _ALLOWED)
-def test_rule_leaves_engineering_notes_alone(text: str) -> None:
-    assert not _hit(text, migration=True), f"a rule matched: {text!r}"
+def test_rules_leave_engineering_notes_alone(text: str) -> None:
+    assert not _unit_hits(text, {**_HASHED, **_HASHED_MIGRATION_DOCSTRING})
 
 
-def test_private_contact_field_is_flagged_only_in_migration_docstrings() -> None:
-    text = "Private contact (email / phone / personnummer) stays blank."
-    assert _hit(text, migration=True)
-    assert not _hit(text)
+def _module(tmp_path: Path, rel: str, text: str) -> Path:
+    path = tmp_path / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return path
 
 
-def test_a_phrase_wrapped_across_lines_still_matches() -> None:
-    assert _hit("Signed\n    off by the\n    owner.")
+def test_scan_flags_a_listed_term_in_a_docstring_and_in_a_comment(tmp_path: Path) -> None:
+    hashed = {"listed phrase": frozenset({hashed_terms.digest("example notes")})}
+    path = _module(
+        tmp_path,
+        "app/example.py",
+        '"""Built from the example notes."""\n\n# Same as the example\n# notes say.\nVALUE = 1\n',
+    )
+    assert scan(path, base=tmp_path, hashed=hashed) == [
+        "app/example.py:1: docstring: listed phrase: 'example notes'",
+        "app/example.py:3: comment: listed phrase: 'example notes'",
+    ]
+
+
+def test_scan_flags_a_listed_repository_name_after_an_owner_prefix(tmp_path: Path) -> None:
+    hashed = {"repository name": _HASHED["repository name"] | {hashed_terms.digest("example-repo")}}
+    path = _module(tmp_path, "tests/test_example.py", "# Mirrors Dashtid/example-repo.\nX = 1\n")
+    assert scan(path, base=tmp_path, hashed=hashed) == [
+        "tests/test_example.py:1: comment: repository name: 'example-repo'",
+    ]
+
+
+def test_a_listed_field_name_is_flagged_only_in_migration_docstrings(tmp_path: Path) -> None:
+    field = {"listed field name": frozenset({hashed_terms.digest("example_field")})}
+    text = '"""Adds the example_field column."""\n'
+    migration = _module(tmp_path, "alembic/versions/x_example.py", text)
+    module = _module(tmp_path, "app/example.py", text)
+    assert scan(migration, base=tmp_path, migration_hashed=field) == [
+        "alembic/versions/x_example.py:1: docstring: listed field name: 'example_field'",
+    ]
+    assert scan(module, base=tmp_path, migration_hashed=field) == []
