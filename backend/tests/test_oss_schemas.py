@@ -56,6 +56,9 @@ KNOWN_PUBLIC_REPOS = frozenset(
         # Verified public 2026-08-29 (upstream org repo; PR #190 readable
         # with an unauthenticated call).
         "Efferent-Health/fo-dicom.Codecs",
+        # Verified public, not archived (upstream org repo; PR #3088 readable
+        # with an unauthenticated call).
+        "cartography-cncf/cartography",
     }
 )
 
@@ -225,7 +228,7 @@ class TestBuildDashboardVariables:
 class TestConstants:
     def test_tracked_repos_immutable_and_complete(self):
         assert isinstance(TRACKED_REPOS, tuple)
-        assert len(TRACKED_REPOS) == 9
+        assert len(TRACKED_REPOS) == 10
         # Sanity-check a couple of well-known entries from NOTES.md.
         assert "anchore/syft" in TRACKED_REPOS
         assert "microsoft/presidio" in TRACKED_REPOS
@@ -287,12 +290,13 @@ class TestShardTrackedRepos:
         assert flattened == list(TRACKED_REPOS)
 
     def test_current_list_needs_exactly_two_shards(self):
-        """The first 8 repos measured 255/256 in one query, so the 9th must
-        open a second shard. If a template edit ever changes this, the
-        assertion forces a conscious look rather than a silent repack."""
+        """The first 8 repos measured 255/256 in one query, so the 9th opens
+        a second shard and the 10th joins it. If a template edit ever changes
+        this, the assertion forces a conscious look rather than a silent
+        repack."""
         shards = shard_tracked_repos()
         assert len(shards) == 2
-        assert shards[1] == ("Efferent-Health/fo-dicom.Codecs",)
+        assert shards[1] == ("Efferent-Health/fo-dicom.Codecs", "cartography-cncf/cartography")
 
     def test_every_shard_builds_valid_variables(self):
         """No shard may trip the runtime 256-char guard."""

@@ -44,8 +44,9 @@ TRACKED_REPOS: tuple[str, ...] = (
     "DependencyTrack/dependency-track",
     "microsoft/presidio",
     "Efferent-Health/fo-dicom.Codecs",
+    "cartography-cncf/cartography",
 )
-"""The 9 upstream repos covered by the dashboard. v1.3 will auto-discover.
+"""The 10 upstream repos covered by the dashboard. v1.3 will auto-discover.
 
 INVARIANT: every entry MUST be a public repository accessible to a PAT
 scoped only to ``public_repo``. Private / archived / renamed repos
@@ -347,7 +348,7 @@ def build_dashboard_variables(
     searches = _search_strings(username, cutoff, _repo_filter(repos))
 
     # Callers are expected to pass ONE SHARD from shard_tracked_repos();
-    # the full 9-repo TRACKED_REPOS no longer fits a single query. This
+    # the full TRACKED_REPOS no longer fits a single query. This
     # guard stays as the last line of defence for a pathological shard
     # (e.g. a single repo name that alone blows the budget).
     for key, value in searches.items():

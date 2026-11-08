@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from app.models.oss import OssContribution
 from app.services.bucket_classifier import Bucket
+from app.services.oss_queries import TRACKED_REPOS
 from tests.conftest import TestSessionLocal
 
 
@@ -104,6 +105,28 @@ class TestPublicOssContributions:
         response = client.get("/api/v1/oss/contributions")
         assert response.status_code == 200
         assert [row["number"] for row in response.json()] == [12]
+
+    @pytest.mark.asyncio
+    async def test_serves_a_merged_pr_from_every_tracked_repo(self, client: TestClient):
+        """The endpoint filters on author, kind, state, draft and merged_at, not
+        on repository, so a merged self-authored PR from each repository in
+        TRACKED_REPOS is served, cartography-cncf/cartography included."""
+        await _seed_rows(
+            [
+                _make_row(
+                    repo_name_with_owner=repo,
+                    number=index,
+                    url=f"https://github.com/{repo}/pull/{index}",
+                )
+                for index, repo in enumerate(TRACKED_REPOS, start=1)
+            ]
+        )
+
+        response = client.get("/api/v1/oss/contributions")
+        assert response.status_code == 200
+        served = {row["repoNameWithOwner"] for row in response.json()}
+        assert served == set(TRACKED_REPOS)
+        assert "cartography-cncf/cartography" in served
 
     @pytest.mark.asyncio
     async def test_dto_carries_no_person_or_workflow_fields(self, client: TestClient):
