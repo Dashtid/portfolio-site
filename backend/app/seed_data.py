@@ -57,7 +57,7 @@ async def seed_companies(session: AsyncSession):
             "name": "Hermes Medical Solutions",
             "title": "QA/RA & Security Specialist",
             # Renders on the public homepage.
-            "description": "Product security for regulated medical software: threat modeling, FDA premarket security documentation, IEC 81001-5-1 secure-lifecycle work, SBOM and vulnerability management — alongside QA/RA responsibility for V&V and market clearance.",
+            "description": "Product security for regulated medical software: threat modeling, FDA premarket security documentation, IEC 81001-5-1 secure-lifecycle work, SBOM and vulnerability management — alongside QA/RA work on V&V and regulatory submissions.",
             "location": "Stockholm, Sweden",
             "start_date": datetime(2024, 5, 1),
             "end_date": None,
@@ -204,7 +204,7 @@ async def seed_projects(session: AsyncSession):
     projects: list[dict[str, Any]] = [
         {
             "name": "subvectors",
-            "description": "Cited, versioned conformance vectors for CI/CD OIDC trust decisions — the answer key for whether a workload-identity trust condition actually matches, and whether it is safe.",
+            "description": "Cited, versioned conformance vectors for CI/CD OIDC trust decisions — the answer key for whether a workload-identity trust condition actually matches, and whether it is safe. Finished: 0.7.0 on PyPI is the final release.",
             "technologies": ["Python", "OIDC", "GitHub Actions", "AWS IAM", "Azure", "GCP"],
             "github_url": "https://github.com/Dashtid/subvectors",
             "live_url": None,
@@ -222,7 +222,7 @@ async def seed_projects(session: AsyncSession):
         },
         {
             "name": "Portfolio Site",
-            "description": "This site. Vue 3 + TypeScript static build with a FastAPI/PostgreSQL backend, hash-based CSP, SHA-pinned actions and a full CI/CD pipeline.",
+            "description": "This site: a Vue 3 + TypeScript static build on a FastAPI and PostgreSQL backend, with a hash-locked content-security policy, SHA-pinned GitHub Actions and a post-deploy check of the production security headers.",
             "technologies": ["Vue 3", "TypeScript", "FastAPI", "PostgreSQL", "Docker", "CI/CD"],
             "github_url": "https://github.com/Dashtid/portfolio-site",
             "live_url": "https://dashti.se",
