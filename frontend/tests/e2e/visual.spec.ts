@@ -32,7 +32,7 @@ const FIXTURE_COMPANIES = [
     name: 'Hermes Medical Solutions',
     title: 'QA/RA & Security Specialist',
     description:
-      'Ensuring NIS2/ISO 27001 compliance, regulatory clearance, and V&V processes for nuclear medicine software solutions.',
+      'Ensuring NIS2/ISO 27001 compliance, regulatory clearance, and V&V processes for medical software solutions.',
     detailed_description: null,
     logo_url: null,
     start_date: '2024-05-01T00:00:00Z',
@@ -264,9 +264,9 @@ const FIXTURE_GITHUB_STATS = {
       forks: 3
     },
     {
-      name: 'sysadmin-toolkit',
-      description: 'Automation scripts for Windows and Linux system administration.',
-      html_url: 'https://github.com/Dashtid/sysadmin-toolkit',
+      name: 'fixture-tool',
+      description: 'Fixture repository with a one-line description for the card.',
+      html_url: 'https://github.com/Dashtid/fixture-tool',
       language: 'PowerShell',
       stars: 5,
       forks: 0
