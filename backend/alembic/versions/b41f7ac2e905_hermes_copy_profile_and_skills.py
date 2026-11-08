@@ -1,14 +1,10 @@
-"""September 2026 CV copy and homepage description update
+"""Hermes row copy, cv_profile label and summary, three regulatory skills
 
 Data-only. Four things change on the deployed database:
 
 1. `companies.cv_highlights` on the row named _HERMES is set to _HIGHLIGHTS.
-   The text it replaces is kept out of this file on purpose: the tracked-tree
-   guard in `frontend/tests/unit/cvPublicScrub.spec.ts` scans source for
-   text of that kind.
-2. `companies.description` on the same row is set to _DESCRIPTION, which
-   names the domain generically ("regulated medical software"); this string
-   renders on the public homepage.
+2. `companies.description` on the same row is set to _DESCRIPTION; this
+   string renders on the public homepage.
 3. `cv_profile.summary` (_SUMMARY_OLD -> _SUMMARY_NEW) and `cv_profile.label`
    (_LABEL_OLD -> _LABEL_NEW).
 4. `skills` — MDR, ISO 13485 and EU AI Act are inserted into Regulatory &
@@ -17,24 +13,21 @@ Data-only. Four things change on the deployed database:
    reads skills from THIS table; cv/resume.json is a reference copy that
    never reaches the generated document.
 
-[!] The companies row is updated UNCONDITIONALLY, deliberately breaking this
-repo's guard-on-the-exact-current-value convention (see c9a4e7b21f83 and
-f3d8b17c6e42 for the normal pattern). The convention exists so an edit made
-through /admin/cv is never trampled. It cannot be followed here: writing the
-guard would mean committing the exact string this migration exists to
-remove, putting it back into a public repo's tracked tree and into every
-future clone. An admin edit to this row is overwritten; any edit descended
-from the old bullets would carry the same text.
+[!] The companies row is matched on its name alone and updated
+UNCONDITIONALLY, unlike the exact-previous-value guard used elsewhere (see
+c9a4e7b21f83 and f3d8b17c6e42). The previous values are not recorded in this
+file, so there is nothing to match them against: an edit made to this row
+through /admin/cv before the upgrade is overwritten.
 
-`cv_profile` keeps the normal guard: each update matches the exact previous
-value, so an edited summary or label is left alone. The skills inserts check
-names only, so a re-run, or a row an admin already added by hand, converges
-instead of colliding on the unique name.
+`cv_profile` keeps the exact-previous-value guard: each update matches the
+exact previous value, so an edited summary or label is left alone. The skills
+inserts check names only, so a re-run, or a row an admin already added by
+hand, converges instead of colliding on the unique name.
 
 The companies and cv_profile updates match nothing on empty tables. There is
 no empty-table early return for skills: on an empty skills table the three
 rows are inserted. Downgrade is a deliberate no-op: the previous companies
-values are not recorded here, by design.
+values are not recorded here.
 
 Revision ID: b41f7ac2e905
 Revises: a7f3c81d9b24
@@ -155,8 +148,7 @@ def upgrade() -> None:
     """Upgrade schema (data-only)."""
     bind = op.get_bind()
 
-    # Unconditional on the Hermes row - see the module docstring for why the
-    # exact-value guard is deliberately not used here.
+    # Matched on the row name alone - see the module docstring.
     bind.execute(
         _companies.update()
         .where(_companies.c.name == _HERMES)
@@ -193,4 +185,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Deliberate no-op - reverting would restore the disclosure."""
+    """Deliberate no-op - the previous values are not recorded here."""

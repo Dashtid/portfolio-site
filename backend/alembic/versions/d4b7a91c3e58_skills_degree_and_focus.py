@@ -1,4 +1,4 @@
-"""cv skills accuracy — delete, rename and add skills rows; update two strings
+"""skills: delete, rename and add rows; update a degree and the focus line
 
 Data-only. When the skills table has rows:
 

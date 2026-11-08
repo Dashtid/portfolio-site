@@ -1,11 +1,11 @@
-"""Tests for the d4b7a91c3e58 cv-skills-accuracy migration.
+"""Tests for the d4b7a91c3e58 skills, degree and focus migration.
 
 test_migration_drift only proves the EMPTY-table path (a fresh DB upgrades to
 head). This migration exists for the opposite case: converging an already
 POPULATED prod ``skills`` table (plus the CompTIA education row and the
-cv_profile focus line) onto the 2026-08-22 accuracy set that seed_data can
-never reach. These run the real upgrade() against sync in-memory SQLite and
-assert the pruning semantics — the four listed rows deleted, HL7/FHIR renamed, the
+cv_profile focus line) onto the values seed_data carries, which seed_data
+itself can never reach. These run the real upgrade() against sync in-memory
+SQLite and assert the pruning semantics — the four listed rows deleted, HL7/FHIR renamed, the
 FDA row added exactly once, order_index deduplicated deterministically, an
 owner-edited focus never trampled, idempotent.
 """
@@ -21,10 +21,10 @@ _MIGRATION_PATH = (
     Path(__file__).resolve().parents[1]
     / "alembic"
     / "versions"
-    / "d4b7a91c3e58_cv_skills_accuracy.py"
+    / "d4b7a91c3e58_skills_degree_and_focus.py"
 )
 
-_spec = importlib.util.spec_from_file_location("cv_skills_accuracy", _MIGRATION_PATH)
+_spec = importlib.util.spec_from_file_location("skills_degree_and_focus", _MIGRATION_PATH)
 assert _spec and _spec.loader
 _migration = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_migration)
@@ -111,7 +111,7 @@ def _names(conn: sa.Connection) -> set[str]:
     return set(conn.execute(sa.select(_SKILLS.c.name)).scalars())
 
 
-class TestSkillsAccuracyMigration:
+class TestSkillsDegreeAndFocusMigration:
     def test_prunes_renames_and_adds_on_populated_table(self):
         engine = _make_db(_PROD_SKILLS)
         with engine.begin() as conn:

@@ -20,10 +20,10 @@ _MIGRATION_PATH = (
     Path(__file__).resolve().parents[1]
     / "alembic"
     / "versions"
-    / "a7f3c81d9b24_cv_skills_ten_minute_quiz.py"
+    / "a7f3c81d9b24_skills_delete_and_renumber.py"
 )
 
-_spec = importlib.util.spec_from_file_location("cv_skills_ten_minute_quiz", _MIGRATION_PATH)
+_spec = importlib.util.spec_from_file_location("skills_delete_and_renumber", _MIGRATION_PATH)
 assert _spec and _spec.loader
 _migration = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_migration)
@@ -108,8 +108,8 @@ def _by_name(conn: sa.Connection) -> dict[str, int]:
     return dict(conn.execute(sa.select(_SKILLS.c.name, _SKILLS.c.order_index)).all())
 
 
-class TestSkillsTenMinuteQuizMigration:
-    def test_drops_exactly_the_four_declined_claims(self):
+class TestSkillsDeleteAndRenumberMigration:
+    def test_deletes_exactly_the_four_listed_rows(self):
         engine = _make_db(_PROD_SKILLS)
         with engine.begin() as conn:
             _run_upgrade(conn)
@@ -178,7 +178,7 @@ class TestSkillsTenMinuteQuizMigration:
         with engine.connect() as conn:
             assert _by_name(conn) == first
 
-    def test_downgrade_does_not_restore_the_claims(self):
+    def test_downgrade_does_not_restore_the_rows(self):
         engine = _make_db(_PROD_SKILLS)
         with engine.begin() as conn:
             _run_upgrade(conn)
