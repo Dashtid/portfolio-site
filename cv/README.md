@@ -31,5 +31,4 @@ This repository is **public** (it powers dashti.se). So:
 
 ## Note on content
 
-The `projects` section is not on the source PDF. Every project listed in it links to a public
-repository.
+The `projects` section is not on the source PDF.
