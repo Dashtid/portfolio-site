@@ -9,12 +9,9 @@ import path from 'node:path'
  * deliberate: those two directories are git-ignored and have never been
  * committed, while resume.json is the scrubbed public JSON Resume record.
  *
- * These tests are the tree-scanning tripwire the repo's own
- * committed-something-sensitive policy requires: resume.json's history
- * already carried a personal email once (added d45da5f, removed 56f37bb,
- * fixed forward per policy). A correct .gitignore and a clean working
- * copy are different claims from a clean COMMITTED tree — so this scans
- * what git actually tracks, not what the ignore file promises.
+ * A correct .gitignore and a clean working copy are different claims from
+ * a clean COMMITTED tree, so these tests scan what git actually tracks, not
+ * what the ignore file promises.
  * ci-cd.yml's `changes` filter includes cv/** for the same reason: a
  * commit touching only cv/ must still run this suite.
  */
@@ -81,24 +78,16 @@ describe('cv/ public-repo scrub guard', () => {
  *
  * Two rules, and they are deliberately different shapes:
  *
- * 1. The dynamic-testing technique name is zero-match anywhere in the tree,
- *    once the one repository identifier below has been masked out of each line.
- * 2. The imaging protocol may never share a line with a weakness class. That
- *    one is an ADJACENCY gate, not zero-match, because the bare protocol name
- *    is a load-bearing medtech ATS keyword that is deliberately KEPT (the
- *    resume.json skills list, the seed_data.py skills taxonomy, earlier role
- *    descriptions). A literal zero-match rule there would either fail forever
- *    or get "fixed" by deleting a keyword worth keeping.
+ * 1. The TECHNIQUE token is zero-match anywhere in the tree.
+ * 2. The PROTOCOL token may not share a line with any of the WEAKNESS_TERMS.
+ *    That one is an ADJACENCY gate, not zero-match: the protocol name itself
+ *    appears in the skills lists of resume.json and seed_data.py, and the
+ *    last test below pins that it stays in resume.json.
  *
- * Tokens are assembled from fragments so this guard never matches itself, and
- * so that the file stating the rule does not publish the terms it bans.
+ * Tokens are assembled from fragments so this guard never matches itself.
  */
 const PROTOCOL = 'DI' + 'COM'
 const TECHNIQUE = 'fu' + 'zz'
-// One repository identifier happens to contain both tokens. It is an
-// identifier, not CV copy, so it is masked out of every line before testing:
-// an off-portfolio allowlist that has to name it must not trip the pair test.
-const REPO_IDENTIFIER = `${PROTOCOL.toLowerCase()}-${TECHNIQUE}er`
 
 // A line naming the protocol AND any of these is the banned pair.
 const WEAKNESS_TERMS = [TECHNIQUE, 'vulnerab', 'exploit', 'attack surface', 'pentest']
@@ -133,7 +122,7 @@ const trackedTextFiles = (): string[] =>
     .filter(Boolean)
     .filter(f => !SKIP_EXT.has(path.extname(f).toLowerCase()))
 
-/** Every tracked line, with the tool repo's name masked out. */
+/** Every line of every tracked text file. */
 const scanLines = (): Array<{ file: string; line: number; text: string }> => {
   const out: Array<{ file: string; line: number; text: string }> = []
   for (const file of trackedTextFiles()) {
@@ -146,8 +135,7 @@ const scanLines = (): Array<{ file: string; line: number; text: string }> => {
     }
     if (raw.includes('\u0000')) continue // binary
     raw.split('\n').forEach((text, i) => {
-      const masked = text.replaceAll(new RegExp(REPO_IDENTIFIER, 'gi'), '')
-      out.push({ file, line: i + 1, text: masked })
+      out.push({ file, line: i + 1, text })
     })
   }
   return out

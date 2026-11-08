@@ -18,12 +18,11 @@
  *    which needs that chunk to render the retry UI instead of dead-ending
  *    in the stale-chunk reload loop — see the workbox globIgnores comment).
  * 3. No <style> block or style attribute the CSP does not cover.
- * 4. No off-portfolio repo name and no scrubbed credential may appear in the
- *    baked pages. This is the only check that sees CMS/DB CONTENT: the SSG
- *    bake inlines the API payload into __INITIAL_STATE__, so a claim typed
- *    into the admin panel reaches production without passing a single test.
- *    A 2026-09-06 content audit found exactly that class of miss — text that
- *    exists in no source file, only in the database and the baked output.
+ * 4. No excluded repository name and no listed certification or standard
+ *    name may appear in the baked pages. This is the only check that sees
+ *    CMS/DB CONTENT: the SSG bake inlines the API payload into
+ *    __INITIAL_STATE__, so text typed into the admin panel reaches
+ *    production without passing a single test.
  * 5. The baked homepage must render project cards: the Projects section once
  *    shipped as a bare heading over an empty client-only widget.
  * 6. Every CSS rule that uses backdrop-filter must ship both the standard and
@@ -33,6 +32,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { EXCLUDED_REPO_DIGESTS, digest, findTerms } from './hashedTerms.mjs'
 
 const dist = path.resolve(import.meta.dirname, '..', 'dist')
 const fail = msg => {
@@ -112,38 +112,23 @@ for (const file of walkHtml(dist)) {
 // Everything else in CI reads source files. CMS content never appears in a
 // source file: it is typed into the admin panel, stored in Postgres, and
 // inlined into these pages at build time. So this is the only gate standing
-// between the database and production for the two classes of text that must
-// never be published.
+// between the database and production for the two kinds of text below.
 //
-// [!] Deliberately NOT in this list yet: 'ISMS'. It is site-excluded, like
-// ISO 27001 above. The term reaches the pages through CMS
-// records rather than through source, so listing it here before those records
-// are corrected would turn CI red and block deploys for a fix only the owner
-// can apply. Add it in the same change that lands the CMS correction.
+// A term that current CMS records still contain is added in the same change
+// that edits those records, so this gate never blocks a deploy on content that
+// no change to this repository can fix.
 // ---------------------------------------------------------------------------
-// Repositories held off the public portfolio. The backend allowlist
-// (services/github_service.py PUBLIC_REPO_ALLOWLIST) is the primary control;
-// this is the backstop that also covers CMS-authored prose mentioning them.
+// Repository names excluded from the public dashboard: EXCLUDED_REPO_DIGESTS
+// in ./hashedTerms.mjs, SHA-256 digests matched against every word run of
+// each page. The backend allowlist (services/github_service.py
+// PUBLIC_REPO_ALLOWLIST) is the primary control; this is the backstop that
+// also covers CMS-authored prose. A failure prints digest prefixes, not text.
 //
-// Assembled from fragments, not written out: this repository is public, so the
-// backstop that keeps a set of names off the site must not be where those names
-// get published. Same approach as the tracked-tree guard in
-// frontend/tests/unit/cvPublicScrub.spec.ts.
-const OFF_PORTFOLIO_REPOS = [
-  ['di', 'com', '-fu', 'zzer'],
-  ['sb', 'om-sen', 'tinel'],
-  ['med', 'tech-ai-', 'security'],
-  ['defen', 'sive-tool', 'kit'],
-  ['offen', 'sive-tool', 'kit']
-].map(parts => parts.join(''))
-
+// Certification and standard names, matched case-insensitively as substrings.
 const BANNED_IN_BAKED_PAGES = [
-  ...OFF_PORTFOLIO_REPOS,
-  // Certifications with no education row: Security+ is the only certification row.
   'AZ-500',
   'Certified Ethical Hacker',
   'ISO 27001 Lead Implementer',
-  // Standards with no skills row: neither the site nor the CV lists them as skills.
   'ISO 27001',
   'ISO/IEC 27001'
 ]
@@ -152,28 +137,36 @@ for (const file of walkHtml(dist)) {
   const rel = path.relative(dist, file).replace(/\\/g, '/')
   const html = fs.readFileSync(file, 'utf-8')
   for (const term of BANNED_IN_BAKED_PAGES) {
-    // Case-insensitive: the point is the claim, not its capitalisation.
+    // Case-insensitive: the point is the term, not its capitalisation.
     if (new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(html)) {
       fail(
         `baked page ${rel} contains "${term}" — this text must not be published. ` +
-          'If it came from the CMS, fix the record and rebake; if from source, remove it. ' +
-          'See the BANNED_IN_BAKED_PAGES comment for why each entry is listed.'
+          'If it came from the CMS, fix the record and rebake; if from source, remove it.'
       )
     }
+  }
+  const excluded = findTerms(html, EXCLUDED_REPO_DIGESTS)
+  if (excluded.length > 0) {
+    fail(
+      `baked page ${rel} names ${excluded.length} excluded repository name(s), digest ` +
+        `${excluded.map(term => digest(term).slice(0, 12)).join(', ')} — this text must ` +
+        'not be published. If it came from the CMS, fix the record and rebake; if from ' +
+        'source, remove it.'
+    )
   }
 }
 
 // ---------------------------------------------------------------------------
 // 5. The Projects section must ship with actual projects in it.
 //
-// It shipped as a bare heading over a client-only, IntersectionObserver-gated
-// widget: crawlers, no-JS readers and anyone who did not scroll got a section
-// title and nothing else, while the curated projects sat in the page's baked
-// JSON state, rendered by no component (2026-09-06 content audit). Nothing
-// failed loudly — the section simply had no content, which is exactly the
-// kind of regression that survives review. The bake is a pure function of the
-// API response, so an empty grid here means either the fetch degraded or the
-// rendering was dropped; both should stop the build.
+// Without a prerendered grid the section is a bare heading over a client-only,
+// IntersectionObserver-gated widget: crawlers, no-JS readers and anyone who
+// does not scroll get a section title and nothing else, while the curated
+// projects sit in the page's baked JSON state, rendered by no component.
+// Nothing fails loudly — the section simply has no content, which is exactly
+// the kind of regression that survives review. The bake is a pure function of
+// the API response, so an empty grid here means either the fetch degraded or
+// the rendering was dropped; both should stop the build.
 // ---------------------------------------------------------------------------
 const homeCards = (indexHtml.match(/class="[^"]*\bproject-card\b/g) ?? []).length
 if (homeCards === 0) {
@@ -250,7 +243,8 @@ console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
     'baked HTML free of unhashed styling, ' +
-    `${BANNED_IN_BAKED_PAGES.length} banned terms absent from baked content, ` +
+    `${BANNED_IN_BAKED_PAGES.length} banned terms and ${EXCLUDED_REPO_DIGESTS.size} ` +
+    'excluded repository names absent from baked content, ' +
     `${homeCards} project cards prerendered, ` +
     `${backdropRules} backdrop-filter rules carry both forms`
 )
