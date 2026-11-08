@@ -293,7 +293,7 @@ def test_scope_covers_migrations_seed_data_and_tests() -> None:
 def test_hashed_lists_hold_sha256_digests() -> None:
     lists = {**_HASHED, **_HASHED_MIGRATION_DOCSTRING}
     assert {label: len(digests) for label, digests in lists.items()} == {
-        "repository name": 7,
+        "repository name": 8,
         "listed phrase": 81,
         "listed field name": 1,
     }
