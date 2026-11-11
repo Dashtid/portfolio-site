@@ -16,7 +16,7 @@ dependencies = [
     # scope['route'] (or equivalent) AND both paths are regression-tested.
     "fastapi>=0.115.0,<0.137",
     "uvicorn[standard]==0.54.0",
-    "python-multipart==0.0.32",
+    "python-multipart==0.0.33",
     # Database
     "sqlalchemy==2.1.6",
     "asyncpg==0.32.0",
