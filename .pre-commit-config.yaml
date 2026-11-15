@@ -238,7 +238,7 @@ repos:
   # answers, and the hook was linting with a different parser than the gate that
   # blocks the merge. Pin what the lock holds at the moment of the re-roll.
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.13.0
+    rev: v10.14.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|ts|vue)$
@@ -253,7 +253,7 @@ repos:
         exclude: ^frontend/public/sw\.js$
         args: ['--fix', '--config', 'frontend/eslint.config.js']
         additional_dependencies:
-          - eslint@10.13.0
+          - eslint@10.14.0
           - '@eslint/js@10.0.1'
           - '@typescript-eslint/eslint-plugin@8.72.1'
           - '@typescript-eslint/parser@8.72.1'
