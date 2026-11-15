@@ -1,6 +1,6 @@
 # Multi-stage build for FastAPI backend
 # Stage 1: Builder - install dependencies
-FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8 AS builder
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install --require-hashes -r requirements.txt
 
 # Stage 2: Runtime - minimal production image
-FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
 
 # Create non-root user (CI-016). All runtime files are owned by appuser.
 RUN groupadd --system --gid 1001 appgroup \
