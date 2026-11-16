@@ -108,11 +108,23 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: "chore(ci)"
+    # Same 7-day cooldown as the pip and npm blocks. Without a cooldown
+    # block Dependabot applies its built-in 3-day default. Security updates
+    # bypass cooldown.
+    cooldown:
+      default-days: 7
 
   # Docker base image (D3-CI-02): backend/Dockerfile digest-pins
-  # python:3.13-slim, but nothing bumped the digest — trivy fs never scans
+  # python:3.14-slim, but nothing bumped the digest — trivy fs never scans
   # the image OS layer, so base-image CVEs accumulated silently. Dependabot
-  # keeps the digest current; Fly rebuilds from it on each deploy.
+  # proposes tag bumps here; Fly rebuilds from the pinned digest on each
+  # deploy.
+  #
+  # No 7-day cooldown here, unlike the blocks above: Dependabot dates a
+  # Docker Hub tag by its last push and the official python tags are
+  # re-pushed on every rebuild, so a long cooldown keeps the newest digest
+  # too young to propose. Digest refreshes are landed by hand, at the
+  # newest index that is at least 7 days old.
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
