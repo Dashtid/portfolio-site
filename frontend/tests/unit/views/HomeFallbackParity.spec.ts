@@ -34,12 +34,14 @@ const staticTextsFor = (cls: string): string[] =>
         .trim()
     )
     .filter(t => t.length > 0 && !t.includes('{{'))
+    // &amp; is decoded last, so an escaped entity such as &amp;ndash; stays
+    // literal instead of being decoded twice.
     .map(t =>
       t
-        .replace(/&amp;/g, '&')
         .replace(/&ndash;/g, '–')
         .replace(/&middot;/g, '·')
         .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
     )
 
 /** Values of `key` across seed_data.py's dict literals. */
