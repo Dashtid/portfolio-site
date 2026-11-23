@@ -4,9 +4,9 @@ alembic==1.20.1 \
     --hash=sha256:83490def1f723413db5096591f7609ac52544805be93849170088ed04f5a2e0b \
     --hash=sha256:9970712cfb81ea26c8658d378aaa5b8f6ff9146e5bb111d70497c164016cf598
     # via portfolio-backend (pyproject.toml)
-annotated-doc==0.0.5 \
-    --hash=sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101 \
-    --hash=sha256:c7e58ce09192557605d8bbd92836d7e1d520ac9580096042c0bfd197efacf1bb
+annotated-doc==0.0.6 \
+    --hash=sha256:361ca0950cc7082f53fa69e9328409f40a62c61e57e0a47e1825a08078a58a53 \
+    --hash=sha256:7969bb69912085b2285849c0dcac0b4b374fd180c13cf10a87f284ffcf347bbf
     # via fastapi
 annotated-types==0.8.0 \
     --hash=sha256:13b2beaad985e05e2d6407ee4c4f35590b11f8d693a258a561055cac8f64cab7 \
@@ -219,9 +219,9 @@ cffi==2.1.1 \
     --hash=sha256:fb92203a88b3d3053034db775110081c49d28be6551923805e039924093761e4 \
     --hash=sha256:fcd22650c908d7b7da162bbfaab594a1227a15d1643a98c68b122ac642fa2264
     # via cryptography
-click==8.5.0 \
-    --hash=sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360 \
-    --hash=sha256:ba0d2089de75ea0310e2dde03160e6ca10009947fb95a182f9b54021bb272e34
+click==8.5.1 \
+    --hash=sha256:8bb5376d2006950386f8c6427613334a2acadc5f559cb80e638d00b4df957e37 \
+    --hash=sha256:9bbfada76703fd1d784b83eea012e3e8c6a001a876543ef104fa56aaaeb072b4
     # via uvicorn
 cryptography==50.0.2 \
     --hash=sha256:0ddc924c04591c2811ca024d62ecad4f7f6f08af8939c211438f48a16bd23602 \
@@ -294,22 +294,22 @@ fastapi==0.136.3 \
     # via
     #   portfolio-backend (pyproject.toml)
     #   sentry-sdk
-githubkit==0.17.0 \
-    --hash=sha256:3439e35462044142aa21c01d00102d8c03cb2b98f1aa354c2a83cb026c9af249 \
-    --hash=sha256:ccedcd9f2fc3fa270e126d468a61bdecf9a7f9b1dbc43fb0eef74cf5060203d7
+githubkit==0.17.1 \
+    --hash=sha256:d341a048e8c15cd594cbedc9f8e9a62e14bd2c33c248006de2a911ce47009bf9 \
+    --hash=sha256:ea15afe3992d54478dca2906701d34a5f5caa4e5b0d5aebb8224da609ee75a9e
     # via
     #   portfolio-backend (pyproject.toml)
     #   githubkit-schemas
-githubkit-schemas==26.10.28 \
-    --hash=sha256:dc797fda250fd99966ace65a9a74f387c2c85f78f2a4641790a08ed47e5dec63 \
-    --hash=sha256:e7105b07de703ca7ee2b6d95a6ab9e5c7ac1819a72f75649afdf9facb0a1a9c5
+githubkit-schemas==26.11.15 \
+    --hash=sha256:29a990417a22eec04bc607675e818e19d85686edd662d81fdde4bf27946705b2 \
+    --hash=sha256:4b56d0c32644570c64db7dec22f87ed227d5da22466a48c238c42cda0990a14a
     # via
     #   portfolio-backend (pyproject.toml)
     #   githubkit
     #   githubkit-schemas-2026-03-10
-githubkit-schemas-2026-03-10==26.10.28 \
-    --hash=sha256:6a5b44a5b73bd0e31455388812ef0a62451c44ace5794b6d44d7237c703f11ac \
-    --hash=sha256:9783a704b90f22d1032ff848ff0d37979998ea281c1e98b699bae15c7869dc44
+githubkit-schemas-2026-03-10==26.11.15 \
+    --hash=sha256:06489998317ebef98a532d54d6b939769ea4e078a79af3f120b7396f137d7cc4 \
+    --hash=sha256:8e6906734f1eeb760a0a3a33935015241f6bde9f68152bf24c0bf0eeac9ae859
     # via githubkit-schemas
 greenlet==3.5.6 \
     --hash=sha256:0616b8f878098c5681fd8f0dc92d887551717402342a70f0abcbfea5f5ad8a44 \
@@ -801,9 +801,9 @@ pycparser==3.12 \
     --hash=sha256:a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e \
     --hash=sha256:f03387877eab82ce01bbdfd0ba7252ee55a90b1c708d5129e2ce915475cf1db6
     # via cffi
-pydantic==2.14.2 \
-    --hash=sha256:7efbf7507b937931cd32a5755acb00ea1cf5ccb1d4e8067a5850d5069e382118 \
-    --hash=sha256:fb7b2db6cefe8414dd612edeede49c4c433acb0432b0f92b95024e45f66c505d
+pydantic==2.14.3 \
+    --hash=sha256:1054f237f4d4733e5a30e1e2333bd33a2004ab9ab1510bd053a9a31bb48e232d \
+    --hash=sha256:3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8
     # via
     #   portfolio-backend (pyproject.toml)
     #   fastapi
@@ -952,9 +952,9 @@ pydantic-core==2.50.2 \
     --hash=sha256:f81df206b937d0dca5efb38c25fc99037d82dbcd3740e34c3f81997d2322ac1c \
     --hash=sha256:fd9aa71a800c87c0f7ab53fa38009169a23a82c685989626ca74a4bd483e1b67
     # via pydantic
-pydantic-settings==2.16.2 \
-    --hash=sha256:3dc08ffabed2bbd5dc2dd55ead7b78b4e4c5cd776aecd04310db5f1224caaf46 \
-    --hash=sha256:8d523e5c129b097686bde019bd6109bff53f4c8c3f63f1ddf9933ffa42e5ab4f
+pydantic-settings==2.16.3 \
+    --hash=sha256:10e36f616623ebb586c05ca3d3cd22927146869db413d4f14c20c514442a1337 \
+    --hash=sha256:d1db16a2d34006323a1b42c0640898da58adfbad7ec30baaa9e2b18aafc08999
     # via portfolio-backend (pyproject.toml)
 pyjwt==2.15.1 \
     --hash=sha256:42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193 \
@@ -1046,9 +1046,9 @@ pyyaml==6.0.3 \
     --hash=sha256:fa160448684b4e94d80416c0fa4aac48967a969efe22931448d853ada8baf926 \
     --hash=sha256:fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0
     # via uvicorn
-sentry-sdk==2.73.0 \
-    --hash=sha256:0bcfa6928ea5adbb89591858b514d27adac27c7a3cccc31b20ed10e0b09eda9e \
-    --hash=sha256:4a2ab97b16e4693c325ab361c7bbbb346dbc7d0bc0150922d795a25bac8d5280
+sentry-sdk==2.75.0 \
+    --hash=sha256:9a10e97de2cbd42ad7e4a6e02a0d5af19de9811eb02445077d41ba14c08e170c \
+    --hash=sha256:c38ac2d4b2435c11da821e173bb9d9088c98f41ae92f559ce0e424170a8e1a29
     # via portfolio-backend (pyproject.toml)
 slowapi==0.1.10 \
     --hash=sha256:3acb61561dc9d687e3d3669362ff6a439de9ba44e2fed3a9c165da26b4b83e28 \
