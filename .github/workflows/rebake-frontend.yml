@@ -39,7 +39,7 @@ jobs:
           node-version: 24
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@53.4.0
+        run: npm install -g vercel@65.16.0
 
       # No working-directory: the main pipeline deploys from the repo root
       # (Vercel's Root Directory project setting selects frontend/) — a

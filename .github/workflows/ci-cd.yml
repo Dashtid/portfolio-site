@@ -496,7 +496,7 @@ jobs:
         # Pinned (not @latest) but kept current — Vercel rejects deploys from
         # CLI versions below a server-side minimum (44.x started 400ing with
         # "requires version 47.2.2 or later").
-        run: npm install -g vercel@53.4.0
+        run: npm install -g vercel@65.16.0
 
       - name: Deploy to Vercel
         # The Vercel CLI does not authenticate from the VERCEL_TOKEN env var on
