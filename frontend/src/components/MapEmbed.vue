@@ -84,8 +84,8 @@ const localizedUrl = computed(() => {
 }
 
 .embed-caption {
-  /* Mono caption below the media — matches the rail's dt labels. */
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  /* Mono caption below the media — the same --font-mono stack as the rail's dt labels. */
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 400;
   text-transform: uppercase;
