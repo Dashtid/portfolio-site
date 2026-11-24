@@ -147,7 +147,7 @@ repos:
   # block, which is where Python tooling config lives; passing them here would
   # silently override a repository that meant something different.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.2
+    rev: v0.17.5
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix]
@@ -212,12 +212,12 @@ repos:
   # stable releases. The executed prettier version stays pinned by
   # additional_dependencies either way.
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.10
+    rev: v3.10.1
     hooks:
       - id: prettier
         files: ^frontend/.*\.(js|ts|vue|json|css|scss|md)$
         additional_dependencies:
-          - prettier@3.9.10
+          - prettier@3.10.1
 
   # LOCAL PREREQUISITE: run `npm ci` in frontend/ before your first commit that
   # touches a .vue, .ts or .js file. frontend/eslint.config.js imports @eslint/js
@@ -238,7 +238,7 @@ repos:
   # answers, and the hook was linting with a different parser than the gate that
   # blocks the merge. Pin what the lock holds at the moment of the re-roll.
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.14.0
+    rev: v10.15.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(js|ts|vue)$
@@ -253,11 +253,11 @@ repos:
         exclude: ^frontend/public/sw\.js$
         args: ['--fix', '--config', 'frontend/eslint.config.js']
         additional_dependencies:
-          - eslint@10.14.0
+          - eslint@10.15.0
           - '@eslint/js@10.0.1'
-          - '@typescript-eslint/eslint-plugin@8.72.1'
-          - '@typescript-eslint/parser@8.72.1'
-          - eslint-plugin-vue@10.12.0
+          - '@typescript-eslint/eslint-plugin@8.73.0'
+          - '@typescript-eslint/parser@8.73.0'
+          - eslint-plugin-vue@10.12.1
           - eslint-plugin-prettier@5.5.7
           - eslint-config-prettier@10.1.8
           - vue-eslint-parser@10.4.0
@@ -280,5 +280,5 @@ repos:
         # python-jose stubs went on 2026-11-06: the backend uses pyjwt now.
         additional_dependencies:
           - fastapi==0.136.3
-          - pydantic==2.14.2
+          - pydantic==2.14.3
           - starlette==1.10.0
