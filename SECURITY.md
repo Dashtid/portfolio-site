@@ -70,15 +70,13 @@ development-scope Dependabot alert, #246. No Dependabot alert is open. The
 nine advisories that left the audit since 2026-11-15 are listed in the dated
 note at the end.
 
-Code-scanning alert 120 is **under review** and has no entry yet. Trivy
-opened it on 2026-11-17 for `picomatch` 4.0.7 and CVE-2026-112366 (ReDoS
-through single-branch repeated extglob patterns such as `+(*)`). GitHub
-withdrew the matching advisory,
+Code-scanning alert 120 needs no entry: Trivy opened it on 2026-11-17 for
+`picomatch` 4.0.7 and CVE-2026-112366 (ReDoS through single-branch repeated
+extglob patterns such as `+(*)`), and GitHub withdrew the matching advisory,
 [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf), on
-2026-11-18 as not a security issue, so `npm audit` does not report it and
-Dependabot opened no alert for it; 4.0.7 is still the newest picomatch
-release. Trivy's scans of three pull requests on 2026-11-23, on the same
-picomatch 4.0.7, found nothing.
+2026-11-18 as not a security issue. `npm audit` does not report it, Dependabot
+opened no alert for it, and Trivy's scan of `main` on 2026-11-24, with
+picomatch still at 4.0.7, the newest release, closed the alert as fixed.
 
 ### minimatch — denial of service through pattern amplification (accepted)
 
@@ -182,6 +180,10 @@ that stood on 2026-11-15 was dropped after the lock was written without it:
 
 ### What changed since 2026-08-07, and the lesson
 
+- **2026-11-24:** once the 2026-11-23 lock reached `main`, GitHub marked the
+  eight Dependabot alerts #187, #200, #218, #234, #238, #241, #248 and #249
+  fixed, the dismissed and auto-dismissed ones included. Trivy's scan of
+  the same push closed code-scanning alert 120 (see above).
 - **2026-11-23:** the extract-zip, basic-ftp and deepmerge entries are
   **gone**, and so are three advisories that had none. `@lhci/cli` 0.16.1
   (Lighthouse 13.6.0, `puppeteer-core` 25.17.0, `@puppeteer/browsers` 3.2.7)
