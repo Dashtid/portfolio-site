@@ -70,6 +70,21 @@ development-scope Dependabot alert, #246. No Dependabot alert is open. The
 nine advisories that left the audit since 2026-11-15 are listed in the dated
 note at the end.
 
+glob's advisory needs a caller that passes glob an `AbortSignal`: an aborted
+walk rejects but goes on reading directories. Nothing here passes one
+(checked 2026-11-24 by searching each consumer's installed code for
+`signal`). `workbox-build` 7.4.1 calls `globSync()` during `build:ssg`,
+`@sentry/bundler-plugins` 10.78.0 calls it with an `ignore` list only, and
+`js-beautify` 2.0.3 loads it only in its command-line tool, which nothing
+here runs.
+
+Both advisories are listed in
+[`frontend/osv-scanner.toml`](frontend/osv-scanner.toml) until 2027-02-24.
+OpenSSF Scorecard's Vulnerabilities check runs OSV-Scanner over
+`frontend/package-lock.json`, and OSV-Scanner skips the IDs that file lists,
+so the check does not count them. Each entry lapses on that date, and the
+check counts its advisory again until the entry is re-checked and renewed.
+
 Code-scanning alert 120 needs no entry: Trivy opened it on 2026-11-17 for
 `picomatch` 4.0.7 and CVE-2026-112366 (ReDoS through single-branch repeated
 extglob patterns such as `+(*)`), and GitHub withdrew the matching advisory,
@@ -183,7 +198,9 @@ that stood on 2026-11-15 was dropped after the lock was written without it:
 - **2026-11-24:** once the 2026-11-23 lock reached `main`, GitHub marked the
   eight Dependabot alerts #187, #200, #218, #234, #238, #241, #248 and #249
   fixed, the dismissed and auto-dismissed ones included. Trivy's scan of
-  the same push closed code-scanning alert 120 (see above).
+  the same push closed code-scanning alert 120 (see above). The same day,
+  `frontend/osv-scanner.toml` began listing glob's and minimatch's
+  advisories until 2027-02-24 (see above).
 - **2026-11-23:** the extract-zip, basic-ftp and deepmerge entries are
   **gone**, and so are three advisories that had none. `@lhci/cli` 0.16.1
   (Lighthouse 13.6.0, `puppeteer-core` 25.17.0, `@puppeteer/browsers` 3.2.7)

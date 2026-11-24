@@ -1,0 +1,13 @@
+# OSV-Scanner applies this file to package-lock.json in this directory only,
+# and OpenSSF Scorecard's Vulnerabilities check runs OSV-Scanner. Each entry
+# lapses on its ignoreUntil date; SECURITY.md has the evidence for both.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-24
+reason = "minimatch 10.2.6 is dev-only and no 10.x release has the fix. Its one optimizationLevel 2 caller, workbox-build's glob 11.1.0, compiles only the literal workbox patterns from vite.config.ts during build:ssg, none containing '..'. See SECURITY.md."
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2027-02-24
+reason = "glob 13.0.6 and 11.1.0 are dev-only, and the bug needs a caller that passes glob an AbortSignal. None does. See SECURITY.md."
