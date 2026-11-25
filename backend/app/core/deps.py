@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.security import decode_token
 from app.database import get_db
 from app.models.user import User
@@ -88,8 +89,16 @@ async def get_current_user(
 
 
 async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:  # noqa: B008
-    """Require the current user to be an admin"""
-    if not current_user.is_admin:
+    """Require the current user to be the configured admin.
+
+    The stored is_admin flag is not enough on its own: the user's GitHub id
+    must match ADMIN_GITHUB_ID on every request, so changing the setting
+    locks the previous account out at once, and an unset one admits nobody.
+    """
+    admin_github_id = settings.ADMIN_GITHUB_ID
+    if not (
+        current_user.is_admin and admin_github_id and current_user.github_id == admin_github_id
+    ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
 
     return current_user

@@ -37,6 +37,7 @@ def create_refresh_token(
     subject: str | Any,
     expires_delta: timedelta | None = None,
     jti: str | None = None,
+    auth_time: int | None = None,
 ) -> tuple[str, str, datetime]:
     """Create a JWT refresh token and return (token, jti, expires_at).
 
@@ -44,15 +45,26 @@ def create_refresh_token(
     rotation can revoke prior tokens and detect replay. Callers should pass
     `jti` only when they need a deterministic id; otherwise we mint a
     fresh url-safe random one here.
+
+    `auth_time` (Unix seconds) is when the session's sign-in happened: a
+    rotation passes the presented token's value on, so the session's age
+    survives every rotation. Left out, the session starts now.
     """
+    now = datetime.now(UTC)
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
     token_jti = jti or secrets.token_urlsafe(16)
 
-    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh", "jti": token_jti}
+    to_encode = {
+        "exp": expire,
+        "sub": str(subject),
+        "type": "refresh",
+        "jti": token_jti,
+        "auth_time": int(now.timestamp()) if auth_time is None else auth_time,
+    }
     token = jwt.encode(to_encode, _get_secret_key(), algorithm=settings.ALGORITHM)
     return token, token_jti, expire
 

@@ -2,12 +2,15 @@
 Tests for authentication endpoints
 """
 
+import asyncio
 import urllib.parse  # noqa: PLC0415
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import jwt
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.core.security import create_access_token, create_refresh_token
 
 
@@ -565,6 +568,104 @@ class TestRefreshTokenEdgeCases:
         client.cookies.clear()
         replay = client.post("/api/v1/auth/refresh", json={"refresh_token": rotated})
         assert replay.status_code == 401
+
+
+def _store_refresh_row(
+    user_id: str, jti: str, expires_at: datetime, issued_at: datetime | None = None
+) -> None:
+    """Insert the server-side record of a refresh token minted by a test."""
+    from app.models.refresh_token import RefreshToken  # noqa: PLC0415
+    from tests.conftest import TestSessionLocal  # noqa: PLC0415
+
+    async def insert() -> None:
+        async with TestSessionLocal() as session:
+            row = RefreshToken(jti=jti, user_id=user_id, expires_at=expires_at)
+            if issued_at is not None:
+                row.issued_at = issued_at
+            session.add(row)
+            await session.commit()
+
+    asyncio.run(insert())
+
+
+def _refresh_token_without_auth_time(user_id: str, jti: str, expires_at: datetime) -> str:
+    """A refresh token as minted before the auth_time claim existed."""
+    secret = settings.SECRET_KEY
+    assert secret
+    claims = {"exp": expires_at, "sub": user_id, "type": "refresh", "jti": jti}
+    return jwt.encode(claims, secret, algorithm=settings.ALGORITHM)
+
+
+def _auth_time(token: str) -> int:
+    from app.core.security import decode_token  # noqa: PLC0415
+
+    payload = decode_token(token)
+    assert payload is not None
+    return payload["auth_time"]
+
+
+class TestSessionMaxAge:
+    """A session lives at most SESSION_MAX_AGE from its GitHub sign-in,
+    however often its refresh token rotates."""
+
+    def test_rotation_carries_auth_time_forward(self, client: TestClient, test_user_in_db: dict):
+        first_auth_time = _auth_time(test_user_in_db["refresh_token"])
+
+        response = client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+        )
+
+        assert response.status_code == 200
+        assert _auth_time(response.cookies["refresh_token"]) == first_auth_time
+
+    def test_refresh_past_the_session_lifetime_is_refused(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        from app.api.v1.auth import SESSION_MAX_AGE  # noqa: PLC0415
+
+        signed_in = datetime.now(UTC) - SESSION_MAX_AGE - timedelta(minutes=1)
+        token, jti, exp = create_refresh_token(
+            subject=test_user_in_db["user_id"], auth_time=int(signed_in.timestamp())
+        )
+        _store_refresh_row(test_user_in_db["user_id"], jti, exp)
+
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": token})
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Session expired"
+        assert "refresh_token" not in response.cookies
+
+    def test_token_without_auth_time_counts_from_its_row(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        """A token minted before the claim existed keeps working, and the
+        session's lifetime counts from the row that recorded it."""
+        user_id = test_user_in_db["user_id"]
+        issued_at = (datetime.now(UTC) - timedelta(days=2)).replace(microsecond=0)
+        expires_at = datetime.now(UTC) + timedelta(days=5)
+        legacy = _refresh_token_without_auth_time(user_id, "legacy-jti-recent-row", expires_at)
+        _store_refresh_row(user_id, "legacy-jti-recent-row", expires_at, issued_at)
+
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": legacy})
+
+        assert response.status_code == 200
+        assert _auth_time(response.cookies["refresh_token"]) == int(issued_at.timestamp())
+
+    def test_token_without_auth_time_from_an_old_row_is_refused(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        from app.api.v1.auth import SESSION_MAX_AGE  # noqa: PLC0415
+
+        user_id = test_user_in_db["user_id"]
+        issued_at = datetime.now(UTC) - SESSION_MAX_AGE - timedelta(hours=1)
+        expires_at = datetime.now(UTC) + timedelta(days=1)
+        legacy = _refresh_token_without_auth_time(user_id, "legacy-jti-old-row", expires_at)
+        _store_refresh_row(user_id, "legacy-jti-old-row", expires_at, issued_at)
+
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": legacy})
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Session expired"
 
 
 class TestGitHubCallbackMocked:

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.config import settings
 from app.core.security import create_access_token
 from app.database import Base, get_db
 from app.main import app
@@ -33,6 +34,9 @@ from app.models.user import User  # noqa: F401
 
 # Test database URL - use file-based SQLite for test isolation
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+
+# The GitHub id of admin_user_in_db, configured as ADMIN_GITHUB_ID for every test.
+ADMIN_GITHUB_ID = "67890"
 
 # Create test engine with StaticPool to share connection across async operations
 test_engine = create_async_engine(
@@ -84,6 +88,16 @@ def _reset_rate_limiter() -> Generator[None, Any, None]:
     """
     limiter.reset()
     yield
+
+
+@pytest.fixture(autouse=True)
+def _admin_github_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make admin_user_in_db the configured admin.
+
+    get_current_admin_user checks the user's GitHub id against
+    ADMIN_GITHUB_ID on every request and admits nobody while it is unset.
+    """
+    monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", ADMIN_GITHUB_ID)
 
 
 @pytest.fixture(scope="function")
@@ -215,7 +229,7 @@ def admin_user_in_db(client: TestClient) -> dict[str, Any]:
     """Create an admin user in the database and return user data with tokens."""
     return _seed_user_with_tokens(
         user_id="admin-user-id-12345",
-        github_id="67890",
+        github_id=ADMIN_GITHUB_ID,
         username="adminuser",
         email="admin@example.com",
         name="Admin User",

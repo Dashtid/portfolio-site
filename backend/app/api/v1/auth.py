@@ -6,7 +6,7 @@ Uses database-backed OAuth state storage for multi-instance deployments.
 
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -42,6 +42,11 @@ OAUTH_STATE_TTL_SECONDS = 300  # 5 minutes
 # enough to cover a slow sibling request, short enough that a genuinely
 # stolen-and-replayed token still trips the revoke-all sweep.
 REFRESH_ROTATION_GRACE_SECONDS = 30
+
+# Absolute session lifetime. Every rotation issues a refresh token with a
+# fresh REFRESH_TOKEN_EXPIRE_DAYS, so without this cap an active session
+# (or a stolen one kept warm) renewed forever without a GitHub sign-in.
+SESSION_MAX_AGE = timedelta(days=30)
 
 # PERF-10: shared httpx.AsyncClient for the OAuth code-exchange + user-info
 # round-trips to github.com. Each `async with httpx.AsyncClient()` in the
@@ -459,6 +464,8 @@ async def refresh_token_endpoint(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
         )
 
+    auth_time = _session_auth_time(payload, stored, now)
+
     # Get user from database. We deliberately check after the jti check so
     # we can't be probed for user existence by replaying old jti values.
     result = await db.execute(select(User).where(User.id == user_id))
@@ -483,7 +490,7 @@ async def refresh_token_endpoint(
         )
 
     access_token = create_access_token(subject=user.id)
-    new_refresh_token, new_jti, new_exp = create_refresh_token(subject=user.id)
+    new_refresh_token, new_jti, new_exp = create_refresh_token(subject=user.id, auth_time=auth_time)
     db.add(RefreshToken(jti=new_jti, user_id=user.id, expires_at=new_exp))
     await db.commit()
 
@@ -505,6 +512,25 @@ async def refresh_token_endpoint(
     )
 
     return RefreshSuccess()
+
+
+def _session_auth_time(payload: dict[str, Any], stored: RefreshToken, now: datetime) -> int:
+    """Return when the presented token's session signed in (Unix seconds).
+
+    Raises 401 once the session is older than SESSION_MAX_AGE. A token
+    minted before the auth_time claim existed counts from its own row's
+    issued_at: the session is at least that old.
+    """
+    auth_time = payload.get("auth_time")
+    if not isinstance(auth_time, int):
+        issued_at = stored.issued_at
+        if issued_at.tzinfo is None:
+            # SQLite returns naive datetimes; reattach UTC.
+            issued_at = issued_at.replace(tzinfo=UTC)
+        auth_time = int(issued_at.timestamp())
+    if now - datetime.fromtimestamp(auth_time, UTC) > SESSION_MAX_AGE:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")
+    return auth_time
 
 
 async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> None:

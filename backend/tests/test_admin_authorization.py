@@ -16,6 +16,9 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from app.config import settings
+from tests.conftest import _seed_user_with_tokens
+
 # Minimal valid payloads to push past Pydantic validation — the request
 # should never reach the model layer because the admin gate is checked
 # first, but giving Pydantic real data isolates the test to the gate.
@@ -193,3 +196,35 @@ class TestAdminMutationsStillSucceed:
             "/api/v1/skills/", json=SKILL_PAYLOAD, headers=admin_user_in_db["headers"]
         )
         assert response.status_code == 201
+
+
+class TestAdminGithubIdIsRechecked:
+    """The admin gate checks the GitHub id against ADMIN_GITHUB_ID on every
+    request, so the stored is_admin flag alone admits nobody."""
+
+    def test_flagged_row_with_another_github_id_is_refused(self, client: TestClient):
+        # A row that was the admin before ADMIN_GITHUB_ID moved to another account.
+        former = _seed_user_with_tokens(
+            user_id="former-admin-id",
+            github_id="11111",
+            username="formeradmin",
+            email="former@example.com",
+            name="Former Admin",
+            avatar_url="https://example.com/former.png",
+            is_admin=True,
+        )
+
+        write = client.post("/api/v1/companies/", json=COMPANY_PAYLOAD, headers=former["headers"])
+        panel = client.get("/api/v1/admin/sentry-panel", headers=former["headers"])
+
+        assert write.status_code == 403
+        assert panel.status_code == 403
+
+    def test_admin_refused_while_admin_github_id_is_unset(
+        self, client: TestClient, admin_user_in_db: dict[str, Any], monkeypatch
+    ):
+        monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", None)
+
+        response = client.get("/api/v1/admin/sentry-panel", headers=admin_user_in_db["headers"])
+
+        assert response.status_code == 403

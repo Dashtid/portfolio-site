@@ -106,9 +106,32 @@ class TestGetCurrentAdminUser:
     @pytest.mark.asyncio
     async def test_get_current_admin_user_success(self):
         """Test get_current_admin_user returns admin user."""
-        mock_user = User(id="admin123", username="admin", is_admin=True)
+        mock_user = User(id="admin123", username="admin", github_id="67890", is_admin=True)
 
         result = await get_current_admin_user(mock_user)
 
         assert result == mock_user
         assert result.is_admin is True
+
+    @pytest.mark.asyncio
+    async def test_admin_flag_with_another_github_id_is_refused(self):
+        """A stored is_admin flag is not enough: the GitHub id must be ADMIN_GITHUB_ID."""
+        mock_user = User(id="old123", username="old", github_id="11111", is_admin=True)
+
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_admin_user(mock_user)
+
+        assert exc_info.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_admin_refused_while_admin_github_id_is_unset(self, monkeypatch):
+        """With ADMIN_GITHUB_ID unset nobody is the admin (fail closed)."""
+        from app.config import settings  # noqa: PLC0415
+
+        monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", None)
+        mock_user = User(id="admin123", username="admin", github_id="67890", is_admin=True)
+
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_admin_user(mock_user)
+
+        assert exc_info.value.status_code == 403
