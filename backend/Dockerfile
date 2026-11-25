@@ -4,11 +4,6 @@ FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916
 
 WORKDIR /app
 
-# Install system dependencies needed for compiling Python wheels
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements and install Python dependencies into a shared prefix
 # (/install). Using a shared location instead of --user keeps the runtime
 # stage free of per-user assumptions and lets a non-root user read the libs.
@@ -16,8 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # --require-hashes enforces the SHA-256 hashes baked into requirements.txt
 # by `uv pip compile --generate-hashes`, so a hijacked PyPI mirror cannot
 # substitute an alternate wheel. See OpenSSF Scorecard Pinned-Dependencies.
+# --only-binary=:all: takes wheels only: pip would build a pin that has no
+# matching wheel from its sdist, and it installs a build's dependencies
+# without checking any hash. Nothing is compiled, so the stage needs no gcc.
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install --require-hashes -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install --require-hashes --only-binary=:all: -r requirements.txt
 
 # Stage 2: Runtime - minimal production image
 FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f

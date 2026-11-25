@@ -162,8 +162,11 @@ jobs:
       - name: Install dependencies
         # Every install below runs under --require-hashes, including the pip
         # bootstrap itself: a version pin alone still trusts whatever artifact
-        # the index serves for that version. Regenerate the lock and the
-        # requirements files together, in backend/:
+        # the index serves for that version. --only-binary=:all: refuses
+        # sdists, whose build dependencies pip installs without checking any
+        # hash, so a pin with no wheel for this runner fails here; the image
+        # build in backend/Dockerfile takes wheels only as well.
+        # Regenerate the lock and the requirements files together, in backend/:
         #   uv lock
         #   uv pip compile pyproject.toml -o requirements.txt --generate-hashes
         #     --python-platform x86_64-unknown-linux-gnu --python-version 3.14
@@ -176,9 +179,9 @@ jobs:
         # requirements-dev.txt is only the delta over requirements.txt, so it
         # must be installed second -- on its own it is not a full resolution.
         run: |
-          python -m pip install --upgrade --require-hashes -r requirements-pip.txt
-          pip install --require-hashes -r requirements.txt
-          pip install --require-hashes -r requirements-dev.txt
+          python -m pip install --upgrade --require-hashes --only-binary=:all: -r requirements-pip.txt
+          pip install --require-hashes --only-binary=:all: -r requirements.txt
+          pip install --require-hashes --only-binary=:all: -r requirements-dev.txt
 
       - name: Lint with ruff
         run: |
