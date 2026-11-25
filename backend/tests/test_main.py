@@ -317,3 +317,38 @@ class TestStaticFilesMount:
         response = client.get("/static/nonexistent.js")
         # Non-existent file should return 404
         assert response.status_code == 404
+
+
+class TestValidationErrorBody:
+    """422 responses keep FastAPI's error list minus each rejected value."""
+
+    BEACON = "/api/v1/analytics/track/pageview"
+
+    def test_rejected_value_is_not_echoed(self, client: TestClient):
+        response = client.post(self.BEACON, json={"page_path": "/" + "x" * 3000})
+
+        assert response.status_code == 422
+        [error] = response.json()["detail"]
+        assert error["loc"] == ["body", "page_path"]
+        assert error["type"] == "string_too_long"
+        assert "input" not in error
+        assert len(response.content) < 1024
+
+    def test_lone_surrogate_is_a_422_not_a_500(self, client: TestClient):
+        """Echoed, the surrogate made the UTF-8 encode of the 422 body raise."""
+        response = client.post(
+            self.BEACON,
+            content=b'{"page_path": "\\ud800"}',
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert response.status_code == 422
+        assert all("input" not in error for error in response.json()["detail"])
+
+    def test_path_parameter_errors_drop_the_value_too(self, client: TestClient):
+        response = client.get("/api/v1/education/0")
+
+        assert response.status_code == 422
+        [error] = response.json()["detail"]
+        assert error["loc"] == ["path", "education_id"]
+        assert "input" not in error

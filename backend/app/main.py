@@ -10,6 +10,8 @@ from pathlib import Path
 
 import sentry_sdk
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
@@ -554,6 +556,23 @@ app = FastAPI(
     openapi_url=None if not _docs_enabled else "/openapi.json",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """FastAPI's 422 body without the rejected value in each error.
+
+    The default handler echoed every error's "input": a response as large
+    as the request body, and a lone surrogate in it made the JSON encoder
+    raise, turning the 422 into a 500.
+    """
+    errors = [
+        {key: value for key, value in error.items() if key != "input"} for error in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={"detail": jsonable_encoder(errors)})
+
 
 # Configure rate limiter
 if settings.RATE_LIMIT_ENABLED:
