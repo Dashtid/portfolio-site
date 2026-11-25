@@ -169,6 +169,24 @@ def test_three_failed_attempts_fail_the_check(
     assert code == 1
 
 
+def test_vercel_json_switches_off_each_feature_the_colophon_names() -> None:
+    # The live check holds production to vercel.json, so a weaker value in
+    # vercel.json itself would pass it; the colophon cites this one.
+    colophon = (ROOT / "frontend" / "src" / "views" / "ColophonView.vue").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        "camera, microphone, geolocation, payment, USB and the motion sensors all switched off"
+        " for the page and anything it embeds"
+    ) in colophon
+    served = dict(check_live_headers.expected_headers(ROOT / "frontend" / "vercel.json"))
+    # An empty allowlist, (), turns a feature off in every frame.
+    assert served["Permissions-Policy"] == (
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=(), "
+        "magnetometer=(), gyroscope=(), accelerometer=()"
+    )
+
+
 def test_expected_headers_come_from_the_catch_all_rule(tmp_path: Path) -> None:
     assert check_live_headers.expected_headers(_vercel_json(tmp_path, RULE)) == RULE
     real = dict(check_live_headers.expected_headers(ROOT / "frontend" / "vercel.json"))
