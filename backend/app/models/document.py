@@ -37,7 +37,8 @@ class Document(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # thesis, paper, report, etc.
     document_type: Mapped[str] = mapped_column(String, nullable=False)
-    # e.g., "documents/bachelor-thesis.pdf"
+    # The path on the API host, e.g. "/static/documents/bachelor-thesis.pdf"
+    # or an upload's "/media/<name>"
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)  # Size in bytes
     file_url: Mapped[str] = mapped_column(String, nullable=False)  # Public download URL

@@ -81,6 +81,7 @@ class TestSettings:
         monkeypatch.setenv(
             "GITHUB_REDIRECT_URI", "https://api.dashti.se/api/v1/auth/github/callback"
         )
+        monkeypatch.setenv("PUBLIC_API_URL", "https://api.dashti.se")
         # _env_file=None ignores the developer's local backend/.env, which
         # legitimately sets localhost origins. Fly has no .env file, so this
         # models the real production environment.
@@ -246,20 +247,23 @@ class TestEnvironmentGuards:
             DATABASE_URL="postgresql://u:p@host:5432/db",
             GITHUB_REDIRECT_URI="https://api.dashti.se/api/v1/auth/github/callback",
             FRONTEND_URL="https://dashti.se",
+            PUBLIC_API_URL="https://api.dashti.se",
         )
         assert settings.ENVIRONMENT == "production"
 
 
-def _production_settings(secret_key: str) -> Settings:
+def _production_settings(secret_key: str, **overrides: str) -> Settings:
     """Production Settings with no .env file and every other value valid."""
-    return Settings(
-        _env_file=None,
-        ENVIRONMENT="production",
-        SECRET_KEY=secret_key,
-        DATABASE_URL="postgresql://u:p@host:5432/db",
-        GITHUB_REDIRECT_URI="https://api.dashti.se/api/v1/auth/github/callback",
-        FRONTEND_URL="https://dashti.se",
-    )
+    values = {
+        "ENVIRONMENT": "production",
+        "SECRET_KEY": secret_key,
+        "DATABASE_URL": "postgresql://u:p@host:5432/db",
+        "GITHUB_REDIRECT_URI": "https://api.dashti.se/api/v1/auth/github/callback",
+        "FRONTEND_URL": "https://dashti.se",
+        "PUBLIC_API_URL": "https://api.dashti.se",
+        **overrides,
+    }
+    return Settings(_env_file=None, **values)
 
 
 class TestProductionSecretKey:
@@ -306,3 +310,33 @@ class TestProductionSecretKey:
     def test_development_keeps_accepting_any_key(self):
         """Only production checks the key's content; tests and local runs use short ones."""
         assert Settings(_env_file=None, SECRET_KEY="x" * 48).ENVIRONMENT == "development"
+
+
+class TestPublicApiUrl:
+    """The origin upload responses build each document's file_url on."""
+
+    @pytest.fixture(autouse=True)
+    def _off_fly(self, monkeypatch):
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+        monkeypatch.delenv("PUBLIC_API_URL", raising=False)
+
+    @pytest.mark.parametrize(
+        "url", ["http://localhost:8000", "http://api.dashti.se", "https://localhost:8443"]
+    )
+    def test_production_refuses_a_local_or_plain_http_origin(self, url: str):
+        with pytest.raises(ValidationError, match="PUBLIC_API_URL"):
+            _production_settings(secrets.token_urlsafe(32), PUBLIC_API_URL=url)
+
+    def test_production_refuses_the_local_default(self):
+        values = {"PUBLIC_API_URL": Settings.model_fields["PUBLIC_API_URL"].default}
+        with pytest.raises(ValidationError, match="PUBLIC_API_URL"):
+            _production_settings(secrets.token_urlsafe(32), **values)
+
+    def test_a_trailing_slash_is_dropped(self):
+        settings = _production_settings(
+            secrets.token_urlsafe(32), PUBLIC_API_URL="https://api.dashti.se/"
+        )
+        assert settings.PUBLIC_API_URL == "https://api.dashti.se"
+
+    def test_development_defaults_to_the_local_server(self):
+        assert Settings(_env_file=None).PUBLIC_API_URL == "http://localhost:8000"

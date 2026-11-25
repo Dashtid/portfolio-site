@@ -6,7 +6,7 @@ Endpoints for managing academic documents, theses, and papers.
 The public surface (``GET /documents``, ``GET /documents/{id}``) is open;
 the admin write surface (``POST``, ``PUT``, ``DELETE``, ``POST /upload``)
 requires an admin user. Files uploaded through ``/upload`` are written
-to ``static/documents/`` and served back by the ``/static`` mount.
+to ``settings.UPLOAD_DIR`` and served back by the ``/media`` mount.
 """
 
 import re
@@ -49,9 +49,10 @@ AdminUser = Annotated[User, Depends(get_current_admin_user)]
 # volume (/data/uploads/documents) so uploads survive deploys — the
 # previous hardcoded path lived on the ephemeral rootfs and every deploy
 # wiped them. The ``/media`` mount in main.py serves this directory back
-# at ``/media/<filename>``, which is what the admin UI sets as
-# ``file_url`` when creating the row. (Seeded PDFs baked into the image
-# keep their /static/documents/ URLs via the existing /static mount.)
+# at ``/media/<filename>``; the upload response's file_path is that path
+# and its file_url the same path on settings.PUBLIC_API_URL, and the admin
+# UI copies both into the row. (Seeded PDFs baked into the image keep
+# their /static/documents/ URLs via the existing /static mount.)
 _UPLOAD_DIR = Path(settings.UPLOAD_DIR)
 # Reject anything that isn't a PDF — the public catalogue is academic
 # papers + theses, so other types would be out-of-scope content. Add to
@@ -214,7 +215,7 @@ async def upload_document_file(
     current_user: AdminUser,
     file: Annotated[UploadFile, File(description="The PDF file to upload")],
 ):
-    """Accept a PDF upload, persist it under ``static/documents/``, and
+    """Accept a PDF upload, persist it under ``settings.UPLOAD_DIR``, and
     return the metadata the caller needs to POST a Document row.
 
     The two-step flow (upload → create row) keeps file storage and
@@ -277,12 +278,13 @@ async def upload_document_file(
     # here used to stall every in-flight request on the single worker).
     await run_in_threadpool(_persist_upload, target_path, contents)
 
-    relative_path = f"documents/{unique_name}"
-    public_url = f"/media/{unique_name}"
+    # The path passes the schemas' URL check, which needs a leading slash.
+    # The URL is absolute: the site that links to it is another host.
+    file_path = f"/media/{unique_name}"
     return {
-        "file_path": relative_path,
+        "file_path": file_path,
         "file_size": len(contents),
-        "file_url": public_url,
+        "file_url": f"{settings.PUBLIC_API_URL}{file_path}",
         "original_filename": raw_name,
     }
 

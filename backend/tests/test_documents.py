@@ -8,6 +8,8 @@ import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 
+from app.config import settings
+
 
 def _make_mock_request() -> Request:
     """Build a minimal Request instance for direct endpoint calls.
@@ -285,11 +287,53 @@ class TestDocumentsAdminUpload:
         body = response.json()
         # Uploads are served from the /media mount (settings.UPLOAD_DIR,
         # the persistent volume in prod) — not /static, which serves
-        # image-baked assets only.
-        assert body["file_url"].startswith("/media/")
-        assert body["file_url"].endswith(".pdf")
+        # image-baked assets only. The URL is absolute on the API's origin.
+        assert body["file_path"].startswith("/media/")
+        assert body["file_path"].endswith("-paper.pdf")
+        assert body["file_url"] == f"{settings.PUBLIC_API_URL}{body['file_path']}"
         assert body["file_size"] == len(payload)
         assert body["original_filename"] == "paper.pdf"
+
+    def test_upload_response_creates_a_row_that_serves_the_file(
+        self, client: TestClient, admin_user_in_db: dict, tmp_path, monkeypatch
+    ):
+        """The admin page posts the upload's file_path, file_size and file_url
+        unchanged; the row must be accepted and its path must serve the PDF."""
+        monkeypatch.chdir(tmp_path)
+        payload = self._make_pdf_bytes(256)
+        headers = admin_user_in_db["headers"]
+        upload = client.post(
+            "/api/v1/documents/upload",
+            files={"file": ("thesis.pdf", payload, "application/pdf")},
+            headers=headers,
+        )
+        assert upload.status_code == 200
+        uploaded = upload.json()
+
+        row = {
+            "id": "uploaded-doc",
+            "title": "Uploaded Thesis",
+            "document_type": "thesis",
+            "file_path": uploaded["file_path"],
+            "file_size": uploaded["file_size"],
+            "file_url": uploaded["file_url"],
+        }
+        created = client.post("/api/v1/documents/", json=row, headers=headers)
+        assert created.status_code == 201
+        assert (
+            client.get("/api/v1/documents/uploaded-doc").json()["file_url"]
+            == (uploaded["file_url"])
+        )
+
+        # Replacing an existing row's file sends the same three fields.
+        file_fields = {key: uploaded[key] for key in ("file_path", "file_size", "file_url")}
+        replaced = client.put("/api/v1/documents/uploaded-doc", json=file_fields, headers=headers)
+        assert replaced.status_code == 200
+
+        download = client.get(uploaded["file_path"])
+        assert download.status_code == 200
+        assert download.headers["content-type"] == "application/pdf"
+        assert download.content == payload
 
     def test_upload_without_auth_rejected(self, client: TestClient):
         response = client.post(

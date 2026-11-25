@@ -171,6 +171,25 @@ class Settings(BaseSettings):
             )
         return v
 
+    # Origin of this API as browsers reach it. Uploaded documents' file_url
+    # values are built from it: the site renders them on its own host, where
+    # a bare path would point at the frontend. fly.toml [env] sets it.
+    PUBLIC_API_URL: str = "http://localhost:8000"
+
+    @field_validator("PUBLIC_API_URL")
+    @classmethod
+    def validate_public_api_url(cls, v: str, info) -> str:
+        """Require a public HTTPS origin in production; drop a trailing slash."""
+        environment = info.data.get("ENVIRONMENT", "development")
+        host = urlparse(v).hostname or ""
+        if environment == "production" and (
+            not v.startswith("https://") or host in ("localhost", "127.0.0.1")
+        ):
+            raise ValueError(
+                "PUBLIC_API_URL must be the API's public https:// origin in production."
+            )
+        return v.rstrip("/")
+
     # Security
     # SECRET_KEY MUST be set via environment variable (no fallback for security)
     # For development: set SECRET_KEY=dev-mode-insecure to explicitly enable insecure mode

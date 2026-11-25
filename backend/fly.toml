@@ -31,6 +31,9 @@ primary_region = 'arn'
   # an empty SQLite DB. config.py now refuses sqlite in production, so a
   # missing secret fails the deploy loudly instead.
   UPLOAD_DIR = '/data/uploads/documents'
+  # The origin each uploaded document's file_url is built on; production
+  # refuses to boot without an https one.
+  PUBLIC_API_URL = 'https://api.dashti.se'
 
 [[mounts]]
   source = 'portfolio_data'

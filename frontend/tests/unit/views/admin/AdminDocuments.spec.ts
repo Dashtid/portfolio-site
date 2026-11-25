@@ -153,16 +153,18 @@ describe('AdminDocuments', () => {
     })
   })
 
+  // The shape POST /api/v1/documents/upload returns: the path on the API
+  // host, and the absolute URL the site links to.
+  const uploadResponse = {
+    file_path: '/media/0f1e2d3c-new.pdf',
+    file_size: 1_000_000,
+    file_url: 'https://api.dashti.se/media/0f1e2d3c-new.pdf',
+    original_filename: 'new.pdf'
+  }
+
   describe('file upload', () => {
     it('POSTs the selected PDF as multipart FormData and stores the response', async () => {
-      vi.mocked(api.post).mockResolvedValue({
-        data: {
-          file_path: 'documents/uuid_new.pdf',
-          file_size: 1_000_000,
-          file_url: 'https://api.dashti.se/static/documents/uuid_new.pdf',
-          original_filename: 'new.pdf'
-        }
-      })
+      vi.mocked(api.post).mockResolvedValue({ data: uploadResponse })
       const wrapper = await createWrapper()
       await wrapper.find('.add-button').trigger('click')
 
@@ -228,14 +230,7 @@ describe('AdminDocuments', () => {
 
     it('POSTs the document after a successful upload', async () => {
       vi.mocked(api.post)
-        .mockResolvedValueOnce({
-          data: {
-            file_path: 'documents/uuid_new.pdf',
-            file_size: 1_000_000,
-            file_url: 'https://api.dashti.se/static/documents/uuid_new.pdf',
-            original_filename: 'new.pdf'
-          }
-        })
+        .mockResolvedValueOnce({ data: uploadResponse })
         .mockResolvedValueOnce({ data: {} })
       const wrapper = await createWrapper()
       await wrapper.find('.add-button').trigger('click')
@@ -246,12 +241,15 @@ describe('AdminDocuments', () => {
       await wrapper.find('form').trigger('submit.prevent')
       await flushPromises()
 
+      // The upload's fields go into the row as returned.
       expect(api.post).toHaveBeenCalledWith(
         '/api/v1/documents/',
         expect.objectContaining({
           title: 'New Doc',
           document_type: 'paper',
-          file_url: 'https://api.dashti.se/static/documents/uuid_new.pdf'
+          file_path: uploadResponse.file_path,
+          file_size: uploadResponse.file_size,
+          file_url: uploadResponse.file_url
         })
       )
       expect(mockToast.success).toHaveBeenCalledWith('Document added.')
