@@ -152,6 +152,36 @@ def test_frontend_deploys_and_rebakes_share_one_concurrency_group() -> None:
     assert isinstance(rebake["timeout-minutes"], int)
 
 
+HEADER_CHECK = (
+    "python3 scripts/check-live-headers.py frontend/vercel.json "
+    "https://dashti.se/ https://dashti.se/colophon https://dashti.se/admin"
+)
+
+
+@pytest.mark.parametrize(
+    ("workflow", "job"), [("ci-cd.yml", "deploy-frontend"), ("rebake-frontend.yml", "rebake")]
+)
+def test_frontend_deploys_end_by_holding_served_headers_to_vercel_json(
+    workflow: str, job: str
+) -> None:
+    steps = _load(workflow)["jobs"][job]["steps"]
+    assert steps[-1]["name"] == "Post-deploy security-header smoke"
+    assert HEADER_CHECK in " ".join(steps[-1]["run"].replace("\\\n", " ").split())
+
+
+def _path_filters() -> dict[str, list[str]]:
+    [step] = [s for s in _load("ci-cd.yml")["jobs"]["changes"]["steps"] if s.get("id") == "filter"]
+    filters = yaml.safe_load(step["with"]["filters"])
+    assert isinstance(filters, dict)
+    return filters
+
+
+def test_a_header_check_change_runs_its_tests_and_a_frontend_deploy() -> None:
+    filters = _path_filters()
+    assert "scripts/check-live-headers.py" in filters["frontend"]
+    assert "scripts/check-live-headers.py" in filters["backend"]
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filter finds the pushed range's base locally; a
     # depth-1 clone would make it fetch, and without credentials.
