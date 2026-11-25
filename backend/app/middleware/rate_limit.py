@@ -10,6 +10,7 @@ import ipaddress
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import _find_route_handler, _get_route_name
+from slowapi.wrappers import LimitGroup
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -179,9 +180,24 @@ rate_limit_public = limiter.limit(
 # requests before any body parsing instead. (RouteLimitMiddleware below
 # now runs a decorator's check before the body is read as well.)
 
+# The default limit, in one window per client, for requests that match no
+# route endpoint: the /static and /media mounts and unknown paths.
+UNROUTED_LIMITS = list(
+    LimitGroup(
+        settings.RATE_LIMIT_DEFAULT, get_user_or_ip, "unrouted", False, None, None, None, 1, False
+    )
+)
+
+
+def _check_unrouted_limit(request: Request) -> None:
+    key = get_user_or_ip(request)
+    for lim in UNROUTED_LIMITS:
+        if not limiter.limiter.hit(lim.limit, key, lim.scope):
+            raise RateLimitExceeded(lim)
+
 
 class RouteLimitMiddleware:
-    """Check a decorated route's own limit before the route reads its body.
+    """Check the limits slowapi's middleware leaves out, before any body is read.
 
     slowapi's middleware skips routes that carry a limit decorator, and the
     decorator checks only once FastAPI has parsed the body and solved the
@@ -189,6 +205,9 @@ class RouteLimitMiddleware:
     never counted, and one over the limit was parsed before its 429. This
     runs the decorator's check first and marks the request as checked,
     which the decorator honours, so nothing is counted twice.
+
+    The middleware also lets through every request it cannot resolve to a
+    route endpoint, the static mounts included; those get UNROUTED_LIMITS.
     """
 
     def __init__(self, app: ASGIApp) -> None:
@@ -198,13 +217,15 @@ class RouteLimitMiddleware:
         if scope["type"] == "http" and limiter.enabled:
             routes = getattr(scope.get("app"), "routes", ())
             handler = _find_route_handler(routes, scope)
-            if handler is not None and _get_route_name(handler) in limiter._route_limits:
-                request = Request(scope, receive)
-                try:
+            request = Request(scope, receive)
+            try:
+                if handler is None:
+                    _check_unrouted_limit(request)
+                elif _get_route_name(handler) in limiter._route_limits:
                     limiter._check_request_limit(request, handler, False)
-                except RateLimitExceeded as exc:
-                    response = await rate_limit_exceeded_handler(request, exc)
-                    await response(scope, receive, send)
-                    return
-                request.state._rate_limiting_complete = True
+                    request.state._rate_limiting_complete = True
+            except RateLimitExceeded as exc:
+                response = await rate_limit_exceeded_handler(request, exc)
+                await response(scope, receive, send)
+                return
         await self.app(scope, receive, send)

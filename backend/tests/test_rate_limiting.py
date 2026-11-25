@@ -129,6 +129,37 @@ class TestDecoratedLimitsCountFailedRequests:
         assert client.get("/api/v1/auth/me").status_code == 429
 
 
+class TestUnroutedRequestsShareOneWindow:
+    """Requests that match no route endpoint get the default limit, per client.
+
+    slowapi's middleware resolves no route endpoint for the /static and
+    /media mounts or for an unknown path, and lets those through unlimited.
+    """
+
+    def test_static_files_and_unknown_paths_share_the_window(self, client: TestClient):
+        limit = int(settings.RATE_LIMIT_DEFAULT.split("/")[0])
+
+        for i in range(limit // 2):
+            assert client.get(f"/no-such-path-{i}").status_code == 404
+        for _ in range(limit - limit // 2):
+            assert client.head("/static/documents/bachelor-thesis.pdf").status_code == 200
+
+        blocked = client.get("/static/documents/bachelor-thesis.pdf")
+        assert blocked.status_code == 429
+        assert "Retry-After" in blocked.headers
+        assert client.get("/media/bachelor-thesis.pdf").status_code == 429
+        assert client.get("/no-such-path-again").status_code == 429
+
+    def test_routed_requests_keep_their_own_limits(self, client: TestClient):
+        limit = int(settings.RATE_LIMIT_DEFAULT.split("/")[0])
+        for i in range(limit):
+            client.get(f"/no-such-path-{i}")
+        assert client.get("/no-such-path-again").status_code == 429
+
+        assert client.get("/api/v1/health").status_code == 200
+        assert client.get("/api/v1/projects/").status_code == 200
+
+
 class TestUploadBodyAllowanceGate:
     """The 26 MB upload allowance must require a signature-valid token."""
 
