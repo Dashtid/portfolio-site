@@ -89,9 +89,15 @@ rides the frontend lane for the CV scrub guard):
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
 | `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary), action-pin audit, TruffleHog scan of the pushed or PR commits for live-verified secrets   |
-| `dependency-review` | Blocks PRs introducing vulnerable or denied-licence dependencies                                                                            |
-| `deploy-frontend`   | Vercel CLI deploy, gated on quality + e2e + lighthouse, then a post-deploy smoke asserting the live security headers                        |
-| `deploy-backend`    | `flyctl deploy --remote-only`, gated on backend-quality; frontend deploys serialize behind it so the SSG bake never reads a mid-rollout API |
+| `dependency-review` | Blocks PRs, and pushes to `main`, that introduce vulnerable or denied-licence dependencies                                                  |
+| `deploy-frontend`   | Vercel CLI deploy, gated on quality + e2e + lighthouse + security-scan (+ dependency-review when it runs), then `scripts/check-live-headers.py` holds the live headers of three pages to `vercel.json` |
+| `deploy-backend`    | `flyctl deploy --remote-only`, gated on backend-quality + security-scan (+ dependency-review when it runs); frontend deploys serialize behind it so the SSG bake never reads a mid-rollout API |
+
+Only `main` deploys. On a push the `changes` job also filters the range
+from each lane's last successful deploy, which `scripts/deployed-commits.py`
+reads from the production environment's deployment records, so a lane
+whose deploy failed, was skipped or never ran checks and deploys again
+with the next push.
 
 Python installs in CI use `--require-hashes` against the committed
 lockfiles — including a hash-pinned bootstrap of pip itself
@@ -109,7 +115,7 @@ Supporting workflows:
 | `pre-commit.yml`      | push / PR                   | The shared pre-commit hook set against the full tree                 |
 | `db-backup.yml`       | nightly 03:30 UTC           | Postgres dump, encrypted to a public key before storage              |
 | `restore-drill.yml`   | quarterly (Jan/Apr/Jul/Oct) | Files a restore-checklist issue — backups are rehearsed, not assumed |
-| `rebake-frontend.yml` | manual                      | Re-runs the SSG bake so CMS edits reach the prerendered pages        |
+| `rebake-frontend.yml` | manual, `main` only         | Re-runs the SSG bake so CMS edits reach the prerendered pages        |
 
 ---
 
