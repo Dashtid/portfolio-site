@@ -382,3 +382,61 @@ class TestBodyReadDeadline:
             {"type": "http.disconnect"},
         ]
         assert client.status == 200
+
+
+class TestUnreadBodyClosesTheConnection:
+    """Through the whole app: a body not read to its end means Connection: close.
+
+    uvicorn's keep-alive timer is cancelled by any byte that arrives after
+    the response, so an unread body let a client hold the connection open.
+    """
+
+    BEACON = "/api/v1/analytics/track/pageview"
+
+    @staticmethod
+    async def _call(scope: dict[str, Any], client: ChunkedClient) -> None:
+        async with asyncio.timeout(10):
+            await app(scope, client.receive, client.send)
+
+    @pytest.mark.asyncio
+    async def test_get_with_a_declared_body_it_never_reads(self):
+        """GET /api/v1/health declaring 16 bytes and sending none."""
+        client = PacedClient([], interval=0, stalls=True)
+        await self._call(_sized_scope("GET", "/api/v1/health", 16), client)
+
+        assert client.status == 200
+        assert client.headers["connection"] == "close"
+
+    @pytest.mark.asyncio
+    async def test_declared_size_past_the_cap(self):
+        """A 413 answered from Content-Length alone, before any byte is read."""
+        client = PacedClient([], interval=0, stalls=True)
+        await self._call(_sized_scope("POST", self.BEACON, 17 * 1024), client)
+
+        assert client.status == 413
+        assert client.headers["connection"] == "close"
+
+    @pytest.mark.asyncio
+    async def test_chunked_body_cut_off_at_the_cap(self):
+        client = ChunkedClient([b"a" * 1024] * 100, hangs_up=True)
+        await self._call(_chunked_scope("POST", self.BEACON), client)
+
+        assert client.status == 413
+        assert client.headers["connection"] == "close"
+
+    @pytest.mark.asyncio
+    async def test_body_read_to_its_end_keeps_the_connection(self):
+        """Malformed JSON is read in full before FastAPI's 422."""
+        client = ChunkedClient([b"{"])
+        await self._call(_sized_scope("POST", self.BEACON, 1), client)
+
+        assert client.status == 422
+        assert "connection" not in client.headers
+
+    @pytest.mark.asyncio
+    async def test_request_without_a_body_keeps_the_connection(self):
+        client = ChunkedClient([b""])
+        await self._call(_scope("GET", "/api/v1/health", (b"accept", b"*/*")), client)
+
+        assert client.status == 200
+        assert "connection" not in client.headers

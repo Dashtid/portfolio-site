@@ -21,10 +21,11 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
+from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.api.v1 import (
     admin_panel,
@@ -372,6 +373,51 @@ class HTTPSSchemeMiddleware:
         await self.app(scope, receive, send)
 
 
+def _declares_body(scope: Scope) -> bool:
+    """True when the request headers announce a body."""
+    headers = Headers(scope=scope)
+    if "transfer-encoding" in headers:
+        return True
+    try:
+        return int(headers.get("content-length", "0")) > 0
+    except ValueError:
+        return True
+
+
+class CloseUnreadBodyMiddleware:
+    """Answer with Connection: close when the request body was not read to its end.
+
+    uvicorn arms its keep-alive timer when a response completes, and a byte
+    arriving afterwards cancels it without arming it again. A client whose
+    declared body went unread (a GET with a Content-Length, a 404, 413 or
+    429) could hold the connection open by sending one more byte.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or not _declares_body(scope):
+            await self.app(scope, receive, send)
+            return
+        body_read = False
+
+        async def tracking_receive() -> Message:
+            nonlocal body_read
+            message = await receive()
+            if message["type"] != "http.request" or not message.get("more_body", False):
+                body_read = True
+            return message
+
+        async def closing_send(message: Message) -> None:
+            if message["type"] == "http.response.start" and not body_read:
+                message.setdefault("headers", [])
+                MutableHeaders(scope=message)["Connection"] = "close"
+            await send(message)
+
+        await self.app(scope, tracking_receive, closing_send)
+
+
 # Hosts the API answers in production. redirect_slashes builds its Location
 # from the Host header, so an unchecked Host is reflected into the redirect.
 API_HOSTS = ["api.dashti.se"]
@@ -629,9 +675,9 @@ if settings.RATE_LIMIT_ENABLED:
 # outer layer (e.g. a BodySizeLimit 413) reached the browser without CORS
 # headers, so frontend JS could not read the error. Layers below are added
 # innermost-first; effective order outermost -> innermost:
-#   HTTPSScheme -> CORS -> Logging -> ErrorTracking -> Performance
-#   -> SecurityHeaders -> HostCheck -> CacheControl -> Compression
-#   -> BodySizeLimit -> RouteLimit -> SlowAPI -> routes
+#   CloseUnreadBody -> HTTPSScheme -> CORS -> Logging -> ErrorTracking
+#   -> Performance -> SecurityHeaders -> HostCheck -> CacheControl
+#   -> Compression -> BodySizeLimit -> RouteLimit -> SlowAPI -> routes
 # BodySizeLimit sits just outside SlowAPI and the routes: nothing between
 # it and the handlers reads request bodies, so DoS protection is preserved
 # while its 413s pass through every header/logging layer on the way out.
@@ -704,9 +750,13 @@ app.add_middleware(
     ],
 )
 
-# Scheme pin — added after CORS, therefore outermost: the router and every
-# layer see https in production.
+# Scheme pin — added after CORS, so outside it: the router and every layer
+# see https in production.
 app.add_middleware(HTTPSSchemeMiddleware)
+
+# Outermost, so it sees the client's receive and every response, the 413s,
+# 429s and 404s of the layers below included.
+app.add_middleware(CloseUnreadBodyMiddleware)
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
