@@ -1,17 +1,15 @@
 """
-Tests for the OAuth state lifecycle: IP binding, TTL expiry, and periodic cleanup.
+Tests for the OAuth state lifecycle: single use, TTL expiry, and periodic cleanup.
 
-Covers BACKEND-TESTS-01 (IP-binding mismatch) and BACKEND-TESTS-02 (TTL +
-cleanup). These tests exercise the database-backed CSRF state used by the
-GitHub OAuth callback flow — the consume path lives in
+These tests exercise the database-backed CSRF state used by the GitHub OAuth
+callback flow — the consume path lives in
 ``app.api.v1.auth.validate_and_consume_state`` and the periodic sweep lives
-in ``app.main.cleanup_oauth_states_periodically``.
+in ``app.main.cleanup_oauth_states_periodically``. The cookie that binds a
+state to the browser that started the login is tested through the callback
+in test_auth.py.
 
-The IP-binding behaviour matters because the OAuth state acts as a CSRF
-token; if the IP check is missing, an attacker who tricks the victim into
-hitting a forged ``/auth/github`` link could replay the resulting state from
-their own IP. The TTL/cleanup behaviour bounds how long stale or unused
-state rows linger in the database.
+The TTL/cleanup behaviour bounds how long stale or unused state rows linger
+in the database.
 """
 
 import asyncio
@@ -32,11 +30,11 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-class TestOAuthStateIpBinding:
-    """BACKEND-TESTS-01: state consumption refuses cross-IP replay."""
+class TestOAuthStateConsumption:
+    """A stored state is consumed exactly once."""
 
-    def test_state_consumed_by_originating_ip(self, client: TestClient):
-        """The IP that created the state can consume it.
+    def test_state_is_consumed(self, client: TestClient):
+        """A state the server created can be consumed.
 
         Sanity check before the negative cases — if this fails the rest of
         the file is meaningless because every test would pass vacuously.
@@ -45,88 +43,39 @@ class TestOAuthStateIpBinding:
 
         async def go():
             async with TestSessionLocal() as session:
-                state = await create_oauth_state(session, client_ip="203.0.113.5")
-                return await validate_and_consume_state(session, state, client_ip="203.0.113.5")
+                state = await create_oauth_state(session)
+                return await validate_and_consume_state(session, state)
 
         assert _run(go()) is True
 
-    def test_state_rejected_from_different_ip(self, client: TestClient):
-        """A different IP than the one that created the state cannot consume it.
-
-        This is the CSRF protection: a forged OAuth init that lures the
-        victim into ``/auth/github`` from THEIR IP cannot then be completed
-        from the attacker's IP.
-        """
+    def test_unknown_state_is_rejected(self, client: TestClient):
+        """A state the server never issued matches no row."""
         _ = client
 
         async def go():
             async with TestSessionLocal() as session:
-                state = await create_oauth_state(session, client_ip="203.0.113.5")
-                return await validate_and_consume_state(session, state, client_ip="198.51.100.42")
+                return await validate_and_consume_state(session, "never-issued-state-value")
 
         assert _run(go()) is False
 
-    def test_rejected_replay_does_not_consume_row(self, client: TestClient):
-        """A wrong-IP attempt must NOT delete the legitimate row.
-
-        Otherwise an attacker could DoS the real user's OAuth flow by
-        firing wrong-IP callbacks faster than the user can complete theirs.
-        The current implementation keys the DELETE...RETURNING on the IP
-        match, so the row stays available for the real IP.
-        """
-        _ = client
-
-        async def go():
-            async with TestSessionLocal() as session:
-                state = await create_oauth_state(session, client_ip="203.0.113.5")
-
-            # Attacker tries from wrong IP — fails.
-            async with TestSessionLocal() as session:
-                bad = await validate_and_consume_state(session, state, client_ip="198.51.100.42")
-                assert bad is False
-
-            # Real user from correct IP — succeeds.
-            async with TestSessionLocal() as session:
-                return await validate_and_consume_state(session, state, client_ip="203.0.113.5")
-
-        assert _run(go()) is True
-
-    def test_unbound_state_accepts_any_ip(self, client: TestClient):
-        """A state inserted without a client_ip (legacy / migration path) is
-        consumable from any IP.
-
-        We could have hardened this to require a non-NULL client_ip but the
-        flow that creates them (``github_login``) always passes one. The
-        permissive NULL case avoids breaking any in-flight states across
-        rolling deploys.
-        """
-        _ = client
-
-        async def go():
-            async with TestSessionLocal() as session:
-                state = await create_oauth_state(session, client_ip=None)
-                return await validate_and_consume_state(session, state, client_ip="198.51.100.42")
-
-        assert _run(go()) is True
-
     def test_state_is_single_use(self, client: TestClient):
-        """Even from the originating IP, a state cannot be consumed twice.
+        """A state cannot be consumed twice.
 
         The DELETE...RETURNING is the single source of truth — a second
-        call finds no matching row and returns False, regardless of IP.
+        call finds no matching row and returns False.
         """
         _ = client
 
         async def go():
             async with TestSessionLocal() as session:
-                state = await create_oauth_state(session, client_ip="203.0.113.5")
+                state = await create_oauth_state(session)
 
             async with TestSessionLocal() as session:
-                first = await validate_and_consume_state(session, state, client_ip="203.0.113.5")
+                first = await validate_and_consume_state(session, state)
                 assert first is True
 
             async with TestSessionLocal() as session:
-                return await validate_and_consume_state(session, state, client_ip="203.0.113.5")
+                return await validate_and_consume_state(session, state)
 
         assert _run(go()) is False
 
@@ -137,24 +86,18 @@ class TestOAuthStateTtl:
 
     def test_expired_state_rejected(self, client: TestClient):
         """A state whose ``expires_at`` is in the past cannot be consumed
-        even with the correct state value and matching IP."""
+        even with the correct state value."""
         _ = client
 
         async def go():
             past = datetime.now(UTC) - timedelta(minutes=1)
             async with TestSessionLocal() as session:
-                expired = OAuthState(
-                    state="expired-state-token-aaaa",
-                    expires_at=past,
-                    client_ip="203.0.113.5",
-                )
+                expired = OAuthState(state="expired-state-token-aaaa", expires_at=past)
                 session.add(expired)
                 await session.commit()
 
             async with TestSessionLocal() as session:
-                return await validate_and_consume_state(
-                    session, "expired-state-token-aaaa", client_ip="203.0.113.5"
-                )
+                return await validate_and_consume_state(session, "expired-state-token-aaaa")
 
         assert _run(go()) is False
 

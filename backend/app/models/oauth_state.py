@@ -37,9 +37,8 @@ class OAuthState(Base):
         server_default=func.now(),
         nullable=False,
     )
-    # Client IP binding for enhanced CSRF protection
-    # The state can only be validated from the same IP that initiated the flow
-    # IPv6 max length is 45 chars
+    # No longer written: a cookie binds the state to the browser that started
+    # the login (app/api/v1/auth.py). Nullable, so it needs no migration.
     client_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
 
     def is_expired(self) -> bool:

@@ -4,6 +4,8 @@ Authentication API endpoints with GitHub OAuth
 Uses database-backed OAuth state storage for multi-instance deployments.
 """
 
+import base64
+import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -11,12 +13,11 @@ from typing import Annotated, Any
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import and_, delete, or_, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.deps import get_current_user
-from app.core.ip_utils import get_client_ip
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.database import get_db
 from app.middleware import limiter
@@ -36,6 +37,11 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 # OAuth state TTL
 OAUTH_STATE_TTL_SECONDS = 300  # 5 minutes
+
+# The cookie that ties a login to the browser that started it: the state
+# and the PKCE verifier, "<state>.<verifier>", sent only to the callback.
+OAUTH_COOKIE = "github_oauth"
+OAUTH_COOKIE_PATH = "/api/v1/auth/github"
 
 # Window in which reuse of an already-rotated refresh jti is treated as a
 # benign concurrent refresh (multi-tab race) rather than token theft. Long
@@ -106,50 +112,45 @@ def _auth_cookie_kwargs() -> dict:
     }
 
 
-async def create_oauth_state(db: AsyncSession, client_ip: str | None = None) -> str:
-    """Create and store a new OAuth state bound to client IP for CSRF protection"""
+async def create_oauth_state(db: AsyncSession) -> str:
+    """Create and store a new single-use OAuth state for CSRF protection"""
     state = secrets.token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TTL_SECONDS)
 
-    oauth_state = OAuthState(state=state, expires_at=expires_at, client_ip=client_ip)
+    oauth_state = OAuthState(state=state, expires_at=expires_at)
     db.add(oauth_state)
     await db.commit()
 
     return state
 
 
-async def validate_and_consume_state(
-    db: AsyncSession, state: str, client_ip: str | None = None
-) -> bool:
-    """Validate OAuth state, verify IP binding, and remove it (single-use).
+async def validate_and_consume_state(db: AsyncSession, state: str) -> bool:
+    """Validate OAuth state and remove it (single-use).
 
     The check + delete is performed as a single atomic DELETE...RETURNING so
     two concurrent callbacks with the same state can never both succeed: at
-    most one DELETE's WHERE clause matches a non-expired, IP-bound row, and
-    that caller consumes it. The other gets no row back.
+    most one DELETE's WHERE clause matches a non-expired row, and that
+    caller consumes it. The other gets no row back.
 
-    An attacker arriving with a wrong-IP replay attempt does NOT consume the
-    legitimate row — the WHERE clause filters by client_ip, so the row stays
-    available for the real user. (If we deleted first and checked second,
-    the attacker would DoS the legitimate flow.)
+    The callback calls this only once the state matches the browser's
+    OAUTH_COOKIE, so a request from another browser never consumes the
+    real login's row.
     """
     now = datetime.now(UTC)
-    ip_match = or_(
-        OAuthState.client_ip.is_(None),
-        and_(OAuthState.client_ip.isnot(None), OAuthState.client_ip == client_ip),
-    )
     stmt = (
         delete(OAuthState)
-        .where(
-            OAuthState.state == state,
-            OAuthState.expires_at > now,
-            ip_match,
-        )
+        .where(OAuthState.state == state, OAuthState.expires_at > now)
         .returning(OAuthState.state)
     )
     consumed = (await db.execute(stmt)).first()
     await db.commit()
     return consumed is not None
+
+
+def _pkce_challenge(verifier: str) -> str:
+    """The S256 code_challenge for a PKCE code_verifier (RFC 7636 section 4.2)."""
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
 
 
 @router.get("/github")
@@ -164,11 +165,11 @@ async def github_login(request: Request, db: DbSession):
     # Note: Expired states are cleaned up by background task in main.py (every 5 minutes)
     # Removing duplicate cleanup here to prevent race conditions
 
-    # Get client IP for state binding (CSRF protection)
-    client_ip = get_client_ip(request)
-
-    # Generate state for CSRF protection with TTL and IP binding (database-backed)
-    state = await create_oauth_state(db, client_ip=client_ip)
+    # Generate state for CSRF protection with TTL (database-backed)
+    state = await create_oauth_state(db)
+    # PKCE: GitHub redeems the code only together with this verifier, which
+    # stays in the browser's HttpOnly cookie until the callback sends it.
+    verifier = secrets.token_urlsafe(64)
 
     # Build GitHub authorization URL. No scope: the callback reads only the
     # public profile from GET /user, which a token without scopes can do.
@@ -176,10 +177,30 @@ async def github_login(request: Request, db: DbSession):
         f"https://github.com/login/oauth/authorize?"
         f"client_id={settings.GITHUB_CLIENT_ID}&"
         f"redirect_uri={settings.GITHUB_REDIRECT_URI}&"
-        f"state={state}"
+        f"state={state}&"
+        f"code_challenge={_pkce_challenge(verifier)}&"
+        f"code_challenge_method=S256"
     )
 
-    return RedirectResponse(url=github_auth_url)
+    response = RedirectResponse(url=github_auth_url)
+    # SameSite=Lax, never Strict: GitHub's redirect back to the callback is a
+    # cross-site top-level navigation, which carries Lax cookies only.
+    response.set_cookie(
+        key=OAUTH_COOKIE,
+        value=f"{state}.{verifier}",
+        max_age=OAUTH_STATE_TTL_SECONDS,
+        path=OAUTH_COOKIE_PATH,
+        **_auth_cookie_kwargs(),
+    )
+    return response
+
+
+def _cookie_verifier(request: Request, state: str) -> str | None:
+    """The PKCE verifier from OAUTH_COOKIE when the cookie carries `state`, else None."""
+    cookie_state, _, verifier = request.cookies.get(OAUTH_COOKIE, "").partition(".")
+    if verifier and secrets.compare_digest(cookie_state.encode(), state.encode()):
+        return verifier
+    return None
 
 
 def _oauth_denied_redirect(error: str | None) -> RedirectResponse:
@@ -198,7 +219,7 @@ def _oauth_denied_redirect(error: str | None) -> RedirectResponse:
     )
 
 
-async def _fetch_github_user(code: str) -> Any:
+async def _fetch_github_user(code: str, code_verifier: str) -> Any:
     """Exchange the authorization code for a token and return GET /user's JSON.
 
     Reading GET /user is the token's only use, so the token is revoked right
@@ -215,6 +236,7 @@ async def _fetch_github_user(code: str) -> Any:
                 "client_secret": settings.GITHUB_CLIENT_SECRET,
                 "code": code,
                 "redirect_uri": settings.GITHUB_REDIRECT_URI,
+                "code_verifier": code_verifier,
             },
             headers={"Accept": "application/json"},
         )
@@ -304,16 +326,16 @@ async def github_callback(
     if error or not code or not state:
         return _oauth_denied_redirect(error)
 
-    # Get client IP for state verification
-    client_ip = get_client_ip(request)
-
-    # Verify and consume state (single-use, database-backed, IP-bound)
-    if not await validate_and_consume_state(db, state, client_ip=client_ip):
+    # The state must match this browser's OAUTH_COOKIE before its row is
+    # consumed (single-use, database-backed): a callback from any other
+    # browser fails without using up the real login's state.
+    verifier = _cookie_verifier(request, state)
+    if verifier is None or not await validate_and_consume_state(db, state):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state parameter"
         )
 
-    github_user = await _fetch_github_user(code)
+    github_user = await _fetch_github_user(code, verifier)
 
     # Check if user is the admin. Fail closed when ADMIN_GITHUB_ID is unset:
     # if we don't know who admin is, we cannot safely grant admin to anyone,
@@ -386,6 +408,7 @@ async def github_callback(
         path="/api/v1/auth",  # Only sent to auth endpoints
         **cookie_attrs,
     )
+    response.delete_cookie(key=OAUTH_COOKIE, path=OAUTH_COOKIE_PATH, **cookie_attrs)
 
     return response
 

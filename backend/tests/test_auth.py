@@ -3,6 +3,8 @@ Tests for authentication endpoints
 """
 
 import asyncio
+import base64
+import hashlib
 import urllib.parse  # noqa: PLC0415
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -685,18 +687,33 @@ def _github_client(github_user: dict) -> AsyncMock:
     return github
 
 
-def _complete_github_login(client: TestClient, monkeypatch, github: AsyncMock):
-    """Start a login, then return the callback's response with GitHub answering as `github`."""
+def _start_github_login(client: TestClient, monkeypatch):
+    """GET /auth/github with OAuth configured; the TestClient keeps its cookie."""
     monkeypatch.setattr(settings, "GITHUB_CLIENT_ID", "test_client_id")
     monkeypatch.setattr(settings, "GITHUB_CLIENT_SECRET", "test_client_secret")
     login = client.get("/api/v1/auth/github", follow_redirects=False)
     assert login.status_code == 307
+    return login
+
+
+def _authorize_query(login) -> dict[str, str]:
+    """The query parameters of the authorize URL a login redirected to."""
     query = urllib.parse.parse_qs(urllib.parse.urlsplit(login.headers["location"]).query)
+    return {key: values[0] for key, values in query.items()}
+
+
+def _github_callback(client: TestClient, state: str, github: AsyncMock):
+    """GitHub's redirect back to the callback, with GitHub answering as `github`."""
     with patch("app.api.v1.auth.get_oauth_client", return_value=github):
         return client.get(
-            f"/api/v1/auth/github/callback?code=test_code&state={query['state'][0]}",
-            follow_redirects=False,
+            f"/api/v1/auth/github/callback?code=test_code&state={state}", follow_redirects=False
         )
+
+
+def _complete_github_login(client: TestClient, monkeypatch, github: AsyncMock):
+    """Start a login, then return the callback's response with GitHub answering as `github`."""
+    login = _start_github_login(client, monkeypatch)
+    return _github_callback(client, _authorize_query(login)["state"], github)
 
 
 ADMIN_ON_GITHUB = {"id": int(ADMIN_GITHUB_ID), "login": "adminuser", "name": "Admin User"}
@@ -756,6 +773,117 @@ class TestGitHubTokenRevocation:
 
         assert response.status_code == 400
         github.request.assert_not_awaited()
+
+
+class TestOAuthBrowserBinding:
+    """A cookie binds a login's state to the browser that started it and
+    carries the PKCE verifier the code exchange needs."""
+
+    def test_login_sets_a_short_lived_httponly_lax_cookie_for_the_callback(
+        self, client: TestClient, monkeypatch
+    ):
+        login = _start_github_login(client, monkeypatch)
+
+        set_cookie = login.headers["set-cookie"]
+        assert set_cookie.startswith(f"github_oauth={_authorize_query(login)['state']}.")
+        attributes = {part.strip().lower() for part in set_cookie.split(";")[1:]}
+        assert {"httponly", "samesite=lax", "path=/api/v1/auth/github", "max-age=300"} <= attributes
+
+    def test_the_cookie_is_secure_in_production(self, client: TestClient, monkeypatch):
+        monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+        monkeypatch.setattr(settings, "GITHUB_CLIENT_ID", "test_client_id")
+
+        login = client.get(
+            "/api/v1/auth/github", headers={"Host": "api.dashti.se"}, follow_redirects=False
+        )
+
+        assert login.status_code == 307
+        assert "secure" in {part.strip().lower() for part in login.headers["set-cookie"].split(";")}
+
+    def test_the_authorize_url_carries_the_s256_challenge_of_the_cookie_verifier(
+        self, client: TestClient, monkeypatch
+    ):
+        query = _authorize_query(_start_github_login(client, monkeypatch))
+
+        state, verifier = client.cookies["github_oauth"].split(".")
+        assert state == query["state"]
+        assert 43 <= len(verifier) <= 128  # RFC 7636 section 4.1
+        digest = hashlib.sha256(verifier.encode()).digest()
+        assert query["code_challenge"] == base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
+        assert len(query["code_challenge"]) == 43
+        assert query["code_challenge_method"] == "S256"
+
+    def test_the_code_exchange_sends_the_cookie_verifier(self, client: TestClient, monkeypatch):
+        github = _github_client(ADMIN_ON_GITHUB)
+        state = _authorize_query(_start_github_login(client, monkeypatch))["state"]
+        verifier = client.cookies["github_oauth"].split(".")[1]
+
+        response = _github_callback(client, state, github)
+
+        assert response.status_code == 302
+        assert github.post.call_args.kwargs["data"]["code_verifier"] == verifier
+
+    def test_a_callback_without_the_cookie_is_refused_and_keeps_the_state(
+        self, client: TestClient, monkeypatch
+    ):
+        github = _github_client(ADMIN_ON_GITHUB)
+        state = _authorize_query(_start_github_login(client, monkeypatch))["state"]
+        cookie = client.cookies["github_oauth"]
+        client.cookies.clear()
+
+        refused = _github_callback(client, state, github)
+
+        assert refused.status_code == 400
+        github.post.assert_not_awaited()
+        # The refused callback did not use up the state: the browser that
+        # started the login still finishes it.
+        client.cookies.set("github_oauth", cookie)
+        assert _github_callback(client, state, github).status_code == 302
+
+    def test_a_callback_with_another_logins_cookie_is_refused(
+        self, client: TestClient, monkeypatch
+    ):
+        """A second login in the same browser replaces the cookie, so the
+        first login's state no longer matches it."""
+        github = _github_client(ADMIN_ON_GITHUB)
+        first = _authorize_query(_start_github_login(client, monkeypatch))["state"]
+        second = _authorize_query(_start_github_login(client, monkeypatch))["state"]
+
+        assert _github_callback(client, first, github).status_code == 400
+        assert _github_callback(client, second, github).status_code == 302
+
+    def test_a_cookie_without_a_verifier_is_refused(self, client: TestClient, monkeypatch):
+        github = _github_client(ADMIN_ON_GITHUB)
+        state = _authorize_query(_start_github_login(client, monkeypatch))["state"]
+        client.cookies.clear()
+        client.cookies.set("github_oauth", state)
+
+        assert _github_callback(client, state, github).status_code == 400
+        github.post.assert_not_awaited()
+
+    def test_a_non_ascii_state_is_refused(self, client: TestClient, monkeypatch):
+        _start_github_login(client, monkeypatch)
+
+        response = client.get(
+            "/api/v1/auth/github/callback?code=test_code&state=%C3%A9t%C3%A9",
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 400
+
+    def test_a_successful_login_clears_the_cookie(self, client: TestClient, monkeypatch):
+        response = _complete_github_login(client, monkeypatch, _github_client(ADMIN_ON_GITHUB))
+
+        assert response.status_code == 302
+        cleared = [
+            header
+            for header in response.headers.get_list("set-cookie")
+            if header.startswith("github_oauth=")
+        ]
+        assert len(cleared) == 1
+        attributes = {part.strip().lower() for part in cleared[0].split(";")[1:]}
+        assert {"max-age=0", "path=/api/v1/auth/github"} <= attributes
+        assert "github_oauth" not in client.cookies
 
 
 class TestGitHubCallbackMocked:
