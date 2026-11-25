@@ -6,6 +6,7 @@ scope, and what a deploy job checks before and after it ships.
 """
 
 import json
+import posixpath
 import re
 from pathlib import Path
 from typing import Any
@@ -125,6 +126,69 @@ def test_deploys_wait_for_the_security_scan_and_the_dependency_review(name: str)
         "(needs.dependency-review.result == 'success'"
         " || needs.dependency-review.result == 'skipped')"
     ) in condition
+
+
+COVERAGE_COMMENTS = [
+    (
+        "frontend-quality",
+        "frontend-coverage-comment",
+        "frontend-coverage",
+        "davelosert/vitest-coverage-report-action",
+    ),
+    (
+        "backend-quality",
+        "backend-coverage-comment",
+        "backend-coverage",
+        "MishaKav/pytest-coverage-comment",
+    ),
+]
+
+
+def _comment_inputs(step: dict[str, Any]) -> set[str]:
+    """The workspace paths of the files a coverage comment action reads."""
+    settings = step["with"]
+    keys = [key for key in settings if key.endswith("-path")]
+    base = settings.get("working-directory", ".")
+    return {posixpath.normpath(posixpath.join(base, settings[key])) for key in keys}
+
+
+@pytest.mark.parametrize(("quality", "comment", "artifact", "action"), COVERAGE_COMMENTS)
+def test_pr_coverage_comments_run_apart_from_the_dependency_code(
+    quality: str, comment: str, artifact: str, action: str
+) -> None:
+    # The quality jobs run the project's dependencies on every event, so they
+    # hold contents: read alone; the comment job runs none of them.
+    jobs = _load("ci-cd.yml")["jobs"]
+    assert jobs[quality]["permissions"] == {"contents": "read"}
+    assert _uses(jobs[quality], action) == []
+    [upload] = [
+        step
+        for step in _uses(jobs[quality], "actions/upload-artifact")
+        if step["with"]["name"] == artifact
+    ]
+    assert upload["if"] == "github.event_name == 'pull_request'"
+    job = jobs[comment]
+    assert job["needs"] == quality
+    assert job["if"] == "github.event_name == 'pull_request'"
+    assert job["permissions"] == {"contents": "read", "pull-requests": "write"}
+    assert all("run" not in step for step in job["steps"])
+    # The download puts the uploaded files where the action reads them: the
+    # artifact holds them relative to their common folder.
+    uploaded = set(upload["with"]["path"].split())
+    [download] = _uses(job, "actions/download-artifact")
+    assert download["with"]["name"] == artifact
+    assert download["with"]["path"] == posixpath.commonpath(sorted(uploaded))
+    [step] = _uses(job, action)
+    assert _comment_inputs(step) == uploaded
+
+
+def test_only_the_comment_jobs_and_the_dependency_review_write_to_pull_requests() -> None:
+    holders = sorted(
+        name
+        for name, job in _load("ci-cd.yml")["jobs"].items()
+        if (job.get("permissions") or {}).get("pull-requests") == "write"
+    )
+    assert holders == ["backend-coverage-comment", "dependency-review", "frontend-coverage-comment"]
 
 
 def test_dependency_review_also_checks_the_range_a_push_adds() -> None:

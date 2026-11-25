@@ -86,6 +86,7 @@ rides the frontend lane for the CV scrub guard):
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `frontend-quality`  | ESLint, vue-tsc, the vitest unit suite (664 tests on 2026-10-20) with coverage floors, vite-ssg build + dist invariants, Codecov              |
 | `backend-quality`   | `scripts/check-lock-parity.py` (uv.lock against pyproject.toml's exact pins and both requirements files), hash-pinned install, ruff lint + format, the pytest suite (961 collected on 2026-10-20) with an 83% coverage floor, Codecov; mypy runs in `pre-commit.yml` |
+| `*-coverage-comment` | Pull requests only: the vitest and pytest coverage comments, in jobs that hold `pull-requests: write` and run no project code         |
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
 | `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
 | `vercel-cli`        | Pull requests only: the deploy jobs' Vercel CLI install and version check (`.github/tools/vercel/install.sh`), with no secrets               |
