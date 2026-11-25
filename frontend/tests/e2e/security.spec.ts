@@ -5,7 +5,6 @@ import { test, expect } from '@playwright/test'
 const isProduction =
   process.env.E2E_BASE_URL?.includes('vercel') ||
   process.env.E2E_BASE_URL?.includes('dashti.se') ||
-  process.env.E2E_BASE_URL?.includes('portfolio-site-jade-five.vercel.app') ||
   false /* CI runs against preview, not production */
 
 test.describe('Security Headers', () => {
