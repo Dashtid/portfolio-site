@@ -110,7 +110,7 @@ Supporting workflows:
 
 | Workflow              | Trigger                     | Purpose                                                              |
 | --------------------- | --------------------------- | -------------------------------------------------------------------- |
-| `codeql.yml`          | push + schedule             | CodeQL SAST for JS/TS + Python                                       |
+| `codeql.yml`          | push / PR + weekly          | CodeQL SAST for JS/TS, Python and the Actions workflows              |
 | `scorecard.yml`       | push + weekly               | OpenSSF Scorecard                                                    |
 | `pre-commit.yml`      | push / PR                   | The shared pre-commit hook set against the full tree                 |
 | `db-backup.yml`       | nightly 03:30 UTC           | Postgres dump, encrypted to a public key before storage              |

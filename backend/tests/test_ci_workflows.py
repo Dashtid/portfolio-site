@@ -202,6 +202,20 @@ def test_scorecard_runs_only_after_its_image_digest_check() -> None:
     assert holders == ["analysis"]
 
 
+def test_codeql_analyzes_the_workflows_as_well_as_the_code() -> None:
+    analyze = _load("codeql.yml")["jobs"]["analyze"]
+    assert analyze["strategy"]["matrix"]["language"] == [
+        "actions",
+        "javascript-typescript",
+        "python",
+    ]
+    [init] = _uses(analyze, "github/codeql-action/init")
+    assert init["with"]["languages"] == "${{ matrix.language }}"
+    # One analysis per language, so each keeps its own alerts.
+    [step] = _uses(analyze, "github/codeql-action/analyze")
+    assert step["with"]["category"] == "/language:${{ matrix.language }}"
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filters find their base commits locally; a
     # depth-1 clone would make them fetch, and without credentials.

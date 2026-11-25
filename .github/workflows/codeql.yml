@@ -25,7 +25,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [javascript-typescript, python]
+        # actions: the workflow files themselves (injection, untrusted
+        # checkout, cache and artifact poisoning, token permissions).
+        language: [actions, javascript-typescript, python]
 
     steps:
       - name: Checkout code
