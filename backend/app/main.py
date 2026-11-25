@@ -52,6 +52,7 @@ from app.middleware import (
     CompressionMiddleware,
     ErrorTrackingMiddleware,
     LoggingMiddleware,
+    OriginCheckMiddleware,
     PerformanceMiddleware,
     RouteLimitMiddleware,
     limiter,
@@ -692,8 +693,9 @@ if settings.RATE_LIMIT_ENABLED:
 # headers, so frontend JS could not read the error. Layers below are added
 # innermost-first; effective order outermost -> innermost:
 #   CloseUnreadBody -> HTTPSScheme -> CORS -> Logging -> ErrorTracking
-#   -> Performance -> SecurityHeaders -> HostCheck -> CacheControl
-#   -> Compression -> BodySizeLimit -> RouteLimit -> SlowAPI -> routes
+#   -> Performance -> SecurityHeaders -> HostCheck -> OriginCheck
+#   -> CacheControl -> Compression -> BodySizeLimit -> RouteLimit
+#   -> SlowAPI -> routes
 # BodySizeLimit sits just outside the rate limiters (RouteLimit, SlowAPI)
 # and the routes: nothing between it and the handlers reads request bodies,
 # so DoS protection is preserved while its 413s pass through every
@@ -723,6 +725,10 @@ app.add_middleware(CompressionMiddleware, minimum_size=1000)
 
 # Cache control headers
 app.add_middleware(CacheControlMiddleware, max_age=300)
+
+# Origin check on cookie-authenticated writes — outside the body reads and
+# rate limiters, so a refused request is never parsed and costs no budget.
+app.add_middleware(OriginCheckMiddleware, allowed_origins=settings.CORS_ORIGINS)
 
 # Host check (production) — inside the logging and security-header layers,
 # so a rejected Host is still logged and its 400 carries the headers.

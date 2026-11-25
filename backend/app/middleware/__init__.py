@@ -6,6 +6,7 @@ from .cache import CacheControlMiddleware
 from .compression import CompressionMiddleware
 from .error_tracking import ErrorTrackingMiddleware
 from .logging import LoggingMiddleware
+from .origin_check import OriginCheckMiddleware
 from .performance import PerformanceMiddleware
 from .rate_limit import (
     RouteLimitMiddleware,
@@ -18,6 +19,7 @@ from .rate_limit import (
 
 __all__ = [
     "LoggingMiddleware",
+    "OriginCheckMiddleware",
     "ErrorTrackingMiddleware",
     "PerformanceMiddleware",
     "CompressionMiddleware",
