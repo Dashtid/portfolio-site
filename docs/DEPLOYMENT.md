@@ -111,10 +111,10 @@ push.
 That catch-up does not repeat a push's dependency review. The review,
 like the TruffleHog scan in `security-scan`, covers only the commits the
 push added, so a failed review stops the deploys of that push alone: the
-next push, whatever it touches, passes its own review and deploys the
-tree with the flagged dependency. Fix the dependency in that next push.
-An advisory accepted instead belongs in the action's `allow-ghsas` list,
-where the acceptance is on record.
+next push, even a docs-only one, reviews only its own commits, and its
+catch-up deploys the tree with the flagged dependency. Fix the
+dependency in that next push. An advisory accepted instead belongs in
+the action's `allow-ghsas` list, where the acceptance is on record.
 
 Python installs in CI use `--require-hashes` against the committed
 lockfiles — including a hash-pinned bootstrap of pip itself
