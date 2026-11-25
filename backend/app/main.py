@@ -112,6 +112,15 @@ BODY_SIZE_OVERRIDES = {
     "/api/v1/documents/upload": 26 * 1024 * 1024,
 }
 
+# The routes that take a JSON body without authentication, capped far below
+# MAX_BODY_SIZE for every caller: FastAPI parses the whole body before any
+# route check runs, and their real bodies (a page-view beacon, or {} to
+# /auth/refresh) are a few KB at most.
+BODY_SIZE_CAPS = {
+    "/api/v1/analytics/track/pageview": 16 * 1024,
+    "/api/v1/auth/refresh": 16 * 1024,
+}
+
 
 def _bears_valid_token(request: Request) -> bool:
     """True when the request carries a JWT that passes signature+expiry.
@@ -145,15 +154,17 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
 
     @staticmethod
     def _oversize_response(limit: int) -> JSONResponse:
+        if limit >= 1024 * 1024:
+            size = f"{limit // (1024 * 1024)} MB"
+        else:
+            size = f"{limit // 1024} KB"
         return JSONResponse(
             status_code=413,
-            content={
-                "detail": (f"Request body too large. Maximum size is {limit // (1024 * 1024)} MB.")
-            },
+            content={"detail": f"Request body too large. Maximum size is {size}."},
         )
 
     async def dispatch(self, request: Request, call_next):
-        max_body_size = MAX_BODY_SIZE
+        max_body_size = BODY_SIZE_CAPS.get(request.url.path, MAX_BODY_SIZE)
         if request.url.path in BODY_SIZE_OVERRIDES and _bears_valid_token(request):
             max_body_size = BODY_SIZE_OVERRIDES[request.url.path]
         content_length = request.headers.get("content-length")

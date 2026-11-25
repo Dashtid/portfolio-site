@@ -18,9 +18,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi.testclient import TestClient
 from starlette.types import Message, Receive, Scope, Send
 
-from app.main import MAX_BODY_SIZE, BodySizeLimitMiddleware, app
+from app.main import BODY_SIZE_CAPS, MAX_BODY_SIZE, BodySizeLimitMiddleware, app
 
 MB = 1024 * 1024
 THESIS = Path(__file__).resolve().parents[1] / "static" / "documents" / "bachelor-thesis.pdf"
@@ -195,3 +196,64 @@ class TestDownstreamValueError:
             )
 
         assert dispatches == 1
+
+
+class TestAnonymousJsonBodyCaps:
+    """The routes that take an anonymous JSON body stop at 16 KB, not 5 MB."""
+
+    PATHS = ["/api/v1/analytics/track/pageview", "/api/v1/auth/refresh"]
+
+    def test_both_routes_are_capped_at_16_kb(self):
+        assert {path: BODY_SIZE_CAPS[path] for path in self.PATHS} == dict.fromkeys(
+            self.PATHS, 16 * 1024
+        )
+
+    @pytest.mark.parametrize("path", PATHS)
+    def test_declared_body_past_the_cap_is_413(self, client: TestClient, path: str):
+        response = client.post(
+            path,
+            content=b'{"page_path": "' + b"a" * (16 * 1024) + b'"}',
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert response.status_code == 413
+        assert response.json() == {"detail": "Request body too large. Maximum size is 16 KB."}
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("path", PATHS)
+    async def test_chunked_body_past_the_cap_is_413(self, path: str):
+        """100 KB without a Content-Length: counted as it arrives, cut at 16 KB."""
+        handed_down = 0
+
+        async def downstream(scope: Scope, receive: Receive, send: Send) -> None:
+            nonlocal handed_down
+            while True:
+                message = await receive()
+                handed_down += len(message.get("body", b""))
+                if not message.get("more_body", False):
+                    break
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"handler ran"})
+
+        client = ChunkedClient([b"a" * 1024] * 100, hangs_up=True)
+        async with asyncio.timeout(10):
+            await BodySizeLimitMiddleware(downstream)(
+                _chunked_scope("POST", path), client.receive, client.send
+            )
+
+        assert client.status == 413
+        assert handed_down <= 16 * 1024
+
+    def test_largest_schema_valid_beacon_fits(self, client: TestClient):
+        """Every field at its schema maximum is still under the cap."""
+        response = client.post(
+            "/api/v1/analytics/track/pageview",
+            json={
+                "page_path": "/" + "p" * 2047,
+                "page_title": "t" * 512,
+                "referrer": "https://example.com/" + "r" * 2028,
+                "visitor_id": "v" * 128,
+            },
+        )
+
+        assert response.status_code == 200
