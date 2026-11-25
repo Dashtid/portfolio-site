@@ -839,6 +839,31 @@ class TestRateLimitKeyFunctions:
         key = get_user_or_ip(mock_request)
         assert key == "user:user-123-abc"
 
+    @pytest.mark.parametrize(
+        ("client_host", "key"),
+        [
+            ("2001:db8:1:2::1", "2001:db8:1:2::/64"),
+            ("2001:db8:1:2:ffff:ffff:ffff:fffe", "2001:db8:1:2::/64"),
+            ("2001:db8:1:3::1", "2001:db8:1:3::/64"),
+            ("203.0.113.7", "203.0.113.7"),
+            # Every IPv4-mapped address sits in ::/64, so those stay whole.
+            ("::ffff:203.0.113.7", "::ffff:203.0.113.7"),
+        ],
+    )
+    def test_get_user_or_ip_keys_ipv6_clients_per_64(self, client_host: str, key: str):
+        """One IPv6 subscriber holds a /64; any address in it is the same bucket."""
+        from app.middleware.rate_limit import get_user_or_ip
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.state = MagicMock()
+        mock_request.state.user = None
+        mock_request.headers = {}
+        mock_request.cookies = {}
+        mock_request.client = MagicMock()
+        mock_request.client.host = client_host
+
+        assert get_user_or_ip(mock_request) == key
+
     def test_get_user_or_ip_token_consistency(self):
         """Same verified token produces the same subject-based key."""
         from app.core.security import create_access_token

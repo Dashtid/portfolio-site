@@ -5,6 +5,8 @@ Provides configurable rate limiting for API endpoints with different limits
 for public and authenticated endpoints.
 """
 
+import ipaddress
+
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from starlette.requests import Request
@@ -18,10 +20,27 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _ip_bucket(ip: str) -> str:
+    """The rate-limit key for a client address: an IPv6 client's whole /64.
+
+    An IPv6 subscriber is usually handed a /64 and can send from any
+    address in it, so a per-address key let one client rotate buckets.
+    IPv4 (and IPv4-mapped) addresses stay per address.
+    """
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped is None:
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return ip
+
+
 def get_user_or_ip(request: Request) -> str:
     """
     Get rate limit key based on authenticated user ID or client IP.
 
+    The client IP keys per address, an IPv6 client per /64 (_ip_bucket).
     Only tokens that pass signature verification earn their own bucket,
     keyed by the token subject. The previous implementation hashed the
     raw header/cookie value without validating it, so a client rotating
@@ -50,7 +69,7 @@ def get_user_or_ip(request: Request) -> str:
         if subject:
             return f"user:{subject}"
 
-    return get_client_ip(request)
+    return _ip_bucket(get_client_ip(request))
 
 
 # Create limiter instance with configurable defaults

@@ -197,3 +197,14 @@ class TestForwardedForCannotPickTheBucket:
 
     def test_without_proxy_headers(self, client: TestClient):
         assert self._statuses(app) == [302] * 5 + [429]
+
+
+def test_ipv6_addresses_in_one_64_share_the_auth_bucket(client: TestClient):
+    """Rotating the interface half of an IPv6 address does not reset the limit."""
+    statuses = [
+        TestClient(app, client=(f"2001:db8:1:2::{i:x}", 40000))
+        .get("/api/v1/auth/github/callback", follow_redirects=False)
+        .status_code
+        for i in range(1, 7)
+    ]
+    assert statuses == [302] * 5 + [429]

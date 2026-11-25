@@ -44,6 +44,7 @@ Configured in `app/config.py` (slowapi):
 - Auth endpoints (`/api/v1/auth/*`): 5 requests/minute per IP
 - General API tier: 60/minute; public read-only tier: 120/minute
 - Health checks: unlimited
+- "Per IP" is per address for IPv4 and per /64 for IPv6, taken from Fly's `Fly-Client-IP` header
 
 ## Analytics & Privacy
 
