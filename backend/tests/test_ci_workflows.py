@@ -235,6 +235,56 @@ def test_every_artifact_upload_sets_its_retention_and_lighthouse_uploads_none() 
     assert lighthouse["with"]["temporaryPublicStorage"] is True
 
 
+def test_the_image_scan_reads_the_runtime_base_weekly_and_gates_no_deploy() -> None:
+    workflow = _load("image-scan.yml")
+    triggers = _triggers(workflow)
+    assert set(triggers) == {"schedule", "push", "pull_request", "workflow_dispatch"}
+    for event in ("push", "pull_request"):
+        assert triggers[event]["branches"] == ["main"]
+        assert triggers[event]["paths"] == [
+            "backend/Dockerfile",
+            ".github/workflows/image-scan.yml",
+        ]
+    assert workflow["permissions"] == {"contents": "read"}
+    # Not security-scan, the check main's ruleset requires: a base with a
+    # fixable vulnerability must not hold up unrelated pull requests.
+    [(name, job)] = workflow["jobs"].items()
+    assert name == "image-scan"
+    assert job["permissions"] == {"contents": "read", "security-events": "write"}
+    assert "needs" not in job
+    assert "secrets." not in yaml.safe_dump(workflow)
+    # The scanner image is pinned by digest.
+    image = job["env"]["GRYPE_IMAGE"]
+    assert re.fullmatch(r"ghcr\.io/anchore/grype:v\d+\.\d+\.\d+@sha256:[0-9a-f]{64}", image)
+    steps = {step["name"]: step for step in job["steps"]}
+    scan = steps["Scan the base image"]
+    assert scan["env"] == {"IMAGE_REF": "${{ steps.base.outputs.ref }}"}
+    run = " ".join(scan["run"].replace("\\\n", " ").split())
+    assert '"${GRYPE_IMAGE}" "registry:${IMAGE_REF}" --platform linux/amd64 --only-fixed' in run
+    [upload] = _uses(job, "github/codeql-action/upload-sarif")
+    assert upload["with"] == {
+        "sarif_file": "${{ runner.temp }}/grype/high.sarif",
+        "category": "grype-image",
+    }
+    # The gate runs last, after the upload.
+    names = list(steps)
+    assert names.index(upload["name"]) == len(names) - 2
+    assert names[-1] == "Fail while a High or Critical match has a fix"
+
+
+def test_both_dockerfile_stages_share_one_base_pinned_by_digest() -> None:
+    # The image scan reads the last FROM; production runs the runtime stage.
+    dockerfile = (WORKFLOWS.parents[1] / "backend" / "Dockerfile").read_text(encoding="utf-8")
+    bases = [line.split()[1] for line in dockerfile.splitlines() if line.startswith("FROM ")]
+    assert len(bases) == 2
+    assert bases[0] == bases[1]
+    assert re.fullmatch(r"[^@\s]+@sha256:[0-9a-f]{64}", bases[-1])
+    # The scan covers the base alone: an OS package the runtime stage
+    # installed would reach production unscanned.
+    runtime = dockerfile[dockerfile.rindex("\nFROM ") :]
+    assert "apt-get" not in runtime
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filters find their base commits locally; a
     # depth-1 clone would make them fetch, and without credentials.

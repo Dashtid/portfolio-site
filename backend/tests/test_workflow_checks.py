@@ -4,6 +4,7 @@ A step that runs `python3 - <<'PY'` is read from its workflow file and run in
 this process with the network replaced, so each check is tested as CI runs it.
 """
 
+import json
 import socket
 import ssl
 import sys
@@ -42,11 +43,12 @@ def _heredoc(step: dict[str, Any]) -> str:
 def _run(step: dict[str, Any], argv: list[str], monkeypatch: pytest.MonkeyPatch) -> int:
     """Run a step's Python with `argv` and return its exit code."""
     monkeypatch.setattr(sys, "argv", ["-", *argv])
-    with pytest.raises(SystemExit) as stop:
+    try:
         exec(compile(_heredoc(step), step["name"], "exec"), {"__name__": "__main__"})
-    code = stop.value.code
-    assert isinstance(code, int)
-    return code
+    except SystemExit as stop:
+        assert isinstance(stop.code, int)
+        return stop.code
+    return 0
 
 
 def _errors(out: str) -> list[str]:
@@ -186,3 +188,68 @@ def test_a_failed_connection_is_reported_and_the_other_hosts_still_checked(
     assert [call[1] for call in network.calls if call[0] == "handshake"] == HOSTS
     assert "\ndashti.se: valid until " in f"\n{out}"
     assert "\napi.dashti.se: valid until " in out
+
+
+FILTER = ("image-scan.yml", "Keep the High and Critical matches")
+GATE = ("image-scan.yml", "Fail while a High or Critical match has a fix")
+
+
+def _sarif(*levels: str) -> dict[str, Any]:
+    """A grype-shaped SARIF report with one result per level, in order."""
+    results = [
+        {"ruleId": f"CVE-2026-{n}-pkg", "level": level, "message": {"text": f"match {n}"}}
+        for n, level in enumerate(levels, 1)
+    ]
+    rules = [{"id": result["ruleId"]} for result in results]
+    return {
+        "version": "2.1.0",
+        "runs": [{"tool": {"driver": {"name": "grype", "rules": rules}}, "results": results}],
+    }
+
+
+def _filter(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, report: dict[str, Any]
+) -> dict[str, Any]:
+    source, target = tmp_path / "grype.sarif", tmp_path / "high.sarif"
+    source.write_text(json.dumps(report), encoding="utf-8")
+    assert _run(_step(*FILTER), [str(source), str(target)], monkeypatch) == 0
+    kept: dict[str, Any] = json.loads(target.read_text(encoding="utf-8"))
+    return kept
+
+
+def test_only_high_and_critical_matches_go_to_code_scanning(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    report = _sarif("error", "warning", "note", "error")
+    kept = _filter(tmp_path, monkeypatch, report)
+    [run] = kept["runs"]
+    # grype's SARIF level is "error" for High and Critical, "warning" for Medium.
+    assert [result["ruleId"] for result in run["results"]] == ["CVE-2026-1-pkg", "CVE-2026-4-pkg"]
+    assert run["tool"] == report["runs"][0]["tool"]
+    assert kept["version"] == report["version"]
+
+
+def test_the_gate_fails_on_each_kept_match_and_passes_without_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    high = tmp_path / "high.sarif"
+    high.write_text(json.dumps(_sarif("error", "error")), encoding="utf-8")
+    assert _run(_step(*GATE), [str(high)], monkeypatch) == 1
+    errors = _errors(capsys.readouterr().out)
+    assert [error.split(" - ")[0] for error in errors] == [
+        "::error::CVE-2026-1-pkg: match 1",
+        "::error::CVE-2026-2-pkg: match 2",
+    ]
+    assert all("FROM lines of backend/Dockerfile" in error for error in errors)
+
+    high.write_text(json.dumps(_sarif()), encoding="utf-8")
+    assert _run(_step(*GATE), [str(high)], monkeypatch) == 0
+    assert _errors(capsys.readouterr().out) == []
+
+
+def test_medium_and_low_matches_alone_leave_the_gate_open(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _filter(tmp_path, monkeypatch, _sarif("warning", "note"))
+    assert _run(_step(*GATE), [str(tmp_path / "high.sarif")], monkeypatch) == 0
+    assert _errors(capsys.readouterr().out) == []

@@ -112,6 +112,7 @@ Supporting workflows:
 | --------------------- | --------------------------- | -------------------------------------------------------------------- |
 | `codeql.yml`          | push / PR + weekly          | CodeQL SAST for JS/TS, Python and the Actions workflows              |
 | `scorecard.yml`       | push + weekly               | OpenSSF Scorecard                                                    |
+| `image-scan.yml`      | Dockerfile change + weekly  | grype scan of the backend base image: Debian packages and CPython    |
 | `pre-commit.yml`      | push / PR                   | The shared pre-commit hook set against the full tree                 |
 | `db-backup.yml`       | nightly 03:30 UTC           | Postgres dump, encrypted to a public key before storage              |
 | `restore-drill.yml`   | quarterly (Jan/Apr/Jul/Oct) | Files a restore-checklist issue — backups are rehearsed, not assumed |

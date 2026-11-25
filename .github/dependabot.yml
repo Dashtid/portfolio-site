@@ -130,7 +130,9 @@ updates:
 
   # Docker base image (D3-CI-02): backend/Dockerfile digest-pins
   # python:3.14-slim, but nothing bumped the digest — trivy fs never scans
-  # the image OS layer, so base-image CVEs accumulated silently. Dependabot
+  # the image OS layer, so base-image CVEs accumulated silently.
+  # workflows/image-scan.yml scans the pinned base every week and fails
+  # while it has a High or Critical vulnerability with a fix. Dependabot
   # proposes tag bumps here; Fly rebuilds from the pinned digest on each
   # deploy.
   #
