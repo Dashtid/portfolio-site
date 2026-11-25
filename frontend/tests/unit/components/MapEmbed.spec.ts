@@ -72,12 +72,12 @@ describe('MapEmbed', () => {
     expect(iframe.attributes('tabindex')).toBeUndefined()
   })
 
-  it('iframe has lazy loading and no-referrer policy', () => {
+  it('iframe has lazy loading and sends Google the origin only', () => {
     const wrapper = mount(MapEmbed, {
       props: { url: 'https://www.google.com/maps/embed?pb=abc' }
     })
     const iframe = wrapper.find('iframe')
     expect(iframe.attributes('loading')).toBe('lazy')
-    expect(iframe.attributes('referrerpolicy')).toBe('no-referrer-when-downgrade')
+    expect(iframe.attributes('referrerpolicy')).toBe('strict-origin-when-cross-origin')
   })
 })

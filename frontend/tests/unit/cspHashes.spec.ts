@@ -156,11 +156,10 @@ describe('CSP destinations', () => {
     expect(sources[2]).toMatch(/^https:\/\/o\d+\.ingest\.(?:[a-z]{2}\.)?sentry\.io$/)
   })
 
-  it('frame-src allows the three embed sources and nothing of this origin', () => {
+  it('frame-src allows the two embed sources and nothing of this origin', () => {
     // Only VideoEmbed and MapEmbed create frames, and their validators admit
     // absolute https URLs on these hosts and paths alone.
     expect(directive('frame-src').split(' ')).toEqual([
-      'https://www.youtube.com/embed/',
       'https://www.youtube-nocookie.com/embed/',
       'https://www.google.com/maps/embed'
     ])

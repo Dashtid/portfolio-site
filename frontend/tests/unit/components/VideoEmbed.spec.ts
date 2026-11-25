@@ -3,13 +3,29 @@ import { mount } from '@vue/test-utils'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 
 describe('VideoEmbed', () => {
-  it('renders iframe for valid YouTube URL', () => {
+  it('loads a www.youtube.com URL from the privacy-enhanced host', () => {
     const wrapper = mount(VideoEmbed, {
       props: { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
     })
     const iframe = wrapper.find('iframe')
     expect(iframe.exists()).toBe(true)
-    expect(iframe.attributes('src')).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+    expect(iframe.attributes('src')).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')
+  })
+
+  it('drops the si share parameter and keeps the others', () => {
+    const wrapper = mount(VideoEmbed, {
+      props: { url: 'https://www.youtube.com/embed/abc?si=XyZ123&start=10' }
+    })
+    expect(wrapper.find('iframe').attributes('src')).toBe(
+      'https://www.youtube-nocookie.com/embed/abc?start=10'
+    )
+  })
+
+  it('still rejects http and the bare youtube.com host', () => {
+    for (const url of ['http://www.youtube.com/embed/abc', 'https://youtube.com/embed/abc']) {
+      const wrapper = mount(VideoEmbed, { props: { url } })
+      expect(wrapper.find('iframe').exists()).toBe(false)
+    }
   })
 
   it('renders fallback for invalid URL host', () => {
@@ -21,11 +37,13 @@ describe('VideoEmbed', () => {
     expect(wrapper.find('.fallback-text').text()).toBe('Video could not be loaded')
   })
 
-  it('accepts youtube-nocookie.com URLs', () => {
+  it('passes youtube-nocookie.com URLs through unchanged', () => {
     const wrapper = mount(VideoEmbed, {
       props: { url: 'https://www.youtube-nocookie.com/embed/abc123' }
     })
-    expect(wrapper.find('iframe').exists()).toBe(true)
+    expect(wrapper.find('iframe').attributes('src')).toBe(
+      'https://www.youtube-nocookie.com/embed/abc123'
+    )
   })
 
   it('rejects URLs without /embed/ path', () => {

@@ -6,7 +6,7 @@
         :title="title"
         allowfullscreen
         loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"
+        referrerpolicy="strict-origin-when-cross-origin"
         class="map-iframe"
       />
     </div>
@@ -30,6 +30,8 @@ import { useEmbedValidator } from '@/composables/useEmbedValidator'
  * readers into application mode and tabindex="0" double-stopped keyboard
  * focus. The heading renders as a figcaption below the media, so it no
  * longer outranks the page's section headings in the document outline.
+ * referrerpolicy matches the site's Referrer-Policy header: Google gets the
+ * page's origin, not its full URL.
  */
 
 interface Props {

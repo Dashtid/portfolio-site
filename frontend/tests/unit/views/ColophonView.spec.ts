@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { useHead } from '@unhead/vue'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import ColophonView from '@/views/ColophonView.vue'
 
@@ -144,6 +144,39 @@ describe('ColophonView claims still match the shipped CSP', () => {
     expect(styleSrc).not.toContain('unsafe-inline')
     expect(styleSrc).toContain("'self'")
     expect(styleSrc.match(/'sha256-[^']+'/g) ?? []).toHaveLength(2)
+  })
+})
+
+const vueSources = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    const full = resolve(dir, entry.name)
+    if (entry.isDirectory()) return vueSources(full)
+    return entry.name.endsWith('.vue') ? [readFileSync(full, 'utf-8')] : []
+  })
+
+// Referrer policies that send another origin no more than the page's origin.
+const TRIMMED = new Set([
+  'no-referrer',
+  'origin',
+  'origin-when-cross-origin',
+  'same-origin',
+  'strict-origin',
+  'strict-origin-when-cross-origin'
+])
+
+describe('ColophonView referrer claim', () => {
+  it('holds for the page and for every element that sets its own policy', async () => {
+    // The page: "referrers trimmed across origins". The header covers the
+    // page, and an element's referrerpolicy overrides it for that element's
+    // own requests, so each of those has to trim as well.
+    const wrapper = await mountView()
+    expect(wrapper.text()).toContain('referrers trimmed across origins')
+    expect(vercelHeader('Referrer-Policy')).toBe('strict-origin-when-cross-origin')
+    const policies = vueSources(resolve(FRONTEND_ROOT, 'src')).flatMap(source =>
+      [...source.matchAll(/\s(:?)referrerpolicy="([^"]*)"/g)].map(m => `${m[1]}${m[2]}`)
+    )
+    expect(policies.length).toBeGreaterThan(0)
+    expect(policies.filter(policy => !TRIMMED.has(policy))).toEqual([])
   })
 })
 
