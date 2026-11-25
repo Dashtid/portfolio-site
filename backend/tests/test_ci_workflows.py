@@ -51,3 +51,24 @@ def test_deploys_and_push_e2e_runs_accept_main_only() -> None:
 def test_the_rebake_deploys_from_main_only() -> None:
     rebake = _load("rebake-frontend.yml")["jobs"]["rebake"]
     assert _condition(rebake) == "github.ref == 'refs/heads/main'"
+
+
+def test_only_the_backup_keepalive_job_holds_actions_write() -> None:
+    # actions: write can delete the backup artifacts, so it stays out of the
+    # jobs that hold the Fly tokens and the database password.
+    backup = _load("db-backup.yml")
+    assert backup["permissions"] == {"contents": "read"}
+    holders = [
+        name
+        for name, job in backup["jobs"].items()
+        if (job.get("permissions") or {}).get("actions") == "write"
+    ]
+    assert holders == ["keepalive"]
+    keepalive = backup["jobs"]["keepalive"]
+    assert keepalive["permissions"] == {"actions": "write"}
+    [step] = keepalive["steps"]
+    assert "uses" not in step
+    assert "db-backup.yml/enable" in step["run"]
+    assert "secrets." not in yaml.safe_dump(keepalive)
+    # No `needs` either way: a failed enable call must not stop the dumps.
+    assert all("needs" not in job for job in backup["jobs"].values())

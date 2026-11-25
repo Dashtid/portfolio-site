@@ -47,20 +47,19 @@ permissions:
   contents: read
 
 jobs:
-  backup:
+  # GitHub auto-disables scheduled workflows after 60 days without repo
+  # activity. This workflow is the ONLY durable DB backup, so silent
+  # disablement = silent loss of backups. Re-enabling on every run resets
+  # that clock regardless of commit activity.
+  keepalive:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Only this job runs the keepalive, so the workflow-enable scope lives
-    # here rather than at top level (Scorecard TokenPermissions scores a
-    # top-level 'actions: write' as 0 - every job would inherit it).
+    timeout-minutes: 5
+    # The enable call needs actions: write, which can also delete this
+    # repository's artifacts, so only this job holds it (job level: a
+    # top-level grant reaches every job, and Scorecard scores it 0).
     permissions:
-      contents: read
       actions: write
     steps:
-      # GitHub auto-disables scheduled workflows after 60 days without repo
-      # activity. This workflow is the ONLY durable DB backup, so silent
-      # disablement = silent loss of backups. Re-enabling on every run
-      # resets that clock regardless of commit activity.
       - name: Keepalive (reset the 60-day auto-disable clock)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -68,6 +67,10 @@ jobs:
           gh api -X PUT \
             "repos/${{ github.repository }}/actions/workflows/db-backup.yml/enable"
 
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # 1.6
 
