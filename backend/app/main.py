@@ -14,11 +14,6 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sentry_sdk.integrations.asyncio import AsyncioIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.httpx import HttpxIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.datastructures import Headers, MutableHeaders
@@ -46,6 +41,7 @@ from app.api.v1 import (
 )
 from app.config import settings
 from app.core.security import decode_token
+from app.core.sentry import sentry_options
 from app.database import Base, engine
 from app.middleware import (
     CacheControlMiddleware,
@@ -74,30 +70,12 @@ PAGE_VIEW_RETENTION = timedelta(days=400)
 # points per run it is free against GitHub's 5000/hour budget.
 OSS_REFRESH_INTERVAL_SECONDS = int(timedelta(hours=6).total_seconds())
 
-# Initialize Sentry for error tracking and performance monitoring.
-# We explicitly enumerate integrations rather than relying on Sentry's
-# auto-enable so the exact set is visible in code review and consistent
-# across SDK versions. SqlalchemyIntegration adds spans per query (paired
-# with Sprint 3 slow-query logging), HttpxIntegration covers outbound
-# GitHub API calls, and AsyncioIntegration links task-spawn contexts so
-# spans don't get orphaned across `asyncio.create_task` boundaries.
+# Sentry error tracking and performance monitoring. The options, and what
+# they keep out of every event, transaction and breadcrumb, are in
+# app/core/sentry.py. init runs before the routers are included below, so
+# the integrations wrap every route.
 if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
-    sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
-        environment=settings.ENVIRONMENT,
-        release=f"portfolio-api@{settings.APP_VERSION}",
-        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
-        profiles_sample_rate=settings.SENTRY_PROFILES_SAMPLE_RATE,
-        send_default_pii=False,
-        enable_tracing=True,
-        integrations=[
-            StarletteIntegration(),
-            FastApiIntegration(),
-            SqlalchemyIntegration(),
-            HttpxIntegration(),
-            AsyncioIntegration(),
-        ],
-    )
+    sentry_sdk.init(**sentry_options())
     logger.info("Sentry initialized", extra={"environment": settings.ENVIRONMENT})
 
 
