@@ -403,11 +403,17 @@ jobs:
           # filter.
           extra_args: --results=verified --fail-on-scan-errors --exclude-detectors=lob
 
-  # Dependency Review - blocks PRs with vulnerable dependencies
+  # Dependency Review - blocks PRs, and pushes to main, that add vulnerable
+  # or copyleft-licensed dependencies
   dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'pull_request'
+    # A push needs a previous tip to compare with: a branch creation has
+    # none, and after a force-push the old tip is no longer an ancestor.
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && !github.event.forced &&
+       github.event.before != '0000000000000000000000000000000000000000')
     permissions:
       contents: read
       pull-requests: write # the action posts a summary comment on the PR
@@ -420,6 +426,10 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
+          # A push compares the range it moved main by. On a pull request both
+          # stay empty, and the action reads the PR's base and head itself.
+          base-ref: ${{ github.event_name == 'push' && github.event.before || '' }}
+          head-ref: ${{ github.event_name == 'push' && github.sha || '' }}
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
           # TruffleHog is AGPL-3.0 and is INVOKED as a CI scanner, never
@@ -469,8 +479,9 @@ jobs:
           uploadArtifacts: true
           runs: 3
 
-  # Deploy frontend to Vercel — gated on frontend-quality, e2e-tests, and
-  # lighthouse all succeeding. Vercel builds the bundle itself from source
+  # Deploy frontend to Vercel — gated on frontend-quality, e2e-tests,
+  # lighthouse and security-scan all succeeding, and on dependency-review
+  # passing when it runs. Vercel builds the bundle itself from source
   # (vercel.json's buildCommand), so we don't need to ship the dist artifact —
   # we just trigger the deploy via CLI.
   deploy-frontend:
@@ -481,7 +492,7 @@ jobs:
     # API data. On frontend-only commits deploy-backend is skipped — the
     # !cancelled() + explicit result checks below keep this job running
     # then (a skipped needed job would otherwise skip-cascade this one).
-    needs: [changes, frontend-quality, e2e-tests, lighthouse, deploy-backend]
+    needs: [changes, frontend-quality, e2e-tests, lighthouse, security-scan, dependency-review, deploy-backend]
     if: |
       !cancelled() &&
       github.event_name == 'push' &&
@@ -490,6 +501,8 @@ jobs:
       needs.frontend-quality.result == 'success' &&
       needs.e2e-tests.result == 'success' &&
       needs.lighthouse.result == 'success' &&
+      needs.security-scan.result == 'success' &&
+      (needs.dependency-review.result == 'success' || needs.dependency-review.result == 'skipped') &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     timeout-minutes: 10
     environment:
@@ -583,17 +596,23 @@ jobs:
           fi
           exit $fail
 
-  # Deploy backend to Fly.io — gated on backend-quality. Fly's remote builder
-  # produces the image from the Dockerfile on each deploy; we just invoke the
-  # CLI with a Fly API token.
+  # Deploy backend to Fly.io — gated on backend-quality and security-scan, and
+  # on dependency-review passing when it runs. Fly's remote builder produces
+  # the image from the Dockerfile on each deploy; we just invoke the CLI with a
+  # Fly API token.
   deploy-backend:
     runs-on: ubuntu-latest
-    needs: [changes, backend-quality]
+    needs: [changes, backend-quality, security-scan, dependency-review]
+    # !cancelled() + explicit results: dependency-review is skipped on a
+    # force-push, and a skipped needed job would skip-cascade this one.
     if: |
+      !cancelled() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       needs.changes.outputs.backend == 'true' &&
-      needs.backend-quality.result == 'success'
+      needs.backend-quality.result == 'success' &&
+      needs.security-scan.result == 'success' &&
+      (needs.dependency-review.result == 'success' || needs.dependency-review.result == 'skipped')
     timeout-minutes: 10
     environment:
       name: production

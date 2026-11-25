@@ -111,6 +111,34 @@ def test_no_checkout_leaves_the_job_token_on_disk() -> None:
     assert kept == []
 
 
+@pytest.mark.parametrize("name", ["deploy-frontend", "deploy-backend"])
+def test_deploys_wait_for_the_security_scan_and_the_dependency_review(name: str) -> None:
+    job = _load("ci-cd.yml")["jobs"][name]
+    assert {"security-scan", "dependency-review"} <= set(job["needs"])
+    condition = _condition(job)
+    # Without !cancelled() a skipped dependency-review would skip the deploy.
+    assert condition.startswith("!cancelled() && ")
+    assert "needs.security-scan.result == 'success'" in condition
+    assert (
+        "(needs.dependency-review.result == 'success'"
+        " || needs.dependency-review.result == 'skipped')"
+    ) in condition
+
+
+def test_dependency_review_also_checks_the_range_a_push_adds() -> None:
+    review = _load("ci-cd.yml")["jobs"]["dependency-review"]
+    assert _condition(review) == (
+        "github.event_name == 'pull_request' || (github.event_name == 'push' && "
+        "!github.event.forced && "
+        "github.event.before != '0000000000000000000000000000000000000000')"
+    )
+    [step] = _uses(review, "actions/dependency-review-action")
+    assert step["with"]["base-ref"] == (
+        "${{ github.event_name == 'push' && github.event.before || '' }}"
+    )
+    assert step["with"]["head-ref"] == "${{ github.event_name == 'push' && github.sha || '' }}"
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filter finds the pushed range's base locally; a
     # depth-1 clone would make it fetch, and without credentials.
