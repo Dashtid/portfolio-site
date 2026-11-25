@@ -141,6 +141,16 @@ Supporting workflows:
   `ERROR_TRACKING_ENABLED` is true (its default).
 - **Metrics**: `/api/v1/metrics/*` (admin-gated) returns request counts,
   response times and error rates per endpoint.
+- **Security events**: the backend writes one JSON log line per
+  authentication decision on the `app.security` logger, named in its
+  `event` field: `auth.login_success`, `auth.login_refused`,
+  `auth.login_failed`, `auth.oauth_state_rejected`,
+  `auth.refresh_superseded`, `auth.refresh_reuse_detected`,
+  `auth.refresh_cross_user`, `auth.session_expired`, `auth.logout`,
+  `auth.admin_denied` and `admin.metrics_reset`. A refresh-token reuse
+  that revoked live sessions and a cross-user refresh are ERROR. They
+  appear in `fly logs`, and the admin Metrics page counts each event since
+  the last restart or metrics reset.
 
 ## Troubleshooting
 
