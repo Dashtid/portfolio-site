@@ -1,0 +1,8 @@
+{
+  "name": "vercel-cli",
+  "private": true,
+  "description": "The Vercel CLI the deploy jobs install, locked with its whole dependency tree.",
+  "devDependencies": {
+    "vercel": "65.16.0"
+  }
+}

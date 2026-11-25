@@ -5,6 +5,7 @@ the settings that decide which branch deploys, which job holds which token
 scope, and what a deploy job checks before and after it ships.
 """
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -295,3 +296,79 @@ def test_apt_trusts_only_the_pgdg_key_with_the_published_fingerprint() -> None:
     only_primary = run.index('test "${PRIMARY}" = "${PGDG_FINGERPRINT}"')
     keyring = run.index("sudo install -m 0644")
     assert export < only_primary < keyring < run.index("apt-get update")
+
+
+TOOLS = WORKFLOWS.parent / "tools" / "vercel"
+LOCKED_CLI = '"${RUNNER_TEMP}/vercel-cli/node_modules/.bin/vercel"'
+
+
+def _vercel_install(steps: list[dict[str, Any]]) -> dict[str, Any]:
+    [install] = [step for step in steps if step.get("name") == "Install Vercel CLI"]
+    return install
+
+
+@pytest.mark.parametrize(
+    ("workflow", "job"), [("ci-cd.yml", "deploy-frontend"), ("rebake-frontend.yml", "rebake")]
+)
+def test_the_token_step_runs_the_vercel_cli_installed_from_its_lock(
+    workflow: str, job: str
+) -> None:
+    steps = _load(workflow)["jobs"][job]["steps"]
+    install = _vercel_install(steps)
+    [deploy] = [step for step in steps if "VERCEL_TOKEN" in step.get("env", {})]
+    assert steps.index(install) < steps.index(deploy)
+    assert deploy["run"].startswith(f"{LOCKED_CLI} deploy --prod --yes")
+    # One install for both production paths.
+    pipeline = _vercel_install(_load("ci-cd.yml")["jobs"]["deploy-frontend"]["steps"])
+    assert install["run"] == pipeline["run"]
+
+
+def test_the_vercel_cli_install_takes_only_the_lock_and_needs_the_native_binary() -> None:
+    run = _vercel_install(_load("ci-cd.yml")["jobs"]["deploy-frontend"]["steps"])["run"]
+    assert "npm install" not in run
+    in_order = [
+        "set -euo pipefail",
+        'cd "${RUNNER_TEMP}/vercel-cli"',
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "test -x node_modules/@vercel/vc-native-linux-x64/bin/vercel",
+        "node_modules/.bin/vercel --version 2>&1 | tee version.txt",
+        "grep -qE ",
+    ]
+    positions = [run.index(line) for line in in_order]
+    assert positions == sorted(positions)
+    # The launcher labels the banner only when it spawned the native binary;
+    # the JS CLI fallback prints it bare.
+    match = re.search(r"grep -qE '([^']+)' version\.txt", run)
+    assert match is not None
+    banner = re.compile(match[1])
+    assert banner.match("Vercel CLI 65.16.0 (native)")
+    assert banner.match("Vercel CLI 65.16.0 (native, pr-115 abc1234)")
+    assert not banner.match("Vercel CLI 65.16.0")
+
+
+def test_the_vercel_cli_lock_pins_the_whole_tree_from_the_registry() -> None:
+    package = json.loads((TOOLS / "package.json").read_text(encoding="utf-8"))
+    lock = json.loads((TOOLS / "package-lock.json").read_text(encoding="utf-8"))
+    # Deploy tooling, like the frontend's build tools: scanners scope it as
+    # development, not as code the site serves.
+    assert "dependencies" not in package
+    assert list(package["devDependencies"]) == ["vercel"]
+    version = package["devDependencies"]["vercel"]
+    assert re.fullmatch(r"\d+\.\d+\.\d+", version)
+    assert lock["packages"][""]["devDependencies"] == package["devDependencies"]
+    entries = {path: meta for path, meta in lock["packages"].items() if path}
+    # The launcher runs a native binary only at its own version.
+    assert entries["node_modules/vercel"]["version"] == version
+    assert entries["node_modules/@vercel/vc-native-linux-x64"]["version"] == version
+    for path, meta in entries.items():
+        assert meta["resolved"].startswith("https://registry.npmjs.org/"), path
+        assert meta["integrity"].startswith("sha512-"), path
+        assert meta["dev"] is True, path
+
+
+def test_vercel_cli_bumps_wait_out_the_cooldown_and_run_the_frontend_half() -> None:
+    config = yaml.safe_load((WORKFLOWS.parent / "dependabot.yml").read_text(encoding="utf-8"))
+    [entry] = [u for u in config["updates"] if u["directory"] == "/.github/tools/vercel"]
+    assert entry["package-ecosystem"] == "npm"
+    assert entry["cooldown"] == {"default-days": 7}
+    assert ".github/tools/vercel/**" in _path_filters()["frontend"]

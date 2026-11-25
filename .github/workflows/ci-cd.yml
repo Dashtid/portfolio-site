@@ -59,6 +59,8 @@ jobs:
           - 'cv/**'
           # deploy-frontend runs this check after every deploy.
           - 'scripts/check-live-headers.py'
+          # The Vercel CLI deploy-frontend installs.
+          - '.github/tools/vercel/**'
         backend:
           - 'backend/**'
           - 'requirements*.txt'
@@ -574,8 +576,18 @@ jobs:
       - name: Install Vercel CLI
         # Pinned (not @latest) but kept current — Vercel rejects deploys from
         # CLI versions below a server-side minimum (44.x started 400ing with
-        # "requires version 47.2.2 or later").
-        run: npm install -g vercel@65.16.0
+        # "requires version 47.2.2 or later"). The tree comes from
+        # .github/tools/vercel's lock, outside the checkout that gets uploaded,
+        # and the check fails unless the launcher runs the locked native binary.
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/vercel-cli"
+          cp .github/tools/vercel/package.json .github/tools/vercel/package-lock.json "${RUNNER_TEMP}/vercel-cli/"
+          cd "${RUNNER_TEMP}/vercel-cli"
+          npm ci --ignore-scripts --no-audit --no-fund
+          test -x node_modules/@vercel/vc-native-linux-x64/bin/vercel
+          node_modules/.bin/vercel --version 2>&1 | tee version.txt
+          grep -qE '^Vercel CLI [^ ]+ \(native[,)]' version.txt
 
       - name: Deploy to Vercel
         # The Vercel CLI does not authenticate from the VERCEL_TOKEN env var on
@@ -594,7 +606,7 @@ jobs:
         # what happened before that date. A DSN is client-visible by design;
         # secret storage is just tidier than inline.
         run: |
-          vercel deploy --prod --yes \
+          "${RUNNER_TEMP}/vercel-cli/node_modules/.bin/vercel" deploy --prod --yes \
             --build-env VITE_APP_VERSION="${GITHUB_SHA:0:12}" \
             --build-env VITE_SENTRY_DSN="$VITE_SENTRY_DSN" \
             --build-env SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \

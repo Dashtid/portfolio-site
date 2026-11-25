@@ -94,6 +94,19 @@ updates:
     cooldown:
       default-days: 7
 
+  # The Vercel CLI the deploy jobs install from .github/tools/vercel's lock.
+  # Vercel rejects deploys from CLIs below a server-side minimum, so the pin
+  # has to keep moving.
+  - package-ecosystem: "npm"
+    directory: "/.github/tools/vercel"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(ci)"
+    cooldown:
+      default-days: 7
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
