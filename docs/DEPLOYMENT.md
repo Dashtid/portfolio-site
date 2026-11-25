@@ -90,7 +90,7 @@ rides the frontend lane for the CV scrub guard):
 | `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
 | `vercel-cli`        | Pull requests only: the deploy jobs' Vercel CLI install and version check (`.github/tools/vercel/install.sh`), with no secrets               |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary), action-pin audit, TruffleHog scan of the pushed or PR commits for live-verified secrets   |
-| `dependency-review` | Blocks PRs, and pushes to `main`, that introduce vulnerable or denied-licence dependencies                                                  |
+| `dependency-review` | Blocks PRs, and the deploys of a push to `main`, that introduce vulnerable or denied-licence dependencies (that push only; see below)      |
 | `deploy-frontend`   | Vercel CLI deploy, gated on quality + e2e + lighthouse + security-scan (+ dependency-review when it runs), then `scripts/check-live-headers.py` holds the live headers of three pages to `vercel.json` |
 | `deploy-backend`    | `flyctl deploy --remote-only`, gated on backend-quality + security-scan (+ dependency-review when it runs); frontend deploys serialize behind it so the SSG bake never reads a mid-rollout API |
 
@@ -99,6 +99,14 @@ from each lane's last successful deploy, which `scripts/deployed-commits.py`
 reads from the production environment's deployment records, so a lane
 whose deploy failed, was skipped or never ran checks and deploys again
 with the next push.
+
+That catch-up does not repeat a push's dependency review. The review,
+like the TruffleHog scan in `security-scan`, covers only the commits the
+push added, so a failed review stops the deploys of that push alone: the
+next push, whatever it touches, passes its own review and deploys the
+tree with the flagged dependency. Fix the dependency in that next push.
+An advisory accepted instead belongs in the action's `allow-ghsas` list,
+where the acceptance is on record.
 
 Python installs in CI use `--require-hashes` against the committed
 lockfiles — including a hash-pinned bootstrap of pip itself

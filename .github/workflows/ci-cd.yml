@@ -449,8 +449,9 @@ jobs:
           # filter.
           extra_args: --results=verified --fail-on-scan-errors --exclude-detectors=lob
 
-  # Dependency Review - blocks PRs, and pushes to main, that add vulnerable
-  # or copyleft-licensed dependencies
+  # Dependency Review - blocks PRs, and the deploys of a push to main, that
+  # add vulnerable or copyleft-licensed dependencies. A push is reviewed over
+  # its own commits only: the next push's catch-up deploys what it flagged.
   dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 5
