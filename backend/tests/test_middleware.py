@@ -1440,6 +1440,66 @@ class TestPerformanceMiddlewareDispatchExceptions:
             assert "Slow request" in call_args[0][0]
 
 
+class TestMetricKeysStayBounded:
+    """Client-chosen paths and methods must not add metric keys without bound."""
+
+    def test_record_request_caps_distinct_endpoints(self):
+        """10,000 invented method/path pairs fill the cap, then share one key."""
+        from app.middleware.performance import PerformanceMetrics
+
+        metrics = PerformanceMetrics()
+        for i in range(10_000):
+            metrics.record_request(f"M{i % 7}", f"/junk/{i}", 1.0, 404)
+
+        cap = PerformanceMetrics.MAX_ENDPOINTS
+        assert len(metrics.request_count) == cap + 1
+        assert len(metrics.response_times) == cap + 1
+        assert len(metrics.errors) == cap + 1
+        assert metrics.request_count[PerformanceMetrics.OVERFLOW_ENDPOINT] == 10_000 - cap
+        assert len(metrics.get_stats()["endpoints"]) == cap + 1
+
+    def test_known_endpoint_keeps_its_key_past_the_cap(self):
+        from app.middleware.performance import PerformanceMetrics
+
+        metrics = PerformanceMetrics()
+        metrics.record_request("GET", "/api/v1/health", 1.0, 200)
+        for i in range(PerformanceMetrics.MAX_ENDPOINTS):
+            metrics.record_request("GET", f"/junk/{i}", 1.0, 404)
+        metrics.record_request("GET", "/api/v1/health", 1.0, 200)
+
+        assert metrics.request_count["GET /api/v1/health"] == 2
+
+    def test_requests_are_keyed_by_route_not_by_url(self, client: TestClient):
+        """Unknown paths and 405s share one key per method; /media keeps its mount.
+
+        Routing into the /media Mount rewrites root_path, after which the
+        Mount no longer matches: resolved after the response, those files
+        were keyed by their raw URL.
+        """
+        from app.middleware.performance import UNMATCHED_ROUTE, metrics
+
+        metrics.reset()
+        for i in range(30):
+            response = client.get(f"/no-such-path-{i}")
+            assert response.status_code == 404
+            assert "X-Response-Time" in response.headers
+        for i in range(20):
+            assert client.get(f"/media/missing-{i}.pdf").status_code == 404
+        for i in range(20):
+            assert client.post(f"/api/v1/companies/{i}").status_code == 405
+        assert client.get("/api/v1/companies/no-such-id").status_code == 404
+
+        assert set(metrics.request_count) == {
+            f"GET {UNMATCHED_ROUTE}",
+            "GET /media",
+            f"POST {UNMATCHED_ROUTE}",
+            "GET /api/v1/companies/{company_id}",
+        }
+        assert metrics.request_count[f"GET {UNMATCHED_ROUTE}"] == 30
+        assert metrics.request_count["GET /media"] == 20
+        assert metrics.request_count[f"POST {UNMATCHED_ROUTE}"] == 20
+
+
 class TestLoggingMiddlewareExceptionHandling:
     """Tests for LoggingMiddleware exception handling."""
 

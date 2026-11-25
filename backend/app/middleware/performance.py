@@ -52,6 +52,10 @@ class PerformanceMetrics:
 
     # Maximum number of response times to keep per endpoint (prevents memory exhaustion)
     MAX_RESPONSE_TIMES = 1000
+    # Maximum number of endpoint keys. Route templates bound the paths, but
+    # the method is whatever the client sent; keys past this share one.
+    MAX_ENDPOINTS = 512
+    OVERFLOW_ENDPOINT = "<overflow>"
 
     def __init__(self):
         self.request_count: dict[str, int] = defaultdict(int)
@@ -70,6 +74,8 @@ class PerformanceMetrics:
     def record_request(self, method: str, path: str, duration_ms: float, status_code: int):
         """Record request metrics."""
         endpoint = f"{method} {path}"
+        if endpoint not in self.request_count and len(self.request_count) >= self.MAX_ENDPOINTS:
+            endpoint = self.OVERFLOW_ENDPOINT
 
         self.request_count[endpoint] += 1
         self.response_times[endpoint].append(duration_ms)
@@ -128,8 +134,12 @@ metrics = PerformanceMetrics()
 # (kept for future use in skip-scan windowed percentile work).
 _ = bisect_left
 
+# Metric path for a request no route fully matches (404, 405). Keying those
+# by their raw path gave every invented URL its own entry.
+UNMATCHED_ROUTE = "<unmatched>"
 
-def _resolve_route_template(request: Request, fallback: str) -> str:
+
+def _resolve_route_template(request: Request) -> str:
     """Return the route template that matched, e.g. /companies/{company_id}.
 
     PERF-05: without this, every unique URL path is its own metric key —
@@ -137,24 +147,24 @@ def _resolve_route_template(request: Request, fallback: str) -> str:
     and we lose the aggregate. The template gives us one stable key per
     handler.
 
-    Looks up the matched route via the app router on the request's scope;
-    falls back to the raw path on lookup failure (404, weird middleware
-    ordering, etc.). Resolved AFTER call_next has run so the router has
-    matched.
+    Looks up the matching route via the app router on the request's scope;
+    returns UNMATCHED_ROUTE when none matches fully. Resolved BEFORE
+    call_next: routing into a Mount rewrites root_path in the scope, after
+    which the Mount itself no longer matches.
     """
     app = request.scope.get("app")
     if app is None:
-        return fallback
+        return UNMATCHED_ROUTE
     router = getattr(app, "router", None)
     if router is None:
-        return fallback
+        return UNMATCHED_ROUTE
     for route in router.routes:
         match, _child_scope = route.matches(request.scope)
         if match == Match.FULL:
             template = getattr(route, "path", None)
             if isinstance(template, str) and template:
                 return template
-    return fallback
+    return UNMATCHED_ROUTE
 
 
 class PerformanceMiddleware(BaseHTTPMiddleware):
@@ -169,6 +179,7 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
         # Start timer
         start_time = time.time()
         raw_path = request.url.path
+        route_key = _resolve_route_template(request)
 
         try:
             # Process request
@@ -180,7 +191,7 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
             # Record metrics (templated route key per PERF-05)
             metrics.record_request(
                 method=request.method,
-                path=_resolve_route_template(request, raw_path),
+                path=route_key,
                 duration_ms=duration_ms,
                 status_code=response.status_code,
             )
@@ -208,7 +219,7 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
             # Record with actual HTTP status code
             metrics.record_request(
                 method=request.method,
-                path=_resolve_route_template(request, raw_path),
+                path=route_key,
                 duration_ms=duration_ms,
                 status_code=exc.status_code,
             )
@@ -233,7 +244,7 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
             # Record as 500 for unexpected exceptions
             metrics.record_request(
                 method=request.method,
-                path=_resolve_route_template(request, raw_path),
+                path=route_key,
                 duration_ms=duration_ms,
                 status_code=500,
             )
