@@ -91,3 +91,28 @@ def test_vercel_deploy_jobs_restore_no_npm_cache(workflow: str, job: str) -> Non
     assert "cache" not in settings
     assert "cache-dependency-path" not in settings
     assert settings["package-manager-cache"] is False
+
+
+def test_no_checkout_leaves_the_job_token_on_disk() -> None:
+    # No later step pushes or fetches with the job token, so a persisted copy
+    # would only serve dependency code that reads it.
+    checkouts = {
+        f"{path.name}:{name}": step
+        for path in sorted(WORKFLOWS.glob("*.yml"))
+        for name, job in _load(path.name)["jobs"].items()
+        for step in _uses(job, "actions/checkout")
+    }
+    assert len(checkouts) >= 13
+    kept = [
+        where
+        for where, step in checkouts.items()
+        if step.get("with", {}).get("persist-credentials") is not False
+    ]
+    assert kept == []
+
+
+def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
+    # With full history the filter finds the pushed range's base locally; a
+    # depth-1 clone would make it fetch, and without credentials.
+    [checkout] = _uses(_load("ci-cd.yml")["jobs"]["changes"], "actions/checkout")
+    assert checkout["with"] == {"fetch-depth": 0, "persist-credentials": False}
