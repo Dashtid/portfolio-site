@@ -71,16 +71,46 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Set up flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # 1.6
+      - name: Install flyctl
+        # The archive must match the committed sha256 (from the release's
+        # checksums file): flyctl's release assets can be replaced. Move both
+        # values in all three copies, here and in ci-cd.yml's deploy-backend.
+        env:
+          FLYCTL_VERSION: '0.5.11'
+          FLYCTL_SHA256: '76699a7427c50914d79134db987411615b88502e68156289c58c157cc693f4ed'
+        run: |
+          set -euo pipefail
+          ARCHIVE="flyctl_${FLYCTL_VERSION}_Linux_x86_64.tar.gz"
+          mkdir -p "${RUNNER_TEMP}/flyctl"
+          cd "${RUNNER_TEMP}/flyctl"
+          curl -sSfL -o "${ARCHIVE}" \
+            "https://github.com/superfly/flyctl/releases/download/v${FLYCTL_VERSION}/${ARCHIVE}"
+          echo "${FLYCTL_SHA256}  ${ARCHIVE}" | sha256sum --check --strict
+          tar -xzf "${ARCHIVE}" flyctl
+          rm "${ARCHIVE}"
+          echo "${RUNNER_TEMP}/flyctl" >> "${GITHUB_PATH}"
+          ./flyctl version
 
       - name: Install postgresql client
         # pg_dump must be >= the server's major version (17). The runner
         # image only bakes in an older client .deb — the PGDG apt source
         # itself is not configured — so add it before installing.
+        # apt trusts one key, PGDG's by its published fingerprint. The export
+        # is checked too: another key that holds PGDG's as a subkey matches.
+        env:
+          PGDG_FINGERPRINT: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
         run: |
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-            | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          set -euo pipefail
+          GNUPGHOME="$(mktemp -d)"
+          export GNUPGHOME
+          curl -fsSL -o "${GNUPGHOME}/pgdg.asc" https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          gpg --batch --quiet --import "${GNUPGHOME}/pgdg.asc"
+          gpg --batch --export "${PGDG_FINGERPRINT}" > "${GNUPGHOME}/pgdg.gpg"
+          PRIMARY="$(gpg --batch --show-keys --with-colons "${GNUPGHOME}/pgdg.gpg" \
+            | awk -F: '$1 == "pub" { getline; print $10 }')"
+          test "${PRIMARY}" = "${PGDG_FINGERPRINT}"
+          sudo install -m 0644 "${GNUPGHOME}/pgdg.gpg" /usr/share/keyrings/pgdg.gpg
+          gpgconf --kill all
           echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
             | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
           sudo apt-get update -qq
@@ -144,8 +174,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Set up flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # 1.6
+      - name: Install flyctl
+        # The archive must match the committed sha256 (from the release's
+        # checksums file): flyctl's release assets can be replaced. Move both
+        # values in all three copies, here and in ci-cd.yml's deploy-backend.
+        env:
+          FLYCTL_VERSION: '0.5.11'
+          FLYCTL_SHA256: '76699a7427c50914d79134db987411615b88502e68156289c58c157cc693f4ed'
+        run: |
+          set -euo pipefail
+          ARCHIVE="flyctl_${FLYCTL_VERSION}_Linux_x86_64.tar.gz"
+          mkdir -p "${RUNNER_TEMP}/flyctl"
+          cd "${RUNNER_TEMP}/flyctl"
+          curl -sSfL -o "${ARCHIVE}" \
+            "https://github.com/superfly/flyctl/releases/download/v${FLYCTL_VERSION}/${ARCHIVE}"
+          echo "${FLYCTL_SHA256}  ${ARCHIVE}" | sha256sum --check --strict
+          tar -xzf "${ARCHIVE}" flyctl
+          rm "${ARCHIVE}"
+          echo "${RUNNER_TEMP}/flyctl" >> "${GITHUB_PATH}"
+          ./flyctl version
 
       - name: Install age
         run: |

@@ -5,6 +5,7 @@ the settings that decide which branch deploys, which job holds which token
 scope, and what a deploy job checks before and after it ships.
 """
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -226,3 +227,71 @@ def test_a_push_also_filters_the_range_since_each_half_last_deployed() -> None:
             f"${{{{ steps.filter.outputs.{half} == 'true' || (github.event_name == 'push' && "
             f"steps.{half}-drift.outputs.{half} != 'false') }}}}"
         )
+
+
+def _all_jobs() -> dict[tuple[str, str], dict[str, Any]]:
+    return {
+        (path.name, name): job
+        for path in sorted(WORKFLOWS.glob("*.yml"))
+        for name, job in _load(path.name)["jobs"].items()
+    }
+
+
+FLYCTL_JOBS = [
+    ("ci-cd.yml", "deploy-backend"),
+    ("db-backup.yml", "backup"),
+    ("db-backup.yml", "uploads"),
+]
+
+
+def test_flyctl_comes_from_a_committed_sha256_wherever_it_runs() -> None:
+    # flyctl's release assets can be replaced, and setup-flyctl downloads the
+    # URL api.fly.io names without checking a hash.
+    jobs = _all_jobs()
+    runs_flyctl = [
+        key
+        for key, job in jobs.items()
+        if any(
+            "flyctl " in str(step.get("run", ""))
+            for step in job.get("steps", [])
+            if step.get("name") != "Install flyctl"
+        )
+    ]
+    assert sorted(runs_flyctl) == FLYCTL_JOBS
+    used = [
+        step["uses"] for job in jobs.values() for step in job.get("steps", []) if "uses" in step
+    ]
+    assert not [ref for ref in used if ref.startswith("superfly/")]
+
+    installs = []
+    for key in FLYCTL_JOBS:
+        steps = jobs[key]["steps"]
+        [install] = [step for step in steps if step.get("name") == "Install flyctl"]
+        tokens = [i for i, step in enumerate(steps) if "FLY_API_TOKEN" in step.get("env", {})]
+        assert tokens, key
+        assert steps.index(install) < min(tokens), key
+        installs.append(install)
+    # One version and one hash: the three copies move together.
+    assert installs[0] == installs[1] == installs[2]
+    env = installs[0]["env"]
+    assert re.fullmatch(r"\d+\.\d+\.\d+", env["FLYCTL_VERSION"])
+    assert re.fullmatch(r"[0-9a-f]{64}", env["FLYCTL_SHA256"])
+    run = installs[0]["run"]
+    assert run.startswith("set -euo pipefail\n")
+    check = run.index('echo "${FLYCTL_SHA256}  ${ARCHIVE}" | sha256sum --check --strict')
+    assert check < run.index('tar -xzf "${ARCHIVE}" flyctl') < run.index('>> "${GITHUB_PATH}"')
+
+
+def test_apt_trusts_only_the_pgdg_key_with_the_published_fingerprint() -> None:
+    steps = _load("db-backup.yml")["jobs"]["backup"]["steps"]
+    [step] = [s for s in steps if s.get("name") == "Install postgresql client"]
+    # The fingerprint postgresql.org publishes for its ACCC4CF8.asc key.
+    assert step["env"] == {"PGDG_FINGERPRINT": "B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8"}
+    run = step["run"]
+    assert run.startswith("set -euo pipefail\n")
+    # No dearmor of the fetched file: that would trust every key it holds.
+    assert "--dearmor" not in run
+    export = run.index('gpg --batch --export "${PGDG_FINGERPRINT}"')
+    only_primary = run.index('test "${PRIMARY}" = "${PGDG_FINGERPRINT}"')
+    keyring = run.index("sudo install -m 0644")
+    assert export < only_primary < keyring < run.index("apt-get update")
