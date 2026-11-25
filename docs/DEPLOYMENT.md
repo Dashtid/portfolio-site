@@ -88,6 +88,7 @@ rides the frontend lane for the CV scrub guard):
 | `backend-quality`   | `scripts/check-lock-parity.py` (uv.lock against pyproject.toml's exact pins and both requirements files), hash-pinned install, ruff lint + format, the pytest suite (961 collected on 2026-10-20) with an 83% coverage floor, Codecov; mypy runs in `pre-commit.yml` |
 | `e2e-tests`         | Playwright (chromium) against the built dist — functional, visual-regression and the enforced-CSP check                                     |
 | `lighthouse`        | LHCI budgets: all four category scores and the script and total byte budgets are hard errors (`.github/lighthouse/lighthouserc.json`)       |
+| `vercel-cli`        | Pull requests only: the deploy jobs' Vercel CLI install and version check (`.github/tools/vercel/install.sh`), with no secrets               |
 | `security-scan`     | Trivy filesystem scan (checksum-verified binary), action-pin audit, TruffleHog scan of the pushed or PR commits for live-verified secrets   |
 | `dependency-review` | Blocks PRs, and pushes to `main`, that introduce vulnerable or denied-licence dependencies                                                  |
 | `deploy-frontend`   | Vercel CLI deploy, gated on quality + e2e + lighthouse + security-scan (+ dependency-review when it runs), then `scripts/check-live-headers.py` holds the live headers of three pages to `vercel.json` |

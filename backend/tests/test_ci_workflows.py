@@ -403,6 +403,7 @@ def test_apt_trusts_only_the_pgdg_key_with_the_published_fingerprint() -> None:
 TOOLS = WORKFLOWS.parent / "tools" / "vercel"
 NATIVE = "@vercel/vc-native-linux-x64"
 LOCKED_CLI = f'"${{RUNNER_TEMP}}/vercel-cli/node_modules/{NATIVE}/bin/vercel"'
+INSTALL = "bash .github/tools/vercel/install.sh"
 
 
 def _vercel_install(steps: list[dict[str, Any]]) -> dict[str, Any]:
@@ -421,17 +422,19 @@ def test_the_token_step_runs_the_vercel_cli_installed_from_its_lock(
     [deploy] = [step for step in steps if "VERCEL_TOKEN" in step.get("env", {})]
     assert steps.index(install) < steps.index(deploy)
     assert deploy["run"].startswith(f"{LOCKED_CLI} deploy --prod --yes")
-    # One install for both production paths.
-    pipeline = _vercel_install(_load("ci-cd.yml")["jobs"]["deploy-frontend"]["steps"])
-    assert install["run"] == pipeline["run"]
+    # One install script for both production paths.
+    assert install["run"] == INSTALL
 
 
 def test_the_vercel_cli_install_takes_only_the_lock_and_checks_the_binary_version() -> None:
-    run = _vercel_install(_load("ci-cd.yml")["jobs"]["deploy-frontend"]["steps"])["run"]
-    assert "npm install" not in run
+    script = (TOOLS / "install.sh").read_text(encoding="utf-8")
+    assert script.startswith("#!/usr/bin/env bash\n")
+    assert "npm install" not in script
     in_order = [
         "set -euo pipefail",
-        'cd "${RUNNER_TEMP}/vercel-cli"',
+        'target="${RUNNER_TEMP}/vercel-cli"',
+        'cp "${here}/package.json" "${here}/package-lock.json" "${target}/"',
+        'cd "${target}"',
         "npm ci --ignore-scripts --no-audit --no-fund",
         f"cli=node_modules/{NATIVE}\n",
         'test -x "${cli}/bin/vercel"',
@@ -439,11 +442,28 @@ def test_the_vercel_cli_install_takes_only_the_lock_and_checks_the_binary_versio
         '"${cli}/bin/vercel" --version | tee version.txt',
         'grep -qxF "${want}" version.txt',
     ]
-    positions = [run.index(line) for line in in_order]
+    positions = [script.index(line) for line in in_order]
     assert positions == sorted(positions)
     # The binary prints its bare version on stdout; the banner on stderr has
     # changed shape between releases.
-    assert "2>&1" not in run
+    assert "2>&1" not in script
+
+
+def test_pull_requests_run_the_vercel_cli_install_without_secrets() -> None:
+    workflow = _load("ci-cd.yml")
+    job = workflow["jobs"]["vercel-cli"]
+    assert job["needs"] == "changes"
+    assert _condition(job) == (
+        "github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true'"
+    )
+    # The workflow's contents: read, and nothing a deploy holds.
+    assert "permissions" not in job
+    assert workflow["permissions"] == {"contents": "read"}
+    assert "secrets." not in yaml.safe_dump(job)
+    assert _vercel_install(job["steps"])["run"] == INSTALL
+    [setup_node] = _uses(job, "actions/setup-node")
+    deploy = _load("ci-cd.yml")["jobs"]["deploy-frontend"]
+    assert setup_node["with"] == _uses(deploy, "actions/setup-node")[0]["with"]
 
 
 def test_the_vercel_cli_lock_holds_only_the_native_binary_from_the_registry() -> None:
