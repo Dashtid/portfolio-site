@@ -254,11 +254,36 @@ def _path_filters() -> dict[str, list[str]]:
 def test_a_header_check_change_runs_its_tests_and_a_frontend_deploy() -> None:
     filters = _path_filters()
     assert "scripts/check-live-headers.py" in filters["frontend"]
-    assert "scripts/check-live-headers.py" in filters["backend"]
+    assert "scripts/check-live-headers.py" in filters["scripts"]
 
 
 def test_a_pin_check_change_runs_its_tests() -> None:
-    assert "scripts/verify_action_pins.py" in _path_filters()["backend"]
+    assert "scripts/verify_action_pins.py" in _path_filters()["scripts"]
+
+
+CI_SCRIPTS = [
+    "scripts/check-lock-parity.py",
+    "scripts/check-live-headers.py",
+    "scripts/deployed-commits.py",
+    "scripts/verify_action_pins.py",
+]
+
+
+def test_a_ci_script_change_runs_backend_quality_and_deploys_no_api() -> None:
+    jobs = _load("ci-cd.yml")["jobs"]
+    filters = _path_filters()
+    assert filters["scripts"] == CI_SCRIPTS
+    assert not set(CI_SCRIPTS) & set(filters["backend"])
+    for script in CI_SCRIPTS:
+        assert (WORKFLOWS.parents[1] / script).is_file(), script
+    # Only the push's own range: a script change has nothing to catch up.
+    assert jobs["changes"]["outputs"]["scripts"] == "${{ steps.filter.outputs.scripts }}"
+    assert _condition(jobs["backend-quality"]) == (
+        "needs.changes.outputs.backend == 'true' || needs.changes.outputs.scripts == 'true' || "
+        "github.event_name == 'merge_group'"
+    )
+    for name in ("deploy-backend", "deploy-frontend"):
+        assert "outputs.scripts" not in _condition(jobs[name]), name
 
 
 def test_scorecard_runs_only_after_its_image_digest_check() -> None:
@@ -375,7 +400,7 @@ def test_a_push_also_filters_the_range_since_each_half_last_deployed() -> None:
     for step_id in ("filter", "frontend-drift", "backend-drift"):
         assert steps[step_id]["uses"] == steps["filter"]["uses"]
         assert steps[step_id]["with"]["filters"] == "${{ env.PATH_FILTERS }}"
-    assert "scripts/deployed-commits.py" in _path_filters()["backend"]
+    assert "scripts/deployed-commits.py" in _path_filters()["scripts"]
 
     deployed = steps["deployed"]
     assert deployed["if"] == "github.event_name == 'push'"

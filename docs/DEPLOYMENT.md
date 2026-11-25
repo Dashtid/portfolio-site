@@ -80,7 +80,9 @@ Caching (also `vercel.json`): `/assets/*` one year immutable, `/images/*`
 
 One workflow, `.github/workflows/ci-cd.yml`, with a `changes` filter so
 frontend-only and backend-only commits run only their own lane (`cv/**`
-rides the frontend lane for the CV scrub guard):
+rides the frontend lane for the CV scrub guard). A change to one of CI's
+own scripts under `scripts/` runs `backend-quality`, where their tests
+live, and deploys no backend:
 
 | Job                 | What it does                                                                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |

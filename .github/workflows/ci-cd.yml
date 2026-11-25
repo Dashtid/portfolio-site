@@ -44,6 +44,7 @@ jobs:
       backend: >-
         ${{ steps.filter.outputs.backend == 'true' ||
         (github.event_name == 'push' && steps.backend-drift.outputs.backend != 'false') }}
+      scripts: ${{ steps.filter.outputs.scripts }}
     env:
       # One copy of the path rules, read by the three filter steps below.
       PATH_FILTERS: |
@@ -66,9 +67,11 @@ jobs:
           - 'backend/**'
           - 'requirements*.txt'
           - '.github/workflows/ci-cd.yml'
-          # backend-quality runs this guard, so a change to it must too.
+        # CI's own scripts. backend-quality runs the lock-parity guard, and
+        # backend/tests the other three's tests, but none of them is part of
+        # the API, so a change to them alone deploys nothing.
+        scripts:
           - 'scripts/check-lock-parity.py'
-          # backend/tests holds the tests of these three scripts.
           - 'scripts/check-live-headers.py'
           - 'scripts/deployed-commits.py'
           - 'scripts/verify_action_pins.py'
@@ -182,7 +185,9 @@ jobs:
   backend-quality:
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.backend == 'true' || github.event_name == 'merge_group'
+    if: |
+      needs.changes.outputs.backend == 'true' || needs.changes.outputs.scripts == 'true' ||
+      github.event_name == 'merge_group'
     timeout-minutes: 10
     # Runs the backend's dependencies, so no pull-requests: write here: the
     # PR coverage comment has a job of its own.
