@@ -16,6 +16,13 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 # Set SECRET_KEY=dev-mode-insecure to explicitly enable insecure development
 _DEV_MODE_MARKER = "dev-mode-insecure"
 
+# Production refuses a SECRET_KEY that contains one of these template or
+# placeholder substrings, or that uses fewer distinct characters than
+# _MIN_KEY_DISTINCT_CHARS: such a value is public or guessable, and every
+# token signed with it could be forged. A generated key passes both.
+_PLACEHOLDER_MARKERS = ("change-this", "changeme", "change-me", "your-", "example", "placeholder")
+_MIN_KEY_DISTINCT_CHARS = 8
+
 
 class Settings(BaseSettings):
     # Application
@@ -197,6 +204,16 @@ class Settings(BaseSettings):
             # Ensure key is sufficiently long
             if len(v) < 32:
                 raise ValueError("SECRET_KEY must be at least 32 characters in production")
+            lowered = v.lower()
+            if (
+                any(marker in lowered for marker in _PLACEHOLDER_MARKERS)
+                or len(set(v)) < _MIN_KEY_DISTINCT_CHARS
+            ):
+                # The message never echoes the key.
+                raise ValueError(
+                    "SECRET_KEY looks like a template or placeholder value in production. "
+                    'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+                )
         elif v == _DEV_MODE_MARKER:
             # Warn but allow explicit insecure mode in development
             warnings.warn(
@@ -350,7 +367,11 @@ class Settings(BaseSettings):
     RATE_LIMIT_PUBLIC: str = "120/minute"  # Public read-only endpoints
     RATE_LIMIT_STORAGE_URI: str | None = None  # Redis URI for distributed rate limiting
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    # hide_input_in_errors: a refused value, a SECRET_KEY above all, stays
+    # out of the validation error a failed boot prints.
+    model_config = SettingsConfigDict(
+        env_file=".env", case_sensitive=True, hide_input_in_errors=True
+    )
 
 
 settings = Settings()

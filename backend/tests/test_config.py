@@ -2,10 +2,15 @@
 Tests for configuration module
 """
 
+import secrets
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
 from app.config import Settings
+
+_BACKEND = Path(__file__).resolve().parents[1]
 
 
 class TestSettings:
@@ -71,7 +76,7 @@ class TestSettings:
         monkeypatch.setenv("ENVIRONMENT", "production")
         # ENVIRONMENT=production arms the other fail-closed validators, so
         # supply values that satisfy them; this test is about CORS only.
-        monkeypatch.setenv("SECRET_KEY", "x" * 48)
+        monkeypatch.setenv("SECRET_KEY", secrets.token_urlsafe(32))
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@db.internal:5432/app")
         monkeypatch.setenv(
             "GITHUB_REDIRECT_URI", "https://api.dashti.se/api/v1/auth/github/callback"
@@ -237,9 +242,67 @@ class TestEnvironmentGuards:
         monkeypatch.setenv("FLY_APP_NAME", "dashti-portfolio-backend")
         settings = Settings(
             ENVIRONMENT="production",
-            SECRET_KEY="x" * 40,
+            SECRET_KEY=secrets.token_urlsafe(32),
             DATABASE_URL="postgresql://u:p@host:5432/db",
             GITHUB_REDIRECT_URI="https://api.dashti.se/api/v1/auth/github/callback",
             FRONTEND_URL="https://dashti.se",
         )
         assert settings.ENVIRONMENT == "production"
+
+
+def _production_settings(secret_key: str) -> Settings:
+    """Production Settings with no .env file and every other value valid."""
+    return Settings(
+        _env_file=None,
+        ENVIRONMENT="production",
+        SECRET_KEY=secret_key,
+        DATABASE_URL="postgresql://u:p@host:5432/db",
+        GITHUB_REDIRECT_URI="https://api.dashti.se/api/v1/auth/github/callback",
+        FRONTEND_URL="https://dashti.se",
+    )
+
+
+class TestProductionSecretKey:
+    """A production SECRET_KEY must not be a template, placeholder or low-variety value."""
+
+    @pytest.fixture(autouse=True)
+    def _off_fly(self, monkeypatch):
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+
+    def test_the_production_template_value_is_refused(self):
+        lines = (_BACKEND / ".env.production.example").read_text(encoding="utf-8").splitlines()
+        [template] = [
+            line.split("=", 1)[1].strip('"') for line in lines if line.startswith("SECRET_KEY=")
+        ]
+        with pytest.raises(ValidationError, match="SECRET_KEY"):
+            _production_settings(template)
+
+    @pytest.mark.parametrize(
+        "key",
+        [
+            "your-production-secret-key-min-32-characters-long-change-this",
+            "x" * 48,
+            "changeme" * 5,
+            "Placeholder-" + "0123456789abcdef" * 2,
+            "EXAMPLE-" + "0123456789abcdef" * 2,
+            "abcdefg" * 6,
+        ],
+    )
+    def test_template_placeholder_and_low_variety_keys_are_refused(self, key: str):
+        with pytest.raises(ValidationError, match="template or placeholder") as exc_info:
+            _production_settings(key)
+        # pydantic would print the start and end of a refused value.
+        assert "input_value" not in str(exc_info.value)
+        assert key[:12] not in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        ("generate", "nbytes"),
+        [(secrets.token_urlsafe, 32), (secrets.token_hex, 32), (secrets.token_hex, 16)],
+        ids=["token_urlsafe-32", "token_hex-32", "token_hex-16"],
+    )
+    def test_generated_keys_are_accepted(self, generate, nbytes: int):
+        assert _production_settings(generate(nbytes)).ENVIRONMENT == "production"
+
+    def test_development_keeps_accepting_any_key(self):
+        """Only production checks the key's content; tests and local runs use short ones."""
+        assert Settings(_env_file=None, SECRET_KEY="x" * 48).ENVIRONMENT == "development"
