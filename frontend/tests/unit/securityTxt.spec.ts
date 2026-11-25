@@ -12,6 +12,7 @@ import path from 'node:path'
  */
 
 const FILE = path.resolve(__dirname, '../../public/.well-known/security.txt')
+const VERCEL_JSON = path.resolve(__dirname, '../../vercel.json')
 const CANONICAL = 'https://dashti.se/.well-known/security.txt'
 const POLICY = 'https://github.com/Dashtid/portfolio-site/blob/main/SECURITY.md'
 const PVR = 'https://github.com/Dashtid/portfolio-site/security/advisories/new'
@@ -110,5 +111,18 @@ describe('public security.txt', () => {
       ahead,
       `Expires ${expires} is 365 days or more ahead; RFC 9116 section 2.5.5 recommends less than a year`
     ).toBeLessThan(MAX_AHEAD_MS)
+  })
+
+  it('is where the legacy /security.txt path redirects, as on the API', () => {
+    // RFC 9116 section 3 lets the top-level path redirect. A copy served there
+    // would fail section 2.5.2, because its Canonical names this URI only.
+    const vercel = JSON.parse(fs.readFileSync(VERCEL_JSON, 'utf-8')) as {
+      redirects: { source: string; destination: string; permanent?: boolean }[]
+    }
+    expect(vercel.redirects).toContainEqual({
+      source: '/security.txt',
+      destination: '/.well-known/security.txt',
+      permanent: true
+    })
   })
 })
