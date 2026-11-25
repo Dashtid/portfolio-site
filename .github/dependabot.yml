@@ -54,11 +54,12 @@ updates:
       prefix: "chore(deps)"
     ignore:
       # @types/node must track the Node MAJOR we actually build and run on
-      # (ci-cd.yml NODE_VERSION, currently 24). Types from a newer major
+      # (engines.node in frontend/package.json, currently 24.x, which Vercel
+      # and CI's setup-node steps both use). Types from a newer major
       # describe APIs that do not exist at runtime, so type-check passes and
       # the call still throws in production — the one failure mode a type
       # checker is supposed to prevent. Raise this bound in the same commit
-      # that raises NODE_VERSION, never before (see PR #122, which proposed
+      # that raises engines.node, never before (see PR #122, which proposed
       # @types/node 26 against a Node 24 runtime).
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]

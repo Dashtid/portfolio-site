@@ -424,3 +424,25 @@ def test_vercel_cli_bumps_wait_out_the_cooldown_and_run_the_frontend_half() -> N
     assert entry["package-ecosystem"] == "npm"
     assert entry["cooldown"] == {"default-days": 7}
     assert ".github/tools/vercel/**" in _path_filters()["frontend"]
+
+
+FRONTEND = WORKFLOWS.parents[1] / "frontend"
+
+
+def test_ci_and_vercel_use_the_node_major_that_package_json_declares() -> None:
+    package = json.loads((FRONTEND / "package.json").read_text(encoding="utf-8"))
+    lock = json.loads((FRONTEND / "package-lock.json").read_text(encoding="utf-8"))
+    # Vercel builds production with engines.node and takes a major only.
+    node = package["engines"]["node"]
+    assert re.fullmatch(r"\d+\.x", node)
+    assert lock["packages"][""]["engines"] == package["engines"]
+    # Type definitions for a newer Node major describe APIs the runtime lacks.
+    major = node.removesuffix(".x")
+    assert re.fullmatch(rf"\^{major}\.\d+\.\d+", package["devDependencies"]["@types/node"])
+    setups = [
+        (key, step) for key, job in _all_jobs().items() for step in _uses(job, "actions/setup-node")
+    ]
+    assert len(setups) >= 4
+    for key, step in setups:
+        assert step["with"]["node-version-file"] == "frontend/package.json", key
+        assert "node-version" not in step["with"], key
