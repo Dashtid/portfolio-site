@@ -40,6 +40,8 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
+          # Never an npm cache in a job that holds VERCEL_TOKEN.
+          package-manager-cache: false
 
       - name: Install Vercel CLI
         run: npm install -g vercel@65.16.0

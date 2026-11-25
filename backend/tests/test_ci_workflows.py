@@ -8,6 +8,7 @@ scope, and what a deploy job checks before and after it ships.
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 
 WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
@@ -72,3 +73,21 @@ def test_only_the_backup_keepalive_job_holds_actions_write() -> None:
     assert "secrets." not in yaml.safe_dump(keepalive)
     # No `needs` either way: a failed enable call must not stop the dumps.
     assert all("needs" not in job for job in backup["jobs"].values())
+
+
+def _uses(job: dict[str, Any], action: str) -> list[dict[str, Any]]:
+    """The steps of `job` that run `action` (owner/repo), at any pinned ref."""
+    return [step for step in job["steps"] if str(step.get("uses", "")).startswith(f"{action}@")]
+
+
+@pytest.mark.parametrize(
+    ("workflow", "job"), [("ci-cd.yml", "deploy-frontend"), ("rebake-frontend.yml", "rebake")]
+)
+def test_vercel_deploy_jobs_restore_no_npm_cache(workflow: str, job: str) -> None:
+    # The npm cache is written by the jobs that run the frontend's test and
+    # build tooling; the deploy jobs hold VERCEL_TOKEN and must not unpack it.
+    [setup_node] = _uses(_load(workflow)["jobs"][job], "actions/setup-node")
+    settings = setup_node["with"]
+    assert "cache" not in settings
+    assert "cache-dependency-path" not in settings
+    assert settings["package-manager-cache"] is False
