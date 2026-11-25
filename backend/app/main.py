@@ -124,6 +124,14 @@ BODY_SIZE_CAPS = {
     "/api/v1/auth/refresh": 16 * 1024,
 }
 
+# A request body gets BODY_READ_GRACE_SECONDS to start arriving, then must
+# keep up an average of BODY_READ_MIN_RATE bytes a second: the deadline moves
+# out with every byte read. uvicorn has no read timeout, so a client that
+# trickled a declared body held its connection open indefinitely. The floor
+# is about 260 kbit/s, so a 25 MB upload may take about 13 minutes.
+BODY_READ_GRACE_SECONDS = 10.0
+BODY_READ_MIN_RATE = 32 * 1024
+
 
 def _bears_valid_token(request: Request) -> bool:
     """True when the request carries a JWT that passes signature+expiry.
@@ -153,6 +161,9 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     arrive — otherwise a client sending Transfer-Encoding: chunked (or an
     unparseable Content-Length) gets through unbounded and downstream
     handlers read the whole payload into memory.
+
+    A body must also arrive in time (BODY_READ_GRACE_SECONDS and
+    BODY_READ_MIN_RATE); one that does not is answered 408.
     """
 
     @staticmethod
@@ -164,6 +175,16 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         return JSONResponse(
             status_code=413,
             content={"detail": f"Request body too large. Maximum size is {size}."},
+        )
+
+    @staticmethod
+    def _timeout_response() -> JSONResponse:
+        # The rest of the body may still be on its way, so the connection
+        # cannot carry another request.
+        return JSONResponse(
+            status_code=408,
+            content={"detail": "Request body not received in time."},
+            headers={"Connection": "close"},
         )
 
     async def dispatch(self, request: Request, call_next):
@@ -180,36 +201,55 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
                 declared = None
         # Parsed apart from call_next: a ValueError raised downstream must
         # propagate, not send the request through the app a second time.
-        if declared is not None:
-            if declared > max_body_size:
-                return self._oversize_response(max_body_size)
-            # Trusted Content-Length already covers the entire body.
+        if declared is not None and declared > max_body_size:
+            return self._oversize_response(max_body_size)
+        if declared == 0 or (content_length is None and "transfer-encoding" not in request.headers):
+            # No body to read.
             return await call_next(request)
 
-        # Missing or invalid Content-Length: wrap the receive callable so we
-        # tally each chunk as it streams in. Once the running total exceeds
-        # the cap we short-circuit with 413 without buffering the rest.
+        # A body is coming: wrap the receive callable so we tally each chunk
+        # as it streams in (a missing or invalid Content-Length leaves no
+        # other bound) and time its arrival. Past the cap or the deadline we
+        # short-circuit with 413 or 408 without buffering the rest.
         oversize = False
+        timed_out = False
+        body_done = False
         bytes_seen = 0
         original_receive = request.receive
+        started = asyncio.get_running_loop().time()
 
         async def counting_receive():
-            nonlocal bytes_seen, oversize
-            message = await original_receive()
-            # After the terminal frame below, ASGI allows only http.disconnect,
-            # so drop the rest of the body until it comes. Anything listening
-            # for the disconnect (starlette 1.8's FileResponse does) would
-            # otherwise get a body chunk, and BaseHTTPMiddleware raises on it.
-            while oversize and message.get("type") == "http.request":
+            nonlocal bytes_seen, oversize, timed_out, body_done
+            if body_done:
+                # Only a disconnect listener reads on; it has no deadline.
+                return await original_receive()
+            if oversize or timed_out:
+                # After the terminal frame below, ASGI allows only
+                # http.disconnect, so drop the rest of the body until it
+                # comes. Anything listening for the disconnect (starlette
+                # 1.8's FileResponse does) would otherwise get a body chunk,
+                # and BaseHTTPMiddleware raises on it.
                 message = await original_receive()
-            if message.get("type") == "http.request":
-                body = message.get("body", b"")
-                bytes_seen += len(body)
-                if bytes_seen > max_body_size:
-                    oversize = True
-                    # Return an empty terminal frame so downstream sees a
-                    # clean (but truncated) request stream while we abort.
-                    return {"type": "http.request", "body": b"", "more_body": False}
+                while message.get("type") == "http.request":
+                    message = await original_receive()
+                return message
+            deadline = started + BODY_READ_GRACE_SECONDS + bytes_seen / BODY_READ_MIN_RATE
+            try:
+                async with asyncio.timeout_at(deadline):
+                    message = await original_receive()
+            except TimeoutError:
+                timed_out = True
+                return {"type": "http.request", "body": b"", "more_body": False}
+            if message.get("type") != "http.request":
+                body_done = True
+                return message
+            bytes_seen += len(message.get("body", b""))
+            if bytes_seen > max_body_size:
+                oversize = True
+                # Return an empty terminal frame so downstream sees a
+                # clean (but truncated) request stream while we abort.
+                return {"type": "http.request", "body": b"", "more_body": False}
+            body_done = not message.get("more_body", False)
             return message
 
         # Reassign the request's receive so handler body reads go through us.
@@ -217,6 +257,8 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         if oversize:
             return self._oversize_response(max_body_size)
+        if timed_out:
+            return self._timeout_response()
         return response
 
 

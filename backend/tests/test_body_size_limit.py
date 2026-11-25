@@ -3,7 +3,8 @@ BodySizeLimitMiddleware's streaming counter, driven the way uvicorn drives it.
 
 A body without a Content-Length is counted as it arrives. Past the cap the
 middleware hands downstream an empty terminal frame (more_body=False) and
-answers 413, unless the response is already under way. After that frame
+answers 413, unless the response is already under way. A body that arrives
+too slowly is cut off the same way and answered 408. After that frame
 ASGI allows only http.disconnect, so anything still listening must get
 exactly that, however much body is in flight. starlette 1.8's FileResponse
 listens while it streams below ASGI 2.4, and uvicorn speaks 2.3.
@@ -108,6 +109,28 @@ class ChunkedClient:
             self.body += message.get("body", b"")
             if not message.get("more_body", False):
                 self.response_complete.set()
+
+
+class PacedClient(ChunkedClient):
+    """A ChunkedClient that waits `interval` seconds before each chunk.
+
+    With `stalls`, every chunk claims more is coming and none ever does:
+    after the last one, receive() waits for the response to complete.
+    """
+
+    def __init__(self, chunks: list[bytes], *, interval: float, stalls: bool = False) -> None:
+        super().__init__(chunks)
+        self.interval = interval
+        self.stalls = stalls
+
+    async def receive(self) -> Message:
+        if self.handed_out < len(self.chunks):
+            await asyncio.sleep(self.interval)
+            message = await super().receive()
+            if self.stalls:
+                message["more_body"] = True
+            return message
+        return await super().receive()
 
 
 class TestChunkedBodyPastTheCap:
@@ -257,3 +280,105 @@ class TestAnonymousJsonBodyCaps:
         )
 
         assert response.status_code == 200
+
+
+async def _read_body_then_ok(scope: Scope, receive: Receive, send: Send) -> None:
+    """Read the body to its terminal frame, then answer 200 with its length."""
+    body = b""
+    while True:
+        message = await receive()
+        body += message.get("body", b"")
+        if not message.get("more_body", False):
+            break
+    await send({"type": "http.response.start", "status": 200, "headers": []})
+    await send({"type": "http.response.body", "body": str(len(body)).encode()})
+
+
+class TestBodyReadDeadline:
+    """A body gets a grace period, then must keep up a floor rate, or it is a 408.
+
+    Patched to 0.5 s and 1000 bytes a second so the tests run in seconds.
+    """
+
+    @pytest.fixture(autouse=True)
+    def short_deadline(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("app.main.BODY_READ_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("app.main.BODY_READ_MIN_RATE", 1000)
+
+    @pytest.mark.asyncio
+    async def test_stalled_body_is_408_with_connection_close(self):
+        """A beacon that declares 1000 bytes and sends 12, through the whole app.
+
+        Without a deadline the request, and its connection, waited for the
+        other 988 bytes for as long as the client kept the socket open.
+        """
+        client = PacedClient([b'{"page_path"'], interval=0, stalls=True)
+        async with asyncio.timeout(10):
+            await app(
+                _sized_scope("POST", "/api/v1/analytics/track/pageview", 1000),
+                client.receive,
+                client.send,
+            )
+
+        assert client.status == 408
+        assert client.headers["connection"] == "close"
+        assert b"not received in time" in client.body
+
+    @pytest.mark.asyncio
+    async def test_body_above_the_floor_rate_is_read_whole(self):
+        """2 s at 2000 bytes a second: past the grace period, never past the deadline."""
+        client = PacedClient([b"a" * 200] * 20, interval=0.1)
+        async with asyncio.timeout(10):
+            await BodySizeLimitMiddleware(_read_body_then_ok)(
+                _sized_scope("POST", "/api/v1/probe", 4000), client.receive, client.send
+            )
+
+        assert client.status == 200
+        assert client.body == b"4000"
+
+    @pytest.mark.asyncio
+    async def test_body_below_the_floor_rate_is_cut_off(self):
+        """10 bytes every 0.2 s is 50 bytes a second: cut off after the grace period."""
+        client = PacedClient([b"a" * 10] * 20, interval=0.2)
+        async with asyncio.timeout(10):
+            await BodySizeLimitMiddleware(_read_body_then_ok)(
+                _chunked_scope("POST", "/api/v1/probe"), client.receive, client.send
+            )
+
+        assert client.status == 408
+        assert client.handed_out < 5
+
+    @pytest.mark.asyncio
+    async def test_waiting_for_the_disconnect_after_the_body_has_no_deadline(self):
+        """Once the body is complete, a disconnect listener may wait past the deadline.
+
+        A timed-out frame there would be an http.request after the terminal
+        one, which BaseHTTPMiddleware raises on.
+        """
+        received: list[Message] = []
+
+        async def downstream(scope: Scope, receive: Receive, send: Send) -> None:
+            received.append(await receive())
+            received.append(await receive())
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"handler ran"})
+
+        client = PacedClient([b"{}"], interval=0)
+        disconnect_after = 1.0
+
+        async def receive() -> Message:
+            if client.handed_out:
+                await asyncio.sleep(disconnect_after)
+                return {"type": "http.disconnect"}
+            return await client.receive()
+
+        async with asyncio.timeout(10):
+            await BodySizeLimitMiddleware(downstream)(
+                _sized_scope("POST", "/api/v1/probe", 2), receive, client.send
+            )
+
+        assert received == [
+            {"type": "http.request", "body": b"{}", "more_body": False},
+            {"type": "http.disconnect"},
+        ]
+        assert client.status == 200
