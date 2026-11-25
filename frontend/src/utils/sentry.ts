@@ -323,7 +323,12 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
         browserTracingIntegration({ router })
       ],
       tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-      tracePropagationTargets: ['localhost', /^https:\/\/dashti\.se/, /^https:\/\/api\.dashti\.se/],
+      // Trace headers go to the API only. The SDK tests each target against a
+      // request's full URL, a string as a substring, so both are anchored.
+      tracePropagationTargets: [
+        /^https:\/\/api\.dashti\.se\//,
+        ...(import.meta.env.DEV ? [/^http:\/\/localhost(?::\d+)?\//] : [])
+      ],
       ignoreErrors: [
         // CefSharp-based hosts, such as the link scanner behind Outlook Safe
         // Links, reject with this exact text when they open a mailed link. The

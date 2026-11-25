@@ -528,6 +528,67 @@ describe('utils/sentry', () => {
     })
   })
 
+  describe('trace headers', () => {
+    type Targets = Array<string | RegExp>
+
+    /**
+     * Whether tracing adds sentry-trace and baggage to a request from
+     * https://dashti.se, as @sentry/browser 10 decides it: each target is
+     * tested against the request's full URL, and against its path when the
+     * request is same-origin; a string target matches as a substring.
+     */
+    const propagates = (targets: Targets, url: string): boolean => {
+      const request = new URL(url, 'https://dashti.se/')
+      const tested = [request.href]
+      if (request.origin === 'https://dashti.se') tested.push(request.pathname)
+      return tested.some(value =>
+        targets.some(target =>
+          typeof target === 'string' ? value.includes(target) : target.test(value)
+        )
+      )
+    }
+
+    const initTargets = async (): Promise<Targets> => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+      return (init.mock.calls[0][0] as { tracePropagationTargets: Targets }).tracePropagationTargets
+    }
+
+    it('go to the API alone in a production build', async () => {
+      vi.stubEnv('DEV', false)
+      const targets = await initTargets()
+
+      expect(propagates(targets, 'https://api.dashti.se/api/v1/companies/')).toBe(true)
+      for (const url of [
+        '/assets/js/app.js',
+        'https://dashti.se/writing/rss.xml',
+        'https://api.dashti.se.example.net/api/v1/companies/',
+        'https://api.dashti.se:8443/',
+        'https://example.net/?next=https://api.dashti.se/',
+        'https://example.net/localhost',
+        'http://localhost:8000/api/v1/companies/'
+      ]) {
+        expect(propagates(targets, url), url).toBe(false)
+      }
+    })
+
+    it('also go to a local API in a dev build', async () => {
+      vi.stubEnv('DEV', true)
+      const targets = await initTargets()
+
+      for (const url of [
+        'https://api.dashti.se/api/v1/companies/',
+        'http://localhost:8000/api/v1/companies/',
+        'http://localhost:3000/api/v1/companies/'
+      ]) {
+        expect(propagates(targets, url), url).toBe(true)
+      }
+      for (const url of ['https://example.net/localhost', 'https://localhost.example.net/']) {
+        expect(propagates(targets, url), url).toBe(false)
+      }
+    })
+  })
+
   describe('the idle window', () => {
     it('forwards a captureException raised before Sentry loaded', async () => {
       sentry.initSentry(fakeApp, fakeRouter)
