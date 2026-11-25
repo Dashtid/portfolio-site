@@ -56,3 +56,8 @@ response). Outbound-click tracking rides the same pageview
 endpoint under synthetic `/event/*` paths; the admin stats summary
 excludes those from page-view metrics and surfaces them as their own
 counter instead.
+
+Request logs follow the same scheme: a log line names the client by that
+truncated digest (`client_ip_hash`), never by its address, and keeps at
+most the first 64 characters of the User-Agent. uvicorn's own access log,
+which would print the address, is off.

@@ -1608,3 +1608,104 @@ class TestHealthCheckLogging:
         assert len(completed) == 1
         assert completed[0].kwargs["extra"]["path"] == "/api/v1/health/ready"
         assert completed[0].kwargs["extra"]["status_code"] == 503
+
+
+class TestLogLinesCarryNoClientAddress:
+    """Log lines name a client by the keyed IP digest page_views stores.
+
+    The request log, the unhandled-exception line and the 429 line carry
+    client_ip_hash, never the address, and at most 64 characters of the
+    User-Agent. The request comes from fly-proxy's private address with
+    the client in Fly-Client-IP, as on Fly.
+    """
+
+    CLIENT = "203.0.113.7"
+    USER_AGENT = (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    )
+
+    def _request(self) -> Request:
+        return Request(
+            {
+                "type": "http",
+                "method": "GET",
+                "path": "/api/v1/crash",
+                "query_string": b"",
+                "headers": [
+                    (b"fly-client-ip", self.CLIENT.encode()),
+                    (b"user-agent", self.USER_AGENT.encode()),
+                ],
+                "client": ("10.0.0.1", 1234),
+            }
+        )
+
+    def _assert_pseudonymous(self, extra: dict, logged: str, *, user_agent: bool) -> None:
+        from app.utils.ip_hash import hash_ip
+
+        assert extra["client_ip_hash"] == hash_ip(self.CLIENT)
+        assert "client_ip" not in extra
+        assert self.CLIENT not in logged
+        if user_agent:
+            assert extra["user_agent"] == self.USER_AGENT[:64]
+
+    def test_request_log_line(self, client: TestClient):
+        from app.main import app
+
+        proxied = TestClient(app, client=("10.0.0.1", 1234))
+        with patch("app.middleware.logging.logger") as mock_logger:
+            proxied.get("/", headers={"Fly-Client-IP": self.CLIENT, "User-Agent": self.USER_AGENT})
+
+        incoming = [
+            c for c in mock_logger.info.call_args_list if c.args and c.args[0] == "Incoming request"
+        ]
+        self._assert_pseudonymous(
+            incoming[0].kwargs["extra"], str(mock_logger.mock_calls), user_agent=True
+        )
+
+    def test_missing_user_agent_logs_none(self, client: TestClient):
+        from app.main import app
+
+        bare = TestClient(app, headers={"user-agent": ""})
+        with patch("app.middleware.logging.logger") as mock_logger:
+            bare.get("/")
+
+        incoming = [
+            c for c in mock_logger.info.call_args_list if c.args and c.args[0] == "Incoming request"
+        ]
+        assert incoming[0].kwargs["extra"]["user_agent"] is None
+
+    def test_unhandled_exception_line(self):
+        from app.middleware.error_tracking import ErrorTrackingMiddleware
+
+        middleware = ErrorTrackingMiddleware(app=MagicMock())
+
+        async def crash(request):
+            raise RuntimeError("handler crashed")
+
+        with (
+            patch("app.middleware.error_tracking.logger") as mock_logger,
+            pytest.raises(RuntimeError),
+        ):
+            asyncio.run(middleware.dispatch(self._request(), crash))
+
+        self._assert_pseudonymous(
+            mock_logger.critical.call_args.kwargs["extra"],
+            str(mock_logger.mock_calls),
+            user_agent=True,
+        )
+
+    def test_rate_limit_line(self):
+        from app.middleware import rate_limit_exceeded_handler
+
+        exc = MagicMock()
+        exc.detail = "5 per 1 minute"
+        with patch("app.middleware.rate_limit.logger") as mock_logger:
+            response = asyncio.run(rate_limit_exceeded_handler(self._request(), exc))
+
+        assert response.status_code == 429
+        self._assert_pseudonymous(
+            mock_logger.warning.call_args.kwargs["extra"],
+            str(mock_logger.mock_calls),
+            user_agent=False,
+        )

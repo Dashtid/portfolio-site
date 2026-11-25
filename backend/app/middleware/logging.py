@@ -11,6 +11,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.ip_utils import get_client_ip
+from app.utils.ip_hash import hash_ip
 from app.utils.logger import get_logger, request_id_var
 
 logger = get_logger(__name__)
@@ -50,6 +51,25 @@ def _loggable_query_params(request: Request) -> dict[str, str]:
     return {
         key: "[REDACTED]" if key.lower() in _REDACTED_QUERY_PARAMS else value
         for key, value in request.query_params.items()
+    }
+
+
+# The first 64 characters of a User-Agent still name the client software
+# (browser engine and OS, or the bot); the rest is mostly version detail.
+_USER_AGENT_LOG_CHARS = 64
+
+
+def client_log_fields(request: Request) -> dict[str, str | None]:
+    """The client fields a log line may carry.
+
+    The address only as the keyed digest the page_views table stores
+    (app/utils/ip_hash.py), so log lines and analytics rows still join on
+    it, and the User-Agent cut to its first characters.
+    """
+    user_agent = request.headers.get("user-agent")
+    return {
+        "client_ip_hash": hash_ip(get_client_ip(request)),
+        "user_agent": user_agent[:_USER_AGENT_LOG_CHARS] if user_agent else None,
     }
 
 
@@ -95,8 +115,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "method": request.method,
                     "path": request.url.path,
                     "query_params": _loggable_query_params(request),
-                    "client_ip": get_client_ip(request),
-                    "user_agent": request.headers.get("user-agent"),
+                    **client_log_fields(request),
                 },
             )
 

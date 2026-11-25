@@ -15,6 +15,7 @@ from starlette.responses import JSONResponse
 from app.config import settings
 from app.core.ip_utils import get_client_ip
 from app.core.security import decode_token
+from app.utils.ip_hash import hash_ip
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -117,7 +118,8 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
     logger.warning(
         "Rate limit exceeded",
         extra={
-            "client_ip": get_client_ip(request),
+            # The keyed digest the request log and page_views carry, never the address.
+            "client_ip_hash": hash_ip(get_client_ip(request)),
             "path": request.url.path,
             "method": request.method,
             "limit": str(exc.detail) if exc.detail else "unknown",
