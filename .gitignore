@@ -137,6 +137,17 @@ age*key*.txt
 key.txt
 recipient.txt
 
+# Documents and archives, such as a CV printed from /admin/cv. The two
+# published theses are the only tracked documents.
+*.pdf
+*.doc
+*.docx
+*.odt
+*.rtf
+*.zip
+!/backend/static/documents/bachelor-thesis.pdf
+!/backend/static/documents/master-thesis.pdf
+
 # Temporary files
 *.tmp
 *.temp
