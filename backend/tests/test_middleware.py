@@ -4,6 +4,7 @@ Tests for middleware components including rate limiting
 
 import asyncio
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -530,6 +531,23 @@ class TestCompressionMiddlewareStructure:
         middleware = CompressionMiddleware(app=app)
         # GZipMiddleware uses __call__ instead of dispatch
         assert callable(middleware)
+
+    def test_pdf_is_sent_uncompressed(self, client: TestClient):
+        """A PDF gains 7-10% from gzip, compressed 64 KB at a time on the event loop."""
+        thesis = Path(__file__).resolve().parents[1] / "static/documents/bachelor-thesis.pdf"
+        response = client.get(
+            "/static/documents/bachelor-thesis.pdf", headers={"Accept-Encoding": "gzip"}
+        )
+
+        assert response.status_code == 200
+        assert "content-encoding" not in response.headers
+        assert response.headers["content-length"] == str(thesis.stat().st_size)
+
+    def test_json_is_still_compressed(self, client: TestClient):
+        response = client.get("/openapi.json", headers={"Accept-Encoding": "gzip"})
+
+        assert response.status_code == 200
+        assert response.headers["content-encoding"] == "gzip"
 
 
 class TestRateLimitMiddleware:
