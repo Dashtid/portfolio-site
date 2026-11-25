@@ -76,10 +76,11 @@ def _reset_rate_limiter() -> Generator[None, Any, None]:
 
     With SlowAPIASGIMiddleware installed (D3-BE-01), default limits apply
     to all undecorated routes. The limiter's fixed windows live in
-    process-global storage keyed by client IP — "testclient" for every
-    TestClient — so without an unconditional reset, tests that build
-    their own TestClient would accumulate into a shared window and 429
-    an unrelated test later in the run.
+    process-global storage keyed by client IP — "unknown" for every
+    TestClient, whose "testclient" peer is not an address — so without an
+    unconditional reset, tests that build their own TestClient would
+    accumulate into a shared window and 429 an unrelated test later in
+    the run.
     """
     limiter.reset()
     yield

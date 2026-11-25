@@ -21,6 +21,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.v1 import (
     admin_panel,
@@ -288,6 +289,27 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+# Scheme pin. Fly's proxy terminates TLS (fly.toml force_https redirects plain
+# http) and uvicorn runs with --no-proxy-headers, so requests reach the app as
+# http, and redirect_slashes builds its 307 Location from scope["scheme"].
+class HTTPSSchemeMiddleware:
+    """Mark production requests https before any inner layer reads the scheme.
+
+    Outside production (local runs, tests) the scheme stays as it arrived.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if settings.ENVIRONMENT == "production":
+            if scope["type"] == "http":
+                scope["scheme"] = "https"
+            elif scope["type"] == "websocket":
+                scope["scheme"] = "wss"
+        await self.app(scope, receive, send)
+
+
 # Background task for periodic auth-row cleanup
 async def cleanup_oauth_states_periodically():
     """Periodically purge expired OAuth states AND refresh-token rows (every 5 min).
@@ -504,8 +526,9 @@ if settings.RATE_LIMIT_ENABLED:
 # outer layer (e.g. a BodySizeLimit 413) reached the browser without CORS
 # headers, so frontend JS could not read the error. Layers below are added
 # innermost-first; effective order outermost -> innermost:
-#   CORS -> Logging -> ErrorTracking -> Performance -> SecurityHeaders
-#   -> CacheControl -> Compression -> BodySizeLimit -> SlowAPI -> routes
+#   HTTPSScheme -> CORS -> Logging -> ErrorTracking -> Performance
+#   -> SecurityHeaders -> CacheControl -> Compression -> BodySizeLimit
+#   -> SlowAPI -> routes
 # BodySizeLimit sits just outside SlowAPI and the routes: nothing between
 # it and the handlers reads request bodies, so DoS protection is preserved
 # while its 413s pass through every header/logging layer on the way out.
@@ -571,6 +594,10 @@ app.add_middleware(
         "baggage",
     ],
 )
+
+# Scheme pin — added after CORS, therefore outermost: the router and every
+# layer see https in production.
+app.add_middleware(HTTPSSchemeMiddleware)
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])

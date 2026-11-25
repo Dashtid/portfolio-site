@@ -11,7 +11,9 @@ Also covers the BodySizeLimit credential gate: the 26 MB allowance on
 parses multipart bodies before auth dependencies run.
 """
 
+import pytest
 from fastapi.testclient import TestClient
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.config import settings
 from app.core.security import create_access_token
@@ -159,3 +161,39 @@ class TestLimiterKeying:
         assert client.get("/").status_code == 200
         limiter.reset()
         assert client.get("/").status_code == 200
+
+
+class TestForwardedForCannotPickTheBucket:
+    """A client-sent X-Forwarded-For entry must not choose the limiter key.
+
+    Six callbacks from fly-proxy's address, each with a fresh leftmost
+    X-Forwarded-For entry and the same Fly-Client-IP: the 5/minute auth
+    tier must answer the sixth with 429.
+    """
+
+    CALLBACK = "/api/v1/auth/github/callback"  # no query: returns before any DB work
+
+    def _statuses(self, asgi_app) -> list[int]:
+        proxied = TestClient(asgi_app, client=("172.16.1.114", 40000))
+        return [
+            proxied.get(
+                self.CALLBACK,
+                headers={
+                    "X-Forwarded-For": f"203.0.113.{i}, 198.51.100.7",
+                    "Fly-Client-IP": "198.51.100.7",
+                },
+                follow_redirects=False,
+            ).status_code
+            for i in range(6)
+        ]
+
+    def test_behind_uvicorn_trusting_every_proxy(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        """The old CMD (--forwarded-allow-ips '*') rotated the key per request."""
+        monkeypatch.setenv("FLY_APP_NAME", "portfolio-test")
+        wrapped = ProxyHeadersMiddleware(app, trusted_hosts="*")
+        assert self._statuses(wrapped) == [302] * 5 + [429]
+
+    def test_without_proxy_headers(self, client: TestClient):
+        assert self._statuses(app) == [302] * 5 + [429]

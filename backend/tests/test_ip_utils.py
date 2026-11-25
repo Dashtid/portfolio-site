@@ -5,9 +5,15 @@ These tests verify the security-focused IP extraction that prevents
 IP spoofing attacks by only trusting X-Forwarded-For from known proxies.
 """
 
+import asyncio
+from collections.abc import Callable
 from unittest.mock import MagicMock
 
+import pytest
 from starlette.requests import Request
+from starlette.responses import PlainTextResponse
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.core.ip_utils import get_client_ip, is_trusted_proxy
 
@@ -192,6 +198,103 @@ class TestGetClientIp:
             forwarded_for="2001:db8::1",
         )
         assert get_client_ip(mock_request) == "2001:db8::1"
+
+    def test_fly_client_ip_wins_over_a_public_peer_on_fly(self, monkeypatch: pytest.MonkeyPatch):
+        """On Fly, Fly-Client-IP wins even when the peer looks like a client.
+
+        uvicorn trusting every proxy rewrote request.client to the leftmost,
+        client-sent X-Forwarded-For entry (198.51.100.7 here), which was then
+        returned without Fly-Client-IP ever being read.
+        """
+        monkeypatch.setenv("FLY_APP_NAME", "portfolio-test")
+        mock_request = self._create_mock_request(
+            client_host="198.51.100.7",
+            forwarded_for="198.51.100.7, 203.0.113.50",
+        )
+        mock_request.headers["Fly-Client-IP"] = "203.0.113.50"
+        assert get_client_ip(mock_request) == "203.0.113.50"
+
+    def test_fly_client_ip_from_a_public_peer_is_ignored_off_fly(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        """Without Fly's proxy in front, the header is whatever the client sent."""
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+        mock_request = self._create_mock_request(client_host="93.184.216.34")
+        mock_request.headers["Fly-Client-IP"] = "203.0.113.50"
+        assert get_client_ip(mock_request) == "93.184.216.34"
+
+    def test_unparseable_fly_client_ip_falls_back_to_the_peer(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setenv("FLY_APP_NAME", "portfolio-test")
+        mock_request = self._create_mock_request(client_host="93.184.216.34")
+        mock_request.headers["Fly-Client-IP"] = "203.0.113.8, 198.51.100.1"
+        assert get_client_ip(mock_request) == "93.184.216.34"
+
+    @pytest.mark.parametrize("client_host", ["testclient", "probe.invalid"])
+    def test_peer_that_is_not_an_address_is_never_returned(self, client_host: str):
+        """uvicorn's forwarded-for parsing accepts any text as the client host."""
+        mock_request = self._create_mock_request(client_host=client_host)
+        assert get_client_ip(mock_request) == "unknown"
+
+
+class TestBehindUvicornProxyHeaders:
+    """get_client_ip behind uvicorn's ProxyHeadersMiddleware, as uvicorn runs it.
+
+    The tests above hand get_client_ip a mocked request.client. In a server,
+    uvicorn's middleware rewrites the scope first: trusting every peer
+    ("*"), it sets the client to the leftmost X-Forwarded-For entry.
+    """
+
+    @staticmethod
+    def _client_ip(wrap: Callable[[ASGIApp], ASGIApp]) -> str:
+        """The client IP the app sees for one request from fly-proxy's address."""
+        seen: list[str] = []
+
+        async def app(scope: Scope, receive: Receive, send: Send) -> None:
+            seen.append(get_client_ip(Request(scope)))
+            await PlainTextResponse("ok")(scope, receive, send)
+
+        scope: Scope = {
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": "GET",
+            "scheme": "http",
+            "path": "/",
+            "raw_path": b"/",
+            "root_path": "",
+            "query_string": b"",
+            "headers": [
+                (b"host", b"api.dashti.se"),
+                # 198.51.100.7 is client-sent; Fly-Client-IP is what Fly's proxy saw.
+                (b"x-forwarded-for", b"198.51.100.7, 203.0.113.9"),
+                (b"fly-client-ip", b"203.0.113.9"),
+            ],
+            "client": ("172.16.1.114", 40000),
+            "server": ("172.19.0.2", 8000),
+        }
+
+        async def receive() -> Message:
+            return {"type": "http.request", "body": b"", "more_body": False}
+
+        async def send(message: Message) -> None:
+            return None
+
+        asyncio.run(wrap(app)(scope, receive, send))
+        return seen[0]
+
+    def test_trusting_every_proxy_cannot_move_the_key_on_fly(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("FLY_APP_NAME", "portfolio-test")
+        ip = self._client_ip(lambda app: ProxyHeadersMiddleware(app, trusted_hosts="*"))
+        assert ip == "203.0.113.9"
+
+    def test_without_proxy_headers_the_peer_is_the_trusted_proxy(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        """--no-proxy-headers leaves fly-proxy's private address as the peer."""
+        monkeypatch.delenv("FLY_APP_NAME", raising=False)
+        assert self._client_ip(lambda app: app) == "203.0.113.9"
 
 
 class TestSecurityScenarios:

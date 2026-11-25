@@ -49,13 +49,12 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
 
 # Run with uvicorn directly (simpler for debugging).
-# --proxy-headers/--forwarded-allow-ips: Fly's proxy terminates TLS and is the
-# only ingress, so it always sets X-Forwarded-Proto. Without these flags uvicorn
-# ignores that header and Starlette's redirect_slashes rebuilds 307 Location
-# values from the app's own http scheme — i.e. https://api.dashti.se/x redirects
-# to http://api.dashti.se/x/, downgrading any non-HSTS client that follows it.
+# --no-proxy-headers: Fly's proxy passes a client-sent X-Forwarded-For through,
+# so letting uvicorn rewrite the client address from it let any client pick
+# its own; the flag is explicit because uvicorn reads those headers by default.
+# get_client_ip reads Fly-Client-IP instead, and HTTPSSchemeMiddleware keeps
+# redirect Locations on https in production.
 CMD ["python", "-m", "uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--proxy-headers", \
-     "--forwarded-allow-ips", "*"]
+     "--no-proxy-headers"]

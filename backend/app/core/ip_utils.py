@@ -6,6 +6,7 @@ IP spoofing attacks by only trusting X-Forwarded-For from known proxies.
 """
 
 import ipaddress
+import os
 
 from starlette.requests import Request
 
@@ -41,6 +42,12 @@ def _parse_ip(ip_str: str) -> str | None:
         return None
 
 
+def _fly_client_ip(request: Request) -> str | None:
+    """The Fly-Client-IP header as a normalized address, or None."""
+    fly_ip = request.headers.get("Fly-Client-IP")
+    return _parse_ip(fly_ip.strip()) if fly_ip else None
+
+
 def get_client_ip(request: Request) -> str:
     """
     Get the real client IP, only trusting proxy headers from known proxies.
@@ -48,30 +55,38 @@ def get_client_ip(request: Request) -> str:
     This prevents IP spoofing attacks where malicious clients send fake
     forwarding headers to bypass IP-based rate limiting or analytics.
 
-    Behind Fly's proxy the authoritative source is Fly-Client-IP, which
-    the edge sets itself and clients cannot forge through it. As a
-    fallback, X-Forwarded-For is walked RIGHT to LEFT: rightmost entries
-    are appended by our own proxies, and the first address not in the
-    trusted set is the real client. The leftmost entry is entirely
-    client-controlled — trusting it (as this function previously did)
-    let any caller choose their own rate-limit bucket.
+    On Fly (FLY_APP_NAME is set) the authoritative source is Fly-Client-IP:
+    Fly's proxy sets it on every request it forwards and replaces any value
+    the client sent, so a parseable one wins whatever the TCP peer or
+    X-Forwarded-For claims. Off Fly, or when it is missing, forwarding
+    headers count only from a trusted proxy: Fly-Client-IP first, then
+    X-Forwarded-For walked RIGHT to LEFT: rightmost entries are appended by
+    our own proxies, and the first address not in the trusted set is the
+    real client. The leftmost entry is entirely client-controlled — trusting
+    it (as this function previously did) let any caller choose their own
+    rate-limit bucket.
 
     Args:
         request: The incoming HTTP request
 
     Returns:
-        Client IP address string, or "unknown" if unavailable
+        A normalized client IP address, or "unknown" when there is none:
+        a value that is not an address never comes back as one
     """
-    # Get the direct connection IP
-    direct_ip = request.client.host if request.client else None
+    if os.environ.get("FLY_APP_NAME"):
+        fly_ip = _fly_client_ip(request)
+        if fly_ip:
+            return fly_ip
+
+    # The direct connection IP; a peer that is not an address (a socket
+    # path, TestClient's "testclient") is never returned as one.
+    direct_ip = _parse_ip(request.client.host) if request.client else None
 
     # Only consult forwarding headers if the direct connection is trusted
     if direct_ip and is_trusted_proxy(direct_ip):
-        fly_ip = request.headers.get("Fly-Client-IP")
+        fly_ip = _fly_client_ip(request)
         if fly_ip:
-            parsed = _parse_ip(fly_ip.strip())
-            if parsed:
-                return parsed
+            return fly_ip
 
         forwarded = request.headers.get("X-Forwarded-For")
         if forwarded:

@@ -2,8 +2,10 @@
 Tests for main application
 """
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 
 
@@ -210,6 +212,32 @@ class TestSecurityHeaders:
         # The middleware class exists and is properly defined
         assert SecurityHeadersMiddleware is not None
         assert hasattr(SecurityHeadersMiddleware, "dispatch")
+
+
+class TestHTTPSSchemePin:
+    """Slash redirects keep https in production although uvicorn sees http.
+
+    Fly's proxy terminates TLS and uvicorn ignores X-Forwarded-Proto, so
+    the request reaches the app as http; the 307 Location is built from
+    the scope's scheme.
+    """
+
+    def test_slash_redirect_is_https_in_production(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+        response = client.get(
+            "/api/v1/companies",
+            headers={"Host": "api.dashti.se", "X-Forwarded-Proto": "http"},
+            follow_redirects=False,
+        )
+        assert response.status_code == 307
+        assert response.headers["location"] == "https://api.dashti.se/api/v1/companies/"
+
+    def test_scheme_is_left_alone_outside_production(self, client: TestClient):
+        response = client.get("/api/v1/companies", follow_redirects=False)
+        assert response.status_code == 307
+        assert response.headers["location"] == "http://testserver/api/v1/companies/"
 
 
 class TestStaticFilesMount:
