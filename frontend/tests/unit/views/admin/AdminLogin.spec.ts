@@ -46,6 +46,24 @@ describe('AdminLogin', () => {
     })
   })
 
+  describe('Revoked-session notice', () => {
+    it('is hidden without the session=revoked query param', () => {
+      const wrapper = createWrapper()
+      expect(wrapper.find('.login-revoked').exists()).toBe(false)
+    })
+
+    it('says every session was revoked when session=revoked is present', () => {
+      mockRoute.query = { session: 'revoked' }
+      const wrapper = createWrapper()
+
+      const notice = wrapper.find('.login-revoked')
+      expect(notice.exists()).toBe(true)
+      expect(notice.attributes('role')).toBe('status')
+      expect(notice.text()).toContain('All admin sessions were revoked')
+      expect(wrapper.find('.login-denied').exists()).toBe(false)
+    })
+  })
+
   describe('Rendering', () => {
     it('should render the login container', () => {
       const wrapper = createWrapper()

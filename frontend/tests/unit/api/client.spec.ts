@@ -132,6 +132,42 @@ describe('API client', () => {
       expect(window.location.href).toBe('/admin/login')
     })
 
+    it('tells the login page when the refresh revoked every session', async () => {
+      window.location.pathname = '/admin/companies'
+      vi.mocked(axios.post).mockRejectedValue({
+        isAxiosError: true,
+        response: { status: 401, data: { detail: 'Refresh token reused; all sessions revoked' } }
+      })
+
+      const error: Partial<AxiosError> = {
+        response: { status: 401 } as any,
+        config: { headers: {} as any, url: '/test' } as InternalAxiosRequestConfig
+      }
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+      await expect(errorInterceptor(error)).rejects.toBeDefined()
+
+      expect(window.location.href).toBe('/admin/login?session=revoked')
+    })
+
+    it('keeps the plain login redirect for any other refresh 401', async () => {
+      window.location.pathname = '/admin/companies'
+      vi.mocked(axios.post).mockRejectedValue({
+        isAxiosError: true,
+        response: { status: 401, data: { detail: 'Refresh token expired' } }
+      })
+
+      const error: Partial<AxiosError> = {
+        response: { status: 401 } as any,
+        config: { headers: {} as any, url: '/test' } as InternalAxiosRequestConfig
+      }
+
+      const errorInterceptor = vi.mocked(apiClient.interceptors.response.use).mock.calls[0][1]
+      await expect(errorInterceptor(error)).rejects.toBeDefined()
+
+      expect(window.location.href).toBe('/admin/login')
+    })
+
     it('does not reload to /admin/login if already on /admin/login (reload-loop guard)', async () => {
       window.location.pathname = '/admin/login'
       vi.mocked(axios.post).mockRejectedValue(new Error('Refresh failed'))

@@ -14,6 +14,11 @@
           GitHub sign-in was cancelled. You can try again below.
         </p>
 
+        <p v-if="sessionRevoked" class="login-revoked" role="status">
+          All admin sessions were revoked because a refresh token was used twice, which can mean it
+          was copied. Sign in again below.
+        </p>
+
         <button class="github-login-button" @click="loginWithGitHub">
           <svg class="github-icon" viewBox="0 0 16 16" fill="currentColor">
             <path
@@ -44,6 +49,10 @@ const route = useRoute()
 // Set by the backend's OAuth deny redirect (/admin/login?oauth=denied)
 // when the user cancels GitHub's authorization screen.
 const oauthDenied = computed(() => route.query.oauth === 'denied')
+
+// Set by the API client (/admin/login?session=revoked) when a token refresh
+// failed because a reused refresh token made the backend revoke every session.
+const sessionRevoked = computed(() => route.query.session === 'revoked')
 
 const loginWithGitHub = (): void => {
   authStore.loginWithGitHub()
@@ -80,7 +89,8 @@ const loginWithGitHub = (): void => {
   margin: 0 0 var(--spacing-2);
 }
 
-.login-denied {
+.login-denied,
+.login-revoked {
   font-size: var(--font-size-sm);
   color: var(--color-amber-800, #92400e);
   background: var(--color-amber-50, #fffbeb);

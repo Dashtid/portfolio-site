@@ -51,6 +51,11 @@ OAUTH_COOKIE_PATH = "/api/v1/auth/github"
 # stolen-and-replayed token still trips the revoke-all sweep.
 REFRESH_ROTATION_GRACE_SECONDS = 30
 
+# The 401 detail when a reused refresh token made /auth/refresh revoke the
+# user's live sessions. The frontend (src/api/client.ts) matches it and the
+# admin login page says that all sessions were revoked.
+SESSIONS_REVOKED_DETAIL = "Refresh token reused; all sessions revoked"
+
 # Absolute session lifetime. Every rotation issues a refresh token with a
 # fresh REFRESH_TOKEN_EXPIRE_DAYS, so without this cap an active session
 # (or a stolen one kept warm) renewed forever without a GitHub sign-in.
@@ -544,8 +549,10 @@ async def refresh_token_endpoint(
         # Revoke ALL of this user's outstanding refresh tokens, forcing a
         # fresh OAuth login.
         revoked_count = await _revoke_all_for_user(db, user_id)
+        # With no live session left (a logout on another device revoked
+        # them all), the replay ended nothing: a warning, not an error.
         security_event(
-            logging.ERROR,
+            logging.ERROR if revoked_count else logging.WARNING,
             "auth.refresh_reuse_detected",
             request,
             user_id=user_id,
@@ -554,7 +561,8 @@ async def refresh_token_endpoint(
             revoked_count=revoked_count,
         )
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=SESSIONS_REVOKED_DETAIL if revoked_count else "Refresh token revoked",
         )
 
     if stored.is_expired(now):

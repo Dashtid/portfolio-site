@@ -5,6 +5,7 @@ import axios, {
   type AxiosError
 } from 'axios'
 import { config } from '@/config'
+import { isAxiosError } from '@/utils/typeGuards'
 
 /**
  * Axios API Client
@@ -34,6 +35,16 @@ function onTokenRefreshed(): void {
 function onTokenRefreshFailed(error: Error): void {
   refreshSubscribers.forEach(({ onError }) => onError(error))
   refreshSubscribers = []
+}
+
+// The refresh endpoint's 401 detail when a reused refresh token made it revoke
+// every live session (SESSIONS_REVOKED_DETAIL in backend/app/api/v1/auth.py).
+const SESSIONS_REVOKED_DETAIL = 'Refresh token reused; all sessions revoked'
+
+function sessionsRevoked(error: unknown): boolean {
+  if (!isAxiosError(error)) return false
+  const data = error.response?.data as { detail?: unknown } | undefined
+  return data?.detail === SESSIONS_REVOKED_DETAIL
 }
 
 // No blanket Cache-Control: no-cache here — it forced revalidation on
@@ -116,7 +127,10 @@ apiClient.interceptors.response.use(
         // /admin/login -> /admin/login spins the browser into a reload loop.
         const onAdminSurface = window.location.pathname.startsWith('/admin')
         if (onAdminSurface && window.location.pathname !== '/admin/login') {
-          window.location.href = '/admin/login'
+          // ?session=revoked makes the login page say every session was revoked.
+          window.location.href = sessionsRevoked(refreshError)
+            ? '/admin/login?session=revoked'
+            : '/admin/login'
         }
         return Promise.reject(refreshError)
       }

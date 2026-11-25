@@ -2,6 +2,7 @@
 Tests for metrics endpoints
 """
 
+import logging
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -35,6 +36,27 @@ def test_reset_metrics(client: TestClient, admin_user_in_db: dict):
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
+
+
+def test_reset_is_a_security_event_that_keeps_the_cleared_counters(
+    client: TestClient, admin_user_in_db: dict, security_records
+):
+    """A reset clears the security counters, so its log record keeps them."""
+    from app.middleware.performance import metrics  # noqa: PLC0415
+
+    metrics.incr("auth.refresh_reuse_detected")
+    before = dict(metrics.counters)
+
+    response = client.post("/api/v1/metrics/reset", headers=admin_user_in_db["headers"])
+
+    assert response.status_code == 200
+    [record] = [r for r in security_records if r.event == "admin.metrics_reset"]
+    assert record.levelno == logging.WARNING
+    assert record.user_id == admin_user_in_db["user_id"]
+    assert record.counters_before == before
+    # The reset itself is counted after the counters were cleared.
+    assert metrics.counters["admin.metrics_reset"] == 1
+    assert "auth.refresh_reuse_detected" not in metrics.counters
 
 
 def test_reset_metrics_requires_auth(client: TestClient):

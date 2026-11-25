@@ -991,6 +991,44 @@ class TestSecurityEvents:
         assert record.seconds_since_rotation >= 0
         _assert_no_secret_logged(security_records, original)
 
+    def test_reuse_that_revoked_sessions_answers_with_the_revoked_detail(
+        self, client: TestClient, test_user_in_db: dict, monkeypatch
+    ):
+        from app.api.v1 import auth as auth_module  # noqa: PLC0415
+
+        monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
+        original = test_user_in_db["refresh_token"]
+        rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert rotated.status_code == 200
+        client.cookies.clear()
+
+        replay = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+
+        assert replay.status_code == 401
+        assert replay.json()["detail"] == "Refresh token reused; all sessions revoked"
+        assert replay.json()["detail"] == auth_module.SESSIONS_REVOKED_DETAIL
+
+    def test_reuse_with_no_live_session_left_is_a_warning(
+        self, client: TestClient, test_user_in_db: dict, monkeypatch, security_records
+    ):
+        """After a logout (on another device, say) revoked every session, a
+        replay of the old token ends nothing: no error, no revoked notice."""
+        from app.api.v1 import auth as auth_module  # noqa: PLC0415
+
+        monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
+        client.cookies.set("refresh_token", test_user_in_db["refresh_token"])
+        assert client.post("/api/v1/auth/logout").status_code == 200
+        client.cookies.clear()
+
+        replay = client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+        )
+
+        assert replay.status_code == 401
+        assert replay.json()["detail"] == "Refresh token revoked"
+        reuse = [r for r in security_records if r.event == "auth.refresh_reuse_detected"]
+        assert [(r.levelno, r.revoked_count) for r in reuse] == [(logging.WARNING, 0)]
+
     def test_a_replay_within_the_grace_window_is_info_not_error(
         self, client: TestClient, test_user_in_db: dict, security_records
     ):
