@@ -2,11 +2,11 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
   merge_group:
-    branches: [main, master]
+    branches: [main]
 
 # Default-minimum permissions; jobs that need more (PR coverage comments,
 # SARIF upload) raise their own at the job level. See OpenSSF Scorecard
@@ -220,7 +220,7 @@ jobs:
     needs: [changes, frontend-quality]
     if: |
       (github.event_name == 'pull_request' ||
-       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))) &&
+       (github.event_name == 'push' && github.ref == 'refs/heads/main')) &&
       needs.changes.outputs.frontend == 'true'
     timeout-minutes: 15
     container:
@@ -469,7 +469,7 @@ jobs:
     if: |
       !cancelled() &&
       github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      github.ref == 'refs/heads/main' &&
       needs.changes.outputs.frontend == 'true' &&
       needs.frontend-quality.result == 'success' &&
       needs.e2e-tests.result == 'success' &&
@@ -572,7 +572,7 @@ jobs:
     needs: [changes, backend-quality]
     if: |
       github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      github.ref == 'refs/heads/main' &&
       needs.changes.outputs.backend == 'true' &&
       needs.backend-quality.result == 'success'
     timeout-minutes: 10

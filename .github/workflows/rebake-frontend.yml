@@ -25,6 +25,9 @@ concurrency:
 
 jobs:
   rebake:
+    # Main only: a dispatch on another branch would deploy that branch's
+    # tree, which no pipeline run has checked.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
