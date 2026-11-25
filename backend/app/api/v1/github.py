@@ -12,6 +12,7 @@ from app.config import settings
 from app.middleware.rate_limit import rate_limit_public
 from app.schemas.github import GitHubStats
 from app.services.github_service import github_service
+from app.services.oss_queries import GITHUB_USERNAME
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -35,12 +36,17 @@ GitHubUsername = Annotated[
 @rate_limit_public
 async def get_github_stats(request: Request, username: GitHubUsername):
     """
-    Get GitHub statistics for a user.
+    Get GitHub statistics for the site owner's account.
 
     Returns aggregated stats including repos, stars, languages, etc.
+    Only GITHUB_USERNAME, the name the frontend requests, is served: any
+    other name is a 404 that never reaches GitHub, so callers cannot spend
+    the server token's rate limit on accounts of their choosing.
     """
+    if username != GITHUB_USERNAME:
+        raise HTTPException(status_code=404, detail="Not found")
     try:
-        stats = await github_service.get_portfolio_stats(username)
+        stats = await github_service.get_portfolio_stats(GITHUB_USERNAME)
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
         logger.exception("Error fetching GitHub stats for %s", username)
         detail = str(e) if settings.DEBUG else "Failed to fetch GitHub statistics"

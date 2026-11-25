@@ -63,9 +63,9 @@ GITHUB_STATS_FAILURE_TTL_SECONDS = 30
 # an outer bound a cold cache miss can hang a visitor's request for the
 # sum of every stage's retries.
 PORTFOLIO_STATS_DEADLINE_SECONDS = 15.0
-# The public endpoint accepts ANY syntactically valid username, so the
-# per-username cache and lock dicts must be bounded or an attacker can
-# grow them without limit.
+# The public endpoint serves one username (api/v1/github.py); the bound
+# keeps the per-username cache and lock dicts finite for any caller that
+# passes others.
 STATS_CACHE_MAX_ENTRIES = 32
 
 
