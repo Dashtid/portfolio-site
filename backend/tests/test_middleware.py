@@ -1531,6 +1531,8 @@ class TestQueryParamRedaction:
     callback carries a live authorization code and the CSRF state token
     in the query string, and SensitiveDataFilter only masks msg/args --
     so the redaction has to happen before the extra dict is built.
+    uvicorn's access line would print them raw; TestClient never runs
+    uvicorn, so test_dockerfile_cmd.py checks the image turns it off.
     """
 
     @staticmethod
@@ -1569,3 +1571,40 @@ class TestQueryParamRedaction:
         assert logged_params["code"] == "[REDACTED]"
         assert logged_params["state"] == "[REDACTED]"
         assert "gho_secretcode" not in str(mock_logger.info.call_args_list)
+
+
+class TestHealthCheckLogging:
+    """Health checks log nothing while they pass, and one line when they fail.
+
+    The image runs uvicorn without its access log, so LoggingMiddleware's
+    "Request completed" line is the only record of a failing readiness check.
+    """
+
+    def test_passing_health_check_is_silent(self, client: TestClient):
+        with patch("app.middleware.logging.logger") as mock_logger:
+            assert client.get("/api/v1/health/ready").status_code == 200
+        mock_logger.info.assert_not_called()
+
+    def test_failing_readiness_check_is_logged(self, client: TestClient):
+        from app.database import get_db
+        from app.main import app
+
+        class _UnreachableDatabase:
+            async def execute(self, *args, **kwargs):
+                raise ConnectionError("database unreachable")
+
+        async def unreachable_db():
+            yield _UnreachableDatabase()
+
+        app.dependency_overrides[get_db] = unreachable_db
+        with patch("app.middleware.logging.logger") as mock_logger:
+            assert client.get("/api/v1/health/ready").status_code == 503
+
+        completed = [
+            c
+            for c in mock_logger.info.call_args_list
+            if c.args and c.args[0] == "Request completed"
+        ]
+        assert len(completed) == 1
+        assert completed[0].kwargs["extra"]["path"] == "/api/v1/health/ready"
+        assert completed[0].kwargs["extra"]["status_code"] == 503

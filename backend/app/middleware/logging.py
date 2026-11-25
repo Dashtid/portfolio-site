@@ -34,7 +34,8 @@ _SILENT_LOG_PREFIXES = ("/api/v1/health", "/api/health")
 # so logging query params verbatim put a live authorization code and the
 # CSRF state token into Fly's log stream on every login. SensitiveDataFilter
 # only masks msg/args, not `extra` dicts — redaction has to happen here,
-# before the dict reaches the logger. Matched case-insensitively.
+# before the dict reaches the logger. Matched case-insensitively. uvicorn's
+# access line prints the raw query string, so the image runs --no-access-log.
 _REDACTED_QUERY_PARAMS = frozenset(
     {"code", "state", "token", "access_token", "refresh_token", "client_secret"}
 )
@@ -111,7 +112,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 # injects request_id onto every record this request emits;
                 # we keep it in the explicit extra here so downstream log
                 # consumers and existing assertions still see it directly.
-                if not silent:
+                # A health check is silent only while it passes: with
+                # uvicorn's access log off, this is the one line a failing
+                # one (a readiness 503) leaves.
+                if not silent or response.status_code >= 400:
                     logger.info(
                         "Request completed",
                         extra={

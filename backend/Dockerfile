@@ -54,7 +54,11 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # its own; the flag is explicit because uvicorn reads those headers by default.
 # get_client_ip reads Fly-Client-IP instead, and HTTPSSchemeMiddleware keeps
 # redirect Locations on https in production.
+# --no-access-log: uvicorn's access line prints the peer address and the raw
+# query string, the OAuth callback's code and state included; LoggingMiddleware
+# logs every request with those query values redacted.
 CMD ["python", "-m", "uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--no-proxy-headers"]
+     "--no-proxy-headers", \
+     "--no-access-log"]

@@ -35,3 +35,12 @@ def test_proxy_headers_are_off() -> None:
     client. uvicorn turns proxy headers on by default, so the flag is explicit.
     """
     assert _uvicorn_params()["proxy_headers"] is False
+
+
+def test_access_log_is_off() -> None:
+    """uvicorn's access line prints the peer address and the raw query string.
+
+    The OAuth callback carries its code and state in the query string, which
+    LoggingMiddleware redacts; uvicorn's own line would print them as sent.
+    """
+    assert _uvicorn_params()["access_log"] is False
