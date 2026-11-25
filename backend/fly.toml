@@ -45,9 +45,14 @@ primary_region = 'arn'
   min_machines_running = 1
   processes = ['app']
 
+  # hard_limit caps the connections Fly's proxy hands this one machine at
+  # once; at the cap the proxy sends it no new traffic. At 25, a client
+  # holding requests open (a body that never comes is cut off after 10 s)
+  # needed about 2.5 new connections a second to block the API; at 250 it
+  # takes a flood. An idle connection costs a few KB of the 512 MB.
   [http_service.concurrency]
     type = 'connections'
-    hard_limit = 25
+    hard_limit = 250
     soft_limit = 20
 
   # /health/ready does SELECT 1 against the DB and returns 503 when it
