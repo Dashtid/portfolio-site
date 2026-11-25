@@ -27,6 +27,9 @@ _engine_kwargs: dict = {
     # pydantic ignores undeclared env vars) — flip locally when debugging.
     "echo": False,
     "future": True,
+    # Keeps bound values out of every StatementError string, and so out of
+    # each log line and traceback that formats one; flip locally to debug.
+    "hide_parameters": True,
 }
 
 if is_sqlite:
