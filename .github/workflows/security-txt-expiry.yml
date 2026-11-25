@@ -8,6 +8,12 @@
 # every Monday and fails once either has 60 days or less left, which gives
 # about four weekly warnings before the unit tests' 30-day limit. GitHub sends
 # a scheduled run's notifications to the user who last modified its cron line.
+#
+# The same job reads the TLS certificates of dashti.se, www.dashti.se and
+# api.dashti.se, and fails once one has less than a quarter of its lifetime
+# left (22.5 days of a 90-day certificate). Vercel and Fly renew with about a
+# third left, so that means a renewal has stalled, and on a domain in the HSTS
+# preload list an expired certificate is an outage nobody can click through.
 name: security.txt expiry
 
 on:
@@ -122,5 +128,48 @@ jobs:
                   errors.append(f"Contact differs: {site_contacts} (site), {api_contacts} (API)")
           for error in errors:
               print(f"::error::{error} - {FIX}")
+          sys.exit(1 if errors else 0)
+          PY
+
+      # The limit is relative to each certificate's own lifetime, so shorter
+      # certificates need no new limit. !cancelled(): the step above is red by
+      # design once security.txt is due for renewal, and this one must still run.
+      - name: Check the TLS certificates
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PY'
+          import socket
+          import ssl
+          import sys
+          import time
+
+          # Each host, and where to look when its certificate is not renewed.
+          HOSTS = {
+              "dashti.se": "the Vercel project's Domains settings",
+              "www.dashti.se": "the Vercel project's Domains settings",
+              "api.dashti.se": "`fly certs show api.dashti.se`",
+          }
+          DAY = 86400
+
+          context = ssl.create_default_context()
+          now = time.time()
+          errors = []
+          for host, where in HOSTS.items():
+              try:
+                  with socket.create_connection((host, 443), timeout=15) as sock:
+                      with context.wrap_socket(sock, server_hostname=host) as tls:
+                          cert = tls.getpeercert()
+                  not_before = ssl.cert_time_to_seconds(cert["notBefore"])
+                  not_after = ssl.cert_time_to_seconds(cert["notAfter"])
+              except Exception as exc:  # network and TLS errors, an expired certificate included
+                  errors.append(f"{host}: {exc} - check {where}")
+                  continue
+              left, lifetime = (not_after - now) / DAY, (not_after - not_before) / DAY
+              print(f"{host}: valid until {cert['notAfter']}, {left:.2f} of {lifetime:.0f} days left")
+              if left < lifetime / 4:
+                  errors.append(f"{host}: {left:.2f} days left, under a quarter of its"
+                                f" {lifetime:.0f}-day lifetime - check {where}")
+          for error in errors:
+              print(f"::error::{error}")
           sys.exit(1 if errors else 0)
           PY

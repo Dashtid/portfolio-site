@@ -132,6 +132,11 @@ Supporting workflows:
   `uptime.yml` probe was retired on 2026-10-20: GitHub ran its hourly
   schedule once between 17:00 and 20:00 UTC that day, so it never saw
   that outage.
+- **Certificates**: every Monday `security-txt-expiry.yml` also reads the
+  TLS certificates of `dashti.se`, `www.dashti.se` and `api.dashti.se`,
+  and fails once one has less than a quarter of its lifetime left (22.5
+  days of a 90-day certificate). Vercel and Fly renew with about a third
+  left, so a failure means a renewal has stalled.
 - **Sentry**: live on the **frontend**. The `VITE_SENTRY_DSN` GitHub
   secret (set 2026-08-16) is forwarded with `--build-env` by `ci-cd.yml`
   and `rebake-frontend.yml`; without it the whole init is
