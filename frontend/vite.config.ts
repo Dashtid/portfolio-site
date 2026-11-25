@@ -404,10 +404,11 @@ export default defineConfig({
           },
           {
             // Public API GETs: network-first, short-lived offline fallback.
-            // Auth, admin, analytics and metrics endpoints are deliberately
-            // excluded — Workbox ignores response Cache-Control, so cached
-            // private payloads would survive logout in CacheStorage.
-            urlPattern: /^https?:\/\/[^/]+\/api\/(?!v1\/(?:auth|admin|analytics|metrics)(?:\/|$))/i,
+            // An allowlist of public reads: Workbox ignores response
+            // Cache-Control, so a cached admin or auth payload would survive
+            // logout in CacheStorage. A read not listed here is not cached.
+            urlPattern:
+              /^https?:\/\/[^/]+\/api\/v1\/(?:(?:companies|skills|projects|education|documents)\/?(?:[0-9a-f-]{36}\/?)?|oss\/contributions\/?|github\/stats\/[A-Za-z0-9-]+)(?:\?.*)?$/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
