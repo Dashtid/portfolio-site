@@ -2,8 +2,11 @@
 Tests for main application
 """
 
+import asyncio
+
 import pytest
 from fastapi.testclient import TestClient
+from starlette.types import Message
 
 from app.config import settings
 from app.main import app
@@ -318,6 +321,33 @@ class TestStaticFilesMount:
         # Non-existent file should return 404
         assert response.status_code == 404
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/static/documents/bachelor-thesis.pdf/",
+            "/static//documents/bachelor-thesis.pdf",
+            "/static/documents//bachelor-thesis.pdf",
+            "/static/./documents/bachelor-thesis.pdf",
+            "/static/documents/../documents/bachelor-thesis.pdf",
+            "/media/bachelor-thesis.pdf/",
+        ],
+    )
+    async def test_non_canonical_spelling_of_a_file_is_404(self, path: str):
+        """Fly's [[statics]] serves only the exact path; other spellings reached the app.
+
+        Sent as raw ASGI: an HTTP client would normalise the dot segments.
+        """
+        assert await _raw_get_status(path) == 404
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "path", ["/static/documents/bachelor-thesis.pdf", "/media/bachelor-thesis.pdf"]
+    )
+    async def test_canonical_path_is_served(self, path: str):
+        """In tests UPLOAD_DIR is static/documents, so /media serves the same file."""
+        assert await _raw_get_status(path) == 200
+
 
 class TestValidationErrorBody:
     """422 responses keep FastAPI's error list minus each rejected value."""
@@ -352,3 +382,42 @@ class TestValidationErrorBody:
         [error] = response.json()["detail"]
         assert error["loc"] == ["path", "education_id"]
         assert "input" not in error
+
+
+async def _raw_get_status(path: str) -> int:
+    """The status of a GET for `path` exactly as written, sent straight to the app."""
+    statuses: list[int] = []
+    sent_request = False
+    response_done = asyncio.Event()
+
+    async def receive() -> Message:
+        nonlocal sent_request
+        if not sent_request:
+            sent_request = True
+            return {"type": "http.request", "body": b"", "more_body": False}
+        await response_done.wait()
+        return {"type": "http.disconnect"}
+
+    async def send(message: Message) -> None:
+        if message["type"] == "http.response.start":
+            statuses.append(message["status"])
+        elif message["type"] == "http.response.body" and not message.get("more_body", False):
+            response_done.set()
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0", "spec_version": "2.3"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": path,
+        "raw_path": path.encode(),
+        "root_path": "",
+        "query_string": b"",
+        "headers": [(b"host", b"testserver")],
+        "client": ("198.51.100.7", 50000),
+        "server": ("testserver", 80),
+    }
+    async with asyncio.timeout(10):
+        await app(scope, receive, send)
+    return statuses[0]

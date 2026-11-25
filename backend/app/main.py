@@ -22,6 +22,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.datastructures import Headers, MutableHeaders
+from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
@@ -442,6 +443,21 @@ class HostCheckMiddleware(TrustedHostMiddleware):
         await super().__call__(scope, receive, send)
 
 
+class CanonicalStaticFiles(StaticFiles):
+    """StaticFiles that serves a file at its canonical path only.
+
+    StaticFiles normalises the path before the lookup, so /x.pdf/, //x.pdf
+    and /./x.pdf all served /x.pdf. Fly's [[statics]] matches the exact
+    path, so those spellings reached the app, which sent the whole file.
+    A path with an empty, "." or ".." segment is a 404 here instead.
+    """
+
+    def get_path(self, scope: Scope) -> str:
+        if any(segment in ("", ".", "..") for segment in scope["path"].split("/")[1:]):
+            raise HTTPException(status_code=404)
+        return super().get_path(scope)
+
+
 # Background task for periodic auth-row cleanup
 async def cleanup_oauth_states_periodically():
     """Periodically purge expired OAuth states AND refresh-token rows (every 5 min).
@@ -772,14 +788,14 @@ app.include_router(skills.router, prefix="/api/v1")
 app.include_router(education.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
 # Mount static files for document downloads (repo-baked assets, in-image)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", CanonicalStaticFiles(directory="static"), name="static")
 # Admin-uploaded documents live under settings.UPLOAD_DIR — on Fly that's
 # the persistent volume (/data/uploads/documents), NOT the image, so they
 # survive deploys. check_dir=False: this mount is constructed at import
 # time, before the directory exists — lifespan startup creates it.
 app.mount(
     "/media",
-    StaticFiles(directory=settings.UPLOAD_DIR, check_dir=False),
+    CanonicalStaticFiles(directory=settings.UPLOAD_DIR, check_dir=False),
     name="media",
 )
 app.include_router(github.router, prefix="/api/v1/github", tags=["GitHub"])
