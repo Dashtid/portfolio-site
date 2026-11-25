@@ -3,6 +3,7 @@ Test configuration and fixtures for pytest
 """
 
 import asyncio
+import logging
 from collections.abc import Generator
 from typing import Any
 
@@ -98,6 +99,29 @@ def _admin_github_id(monkeypatch: pytest.MonkeyPatch) -> None:
     ADMIN_GITHUB_ID on every request and admits nobody while it is unset.
     """
     monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", ADMIN_GITHUB_ID)
+
+
+class _ListHandler(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def security_records() -> Generator[list[logging.LogRecord], Any, None]:
+    """The records the app.security logger emits during the test.
+
+    The app loggers do not propagate, so caplog never sees them; a real
+    handler also runs makeRecord, which a mocked logger would skip.
+    """
+    security_logger = logging.getLogger("app.security")
+    handler = _ListHandler()
+    security_logger.addHandler(handler)
+    yield handler.records
+    security_logger.removeHandler(handler)
 
 
 @pytest.fixture(scope="function")

@@ -6,6 +6,7 @@ Uses database-backed OAuth state storage for multi-instance deployments.
 
 import base64
 import hashlib
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -19,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.deps import get_current_user
 from app.core.security import create_access_token, create_refresh_token, decode_token
+from app.core.security_events import security_event
 from app.database import get_db
 from app.middleware import limiter
 from app.models.oauth_state import OAuthState
@@ -331,11 +333,23 @@ async def github_callback(
     # browser fails without using up the real login's state.
     verifier = _cookie_verifier(request, state)
     if verifier is None or not await validate_and_consume_state(db, state):
+        reason = "unknown_or_expired" if verifier else "not_this_browser"
+        security_event(logging.WARNING, "auth.oauth_state_rejected", request, reason=reason)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state parameter"
         )
 
-    github_user = await _fetch_github_user(code, verifier)
+    try:
+        github_user = await _fetch_github_user(code, verifier)
+    except HTTPException as exc:
+        security_event(
+            logging.WARNING,
+            "auth.login_failed",
+            request,
+            status_code=exc.status_code,
+            reason=exc.detail,
+        )
+        raise
 
     # Check if user is the admin. Fail closed when ADMIN_GITHUB_ID is unset:
     # if we don't know who admin is, we cannot safely grant admin to anyone,
@@ -348,6 +362,13 @@ async def github_callback(
             detail="Admin authentication is not configured",
         )
     if github_id != settings.ADMIN_GITHUB_ID:
+        security_event(
+            logging.WARNING,
+            "auth.login_refused",
+            request,
+            github_id=github_id,
+            github_login=github_user.get("login"),
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only the admin can log in"
         )
@@ -387,6 +408,14 @@ async def github_callback(
     refresh_token, refresh_jti, refresh_exp = create_refresh_token(subject=user.id)
     db.add(RefreshToken(jti=refresh_jti, user_id=user.id, expires_at=refresh_exp))
     await db.commit()
+    security_event(
+        logging.INFO,
+        "auth.login_success",
+        request,
+        user_id=user.id,
+        github_id=github_id,
+        github_login=user.username,
+    )
 
     # Create redirect response with HTTP-only cookies (secure token storage)
     redirect_url = f"{settings.FRONTEND_URL}/admin"
@@ -476,7 +505,16 @@ async def refresh_token_endpoint(
     if stored.user_id != user_id:
         # Cross-user replay attempt: jti is real but bound to a different
         # user. Revoke everything they hold as a defensive sweep and reject.
-        await _revoke_all_for_user(db, user_id)
+        revoked_count = await _revoke_all_for_user(db, user_id)
+        security_event(
+            logging.ERROR,
+            "auth.refresh_cross_user",
+            request,
+            presented_sub=user_id,
+            jti_owner=stored.user_id,
+            jti_prefix=presented_jti[:8],
+            revoked_count=revoked_count,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token mismatch"
         )
@@ -489,15 +527,14 @@ async def refresh_token_endpoint(
             # SQLite returns naive datetimes; reattach UTC (same treatment
             # as RefreshToken.is_expired).
             revoked_at = revoked_at.replace(tzinfo=UTC)
-        if (
-            revoked_at is not None
-            and (now - revoked_at).total_seconds() <= REFRESH_ROTATION_GRACE_SECONDS
-        ):
+        since_rotation = (now - revoked_at).total_seconds() if revoked_at else None
+        if since_rotation is not None and since_rotation <= REFRESH_ROTATION_GRACE_SECONDS:
             # Benign concurrent rotation, not theft: a sibling request
             # (second tab, double-fired 401 interceptor) rotated this jti
             # moments ago and the fresh cookie is already in the shared
             # browser jar — the client only needs to retry. Nuking every
             # session here is what logged the admin out of all tabs.
+            security_event(logging.INFO, "auth.refresh_superseded", request, user_id=user_id)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Refresh superseded by a concurrent request",
@@ -506,7 +543,16 @@ async def refresh_token_endpoint(
         # than any legitimate race could explain is a stolen-token replay.
         # Revoke ALL of this user's outstanding refresh tokens, forcing a
         # fresh OAuth login.
-        await _revoke_all_for_user(db, user_id)
+        revoked_count = await _revoke_all_for_user(db, user_id)
+        security_event(
+            logging.ERROR,
+            "auth.refresh_reuse_detected",
+            request,
+            user_id=user_id,
+            jti_prefix=presented_jti[:8],
+            seconds_since_rotation=since_rotation,
+            revoked_count=revoked_count,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
         )
@@ -518,7 +564,7 @@ async def refresh_token_endpoint(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
         )
 
-    auth_time = _session_auth_time(payload, stored, now)
+    auth_time = _session_auth_time(request, payload, stored, now)
 
     # Get user from database. We deliberately check after the jti check so
     # we can't be probed for user existence by replaying old jti values.
@@ -538,6 +584,7 @@ async def refresh_token_endpoint(
         .values(revoked_at=now)
     )
     if claim.rowcount == 0:  # type: ignore[attr-defined]
+        security_event(logging.INFO, "auth.refresh_superseded", request, user_id=user_id)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh superseded by a concurrent request",
@@ -568,7 +615,9 @@ async def refresh_token_endpoint(
     return RefreshSuccess()
 
 
-def _session_auth_time(payload: dict[str, Any], stored: RefreshToken, now: datetime) -> int:
+def _session_auth_time(
+    request: Request, payload: dict[str, Any], stored: RefreshToken, now: datetime
+) -> int:
     """Return when the presented token's session signed in (Unix seconds).
 
     Raises 401 once the session is older than SESSION_MAX_AGE. A token
@@ -583,11 +632,12 @@ def _session_auth_time(payload: dict[str, Any], stored: RefreshToken, now: datet
             issued_at = issued_at.replace(tzinfo=UTC)
         auth_time = int(issued_at.timestamp())
     if now - datetime.fromtimestamp(auth_time, UTC) > SESSION_MAX_AGE:
+        security_event(logging.INFO, "auth.session_expired", request, user_id=stored.user_id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")
     return auth_time
 
 
-async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> None:
+async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> int:
     """Mark every non-revoked refresh-token row for this user as revoked.
 
     Called from the reuse-detection path and from logout. Rows are marked,
@@ -595,9 +645,11 @@ async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> None:
     detectable; the periodic cleanup task (main.py) purges them once they
     pass expires_at, so any audit surface built on these rows sees at most
     REFRESH_TOKEN_EXPIRE_DAYS of history.
+
+    Returns how many rows it revoked.
     """
     if not user_id:
-        return
+        return 0
     now = datetime.now(UTC)
     rows = (
         (
@@ -614,6 +666,7 @@ async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> None:
     for row in rows:
         row.revoked_at = now
     await db.commit()
+    return len(rows)
 
 
 @router.get("/me", response_model=UserResponse)
@@ -638,11 +691,16 @@ async def logout(request: Request, response: Response, db: DbSession):
     """
     # Tolerate decode failure — logout should not be blockable by a
     # malformed/missing cookie.
+    user_id = None
     refresh_token_value = request.cookies.get("refresh_token")
     if refresh_token_value:
         payload = decode_token(refresh_token_value)
         if payload and payload.get("type") == "refresh":
-            await _revoke_all_for_user(db, payload.get("sub"))
+            user_id = payload.get("sub")
+    revoked_count = await _revoke_all_for_user(db, user_id)
+    security_event(
+        logging.INFO, "auth.logout", request, user_id=user_id, revoked_count=revoked_count
+    )
 
     cookie_attrs = _auth_cookie_kwargs()
 

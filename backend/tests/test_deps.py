@@ -2,11 +2,13 @@
 Tests for dependency injection utilities
 """
 
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
+from starlette.requests import Request
 
 from app.core.deps import get_current_admin_user, get_current_user
 from app.models.user import User
@@ -89,6 +91,20 @@ class TestGetCurrentUser:
             assert result.id == "user123"
 
 
+def _admin_request() -> Request:
+    """A request to an admin route, as get_current_admin_user receives it."""
+    return Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/api/v1/admin/sentry-panel",
+            "headers": [],
+            "query_string": b"",
+            "client": ("203.0.113.9", 1234),
+        }
+    )
+
+
 class TestGetCurrentAdminUser:
     """Tests for get_current_admin_user dependency."""
 
@@ -98,7 +114,7 @@ class TestGetCurrentAdminUser:
         mock_user = User(id="user123", username="testuser", is_admin=False)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin_user(mock_user)
+            await get_current_admin_user(_admin_request(), mock_user)
 
         assert exc_info.value.status_code == 403
         assert "Not enough permissions" in exc_info.value.detail
@@ -108,7 +124,7 @@ class TestGetCurrentAdminUser:
         """Test get_current_admin_user returns admin user."""
         mock_user = User(id="admin123", username="admin", github_id="67890", is_admin=True)
 
-        result = await get_current_admin_user(mock_user)
+        result = await get_current_admin_user(_admin_request(), mock_user)
 
         assert result == mock_user
         assert result.is_admin is True
@@ -119,7 +135,7 @@ class TestGetCurrentAdminUser:
         mock_user = User(id="old123", username="old", github_id="11111", is_admin=True)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin_user(mock_user)
+            await get_current_admin_user(_admin_request(), mock_user)
 
         assert exc_info.value.status_code == 403
 
@@ -132,6 +148,20 @@ class TestGetCurrentAdminUser:
         mock_user = User(id="admin123", username="admin", github_id="67890", is_admin=True)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin_user(mock_user)
+            await get_current_admin_user(_admin_request(), mock_user)
 
         assert exc_info.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_a_refusal_is_a_security_event(self, security_records):
+        mock_user = User(id="old123", username="old", github_id="11111", is_admin=True)
+
+        with pytest.raises(HTTPException):
+            await get_current_admin_user(_admin_request(), mock_user)
+
+        [record] = security_records
+        assert record.levelno == logging.WARNING
+        assert record.event == "auth.admin_denied"
+        assert record.user_id == "old123"
+        assert record.github_id == "11111"
+        assert record.path == "/api/v1/admin/sentry-panel"

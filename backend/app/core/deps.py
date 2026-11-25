@@ -2,6 +2,8 @@
 Dependency injection utilities
 """
 
+import logging
+
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -9,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.security import decode_token
+from app.core.security_events import security_event
 from app.database import get_db
 from app.models.user import User
 
@@ -88,7 +91,10 @@ async def get_current_user(
     return user
 
 
-async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:  # noqa: B008
+async def get_current_admin_user(
+    request: Request,
+    current_user: User = Depends(get_current_user),  # noqa: B008
+) -> User:
     """Require the current user to be the configured admin.
 
     The stored is_admin flag is not enough on its own: the user's GitHub id
@@ -99,6 +105,13 @@ async def get_current_admin_user(current_user: User = Depends(get_current_user))
     if not (
         current_user.is_admin and admin_github_id and current_user.github_id == admin_github_id
     ):
+        security_event(
+            logging.WARNING,
+            "auth.admin_denied",
+            request,
+            user_id=current_user.id,
+            github_id=current_user.github_id,
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
 
     return current_user

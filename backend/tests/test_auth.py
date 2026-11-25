@@ -5,6 +5,7 @@ Tests for authentication endpoints
 import asyncio
 import base64
 import hashlib
+import logging
 import urllib.parse  # noqa: PLC0415
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -884,6 +885,187 @@ class TestOAuthBrowserBinding:
         attributes = {part.strip().lower() for part in cleared[0].split(";")[1:]}
         assert {"max-age=0", "path=/api/v1/auth/github"} <= attributes
         assert "github_oauth" not in client.cookies
+
+
+def _events(records: list[logging.LogRecord]) -> list[tuple[str, int]]:
+    """(event, level) of each record; `event` arrives through the record's extra."""
+    return [(record.__dict__["event"], record.levelno) for record in records]
+
+
+def _assert_no_secret_logged(records: list[logging.LogRecord], *secrets: str) -> None:
+    for record in records:
+        text = repr(record.__dict__)
+        for secret in secrets:
+            assert secret not in text
+
+
+class TestSecurityEvents:
+    """Each authentication decision leaves one app.security record that
+    names it, with identifiers and counts but no token, code or state."""
+
+    def test_a_login_is_logged_without_its_secrets(
+        self, client: TestClient, monkeypatch, security_records
+    ):
+        login = _start_github_login(client, monkeypatch)
+        state = _authorize_query(login)["state"]
+        verifier = client.cookies["github_oauth"].split(".")[1]
+
+        response = _github_callback(client, state, _github_client(ADMIN_ON_GITHUB))
+
+        assert response.status_code == 302
+        assert _events(security_records) == [("auth.login_success", logging.INFO)]
+        [record] = security_records
+        assert record.github_id == ADMIN_GITHUB_ID
+        assert record.github_login == "adminuser"
+        assert record.user_id
+        assert record.client_ip_hash
+        _assert_no_secret_logged(
+            security_records,
+            "test_code",
+            state,
+            verifier,
+            "gho_test_token",
+            response.cookies["access_token"],
+            response.cookies["refresh_token"],
+        )
+
+    def test_a_foreign_account_is_logged_as_refused(
+        self, client: TestClient, monkeypatch, security_records
+    ):
+        github = _github_client({"id": 99999, "login": "someoneelse"})
+
+        assert _complete_github_login(client, monkeypatch, github).status_code == 403
+
+        assert _events(security_records) == [("auth.login_refused", logging.WARNING)]
+        assert security_records[0].github_id == "99999"
+        assert security_records[0].github_login == "someoneelse"
+
+    def test_a_failed_code_exchange_is_logged(
+        self, client: TestClient, monkeypatch, security_records
+    ):
+        github = _github_client(ADMIN_ON_GITHUB)
+        github.post.return_value.json.return_value = {"error": "bad_verification_code"}
+
+        assert _complete_github_login(client, monkeypatch, github).status_code == 400
+
+        assert _events(security_records) == [("auth.login_failed", logging.WARNING)]
+        assert security_records[0].status_code == 400
+
+    def test_a_rejected_state_is_logged_with_its_reason(
+        self, client: TestClient, monkeypatch, security_records
+    ):
+        github = _github_client(ADMIN_ON_GITHUB)
+        state = _authorize_query(_start_github_login(client, monkeypatch))["state"]
+        assert _github_callback(client, state, github).status_code == 302
+        # A replay of the consumed state from the same browser.
+        client.cookies.set("github_oauth", f"{state}.verifier")
+        assert _github_callback(client, state, github).status_code == 400
+        # A state this browser never received.
+        assert _github_callback(client, "never-issued", github).status_code == 400
+
+        rejected = [r for r in security_records if r.event == "auth.oauth_state_rejected"]
+        assert [(r.reason, r.levelno) for r in rejected] == [
+            ("unknown_or_expired", logging.WARNING),
+            ("not_this_browser", logging.WARNING),
+        ]
+
+    def test_refresh_reuse_is_an_error_with_the_revoked_count(
+        self, client: TestClient, test_user_in_db: dict, monkeypatch, security_records
+    ):
+        from app.api.v1 import auth as auth_module  # noqa: PLC0415
+
+        monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
+        original = test_user_in_db["refresh_token"]
+        rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert rotated.status_code == 200
+        client.cookies.clear()
+
+        replay = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+
+        assert replay.status_code == 401
+        assert _events(security_records) == [("auth.refresh_reuse_detected", logging.ERROR)]
+        [record] = security_records
+        assert record.user_id == test_user_in_db["user_id"]
+        assert record.jti_prefix == test_user_in_db["refresh_jti"][:8]
+        assert record.revoked_count == 1  # the rotated successor
+        assert record.seconds_since_rotation >= 0
+        _assert_no_secret_logged(security_records, original)
+
+    def test_a_replay_within_the_grace_window_is_info_not_error(
+        self, client: TestClient, test_user_in_db: dict, security_records
+    ):
+        original = test_user_in_db["refresh_token"]
+        rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+        assert rotated.status_code == 200
+        client.cookies.clear()
+
+        replay = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
+
+        assert replay.status_code == 401
+        assert _events(security_records) == [("auth.refresh_superseded", logging.INFO)]
+
+    def test_a_cross_user_replay_is_an_error(
+        self, client: TestClient, test_user_in_db: dict, security_records
+    ):
+        # A validly signed token whose jti belongs to another user's row.
+        forged, _, _ = create_refresh_token(
+            subject="someone-else", jti=test_user_in_db["refresh_jti"]
+        )
+
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": forged})
+
+        assert response.status_code == 401
+        assert _events(security_records) == [("auth.refresh_cross_user", logging.ERROR)]
+        [record] = security_records
+        assert record.presented_sub == "someone-else"
+        assert record.jti_owner == test_user_in_db["user_id"]
+        assert record.revoked_count == 0
+
+    def test_logout_is_logged_with_the_revoked_count(
+        self, client: TestClient, test_user_in_db: dict, security_records
+    ):
+        client.cookies.set("refresh_token", test_user_in_db["refresh_token"])
+
+        assert client.post("/api/v1/auth/logout").status_code == 200
+
+        assert _events(security_records) == [("auth.logout", logging.INFO)]
+        assert security_records[0].user_id == test_user_in_db["user_id"]
+        assert security_records[0].revoked_count == 1
+
+    def test_an_expired_session_is_logged(
+        self, client: TestClient, test_user_in_db: dict, security_records
+    ):
+        from app.api.v1.auth import SESSION_MAX_AGE  # noqa: PLC0415
+
+        signed_in = datetime.now(UTC) - SESSION_MAX_AGE - timedelta(minutes=1)
+        token, jti, exp = create_refresh_token(
+            subject=test_user_in_db["user_id"], auth_time=int(signed_in.timestamp())
+        )
+        _store_refresh_row(test_user_in_db["user_id"], jti, exp)
+
+        assert client.post("/api/v1/auth/refresh", json={"refresh_token": token}).status_code == 401
+
+        assert _events(security_records) == [("auth.session_expired", logging.INFO)]
+
+    def test_admin_denied_is_logged(
+        self, client: TestClient, test_user_in_db: dict, security_records
+    ):
+        response = client.get("/api/v1/admin/sentry-panel", headers=test_user_in_db["headers"])
+
+        assert response.status_code == 403
+        assert _events(security_records) == [("auth.admin_denied", logging.WARNING)]
+
+    def test_each_event_is_counted_on_the_metrics_page(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        from app.middleware.performance import metrics  # noqa: PLC0415
+
+        before = metrics.counters["auth.logout"]
+        client.cookies.set("refresh_token", test_user_in_db["refresh_token"])
+
+        assert client.post("/api/v1/auth/logout").status_code == 200
+
+        assert metrics.counters["auth.logout"] == before + 1
 
 
 class TestGitHubCallbackMocked:

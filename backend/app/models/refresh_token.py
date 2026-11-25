@@ -23,9 +23,9 @@ class RefreshToken(Base):
 
     __tablename__ = "refresh_tokens"
 
-    # The `jti` claim from the JWT. Url-safe random string. Primary key so
-    # an attempted reuse of an already-rotated jti collides at insert and
-    # surfaces in logs.
+    # The `jti` claim from the JWT. Url-safe random string. /auth/refresh
+    # looks the presented token up by it, and logs a replay of a revoked
+    # jti as the auth.refresh_reuse_detected security event.
     jti: Mapped[str] = mapped_column(String(64), primary_key=True)
     user_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
