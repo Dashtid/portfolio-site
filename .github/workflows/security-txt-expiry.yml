@@ -14,6 +14,9 @@
 # left (22.5 days of a 90-day certificate). Vercel and Fly renew with about a
 # third left, so that means a renewal has stalled, and on a domain in the HSTS
 # preload list an expired certificate is an outage nobody can click through.
+#
+# A second job reads the commit in the footer of https://dashti.se/ and fails
+# when frontend/ on main differs from it: production's frontend is behind main.
 name: security.txt expiry
 
 on:
@@ -172,4 +175,75 @@ jobs:
           for error in errors:
               print(f"::error::{error}")
           sys.exit(1 if errors else 0)
+          PY
+
+  # The deploys and their catch-up read GitHub's deployment records, which
+  # miss a rollback in the Vercel dashboard, a deploy from outside the
+  # pipeline, and a failed deploy that no later push retried. The footer's
+  # build stamp names the commit the site was built from. The API states no
+  # commit, so its half has no such check.
+  frontend-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history, where the footer's short commit can be found.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check that production serves main's frontend
+        run: |
+          python3 - <<'PY'
+          import re
+          import subprocess
+          import sys
+          import urllib.request
+
+          URL = "https://dashti.se/"
+          # FooterSection.vue links the commit the bundle was built from.
+          STAMP = re.compile(r'href="https://github\.com/Dashtid/portfolio-site/commit/([0-9a-f]{7,40})"')
+          FIX = "run rebake-frontend.yml, which deploys main's frontend"
+
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None  # report a redirect as an HTTP error instead of following it
+
+
+          def git(*args):
+              return subprocess.run(["git", *args], capture_output=True, text=True, check=False)
+
+
+          def problem():
+              request = urllib.request.Request(URL, headers={"User-Agent": "frontend-commit"})
+              try:
+                  with urllib.request.build_opener(NoRedirect).open(request, timeout=15) as response:
+                      page = response.read().decode("utf-8")
+              except Exception as exc:  # network, HTTP (redirects included) and decode errors
+                  return f"{URL}: {exc}"
+              stamps = sorted(set(STAMP.findall(page)))
+              if len(stamps) != 1:
+                  return f"{URL}: expected one footer build stamp, found {stamps}"
+              [short] = stamps
+              served = git("rev-parse", "--verify", "--quiet", f"{short}^{{commit}}").stdout.strip()
+              head = git("rev-parse", "HEAD").stdout.strip()
+              if not served or not head:
+                  return f"{URL} serves {short}, a commit this repository's history does not resolve"
+              diff = git("diff", "--quiet", served, head, "--", "frontend")
+              if diff.returncode == 1:
+                  return f"{URL} serves {short}, and frontend/ differs from it on main at {head[:7]}"
+              if diff.returncode != 0:
+                  return f"git diff {short} {head[:7]} failed: {diff.stderr.strip()}"
+              print(f"{URL} serves {short}; frontend/ is the same on main at {head[:7]}")
+              return None
+
+
+          error = problem()
+          if error:
+              print(f"::error::{error} - {FIX}")
+          sys.exit(1 if error else 0)
           PY

@@ -7,8 +7,11 @@ this process with the network replaced, so each check is tested as CI runs it.
 import json
 import socket
 import ssl
+import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -253,3 +256,138 @@ def test_medium_and_low_matches_alone_leave_the_gate_open(
     _filter(tmp_path, monkeypatch, _sarif("warning", "note"))
     assert _run(_step(*GATE), [str(tmp_path / "high.sarif")], monkeypatch) == 0
     assert _errors(capsys.readouterr().out) == []
+
+
+COMMIT = ("security-txt-expiry.yml", "Check that production serves main's frontend")
+SHORT = "b5f4fe6"
+FULL = SHORT + "0" * 33
+HEAD = "c" * 40
+REBAKE = "run rebake-frontend.yml, which deploys main's frontend"
+
+
+def _page(*commits: str) -> bytes:
+    """The home page with one footer build stamp per commit, as the build renders it."""
+    stamps = "".join(
+        '<p class="build-stamp"> Build <a href="https://github.com/Dashtid/portfolio-site/'
+        f'commit/{commit}" target="_blank" rel="noopener noreferrer">{commit}</a></p>'
+        for commit in commits
+    )
+    return f"<html><body><footer>{stamps}</footer></body></html>".encode()
+
+
+class _Response:
+    def __init__(self, body: bytes) -> None:
+        self.body = body
+
+    def __enter__(self) -> "_Response":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return self.body
+
+
+class _Site:
+    """urllib.request.build_opener, answering every request with one page or error."""
+
+    def __init__(self, answer: bytes | Exception) -> None:
+        self.answer = answer
+        self.handlers: tuple[Any, ...] = ()
+        self.requests: list[tuple[str, float]] = []
+
+    def build_opener(self, *handlers: Any) -> "_Site":
+        self.handlers = handlers
+        return self
+
+    def open(self, request: urllib.request.Request, timeout: float) -> _Response:
+        self.requests.append((request.full_url, timeout))
+        if isinstance(self.answer, Exception):
+            raise self.answer
+        return _Response(self.answer)
+
+
+class _Git:
+    """subprocess.run for the step's git commands, answered from its settings."""
+
+    def __init__(self, resolves: bool = True, diff: int = 0) -> None:
+        self.resolves, self.diff = resolves, diff
+        self.calls: list[list[str]] = []
+
+    def run(self, args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        assert args[0] == "git"
+        command = list(args[1:])
+        self.calls.append(command)
+        if command[:3] == ["rev-parse", "--verify", "--quiet"]:
+            found = f"{FULL}\n" if self.resolves else ""
+            return subprocess.CompletedProcess(args, 0 if self.resolves else 1, found, "")
+        if command == ["rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(args, 0, f"{HEAD}\n", "")
+        assert command[0] == "diff", command
+        stderr = "fatal: bad object" if self.diff > 1 else ""
+        return subprocess.CompletedProcess(args, self.diff, "", stderr)
+
+
+def _check_commit(
+    monkeypatch: pytest.MonkeyPatch, answer: bytes | Exception, git: _Git
+) -> tuple[int, _Site]:
+    site = _Site(answer)
+    monkeypatch.setattr(urllib.request, "build_opener", site.build_opener)
+    monkeypatch.setattr(subprocess, "run", git.run)
+    return _run(_step(*COMMIT), [], monkeypatch), site
+
+
+def test_the_commit_check_runs_weekly_on_full_history_with_read_access() -> None:
+    workflow = yaml.safe_load((WORKFLOWS / COMMIT[0]).read_text(encoding="utf-8"))
+    assert "schedule" in workflow.get("on", workflow.get(True))
+    job = workflow["jobs"]["frontend-commit"]
+    assert job["permissions"] == {"contents": "read"}
+    [checkout] = [step for step in job["steps"] if "uses" in step]
+    assert checkout["uses"].startswith("actions/checkout@")
+    assert checkout["with"] == {"fetch-depth": 0, "persist-credentials": False}
+    assert "secrets." not in yaml.safe_dump(job)
+
+
+def test_the_commit_check_passes_when_main_has_the_served_frontend(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    git = _Git()
+    code, site = _check_commit(monkeypatch, _page(SHORT), git)
+    out = capsys.readouterr().out
+    assert (code, _errors(out)) == (0, [])
+    assert site.requests == [("https://dashti.se/", 15)]
+    # A redirect is reported as an error instead of being followed.
+    [handler] = site.handlers
+    assert handler().redirect_request(None, None, 308, "Moved", {}, "https://x.test/") is None
+    assert git.calls == [
+        ["rev-parse", "--verify", "--quiet", f"{SHORT}^{{commit}}"],
+        ["rev-parse", "HEAD"],
+        ["diff", "--quiet", FULL, HEAD, "--", "frontend"],
+    ]
+    assert f"serves {SHORT}; frontend/ is the same on main at ccccccc" in out
+
+
+@pytest.mark.parametrize(
+    ("answer", "git", "problem"),
+    [
+        (_page(SHORT), _Git(diff=1), f"serves {SHORT}, and frontend/ differs from it on main"),
+        (_page(SHORT), _Git(resolves=False), "a commit this repository's history does not resolve"),
+        (_page(SHORT), _Git(diff=128), f"git diff {SHORT} ccccccc failed: fatal: bad object"),
+        (_page(), _Git(), "expected one footer build stamp, found []"),
+        (_page(SHORT, "1234567"), _Git(), "expected one footer build stamp, found ['1234567',"),
+        (urllib.error.URLError("timed out"), _Git(), "https://dashti.se/: <urlopen error"),
+    ],
+)
+def test_the_commit_check_fails_when_main_has_moved_on_or_the_stamp_is_unusable(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    answer: bytes | Exception,
+    git: _Git,
+    problem: str,
+) -> None:
+    code, _ = _check_commit(monkeypatch, answer, git)
+    [error] = _errors(capsys.readouterr().out)
+    assert code == 1
+    assert problem in error
+    assert error.endswith(f" - {REBAKE}")

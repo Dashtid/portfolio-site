@@ -148,6 +148,13 @@ Supporting workflows:
   and fails once one has less than a quarter of its lifetime left (22.5
   days of a 90-day certificate). Vercel and Fly renew with about a third
   left, so a failure means a renewal has stalled.
+- **Production commit**: the same weekly workflow reads the commit in the
+  footer of `https://dashti.se/` and fails when `frontend/` on `main`
+  differs from it. The catch-up reads only GitHub's deployment records,
+  so it misses a rollback in the Vercel dashboard, a deploy from outside
+  the pipeline and a failed deploy that no later push retried;
+  `rebake-frontend.yml` deploys `main`'s frontend again. The API states
+  no commit, so its half has no such check.
 - **Sentry**: live on the **frontend**. The `VITE_SENTRY_DSN` GitHub
   secret (set 2026-08-16) is forwarded with `--build-env` by `ci-cd.yml`
   and `rebake-frontend.yml`; without it the whole init is
