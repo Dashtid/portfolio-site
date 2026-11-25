@@ -694,12 +694,12 @@ if settings.RATE_LIMIT_ENABLED:
 #   CloseUnreadBody -> HTTPSScheme -> CORS -> Logging -> ErrorTracking
 #   -> Performance -> SecurityHeaders -> HostCheck -> CacheControl
 #   -> Compression -> BodySizeLimit -> RouteLimit -> SlowAPI -> routes
-# BodySizeLimit sits just outside SlowAPI and the routes: nothing between
-# it and the handlers reads request bodies, so DoS protection is preserved
-# while its 413s pass through every header/logging layer on the way out.
-# SlowAPI innermost means an oversized request costs a 413 without also
-# consuming rate budget, while every request that reaches a handler has
-# passed the limit check first.
+# BodySizeLimit sits just outside the rate limiters (RouteLimit, SlowAPI)
+# and the routes: nothing between it and the handlers reads request bodies,
+# so DoS protection is preserved while its 413s pass through every
+# header/logging layer on the way out. The limiters innermost means an
+# oversized request costs a 413 without also consuming rate budget, while
+# every request that reaches a handler has passed the limit check first.
 
 # Rate limiting (D3-BE-01) — innermost. Without this middleware, slowapi's
 # default_limits were dead config: only the ~15 decorated routes were
