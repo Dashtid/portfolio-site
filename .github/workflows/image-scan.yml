@@ -45,6 +45,7 @@ jobs:
       # The scanner, by digest: Docker runs the digest, and the tag only names
       # it. Move both together, from
       #   docker buildx imagetools inspect ghcr.io/anchore/grype:<vX.Y.Z>
+      # security-scan's pin check fails when the digest is not the tag's.
       GRYPE_IMAGE: ghcr.io/anchore/grype:v0.122.0@sha256:013e16ae96bd64108973e3e9fecec63f7ff276358d34c46c25d33e2aac96539f
     steps:
       - name: Checkout code

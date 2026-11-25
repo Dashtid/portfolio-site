@@ -6,6 +6,7 @@ its offline checks over the repository's own workflows.
 """
 
 import importlib.util
+import re
 from pathlib import Path
 from types import ModuleType
 
@@ -84,7 +85,8 @@ SCORECARD_ACTION = (
     'runs:\n  using: "docker"\n  image: "docker://ghcr.io/ossf/scorecard-action:v2.5.0"\n'
 )
 DIGEST = "sha256:" + "1e" * 32
-SERVED = {("ossf/scorecard-action", "v2.5.0"): DIGEST}
+GRYPE = "sha256:" + "01" * 32
+SERVED = {("ossf/scorecard-action", "v2.5.0"): DIGEST, ("anchore/grype", "v0.122.0"): GRYPE}
 
 
 @pytest.fixture
@@ -270,6 +272,71 @@ def test_only_checks_the_named_action_and_nothing_repository_wide(
     assert "says 'All nine third-party build steps'" in out
     # An --only for an action no workflow pins fails instead of passing empty.
     assert pins.main(["--only", "ossf/scorecard"]) == 1
+
+
+def test_ghcr_images_named_by_tag_and_digest_outside_comments_are_found() -> None:
+    lines = f"""env:
+  GRYPE_IMAGE: ghcr.io/anchore/grype:v0.122.0@{GRYPE}
+  # GRYPE_IMAGE: ghcr.io/anchore/grype:v0.121.0@{GRYPE}
+  OTHER: ghcr.io/anchore/grype:v0.122.0
+steps:
+  - uses: docker://ghcr.io/owner/tool:1.2.3@{GRYPE} # a Docker action
+  - run: echo ok # ghcr.io/anchore/grype:v0.1.0@{GRYPE}
+""".splitlines()
+    assert pins.ghcr_pins(lines, "scan.yml") == [
+        ("scan.yml:2", "anchore/grype", "v0.122.0", GRYPE),
+        ("scan.yml:6", "owner/tool", "1.2.3", GRYPE),
+    ]
+
+
+SCAN_WORKFLOW = f"""jobs:
+  scan:
+    env:
+      GRYPE_IMAGE: ghcr.io/anchore/grype:v0.122.0@{GRYPE}
+    steps:
+      - uses: actions/checkout@{CHECKOUT} # v7.0.1
+"""
+
+
+@pytest.mark.parametrize(
+    ("workflow", "code", "message"),
+    [
+        (
+            SCAN_WORKFLOW,
+            0,
+            f"[+] ghcr.io/anchore/grype:v0.122.0@{GRYPE[:19]} = ghcr.io  (ci.yml:4)",
+        ),
+        (
+            SCAN_WORKFLOW.replace(GRYPE, f"sha256:{'0' * 64}"),
+            1,
+            f"ci.yml:4: ghcr.io/anchore/grype:v0.122.0 is {GRYPE[:19]}, but the pin is "
+            "sha256:000000000000 -- Docker runs the pinned digest",
+        ),
+        (
+            SCAN_WORKFLOW.replace("v0.122.0", "v9.9.9"),
+            1,
+            "ci.yml:4: ghcr.io/anchore/grype has no tag 'v9.9.9'",
+        ),
+    ],
+)
+def test_a_ghcr_image_must_carry_the_digest_its_tag_serves(
+    repo: Path, capsys: pytest.CaptureFixture[str], workflow: str, code: int, message: str
+) -> None:
+    _write(repo, workflow)
+    assert pins.main([]) == code
+    out = capsys.readouterr().out
+    assert message in out
+    # --only checks one action's pins and none of the images.
+    assert pins.main(["--only", "actions/checkout"]) == 0
+
+
+def test_the_image_scan_names_its_scanner_where_the_check_reads_it() -> None:
+    lines = (pins.WORKFLOW_DIR / "image-scan.yml").read_text(encoding="utf-8").splitlines()
+    [(where, image, tag, digest)] = pins.ghcr_pins(lines, "image-scan.yml")
+    assert image == "anchore/grype"
+    assert re.fullmatch(r"v\d+\.\d+\.\d+", tag)
+    assert re.fullmatch(r"sha256:[0-9a-f]{64}", digest)
+    assert lines[int(where.split(":")[1]) - 1].strip().startswith("GRYPE_IMAGE: ")
 
 
 def test_the_scorecard_step_records_its_image() -> None:

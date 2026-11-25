@@ -37,6 +37,12 @@ and the digest the one ghcr.io serves for it, so a tag pushed again, or a bump
 that leaves the comment behind, fails here. `--only ossf/scorecard-action`
 checks that one action, for a job that must pass before the image is pulled.
 
+A workflow can name a ghcr.io image itself, outside any comment, as
+`ghcr.io/<repository>:<tag>@sha256:<digest>`: image-scan.yml's grype scanner
+in `env:`, for one. Docker runs the digest there too, so a bump that moves the
+tag alone would run the old image under the new name; the digest must be the
+one ghcr.io serves for the tag.
+
 Two checks cover the pin set as a whole. A `uses:` that names no full commit
 SHA (nor a path in this repository, nor a Docker image by digest) fails: the
 comparison above would otherwise pass over it in silence. And the colophon
@@ -135,6 +141,11 @@ GHCR_TAG_RE = re.compile(r"docker://ghcr\.io/(?P<image>[a-z0-9._/-]+):(?P<tag>\w
 IMAGE_COMMENT_RE = re.compile(
     r"#\s*image:\s*ghcr\.io/(?P<image>[a-z0-9._/-]+):(?P<tag>\w[\w.-]*)"
     r"@(?P<digest>sha256:[0-9a-f]{64})"
+)
+
+# A ghcr.io image a workflow names by tag and digest (see the docstring).
+GHCR_PIN_RE = re.compile(
+    r"ghcr\.io/(?P<image>[a-z0-9._/-]+):(?P<tag>\w[\w.-]*)@(?P<digest>sha256:[0-9a-f]{64})"
 )
 
 # Accept the multi-arch index types: the tag points at an index, and without
@@ -396,6 +407,31 @@ def audit_docker_image(
     return None
 
 
+def ghcr_pins(lines: list[str], file_name: str) -> list[tuple[str, str, str, str]]:
+    """("file:line", image, tag, digest) for each ghcr.io tag@digest outside a comment."""
+    found = []
+    for lineno, line in enumerate(lines, 1):
+        code = "" if line.lstrip().startswith("#") else line.split(" #")[0]
+        for match in GHCR_PIN_RE.finditer(code):
+            found.append((f"{file_name}:{lineno}", match["image"], match["tag"], match["digest"]))
+    return found
+
+
+def audit_ghcr_pin(where: str, image: str, tag: str, digest: str) -> str | None:
+    """Failure message unless ghcr.io serves `digest` for image:tag, else None."""
+    ref = f"ghcr.io/{image}:{tag}"
+    served = ghcr_digest(image, tag)
+    if served is None:
+        return f"{where}: ghcr.io/{image} has no tag {tag!r}"
+    if served != digest:
+        return (
+            f"{where}: {ref} is {served[:19]}, but the pin is {digest[:19]} -- "
+            "Docker runs the pinned digest, so the tag and the digest must move together"
+        )
+    print(f"[+] {ref}@{served[:19]} = ghcr.io  ({where})")
+    return None
+
+
 def unpinned_uses(lines: list[str], file_name: str) -> list[str]:
     """A failure line for every `uses:` in a workflow that PINNED_USES_RE does not accept."""
     return [
@@ -471,11 +507,14 @@ def main(argv: list[str] | None = None) -> int:
     # (repo, subpath, sha) -> ("file:line" of a uses:, (file, line, text) of its
     # `# image:` comment or None) for every use, for the Docker image check.
     actions: dict[tuple[str, str, str], list[tuple[str, tuple[str, int, str] | None]]] = {}
+    # ("file:line", image, tag, digest) of every ghcr.io image named by tag and digest.
+    images: list[tuple[str, str, str, str]] = []
     failures: list[str] = []
     for path in sorted(WORKFLOW_DIR.glob("*.yml")) + sorted(WORKFLOW_DIR.glob("*.yaml")):
         lines = path.read_text(encoding="utf-8").splitlines()
         if not only:
             failures.extend(unpinned_uses(lines, path.name))
+            images.extend(ghcr_pins(lines, path.name))
         for lineno, line in enumerate(lines, 1):
             match = PIN_RE.search(line)
             if not match:
@@ -554,6 +593,11 @@ def main(argv: list[str] | None = None) -> int:
             failure = audit_docker_image(action, image, where, comment)
             if failure:
                 failures.append(failure)
+
+    for where, image, tag, digest in images:
+        failure = audit_ghcr_pin(where, image, tag, digest)
+        if failure:
+            failures.append(failure)
 
     claim = None if only else pin_claim(COLOPHON)
     if claim is not None:
