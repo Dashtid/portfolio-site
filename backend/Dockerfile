@@ -33,6 +33,11 @@ WORKDIR /app
 # Copy Python dependencies from the builder stage into the system prefix
 COPY --from=builder /install /usr/local
 
+# Nothing installs packages at runtime: remove pip, and the wheel that
+# `python -m ensurepip` would reinstall it from, so the image has no installer.
+RUN python -m pip uninstall --yes pip \
+    && python -c "import ensurepip, pathlib, shutil; shutil.rmtree(pathlib.Path(ensurepip.__file__).parent / '_bundled')"
+
 # Copy application code, root-owned: no --chown, so the server cannot rewrite it
 COPY . .
 
