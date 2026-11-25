@@ -29,6 +29,9 @@
  *    the -webkit- form: Vite 8's Lightning CSS minifier collapsed the
  *    navbar's pair to the -webkit- form alone, which Chromium and Firefox
  *    ignore.
+ * 7. The ingest origin of every Sentry DSN in the bundle must be in the CSP's
+ *    connect-src, which names that host exactly. A DSN on another host would
+ *    have every error report blocked, and nothing else would say so.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -259,6 +262,41 @@ if (!navbarGlass) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// 7. Every Sentry DSN in the bundle must post to an origin connect-src allows.
+//
+// connect-src names Sentry's ingest host exactly; a regional wildcard would
+// also let a script post page data to a stranger's project. CI builds carry
+// no DSN, so a DSN moved to another org or region would pass every other gate
+// and then have each error report blocked by the CSP. The Vercel build has the
+// DSN, so this fails that deploy instead. It prints the origin, never the key.
+// ---------------------------------------------------------------------------
+const vercel = JSON.parse(
+  fs.readFileSync(path.resolve(import.meta.dirname, '..', 'vercel.json'), 'utf-8')
+)
+const policy = vercel.headers
+  .flatMap(rule => rule.headers)
+  .find(h => h.key === 'Content-Security-Policy').value
+const connectSrc = (policy.match(/(?:^|;\s*)connect-src ([^;]*)/)?.[1] ?? '').trim().split(/\s+/)
+const dsnOrigins = new Set()
+for (const file of allChunks) {
+  const js = fs.readFileSync(path.join(dist, 'assets', 'js', file), 'utf-8')
+  for (const [, scheme, host] of js.matchAll(/(https?:\/\/)[0-9A-Za-z]+@([A-Za-z0-9.-]+)\/\d+/g)) {
+    dsnOrigins.add(`${scheme}${host}`)
+  }
+}
+if (process.env.VITE_SENTRY_DSN && dsnOrigins.size === 0) {
+  fail('VITE_SENTRY_DSN is set but no DSN was found in dist/assets/js: update invariant 7')
+}
+for (const origin of dsnOrigins) {
+  if (!connectSrc.includes(origin)) {
+    fail(
+      `the bundle's Sentry DSN posts to ${origin}, which vercel.json's connect-src does not ` +
+        'allow, so the CSP would block every error report. Put that exact origin in connect-src.'
+    )
+  }
+}
+
 console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
@@ -267,5 +305,6 @@ console.log(
     'excluded repository names absent from baked content ' +
     `(${decodedStates} state and ${decodedLdJson} JSON-LD blocks decoded), ` +
     `${homeCards} project cards prerendered, ` +
-    `${backdropRules} backdrop-filter rules carry both forms`
+    `${backdropRules} backdrop-filter rules carry both forms, ` +
+    `${dsnOrigins.size} Sentry DSN origin(s) allowed by connect-src`
 )

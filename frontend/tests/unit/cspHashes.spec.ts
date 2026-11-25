@@ -145,6 +145,28 @@ describe('CSP script hashes (D3-SEC-03)', () => {
   })
 })
 
+describe('CSP destinations', () => {
+  it('connect-src allows the API and one exact Sentry ingest host, no wildcard', () => {
+    // Any Sentry organisation can get a host under a regional wildcard, so a
+    // wildcard would let a script post page data to a project of its own.
+    // scripts/verify-dist-invariants.mjs checks the host against the DSN.
+    const sources = directive('connect-src').split(' ')
+    expect(sources).toHaveLength(3)
+    expect(sources.slice(0, 2)).toEqual(["'self'", 'https://api.dashti.se'])
+    expect(sources[2]).toMatch(/^https:\/\/o\d+\.ingest\.(?:[a-z]{2}\.)?sentry\.io$/)
+  })
+
+  it('frame-src allows the three embed sources and nothing of this origin', () => {
+    // Only VideoEmbed and MapEmbed create frames, and their validators admit
+    // absolute https URLs on these hosts and paths alone.
+    expect(directive('frame-src').split(' ')).toEqual([
+      'https://www.youtube.com/embed/',
+      'https://www.youtube-nocookie.com/embed/',
+      'https://www.google.com/maps/embed'
+    ])
+  })
+})
+
 describe('vercel.json schema hygiene', () => {
   // Vercel validates vercel.json against a CLOSED schema and REJECTS the whole
   // deploy on any unknown key: "Invalid vercel.json - should NOT have additional
