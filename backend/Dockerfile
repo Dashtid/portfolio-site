@@ -64,8 +64,12 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # --no-access-log: uvicorn's access line prints the peer address and the raw
 # query string, the OAuth callback's code and state included; LoggingMiddleware
 # logs every request with those query values redacted.
+# --ws none: the app has no WebSocket route. A request asking to upgrade is
+# served as plain HTTP through the app's middleware, instead of going to the
+# installed websockets library first.
 CMD ["python", "-m", "uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
      "--no-proxy-headers", \
-     "--no-access-log"]
+     "--no-access-log", \
+     "--ws", "none"]

@@ -44,3 +44,13 @@ def test_access_log_is_off() -> None:
     LoggingMiddleware redacts; uvicorn's own line would print them as sent.
     """
     assert _uvicorn_params()["access_log"] is False
+
+
+def test_websocket_upgrades_are_off() -> None:
+    """The app has no WebSocket route, so uvicorn upgrades no connection.
+
+    With the default --ws auto and a WebSocket library installed, uvicorn hands
+    every request asking to upgrade to that library before the app's
+    middleware runs; with none, the request is served as plain HTTP.
+    """
+    assert _uvicorn_params()["ws"] == "none"
