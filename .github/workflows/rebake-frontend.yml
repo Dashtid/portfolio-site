@@ -19,16 +19,18 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: rebake-frontend
-  cancel-in-progress: false
-
 jobs:
   rebake:
     # Main only: a dispatch on another branch would deploy that branch's
     # tree, which no pipeline run has checked.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The group of ci-cd.yml's deploy-frontend too: two production deploys
+    # never overlap, so an older tree cannot finish last.
+    concurrency:
+      group: production-frontend
+      cancel-in-progress: false
     environment:
       name: production
       url: https://dashti.se

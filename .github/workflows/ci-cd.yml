@@ -505,6 +505,12 @@ jobs:
       (needs.dependency-review.result == 'success' || needs.dependency-review.result == 'skipped') &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     timeout-minutes: 10
+    # Shared with rebake-frontend.yml's job, so two production deploys never
+    # overlap and an older tree cannot finish last. GitHub keeps one waiting
+    # job per group: a later arrival replaces a waiting one.
+    concurrency:
+      group: production-frontend
+      cancel-in-progress: false
     environment:
       name: production
       url: https://dashti.se

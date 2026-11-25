@@ -139,6 +139,19 @@ def test_dependency_review_also_checks_the_range_a_push_adds() -> None:
     assert step["with"]["head-ref"] == "${{ github.event_name == 'push' && github.sha || '' }}"
 
 
+def test_frontend_deploys_and_rebakes_share_one_concurrency_group() -> None:
+    # Group names span every workflow in the repository, so the two jobs that
+    # run `vercel deploy --prod` wait for each other instead of overlapping.
+    deploy = _load("ci-cd.yml")["jobs"]["deploy-frontend"]
+    rebake_workflow = _load("rebake-frontend.yml")
+    rebake = rebake_workflow["jobs"]["rebake"]
+    group = {"group": "production-frontend", "cancel-in-progress": False}
+    assert deploy["concurrency"] == group
+    assert rebake["concurrency"] == group
+    assert "concurrency" not in rebake_workflow
+    assert isinstance(rebake["timeout-minutes"], int)
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filter finds the pushed range's base locally; a
     # depth-1 clone would make it fetch, and without credentials.
