@@ -33,9 +33,11 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: DEFAULT_TITLE }
   },
   {
-    path: '/experience/:id',
+    // The id becomes a segment of an API path. vue-router matches the encoded
+    // path, so an id holding '.' or any %-escape falls to the catch-all.
+    path: '/experience/:id([A-Za-z0-9-]+)',
     name: 'experience-detail',
-    alias: '/company/:id',
+    alias: '/company/:id([A-Za-z0-9-]+)',
     component: ExperienceDetail,
     props: true,
     meta: { title: 'Experience | David Dashti' }

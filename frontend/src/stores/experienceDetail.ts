@@ -24,7 +24,11 @@ export const useExperienceDetailStore = defineStore('experienceDetail', {
      */
     async fetchCompany(id: string, signal?: AbortSignal): Promise<void> {
       if (this.byId[id]) return
-      const response = await apiClient.get<Company>(`/api/v1/companies/${id}`, { signal })
+      // Navigation by route name skips the route's id pattern; encoding keeps
+      // a '/', '?' or '#' in the id from leaving this path segment.
+      const response = await apiClient.get<Company>(`/api/v1/companies/${encodeURIComponent(id)}`, {
+        signal
+      })
       this.byId[id] = response.data
     }
   }

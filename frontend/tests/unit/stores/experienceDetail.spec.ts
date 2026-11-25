@@ -46,6 +46,17 @@ describe('experienceDetail store', () => {
     })
   })
 
+  it('keeps the id inside one path segment of the request', async () => {
+    mockedApiClient.get.mockResolvedValue({ data: company })
+    const store = useExperienceDetailStore()
+
+    await store.fetchCompany('../auth/me')
+
+    expect(mockedApiClient.get).toHaveBeenCalledWith('/api/v1/companies/..%2Fauth%2Fme', {
+      signal: undefined
+    })
+  })
+
   it('is a no-op when the company is already cached', async () => {
     mockedApiClient.get.mockResolvedValue({ data: company })
     const store = useExperienceDetailStore()
