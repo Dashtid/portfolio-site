@@ -55,16 +55,19 @@ jobs:
           cp .github/tools/vercel/package.json .github/tools/vercel/package-lock.json "${RUNNER_TEMP}/vercel-cli/"
           cd "${RUNNER_TEMP}/vercel-cli"
           npm ci --ignore-scripts --no-audit --no-fund
-          test -x node_modules/@vercel/vc-native-linux-x64/bin/vercel
-          node_modules/.bin/vercel --version 2>&1 | tee version.txt
-          grep -qE '^Vercel CLI [^ ]+ \(native[,)]' version.txt
+          cli=node_modules/@vercel/vc-native-linux-x64
+          test -x "${cli}/bin/vercel"
+          want=$(node -p "require('./${cli}/package.json').version")
+          # The version goes to stdout and the banner to stderr.
+          "${cli}/bin/vercel" --version | tee version.txt
+          grep -qxF "${want}" version.txt
 
       # No working-directory: the main pipeline deploys from the repo root
       # (Vercel's Root Directory project setting selects frontend/) — a
       # rebake must upload the identical tree.
       - name: Deploy to Vercel (rebake with fresh CMS content)
         run: |
-          "${RUNNER_TEMP}/vercel-cli/node_modules/.bin/vercel" deploy --prod --yes \
+          "${RUNNER_TEMP}/vercel-cli/node_modules/@vercel/vc-native-linux-x64/bin/vercel" deploy --prod --yes \
             --build-env VITE_APP_VERSION="${GITHUB_SHA:0:12}" \
             --build-env VITE_SENTRY_DSN="$VITE_SENTRY_DSN" \
             --build-env SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \

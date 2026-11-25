@@ -401,7 +401,8 @@ def test_apt_trusts_only_the_pgdg_key_with_the_published_fingerprint() -> None:
 
 
 TOOLS = WORKFLOWS.parent / "tools" / "vercel"
-LOCKED_CLI = '"${RUNNER_TEMP}/vercel-cli/node_modules/.bin/vercel"'
+NATIVE = "@vercel/vc-native-linux-x64"
+LOCKED_CLI = f'"${{RUNNER_TEMP}}/vercel-cli/node_modules/{NATIVE}/bin/vercel"'
 
 
 def _vercel_install(steps: list[dict[str, Any]]) -> dict[str, Any]:
@@ -425,47 +426,48 @@ def test_the_token_step_runs_the_vercel_cli_installed_from_its_lock(
     assert install["run"] == pipeline["run"]
 
 
-def test_the_vercel_cli_install_takes_only_the_lock_and_needs_the_native_binary() -> None:
+def test_the_vercel_cli_install_takes_only_the_lock_and_checks_the_binary_version() -> None:
     run = _vercel_install(_load("ci-cd.yml")["jobs"]["deploy-frontend"]["steps"])["run"]
     assert "npm install" not in run
     in_order = [
         "set -euo pipefail",
         'cd "${RUNNER_TEMP}/vercel-cli"',
         "npm ci --ignore-scripts --no-audit --no-fund",
-        "test -x node_modules/@vercel/vc-native-linux-x64/bin/vercel",
-        "node_modules/.bin/vercel --version 2>&1 | tee version.txt",
-        "grep -qE ",
+        f"cli=node_modules/{NATIVE}\n",
+        'test -x "${cli}/bin/vercel"',
+        """want=$(node -p "require('./${cli}/package.json').version")""",
+        '"${cli}/bin/vercel" --version | tee version.txt',
+        'grep -qxF "${want}" version.txt',
     ]
     positions = [run.index(line) for line in in_order]
     assert positions == sorted(positions)
-    # The launcher labels the banner only when it spawned the native binary;
-    # the JS CLI fallback prints it bare.
-    match = re.search(r"grep -qE '([^']+)' version\.txt", run)
-    assert match is not None
-    banner = re.compile(match[1])
-    assert banner.match("Vercel CLI 65.16.0 (native)")
-    assert banner.match("Vercel CLI 65.16.0 (native, pr-115 abc1234)")
-    assert not banner.match("Vercel CLI 65.16.0")
+    # The binary prints its bare version on stdout; the banner on stderr has
+    # changed shape between releases.
+    assert "2>&1" not in run
 
 
-def test_the_vercel_cli_lock_pins_the_whole_tree_from_the_registry() -> None:
+def test_the_vercel_cli_lock_holds_only_the_native_binary_from_the_registry() -> None:
     package = json.loads((TOOLS / "package.json").read_text(encoding="utf-8"))
     lock = json.loads((TOOLS / "package-lock.json").read_text(encoding="utf-8"))
     # Deploy tooling, like the frontend's build tools: scanners scope it as
     # development, not as code the site serves.
     assert "dependencies" not in package
-    assert list(package["devDependencies"]) == ["vercel"]
-    version = package["devDependencies"]["vercel"]
+    assert list(package["devDependencies"]) == [NATIVE]
+    version = package["devDependencies"][NATIVE]
     assert re.fullmatch(r"\d+\.\d+\.\d+", version)
     assert lock["packages"][""]["devDependencies"] == package["devDependencies"]
+    # The binary's package alone: no launcher and no JavaScript fallback tree.
     entries = {path: meta for path, meta in lock["packages"].items() if path}
-    # The launcher runs a native binary only at its own version.
-    assert entries["node_modules/vercel"]["version"] == version
-    assert entries["node_modules/@vercel/vc-native-linux-x64"]["version"] == version
-    for path, meta in entries.items():
-        assert meta["resolved"].startswith("https://registry.npmjs.org/"), path
-        assert meta["integrity"].startswith("sha512-"), path
-        assert meta["dev"] is True, path
+    assert list(entries) == [f"node_modules/{NATIVE}"]
+    [meta] = entries.values()
+    assert meta["version"] == version
+    assert meta["resolved"] == (
+        f"https://registry.npmjs.org/{NATIVE}/-/vc-native-linux-x64-{version}.tgz"
+    )
+    assert meta["integrity"].startswith("sha512-")
+    assert meta["dev"] is True
+    assert (meta["os"], meta["cpu"], meta["libc"]) == (["linux"], ["x64"], ["glibc"])
+    assert not {"dependencies", "optionalDependencies", "hasInstallScript", "bin"} & set(meta)
 
 
 def test_vercel_cli_bumps_wait_out_the_cooldown_and_run_the_frontend_half() -> None:
