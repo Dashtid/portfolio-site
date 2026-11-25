@@ -67,9 +67,10 @@ jobs:
           - '.github/workflows/ci-cd.yml'
           # backend-quality runs this guard, so a change to it must too.
           - 'scripts/check-lock-parity.py'
-          # backend/tests holds the tests of these two scripts.
+          # backend/tests holds the tests of these three scripts.
           - 'scripts/check-live-headers.py'
           - 'scripts/deployed-commits.py'
+          - 'scripts/verify_action_pins.py'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

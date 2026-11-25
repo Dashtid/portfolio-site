@@ -27,6 +27,12 @@ serves for that tag. Docker runs the digest when a reference carries both, so a
 digest left behind by a version bump would run the old scanner under the new
 name.
 
+Two checks cover the pin set as a whole. A `uses:` that names no full commit
+SHA (nor a path in this repository, nor a Docker image by digest) fails: the
+comparison above would otherwise pass over it in silence. And the colophon
+page states how many actions are pinned, so a count that differs from the
+pins found here fails as well.
+
 Run locally with `gh auth token` available, or in CI with GITHUB_TOKEN.
 """
 
@@ -46,6 +52,7 @@ from pathlib import Path
 from typing import TypeVar
 
 WORKFLOW_DIR = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+COLOPHON = WORKFLOW_DIR.parent.parent / "frontend" / "src" / "views" / "ColophonView.vue"
 API = "https://api.github.com"
 GHCR = "https://ghcr.io"
 
@@ -61,6 +68,41 @@ PIN_RE = re.compile(
     r"uses:\s*(?P<owner>[\w.-]+)/(?P<repo>[\w.-]+)(?P<subpath>(?:/[\w.-]+)*)"
     r"@(?P<sha>[0-9a-f]{40})(?:\s*#\s*(?P<version>\S+))?"
 )
+
+# Every `uses:` key, quoted or not: a step's action or a job's reusable workflow.
+USES_RE = re.compile(r"""^\s*(?:-\s+)?uses:\s*(?P<q>['"]?)(?P<ref>[^\s'"#]+)(?P=q)""")
+
+# What a `uses:` may name: a commit by its full SHA, a path in this repository,
+# or a Docker image by digest.
+PINNED_USES_RE = re.compile(
+    r"[\w.-]+/[\w.-]+(?:/[\w.-]+)*@[0-9a-f]{40}|\./\S*|docker://\S+@sha256:[0-9a-f]{64}"
+)
+
+# The colophon's count: "All <number> third-party build steps are pinned ...".
+PIN_CLAIM_RE = re.compile(r"\bAll\s+(?P<count>[\w-]+)\s+third-party\s+build\s+steps\b")
+_UNITS = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+]
+_TENS = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
 
 # Docker-hosted or first-party actions that carry no resolvable upstream tag.
 SKIP_REPOS: set[str] = set()
@@ -245,6 +287,39 @@ def audit_image_pin(
     return None
 
 
+def unpinned_uses(lines: list[str], file_name: str) -> list[str]:
+    """A failure line for every `uses:` in a workflow that PINNED_USES_RE does not accept."""
+    return [
+        f"{file_name}:{lineno}: uses: {uses['ref']} is not pinned to a full commit SHA"
+        for lineno, line in enumerate(lines, 1)
+        if (uses := USES_RE.match(line)) and not PINNED_USES_RE.fullmatch(uses["ref"])
+    ]
+
+
+def number_word(word: str) -> int | None:
+    """The value of digits or of an English number below one hundred, else None."""
+    word = word.lower()
+    if word.isdigit():
+        return int(word)
+    if word in _UNITS:
+        return _UNITS.index(word)
+    tens, _, unit = word.partition("-")
+    if tens in _TENS and (not unit or unit in _UNITS[1:10]):
+        return 20 + 10 * _TENS.index(tens) + (_UNITS.index(unit) if unit else 0)
+    return None
+
+
+def pin_claim(colophon: Path) -> tuple[str, int] | None:
+    """(phrase, number) of the colophon's count of pinned steps, or None when it states none."""
+    if not colophon.is_file():
+        return None
+    for match in PIN_CLAIM_RE.finditer(colophon.read_text(encoding="utf-8")):
+        count = number_word(match["count"])
+        if count is not None:
+            return match[0], count
+    return None
+
+
 def resolve_tag(repo: str, tag: str, token: str | None) -> tuple[str | None, str | None]:
     """Resolve a tag to (commit_sha, tag_object_sha).
 
@@ -276,8 +351,10 @@ def main() -> int:
     # (repo, "file:line" of the uses:, its version comment, (file, line, value)
     # of the step's version input or None) for IMAGE_VERSION_ACTIONS steps.
     image_pins: list[tuple[str, str, str | None, tuple[str, int, str] | None]] = []
+    failures: list[str] = []
     for path in sorted(WORKFLOW_DIR.glob("*.yml")) + sorted(WORKFLOW_DIR.glob("*.yaml")):
         lines = path.read_text(encoding="utf-8").splitlines()
+        failures.extend(unpinned_uses(lines, path.name))
         for lineno, line in enumerate(lines, 1):
             match = PIN_RE.search(line)
             if not match:
@@ -294,7 +371,6 @@ def main() -> int:
         print("[-] No SHA-pinned actions found -- is the workflow directory right?")
         return 1
 
-    failures: list[str] = []
     cache: dict[tuple[str, str], str | None] = {}
 
     for (repo, sha, version), locations in sorted(pins.items()):
@@ -335,8 +411,19 @@ def main() -> int:
         if failure:
             failures.append(failure)
 
+    claim = pin_claim(COLOPHON)
+    if claim is not None:
+        page = COLOPHON.relative_to(WORKFLOW_DIR.parent.parent).as_posix()
+        if claim[1] != len(pins):
+            failures.append(
+                f"{page}: says {claim[0]!r}, but {len(pins)} actions are pinned -- "
+                "move the page's number with the pins"
+            )
+        else:
+            print(f"[+] {page}: {claim[0]!r} = {len(pins)} pinned actions")
+
     if failures:
-        print(f"\n[-] {len(failures)} action pin(s) disagree with their comment:\n")
+        print(f"\n[-] {len(failures)} action pin check(s) failed:\n")
         for failure in failures:
             print(f"    {failure}")
         print(

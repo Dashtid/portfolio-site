@@ -183,6 +183,10 @@ def test_a_header_check_change_runs_its_tests_and_a_frontend_deploy() -> None:
     assert "scripts/check-live-headers.py" in filters["backend"]
 
 
+def test_a_pin_check_change_runs_its_tests() -> None:
+    assert "scripts/verify_action_pins.py" in _path_filters()["backend"]
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filters find their base commits locally; a
     # depth-1 clone would make them fetch, and without credentials.
