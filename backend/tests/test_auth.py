@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.config import settings
 from app.core.security import create_access_token, create_refresh_token
+from tests.conftest import ADMIN_GITHUB_ID
 
 
 class TestGitHubLogin:
@@ -40,6 +41,8 @@ class TestGitHubLogin:
             assert "github.com/login/oauth/authorize" in location
             assert "client_id=test_client_id" in location
             assert "state=" in location
+            # The callback reads only the public profile, which needs no scope.
+            assert "scope" not in urllib.parse.parse_qs(urllib.parse.urlsplit(location).query)
 
     def test_github_login_not_configured(self, client: TestClient):
         """Test GitHub login when OAuth is not configured."""
@@ -666,6 +669,93 @@ class TestSessionMaxAge:
 
         assert response.status_code == 401
         assert response.json()["detail"] == "Session expired"
+
+
+def _github_client(github_user: dict) -> AsyncMock:
+    """Stand-in for the shared OAuth client: the code exchange, GET /user and
+    the token revocation all succeed."""
+    token_response = MagicMock(status_code=200)
+    token_response.json.return_value = {"access_token": "gho_test_token", "token_type": "bearer"}
+    user_response = MagicMock(status_code=200)
+    user_response.json.return_value = github_user
+    github = AsyncMock()
+    github.post.return_value = token_response
+    github.get.return_value = user_response
+    github.request.return_value = MagicMock(status_code=204)
+    return github
+
+
+def _complete_github_login(client: TestClient, monkeypatch, github: AsyncMock):
+    """Start a login, then return the callback's response with GitHub answering as `github`."""
+    monkeypatch.setattr(settings, "GITHUB_CLIENT_ID", "test_client_id")
+    monkeypatch.setattr(settings, "GITHUB_CLIENT_SECRET", "test_client_secret")
+    login = client.get("/api/v1/auth/github", follow_redirects=False)
+    assert login.status_code == 307
+    query = urllib.parse.parse_qs(urllib.parse.urlsplit(login.headers["location"]).query)
+    with patch("app.api.v1.auth.get_oauth_client", return_value=github):
+        return client.get(
+            f"/api/v1/auth/github/callback?code=test_code&state={query['state'][0]}",
+            follow_redirects=False,
+        )
+
+
+ADMIN_ON_GITHUB = {"id": int(ADMIN_GITHUB_ID), "login": "adminuser", "name": "Admin User"}
+
+
+class TestGitHubTokenRevocation:
+    """The callback revokes the GitHub token once GET /user has been read."""
+
+    def _assert_revoked(self, github: AsyncMock) -> None:
+        github.request.assert_awaited_once()
+        args, kwargs = github.request.call_args
+        assert args == ("DELETE", "https://api.github.com/applications/test_client_id/token")
+        assert kwargs["auth"] == ("test_client_id", "test_client_secret")
+        assert kwargs["json"] == {"access_token": "gho_test_token"}
+
+    def test_token_is_revoked_after_a_login(self, client: TestClient, monkeypatch):
+        github = _github_client(ADMIN_ON_GITHUB)
+
+        response = _complete_github_login(client, monkeypatch, github)
+
+        assert response.status_code == 302
+        self._assert_revoked(github)
+
+    def test_token_is_revoked_when_the_account_is_refused(self, client: TestClient, monkeypatch):
+        github = _github_client({"id": 99999, "login": "someoneelse"})
+
+        response = _complete_github_login(client, monkeypatch, github)
+
+        assert response.status_code == 403
+        self._assert_revoked(github)
+
+    def test_token_is_revoked_when_get_user_fails(self, client: TestClient, monkeypatch):
+        github = _github_client(ADMIN_ON_GITHUB)
+        github.get.return_value = MagicMock(status_code=401)
+
+        response = _complete_github_login(client, monkeypatch, github)
+
+        assert response.status_code == 400
+        self._assert_revoked(github)
+
+    def test_a_failed_revocation_does_not_block_the_login(self, client: TestClient, monkeypatch):
+        import httpx  # noqa: PLC0415
+
+        github = _github_client(ADMIN_ON_GITHUB)
+        github.request.side_effect = httpx.ConnectError("unreachable")
+
+        response = _complete_github_login(client, monkeypatch, github)
+
+        assert response.status_code == 302
+        assert response.cookies.get("access_token")
+
+    def test_nothing_is_revoked_without_a_token(self, client: TestClient, monkeypatch):
+        github = _github_client(ADMIN_ON_GITHUB)
+        github.post.return_value.json.return_value = {"error": "bad_verification_code"}
+
+        response = _complete_github_login(client, monkeypatch, github)
+
+        assert response.status_code == 400
+        github.request.assert_not_awaited()
 
 
 class TestGitHubCallbackMocked:

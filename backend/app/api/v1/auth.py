@@ -170,12 +170,12 @@ async def github_login(request: Request, db: DbSession):
     # Generate state for CSRF protection with TTL and IP binding (database-backed)
     state = await create_oauth_state(db, client_ip=client_ip)
 
-    # Build GitHub authorization URL
+    # Build GitHub authorization URL. No scope: the callback reads only the
+    # public profile from GET /user, which a token without scopes can do.
     github_auth_url = (
         f"https://github.com/login/oauth/authorize?"
         f"client_id={settings.GITHUB_CLIENT_ID}&"
         f"redirect_uri={settings.GITHUB_REDIRECT_URI}&"
-        f"scope=read:user user:email&"
         f"state={state}"
     )
 
@@ -196,6 +196,95 @@ def _oauth_denied_redirect(error: str | None) -> RedirectResponse:
         url=f"{settings.FRONTEND_URL}/admin/login?oauth=denied",
         status_code=status.HTTP_302_FOUND,
     )
+
+
+async def _fetch_github_user(code: str) -> Any:
+    """Exchange the authorization code for a token and return GET /user's JSON.
+
+    Reading GET /user is the token's only use, so the token is revoked right
+    after, whatever the outcome: an OAuth app's token is valid until revoked.
+    """
+    # The shared module-level client reuses its TLS session for these calls.
+    client = get_oauth_client()
+    github_access_token: str | None = None
+    try:
+        token_response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id": settings.GITHUB_CLIENT_ID,
+                "client_secret": settings.GITHUB_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": settings.GITHUB_REDIRECT_URI,
+            },
+            headers={"Accept": "application/json"},
+        )
+
+        if token_response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get access token from GitHub",
+            )
+
+        token_data = token_response.json()
+
+        if "error" in token_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to authenticate with GitHub",
+            )
+
+        github_access_token = token_data.get("access_token")
+
+        user_response = await client.get(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": f"Bearer {github_access_token}",
+                "Accept": "application/json",
+            },
+        )
+
+        if user_response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get user info from GitHub",
+            )
+
+        github_user = user_response.json()
+    except httpx.TimeoutException as err:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="GitHub service is not responding. Please try again later.",
+        ) from err
+    except httpx.RequestError as err:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to communicate with authentication service. Please try again.",
+        ) from err
+    finally:
+        if github_access_token:
+            await _revoke_github_token(client, github_access_token)
+    return github_user
+
+
+async def _revoke_github_token(client: httpx.AsyncClient, access_token: str) -> None:
+    """Revoke a GitHub token with DELETE /applications/{client_id}/token.
+
+    GitHub authenticates the call with the app's client id and secret. A
+    failure is logged and the login goes on: the token is never stored.
+    """
+    try:
+        response = await client.request(
+            "DELETE",
+            f"https://api.github.com/applications/{settings.GITHUB_CLIENT_ID}/token",
+            auth=(settings.GITHUB_CLIENT_ID or "", settings.GITHUB_CLIENT_SECRET or ""),
+            json={"access_token": access_token},
+            headers={"Accept": "application/vnd.github+json"},
+        )
+    except httpx.HTTPError as err:
+        logger.warning("GitHub token revocation failed: %s", type(err).__name__)
+        return
+    if response.status_code != 204:
+        logger.warning("GitHub token revocation answered HTTP %s", response.status_code)
 
 
 @router.get("/github/callback")
@@ -224,65 +313,7 @@ async def github_callback(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state parameter"
         )
 
-    # Exchange code for access token with proper timeout and error handling.
-    # PERF-10: shared module-level client; TLS session reused across the two
-    # round-trips in this handler.
-    client = get_oauth_client()
-    try:
-        # Get access token from GitHub
-        token_response = await client.post(
-            "https://github.com/login/oauth/access_token",
-            data={
-                "client_id": settings.GITHUB_CLIENT_ID,
-                "client_secret": settings.GITHUB_CLIENT_SECRET,
-                "code": code,
-                "redirect_uri": settings.GITHUB_REDIRECT_URI,
-            },
-            headers={"Accept": "application/json"},
-        )
-
-        if token_response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get access token from GitHub",
-            )
-
-        token_data = token_response.json()
-
-        if "error" in token_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to authenticate with GitHub",
-            )
-
-        github_access_token = token_data.get("access_token")
-
-        # Get user info from GitHub
-        user_response = await client.get(
-            "https://api.github.com/user",
-            headers={
-                "Authorization": f"Bearer {github_access_token}",
-                "Accept": "application/json",
-            },
-        )
-
-        if user_response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get user info from GitHub",
-            )
-
-        github_user = user_response.json()
-    except httpx.TimeoutException as err:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="GitHub service is not responding. Please try again later.",
-        ) from err
-    except httpx.RequestError as err:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to communicate with authentication service. Please try again.",
-        ) from err
+    github_user = await _fetch_github_user(code)
 
     # Check if user is the admin. Fail closed when ADMIN_GITHUB_ID is unset:
     # if we don't know who admin is, we cannot safely grant admin to anyone,
