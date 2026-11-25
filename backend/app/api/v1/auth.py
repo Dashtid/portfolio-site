@@ -191,7 +191,7 @@ async def github_login(request: Request, db: DbSession):
 
     response = RedirectResponse(url=github_auth_url)
     # SameSite=Lax, never Strict: GitHub's redirect back to the callback is a
-    # cross-site top-level navigation, which carries Lax cookies only.
+    # cross-site top-level navigation, which sends Lax cookies but not Strict.
     response.set_cookie(
         key=OAUTH_COOKIE,
         value=f"{state}.{verifier}",
