@@ -10,8 +10,29 @@ on:
 permissions: read-all
 
 jobs:
+  # The action's own metadata runs its image by tag, which the SHA pin does
+  # not fix; this job holds that tag to the digest recorded under the pin
+  # before the analysis pulls it. Publishing needs the analysis job to hold
+  # nothing but `uses:` steps, so the check is a job of its own.
+  image-pin:
+    name: Scorecard image pin
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the image digest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/verify_action_pins.py --only ossf/scorecard-action
+
   analysis:
     name: Scorecard analysis
+    needs: image-pin
     runs-on: ubuntu-latest
     permissions:
       security-events: write # upload SARIF to code-scanning
@@ -28,6 +49,8 @@ jobs:
         # api.securityscorecards.dev rejects tag-object SHAs as
         # "imposter commits" during webapp publish verification.
         uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        # The image the pinned action.yaml names; move it with the action.
+        # image: ghcr.io/ossf/scorecard-action:v2.5.0@sha256:1e1481c65fc2407d3fd6ab18a23c741eb4d1c0d9359ebafc4b3ab13aa61d8627
         with:
           results_file: results.sarif
           results_format: sarif

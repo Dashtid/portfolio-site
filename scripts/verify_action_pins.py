@@ -27,6 +27,16 @@ serves for that tag. Docker runs the digest when a reference carries both, so a
 digest left behind by a version bump would run the old scanner under the new
 name.
 
+A Docker action has the same gap when its own metadata names the image by tag:
+ossf/scorecard-action's action.yaml runs
+`docker://ghcr.io/ossf/scorecard-action:<tag>`, and the SHA pin fixes that
+line, not what the tag points to. Such a `uses:` carries
+`# image: ghcr.io/<repository>:<tag>@sha256:<digest>` among the comment lines
+right under it. The tag must be the one the metadata names at the pinned SHA
+and the digest the one ghcr.io serves for it, so a tag pushed again, or a bump
+that leaves the comment behind, fails here. `--only ossf/scorecard-action`
+checks that one action, for a job that must pass before the image is pulled.
+
 Two checks cover the pin set as a whole. A `uses:` that names no full commit
 SHA (nor a path in this repository, nor a Docker image by digest) fails: the
 comparison above would otherwise pass over it in silence. And the colophon
@@ -38,6 +48,8 @@ Run locally with `gh auth token` available, or in CI with GITHUB_TOKEN.
 
 from __future__ import annotations
 
+import argparse
+import base64
 import hashlib
 import json
 import os
@@ -114,6 +126,15 @@ IMAGE_VERSION_ACTIONS = {"trufflesecurity/trufflehog": "trufflesecurity/truffleh
 # `<tag>@sha256:<digest>`, optionally quoted, optionally followed by a comment.
 IMAGE_PIN_RE = re.compile(
     r"""^(?P<q>['"]?)(?P<tag>\w[\w.-]*)(?:@(?P<digest>sha256:[0-9a-f]{64}))?(?P=q)(?:\s+#.*)?$"""
+)
+
+# A Docker action's `runs.image` when it is a ghcr.io image named by tag.
+GHCR_TAG_RE = re.compile(r"docker://ghcr\.io/(?P<image>[a-z0-9._/-]+):(?P<tag>\w[\w.-]*)")
+
+# The comment that records such an image under its `uses:` (see the docstring).
+IMAGE_COMMENT_RE = re.compile(
+    r"#\s*image:\s*ghcr\.io/(?P<image>[a-z0-9._/-]+):(?P<tag>\w[\w.-]*)"
+    r"@(?P<digest>sha256:[0-9a-f]{64})"
 )
 
 # Accept the multi-arch index types: the tag points at an index, and without
@@ -287,6 +308,94 @@ def audit_image_pin(
     return None
 
 
+def image_comment(lines: list[str], uses_index: int) -> tuple[int, str] | None:
+    """(line number, text) of the `# image:` line among the comments right under
+    the `uses:` at lines[uses_index], or None when there is none."""
+    for index in range(uses_index + 1, len(lines)):
+        text = lines[index].strip()
+        if not text.startswith("#"):
+            break
+        if re.match(r"#\s*image:", text):
+            return index + 1, text
+    return None
+
+
+def docker_image(metadata: str) -> str | None:
+    """`runs.image` of an action's metadata when `runs.using` is docker, else None.
+
+    Line-based like step_input(): only the keys one level under `runs:` count.
+    """
+    in_runs, level, keys = False, 0, {}
+    for line in metadata.splitlines():
+        text = line.strip()
+        if not text or text.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if indent == 0:
+            in_runs, level = text.partition(":")[0] == "runs", 0
+        elif in_runs:
+            level = level or indent
+            if indent == level:
+                key, _, value = text.partition(":")
+                keys[key] = value.split(" #")[0].strip().strip("'\"")
+    return keys.get("image") if keys.get("using") == "docker" else None
+
+
+def action_metadata(repo: str, subpath: str, sha: str, token: str | None) -> str | None:
+    """The action.yml, else the action.yaml, of an action at `sha`; None when it has neither."""
+    for name in ("action.yml", "action.yaml"):
+        found = _api(f"/repos/{repo}/contents{subpath}/{name}?ref={sha}", token)
+        if isinstance(found, dict) and isinstance(found.get("content"), str):
+            return base64.b64decode(found["content"]).decode("utf-8")
+    return None
+
+
+def audit_docker_image(
+    action: str, image: str, where: str, comment: tuple[str, int, str] | None
+) -> str | None:
+    """Failure message for one `uses:` of a Docker action whose metadata runs `image`, or None.
+
+    `action` names the pin, `where` is its `uses:` line and `comment` the
+    (file, line, text) of the `# image:` comment under it.
+    """
+    if not image.startswith("docker://") or "@sha256:" in image:
+        # Built from the pinned commit's Dockerfile, or fixed by digest upstream.
+        return None
+    tagged = GHCR_TAG_RE.fullmatch(image)
+    if tagged is None:
+        return f"{where}: {action} runs {image}, a tag on a registry this script cannot read"
+    ref = f"ghcr.io/{tagged['image']}:{tagged['tag']}"
+    fix = (
+        f"record `# image: {ref}@sha256:<digest>` under the `uses:`, from "
+        f"`docker buildx imagetools inspect {ref}`"
+    )
+    if comment is None:
+        return f"{where}: {action} runs {ref}, a tag its SHA pin does not fix -- {fix}"
+
+    file_name, lineno, text = comment
+    at = f"{file_name}:{lineno}"
+    pin = IMAGE_COMMENT_RE.fullmatch(text)
+    if pin is None:
+        return f"{at}: {text!r} is not `# image: ghcr.io/<repository>:<tag>@sha256:<digest>`"
+    if (pin["image"], pin["tag"]) != (tagged["image"], tagged["tag"]):
+        return (
+            f"{at}: records ghcr.io/{pin['image']}:{pin['tag']}, but {action} runs {ref}; "
+            f"the comment must move with the action -- {fix}"
+        )
+
+    served = ghcr_digest(tagged["image"], tagged["tag"])
+    if served is None:
+        return f"{at}: ghcr.io/{tagged['image']} has no tag {tagged['tag']!r}"
+    if served != pin["digest"]:
+        return (
+            f"{at}: {ref} is {served[:19]}, but the recorded digest is {pin['digest'][:19]} "
+            "-- the tag was pushed again since it was recorded"
+        )
+
+    print(f"[+] {action} image {ref}@{served[:19]} = ghcr.io  ({at})")
+    return None
+
+
 def unpinned_uses(lines: list[str], file_name: str) -> list[str]:
     """A failure line for every `uses:` in a workflow that PINNED_USES_RE does not accept."""
     return [
@@ -341,7 +450,15 @@ def resolve_tag(repo: str, tag: str, token: str | None) -> tuple[str | None, str
     return obj.get("sha"), None
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Verify the action pins in .github/workflows.")
+    parser.add_argument(
+        "--only",
+        action="append",
+        metavar="OWNER/REPO",
+        help="check only this action's pins, without the checks over the whole pin set",
+    )
+    only = parser.parse_args(argv).only
     token = _token()
     if not token:
         print("[!] No GITHUB_TOKEN and no gh auth token; unauthenticated API.")
@@ -351,21 +468,32 @@ def main() -> int:
     # (repo, "file:line" of the uses:, its version comment, (file, line, value)
     # of the step's version input or None) for IMAGE_VERSION_ACTIONS steps.
     image_pins: list[tuple[str, str, str | None, tuple[str, int, str] | None]] = []
+    # (repo, subpath, sha) -> ("file:line" of a uses:, (file, line, text) of its
+    # `# image:` comment or None) for every use, for the Docker image check.
+    actions: dict[tuple[str, str, str], list[tuple[str, tuple[str, int, str] | None]]] = {}
     failures: list[str] = []
     for path in sorted(WORKFLOW_DIR.glob("*.yml")) + sorted(WORKFLOW_DIR.glob("*.yaml")):
         lines = path.read_text(encoding="utf-8").splitlines()
-        failures.extend(unpinned_uses(lines, path.name))
+        if not only:
+            failures.extend(unpinned_uses(lines, path.name))
         for lineno, line in enumerate(lines, 1):
             match = PIN_RE.search(line)
             if not match:
                 continue
             repo = f"{match['owner']}/{match['repo']}"
+            if only and repo not in only:
+                continue
             key = (repo, match["sha"], match["version"])
             pins.setdefault(key, []).append(f"{path.name}:{lineno}")
             if repo in IMAGE_VERSION_ACTIONS:
                 found = step_input(lines, lineno - 1, "version")
                 version_input = (path.name, *found) if found else None
                 image_pins.append((repo, f"{path.name}:{lineno}", match["version"], version_input))
+            noted = image_comment(lines, lineno - 1)
+            comment = (path.name, *noted) if noted else None
+            actions.setdefault((repo, match["subpath"], match["sha"]), []).append(
+                (f"{path.name}:{lineno}", comment)
+            )
 
     if not pins:
         print("[-] No SHA-pinned actions found -- is the workflow directory right?")
@@ -411,7 +539,23 @@ def main() -> int:
         if failure:
             failures.append(failure)
 
-    claim = pin_claim(COLOPHON)
+    for (repo, subpath, sha), uses in sorted(actions.items()):
+        if subpath.endswith((".yml", ".yaml")):
+            continue  # a reusable workflow, which has no action metadata
+        action = f"{repo}{subpath}@{sha[:12]}"
+        metadata = action_metadata(repo, subpath, sha, token)
+        if metadata is None:
+            failures.append(f"{uses[0][0]}: {action} has no action.yml or action.yaml")
+            continue
+        image = docker_image(metadata)
+        if image is None:
+            continue
+        for where, comment in uses:
+            failure = audit_docker_image(action, image, where, comment)
+            if failure:
+                failures.append(failure)
+
+    claim = None if only else pin_claim(COLOPHON)
     if claim is not None:
         page = COLOPHON.relative_to(WORKFLOW_DIR.parent.parent).as_posix()
         if claim[1] != len(pins):
