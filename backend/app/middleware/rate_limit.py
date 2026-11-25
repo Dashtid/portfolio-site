@@ -9,8 +9,10 @@ import ipaddress
 
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import _find_route_handler, _get_route_name
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.config import settings
 from app.core.ip_utils import get_client_ip
@@ -174,4 +176,35 @@ rate_limit_public = limiter.limit(
 # pass — but FastAPI parses the multipart body BEFORE auth runs, so a
 # decorator would exempt exactly the unauthenticated parse-flood traffic
 # it was meant to throttle. The middleware default limit counts upload
-# requests before any body parsing instead.
+# requests before any body parsing instead. (RouteLimitMiddleware below
+# now runs a decorator's check before the body is read as well.)
+
+
+class RouteLimitMiddleware:
+    """Check a decorated route's own limit before the route reads its body.
+
+    slowapi's middleware skips routes that carry a limit decorator, and the
+    decorator checks only once FastAPI has parsed the body and solved the
+    dependencies: a request that failed validation or authentication was
+    never counted, and one over the limit was parsed before its 429. This
+    runs the decorator's check first and marks the request as checked,
+    which the decorator honours, so nothing is counted twice.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and limiter.enabled:
+            routes = getattr(scope.get("app"), "routes", ())
+            handler = _find_route_handler(routes, scope)
+            if handler is not None and _get_route_name(handler) in limiter._route_limits:
+                request = Request(scope, receive)
+                try:
+                    limiter._check_request_limit(request, handler, False)
+                except RateLimitExceeded as exc:
+                    response = await rate_limit_exceeded_handler(request, exc)
+                    await response(scope, receive, send)
+                    return
+                request.state._rate_limiting_complete = True
+        await self.app(scope, receive, send)

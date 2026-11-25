@@ -8,6 +8,7 @@ from .error_tracking import ErrorTrackingMiddleware
 from .logging import LoggingMiddleware
 from .performance import PerformanceMiddleware
 from .rate_limit import (
+    RouteLimitMiddleware,
     limiter,
     rate_limit_api,
     rate_limit_auth,
@@ -21,6 +22,7 @@ __all__ = [
     "PerformanceMiddleware",
     "CompressionMiddleware",
     "CacheControlMiddleware",
+    "RouteLimitMiddleware",
     "limiter",
     "rate_limit_auth",
     "rate_limit_api",

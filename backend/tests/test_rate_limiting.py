@@ -87,6 +87,48 @@ class TestDefaultLimitEnforced:
         assert client.get("/api/v1/projects/").status_code == 429
 
 
+class TestDecoratedLimitsCountFailedRequests:
+    """A decorated route's limit is checked before its body is read.
+
+    The decorator alone checks inside the endpoint, after FastAPI has
+    parsed the body and solved the dependencies, so 422s and 401s were
+    never counted.
+    """
+
+    JSON = {"Content-Type": "application/json"}
+
+    def test_invalid_beacons_use_up_the_public_tier(self, client: TestClient):
+        limit = int(settings.RATE_LIMIT_PUBLIC.split("/")[0])
+        beacon = "/api/v1/analytics/track/pageview"
+
+        for i in range(limit):
+            response = client.post(beacon, json={"page_path": "/" + "x" * 3000})
+            assert response.status_code == 422, f"request {i + 1}: {response.status_code}"
+
+        blocked = client.post(beacon, json={"page_path": "/"})
+        assert blocked.status_code == 429
+        assert "Retry-After" in blocked.headers
+
+    def test_refresh_over_its_limit_is_refused_before_the_parse(self, client: TestClient):
+        """Malformed JSON is a 422 while under 5/minute and a 429 past it."""
+        limit = int(settings.RATE_LIMIT_AUTH.split("/")[0])
+
+        for _ in range(limit):
+            response = client.post("/api/v1/auth/refresh", content=b"{", headers=self.JSON)
+            assert response.status_code == 422
+
+        blocked = client.post("/api/v1/auth/refresh", content=b"{", headers=self.JSON)
+        assert blocked.status_code == 429
+
+    def test_unauthenticated_reads_use_up_the_api_tier(self, client: TestClient):
+        limit = int(settings.RATE_LIMIT_API.split("/")[0])
+
+        for _ in range(limit):
+            assert client.get("/api/v1/auth/me").status_code == 401
+
+        assert client.get("/api/v1/auth/me").status_code == 429
+
+
 class TestUploadBodyAllowanceGate:
     """The 26 MB upload allowance must require a signature-valid token."""
 

@@ -51,6 +51,7 @@ from app.middleware import (
     ErrorTrackingMiddleware,
     LoggingMiddleware,
     PerformanceMiddleware,
+    RouteLimitMiddleware,
     limiter,
     rate_limit_exceeded_handler,
 )
@@ -588,7 +589,7 @@ if settings.RATE_LIMIT_ENABLED:
 # innermost-first; effective order outermost -> innermost:
 #   HTTPSScheme -> CORS -> Logging -> ErrorTracking -> Performance
 #   -> SecurityHeaders -> HostCheck -> CacheControl -> Compression
-#   -> BodySizeLimit -> SlowAPI -> routes
+#   -> BodySizeLimit -> RouteLimit -> SlowAPI -> routes
 # BodySizeLimit sits just outside SlowAPI and the routes: nothing between
 # it and the handlers reads request bodies, so DoS protection is preserved
 # while its 413s pass through every header/logging layer on the way out.
@@ -604,9 +605,11 @@ if settings.RATE_LIMIT_ENABLED:
 # variant silently swaps our async 429 handler for slowapi's default
 # (sync_check_limits can't await), losing the Retry-After contract and
 # the OBS-09 metrics counter. Decorator-limited routes are exempted by
-# the middleware itself, so nothing is double-counted.
+# the middleware itself, so nothing is double-counted. RouteLimit, just
+# outside it, checks those routes' own limits before the body is read.
 if settings.RATE_LIMIT_ENABLED:
     app.add_middleware(SlowAPIASGIMiddleware)
+    app.add_middleware(RouteLimitMiddleware)
 
 # Body size limit (DoS protection) — just outside the rate limiter
 app.add_middleware(BodySizeLimitMiddleware)
