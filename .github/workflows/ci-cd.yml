@@ -478,6 +478,10 @@ jobs:
           head-ref: ${{ github.event_name == 'push' && github.sha || '' }}
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
+          # The OpenSSF Scorecard lookups fail nothing, but make up to two
+          # requests per added package, one after another, in a 5-minute job
+          # that both deploys wait for.
+          show-openssf-scorecard: false
           # TruffleHog is AGPL-3.0 and is INVOKED as a CI scanner, never
           # linked into or distributed with the frontend or backend, so the
           # copyleft terms have nothing to attach to. Without this allowance

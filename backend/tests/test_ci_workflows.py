@@ -141,6 +141,16 @@ def test_dependency_review_also_checks_the_range_a_push_adds() -> None:
     assert step["with"]["head-ref"] == "${{ github.event_name == 'push' && github.sha || '' }}"
 
 
+def test_dependency_review_makes_no_scorecard_lookups_within_its_time_limit() -> None:
+    # Both deploys wait for this job, and a timed-out job skips them. The
+    # Scorecard lookups only inform, one or two requests per added package.
+    review = _load("ci-cd.yml")["jobs"]["dependency-review"]
+    assert review["timeout-minutes"] == 5
+    [step] = _uses(review, "actions/dependency-review-action")
+    assert step["with"]["show-openssf-scorecard"] is False
+    assert "warn-on-openssf-scorecard-level" not in step["with"]
+
+
 def test_frontend_deploys_and_rebakes_share_one_concurrency_group() -> None:
     # Group names span every workflow in the repository, so the two jobs that
     # run `vercel deploy --prod` wait for each other instead of overlapping.
