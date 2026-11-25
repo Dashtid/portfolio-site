@@ -216,6 +216,25 @@ def test_codeql_analyzes_the_workflows_as_well_as_the_code() -> None:
     assert step["with"]["category"] == "/language:${{ matrix.language }}"
 
 
+def test_every_artifact_upload_sets_its_retention_and_lighthouse_uploads_none() -> None:
+    # Without retention-days an artifact stays for the repository default.
+    uploads = [
+        (key, step)
+        for key, job in _all_jobs().items()
+        for step in _uses(job, "actions/upload-artifact")
+    ]
+    assert len(uploads) >= 6
+    unset = [
+        key for key, step in uploads if not isinstance(step["with"].get("retention-days"), int)
+    ]
+    assert unset == []
+    # The Lighthouse action's own upload takes no retention setting, so its
+    # reports go only to temporary public storage.
+    [lighthouse] = _uses(_load("ci-cd.yml")["jobs"]["lighthouse"], "treosh/lighthouse-ci-action")
+    assert lighthouse["with"]["uploadArtifacts"] is False
+    assert lighthouse["with"]["temporaryPublicStorage"] is True
+
+
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
     # With full history the filters find their base commits locally; a
     # depth-1 clone would make them fetch, and without credentials.

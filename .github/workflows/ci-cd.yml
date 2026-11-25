@@ -520,8 +520,11 @@ jobs:
         uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
         with:
           configPath: './.github/lighthouse/lighthouserc.json'
+          # The reports go to temporary public storage, linked from the log.
+          # The action's own artifact upload takes no retention setting, so
+          # each copy would stay for the repository default of 90 days.
           temporaryPublicStorage: true
-          uploadArtifacts: true
+          uploadArtifacts: false
           runs: 3
 
   # Deploy frontend to Vercel — gated on frontend-quality, e2e-tests,
