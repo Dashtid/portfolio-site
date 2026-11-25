@@ -473,8 +473,9 @@ describe('AdminEducation', () => {
       await createWrapper()
       await flushPromises()
 
+      // The admin route: the public list leaves certificate_number out.
       // Component uses AbortSignal for request cancellation
-      expect(api.get).toHaveBeenCalledWith('/api/v1/education/', {
+      expect(api.get).toHaveBeenCalledWith('/api/v1/education/admin/all', {
         signal: expect.any(AbortSignal)
       })
     })
@@ -495,7 +496,7 @@ describe('AdminEducation', () => {
       await flushPromises()
 
       // Component uses AbortSignal for request cancellation
-      expect(api.get).toHaveBeenCalledWith('/api/v1/education/', {
+      expect(api.get).toHaveBeenCalledWith('/api/v1/education/admin/all', {
         signal: expect.any(AbortSignal)
       })
     })

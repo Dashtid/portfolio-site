@@ -36,6 +36,8 @@ export interface OssContribution {
   mergedAt: string
 }
 
+/** PUBLIC education shape. No certificate_number: the public API leaves it
+ *  out, and the admin editor reads GET /api/v1/education/admin/all. */
 export interface Education {
   id: string
   institution: string
@@ -47,7 +49,6 @@ export interface Education {
   location?: string | null
   logo_url?: string | null
   is_certification?: boolean
-  certificate_number?: string | null
   certificate_url?: string | null
   order_index?: number
 }

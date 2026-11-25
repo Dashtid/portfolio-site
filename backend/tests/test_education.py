@@ -2,6 +2,8 @@
 Tests for education API endpoints
 """
 
+from typing import Any
+
 from fastapi.testclient import TestClient
 
 
@@ -407,3 +409,67 @@ class TestEducationCRUDWithAdmin:
         assert data["description"] == "Updated description"
         assert data["institution"] == "Berkeley"
         assert data["degree"] == "Master of Science"
+
+
+class TestCertificateNumberIsAdminOnly:
+    """certificate_number leaves the public responses; the admin ones keep it."""
+
+    CERT = {
+        "institution": "Certification Body",
+        "degree": "Certified Probe",
+        "is_certification": True,
+        "certificate_number": "CERT-NUMBER-0042",
+        "order_index": 1,
+    }
+
+    def _create(self, client: TestClient, admin: dict[str, Any]) -> int:
+        r = client.post("/api/v1/education/", json=self.CERT, headers=admin["headers"])
+        assert r.status_code == 200
+        # The admin write path echoes the full row back to the editor.
+        assert r.json()["certificate_number"] == "CERT-NUMBER-0042"
+        return r.json()["id"]
+
+    def test_public_list_omits_certificate_number(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        self._create(client, admin_user_in_db)
+        rows = client.get("/api/v1/education/").json()
+        assert rows, "fixture certification should be listed"
+        for row in rows:
+            assert "certificate_number" not in row
+            assert row["degree"] == "Certified Probe"
+
+    def test_public_detail_omits_certificate_number(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        education_id = self._create(client, admin_user_in_db)
+        row = client.get(f"/api/v1/education/{education_id}").json()
+        assert "certificate_number" not in row
+
+    def test_admin_route_returns_certificate_number(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        self._create(client, admin_user_in_db)
+        r = client.get("/api/v1/education/admin/all", headers=admin_user_in_db["headers"])
+        assert r.status_code == 200
+        [row] = r.json()
+        assert row["certificate_number"] == "CERT-NUMBER-0042"
+
+    def test_update_response_keeps_certificate_number(
+        self, client: TestClient, admin_user_in_db: dict[str, Any]
+    ):
+        education_id = self._create(client, admin_user_in_db)
+        r = client.put(
+            f"/api/v1/education/{education_id}",
+            json={"certificate_number": "CERT-NUMBER-0043"},
+            headers=admin_user_in_db["headers"],
+        )
+        assert r.status_code == 200
+        assert r.json()["certificate_number"] == "CERT-NUMBER-0043"
+
+    def test_admin_route_requires_auth(self, client: TestClient):
+        assert client.get("/api/v1/education/admin/all").status_code == 401
+
+    def test_admin_route_requires_admin(self, client: TestClient, test_user_in_db: dict[str, Any]):
+        r = client.get("/api/v1/education/admin/all", headers=test_user_in_db["headers"])
+        assert r.status_code == 403

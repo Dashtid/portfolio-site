@@ -15,7 +15,6 @@ class EducationBase(BaseModel):
     description: str | None = Field(None, max_length=2000)
     logo_url: str | None = None
     is_certification: bool = False
-    certificate_number: str | None = Field(None, max_length=100)
     certificate_url: str | None = None
     order_index: int = Field(0, ge=0)  # Must be non-negative
 
@@ -27,7 +26,9 @@ class EducationBase(BaseModel):
 
 
 class EducationCreate(EducationBase):
-    pass
+    # Admin-only, so not on EducationBase: the public Education response
+    # inherits that, and GET /api/v1/education/ is a public endpoint.
+    certificate_number: str | None = Field(None, max_length=100)
 
 
 class EducationUpdate(BaseModel):
@@ -52,6 +53,14 @@ class EducationUpdate(BaseModel):
 
 
 class Education(EducationBase):
+    """PUBLIC education payload, without certificate_number."""
+
     id: int
 
     model_config = {"from_attributes": True}
+
+
+class EducationAdmin(Education):
+    """Full education row: admin-authenticated callers only."""
+
+    certificate_number: str | None = None

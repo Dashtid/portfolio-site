@@ -427,7 +427,9 @@ const fetchEducation = async (): Promise<void> => {
   abortController = new AbortController()
 
   try {
-    const response = await api.get<EducationFormData[]>('/api/v1/education/', {
+    // Admin-only route: the public GET leaves certificate_number out, and the
+    // certifications table and the edit form show it.
+    const response = await api.get<EducationFormData[]>('/api/v1/education/admin/all', {
       signal: abortController.signal
     })
     educationList.value = response.data

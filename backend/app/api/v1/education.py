@@ -15,7 +15,7 @@ from app.middleware.rate_limit import rate_limit_public
 from app.models.education import Education
 from app.models.user import User
 from app.schemas.education import Education as EducationSchema
-from app.schemas.education import EducationCreate, EducationUpdate
+from app.schemas.education import EducationAdmin, EducationCreate, EducationUpdate
 
 router = APIRouter(prefix="/education", tags=["education"])
 
@@ -43,6 +43,24 @@ async def get_all_education(
     return result.scalars().all()
 
 
+@router.get("/admin/all", response_model=list[EducationAdmin])
+async def get_all_education_admin(
+    db: DbSession,
+    current_user: AdminUser,
+):
+    """Full education rows INCLUDING certificate_number (admin only).
+
+    The public GET leaves certificate_number out (see the Education schema),
+    but the /admin/education editor shows and edits it. Two path segments, so
+    this never matches GET /{education_id}.
+    """
+    _ = current_user  # Used for authentication
+    result = await db.execute(
+        select(Education).order_by(Education.order_index, Education.start_date.desc())
+    )
+    return result.scalars().all()
+
+
 @router.get("/{education_id}", response_model=EducationSchema)
 @rate_limit_public
 async def get_education(
@@ -59,7 +77,7 @@ async def get_education(
     return education
 
 
-@router.post("/", response_model=EducationSchema)
+@router.post("/", response_model=EducationAdmin)
 async def create_education(
     education: EducationCreate,
     db: DbSession,
@@ -74,7 +92,7 @@ async def create_education(
     return db_education
 
 
-@router.put("/{education_id}", response_model=EducationSchema)
+@router.put("/{education_id}", response_model=EducationAdmin)
 async def update_education(
     education_update: EducationUpdate,
     db: DbSession,
