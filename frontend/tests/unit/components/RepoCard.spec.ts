@@ -35,6 +35,13 @@ describe('RepoCard', () => {
     expect(link.attributes('rel')).toBe('noopener noreferrer')
   })
 
+  it('leaves the href out when the repository URL has a script scheme', () => {
+    const wrapper = mount(RepoCard, {
+      props: { repo: { ...sampleRepo, html_url: 'javascript:alert(1)' } }
+    })
+    expect(wrapper.find('a').attributes('href')).toBeUndefined()
+  })
+
   it('keeps the project-card hook class for entrance animation and e2e', () => {
     const wrapper = mount(RepoCard, { props: { repo: sampleRepo } })
     expect(wrapper.find('a').classes()).toContain('project-card')

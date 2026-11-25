@@ -59,7 +59,7 @@
          one reads as an identical "Download PDF" in a screen-reader link
          list. Same pattern as the certificate links in HomeView. -->
     <a
-      :href="document.file_url"
+      :href="safeUrl(document.file_url)"
       target="_blank"
       rel="noopener noreferrer"
       class="download-link mt-auto inline-flex items-center gap-1 pt-6 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
@@ -83,6 +83,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Document } from '@/types'
+import { safeUrl } from '@/utils/safeUrl'
 
 const props = defineProps<{
   document: Document

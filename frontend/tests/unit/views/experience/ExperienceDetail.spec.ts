@@ -179,6 +179,24 @@ describe('ExperienceDetail', () => {
       expect(labels).toContain('WASM')
     })
 
+    it('renders the website link, and leaves its href out for a script scheme', async () => {
+      mockedApiClient.get.mockResolvedValue({
+        data: { ...baseCompany, website: 'https://acme.example' }
+      })
+      const { wrapper } = await createWrapper()
+      expect(wrapper.find('aside a[target="_blank"]').attributes('href')).toBe(
+        'https://acme.example'
+      )
+
+      mockedApiClient.get.mockResolvedValue({
+        data: { ...baseCompany, website: 'javascript:alert(1)' }
+      })
+      const { wrapper: unsafe } = await createWrapper('co-2')
+      const link = unsafe.find('aside a[target="_blank"]')
+      expect(link.exists()).toBe(true)
+      expect(link.attributes('href')).toBeUndefined()
+    })
+
     it('renders responsibilities as a list', async () => {
       mockedApiClient.get.mockResolvedValue({
         data: { ...baseCompany, responsibilities: ['Wrote code', 'Reviewed PRs'] }

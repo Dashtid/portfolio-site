@@ -83,6 +83,13 @@ describe('DocumentCard', () => {
     expect(link.attributes('href')).toBe('https://example.com/thesis.pdf')
   })
 
+  it('leaves the href out when the file URL has a script scheme', () => {
+    const wrapper = mount(DocumentCard, {
+      props: { document: { ...baseDoc, file_url: 'javascript:alert(1)' } }
+    })
+    expect(wrapper.find('.download-link').attributes('href')).toBeUndefined()
+  })
+
   it('formats published date as Month Year', () => {
     const wrapper = mount(DocumentCard, { props: { document: baseDoc } })
     expect(wrapper.text()).toMatch(/June 2024/)

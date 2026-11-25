@@ -45,6 +45,13 @@ describe('ProjectCard', () => {
     expect(wrapper.find('a').attributes('href')).toBe('https://example.com')
   })
 
+  it('leaves the href out when the link has a script scheme', () => {
+    const wrapper = mount(ProjectCard, {
+      props: { project: project({ github_url: 'javascript:alert(1)' }) }
+    })
+    expect(wrapper.find('a').attributes('href')).toBeUndefined()
+  })
+
   it('carries the .project-card behavior hook the animation and e2e rely on', () => {
     // Shared contract with RepoCard: HomeView's entrance animation and the
     // hover e2e test both select on this class.

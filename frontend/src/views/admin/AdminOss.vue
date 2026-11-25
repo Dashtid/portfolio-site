@@ -88,7 +88,7 @@
             </div>
             <a
               v-if="row.url"
-              :href="row.url"
+              :href="safeUrl(row.url)"
               class="contrib-title"
               target="_blank"
               rel="noopener"
@@ -123,6 +123,7 @@ import ossService, {
   type OssRefreshResult
 } from '../../services/oss'
 import { adminLogger } from '../../utils/logger'
+import { safeUrl } from '../../utils/safeUrl'
 
 // Payload drift across a deploy must render a blank, never brick the view
 // (undefined.toLocaleString() in a template throws into the app-level

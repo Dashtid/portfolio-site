@@ -207,7 +207,7 @@
                 <header class="flex items-start gap-4">
                   <img
                     v-if="company.logo_url"
-                    :src="company.logo_url"
+                    :src="safeUrl(company.logo_url)"
                     alt=""
                     class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:bg-slate-100 dark:ring-slate-600"
                     width="56"
@@ -370,7 +370,7 @@
                 >
                   <img
                     v-if="company.logo_url"
-                    :src="company.logo_url"
+                    :src="safeUrl(company.logo_url)"
                     alt=""
                     class="h-9 w-9 shrink-0 rounded-md bg-white object-contain p-1 ring-1 ring-slate-200 dark:bg-slate-100 dark:ring-slate-600"
                     width="36"
@@ -428,7 +428,7 @@
                 <header class="flex items-start gap-4">
                   <img
                     v-if="edu.logo_url"
-                    :src="edu.logo_url"
+                    :src="safeUrl(edu.logo_url)"
                     alt=""
                     class="card-logo h-14 w-14 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-200 dark:bg-slate-100 dark:ring-slate-600"
                     width="56"
@@ -484,7 +484,7 @@
                 </p>
                 <a
                   v-if="edu.certificate_url"
-                  :href="edu.certificate_url"
+                  :href="safeUrl(edu.certificate_url)"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="certificate-link mt-auto pt-8 inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-all hover:gap-2 hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
@@ -775,7 +775,7 @@
           >
             <li v-for="pr in ossContributions" :key="`${pr.repoNameWithOwner}#${pr.number}`">
               <a
-                :href="pr.url"
+                :href="safeUrl(pr.url)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="group flex items-start gap-4 px-5 py-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500 dark:hover:bg-surface-3"
@@ -1026,6 +1026,7 @@ import { useIntersectionAnimation } from '../composables/useIntersectionAnimatio
 import { useHashAlignment } from '../composables/useHashAlignment'
 import { useTheme } from '../composables/useTheme'
 import { useOutboundTracking } from '../composables/useOutboundTracking'
+import { safeUrl } from '../utils/safeUrl'
 import { OSS_BLURBS } from '../data/ossBlurbs'
 import { writingPosts } from '../data/writing'
 import type { OssContribution } from '../types'

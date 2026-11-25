@@ -66,7 +66,7 @@
         </div>
         <a
           v-if="sentryPanel.issues_url"
-          :href="sentryPanel.issues_url"
+          :href="safeUrl(sentryPanel.issues_url)"
           target="_blank"
           rel="noopener noreferrer"
           class="sentry-cta"
@@ -142,6 +142,7 @@
 import { onMounted, ref } from 'vue'
 import apiClient from '../../api/client'
 import { adminLogger } from '../../utils/logger'
+import { safeUrl } from '../../utils/safeUrl'
 
 interface Props {
   companiesCount: number

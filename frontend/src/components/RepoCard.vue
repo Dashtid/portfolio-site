@@ -3,7 +3,7 @@
        e2e hover test), not a style class. Visuals follow the same Tailwind
        recipe as the experience/education cards so all card systems match. -->
   <a
-    :href="repo.html_url"
+    :href="safeUrl(repo.html_url)"
     target="_blank"
     rel="noopener noreferrer"
     class="project-card group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 no-underline transition-colors hover:border-primary-400/60 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-primary-400/40 dark:hover:bg-slate-900"
@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import { getLanguageColor } from '@/utils/githubLanguageColors'
+import { safeUrl } from '@/utils/safeUrl'
 
 export interface Repository {
   name: string

@@ -104,7 +104,7 @@
         <header class="experience-section flex items-start gap-5 lg:col-start-1">
           <img
             v-if="company.logo_url && !logoError"
-            :src="company.logo_url"
+            :src="safeUrl(company.logo_url)"
             alt=""
             class="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-2 ring-1 ring-slate-200 dark:ring-slate-800"
             @error="logoError = true"
@@ -160,7 +160,7 @@
                 </dt>
                 <dd class="mt-1.5 text-sm">
                   <a
-                    :href="company.website"
+                    :href="safeUrl(company.website)"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="inline-flex items-center gap-1.5 font-medium text-primary-600 transition-colors hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
@@ -365,6 +365,7 @@ import MapEmbed from '@/components/MapEmbed.vue'
 import NavBar from '@/components/NavBar.vue'
 import FooterSection from '@/components/FooterSection.vue'
 import { formatDescription } from '@/utils/markdown'
+import { safeUrl } from '@/utils/safeUrl'
 
 // AbortController for cancelling pending requests on route change
 let fetchAbortController: AbortController | null = null
