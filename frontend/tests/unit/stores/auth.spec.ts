@@ -157,15 +157,18 @@ describe('Auth Store', () => {
       expect(store.user).toBeNull()
     })
 
-    it('clears user even if logout API fails', async () => {
-      vi.mocked(apiClient.post).mockRejectedValue(new Error('Network error'))
+    it('keeps the user and rethrows when the logout request fails', async () => {
+      // Only the server clears the HttpOnly cookies and revokes the session,
+      // so a failed request must not look like a completed sign-out.
+      const failure = new Error('Network error')
+      vi.mocked(apiClient.post).mockRejectedValue(failure)
 
       const store = useAuthStore()
       store.user = { id: '1', username: 'test' }
 
-      await store.logout()
+      await expect(store.logout()).rejects.toBe(failure)
 
-      expect(store.user).toBeNull()
+      expect(store.user).toEqual({ id: '1', username: 'test' })
     })
   })
 

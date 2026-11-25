@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, VueWrapper } from '@vue/test-utils'
+import { flushPromises, mount, VueWrapper } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { createRouter, createWebHistory, type Router } from 'vue-router'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
+import apiClient from '@/api/client'
+import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { usePortfolioStore } from '@/stores/portfolio'
 
@@ -288,6 +290,37 @@ describe('AdminDashboard', () => {
       await logoutButton.trigger('click')
 
       expect(authStore.logout).toHaveBeenCalled()
+    })
+
+    it('goes to the login page once the server confirms the logout', async () => {
+      const wrapper = await createWrapper()
+
+      await wrapper.find('.logout-button').trigger('click')
+      await flushPromises()
+
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/auth/logout')
+      expect(router.currentRoute.value.path).toBe('/admin/login')
+    })
+
+    it('stays signed in and shows an error when the logout request fails', async () => {
+      const toast = useToast()
+      toast.clear()
+      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Network error'))
+      const wrapper = await createWrapper()
+      const authStore = useAuthStore()
+
+      await wrapper.find('.logout-button').trigger('click')
+      await flushPromises()
+
+      expect(router.currentRoute.value.path).toBe('/admin')
+      expect(authStore.user).not.toBeNull()
+      expect(toast.toasts.value).toEqual([
+        expect.objectContaining({
+          type: 'error',
+          message: expect.stringContaining('still signed in')
+        })
+      ])
+      toast.clear()
     })
 
     it('should fetch all data on mount', async () => {

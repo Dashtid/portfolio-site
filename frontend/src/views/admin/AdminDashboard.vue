@@ -123,11 +123,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { usePortfolioStore } from '../../stores/portfolio'
 import { adminLogger } from '../../utils/logger'
+import { useToast } from '@/composables/useToast'
 import DashboardOverview from '@/components/admin/DashboardOverview.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const portfolioStore = usePortfolioStore()
+const toast = useToast()
 
 // State
 const loadError = ref<string | null>(null)
@@ -155,11 +157,13 @@ const logout = async (): Promise<void> => {
   try {
     await authStore.logout()
   } catch (error) {
+    // The server did not confirm the logout, so its session cookies may
+    // still be valid: stay on the dashboard and say so.
     adminLogger.error('Logout failed:', error)
-  } finally {
-    // Always redirect to login, even if logout API call fails
-    router.push('/admin/login')
+    toast.error('Sign-out failed, so you are still signed in. Please try again.')
+    return
   }
+  router.push('/admin/login')
 }
 
 // Retry loading data after error

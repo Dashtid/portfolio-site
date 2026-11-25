@@ -58,23 +58,24 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Logout — backend clears the HTTP-only cookies and revokes the
-    // server-side refresh tokens
+    // server-side refresh tokens. Only the server can do either, so a failed
+    // request leaves the session signed in and rethrows for the caller.
     async logout(): Promise<void> {
       try {
         await apiClient.post('/api/v1/auth/logout')
       } catch (error) {
         authLogger.error('Logout error:', error)
-      } finally {
-        this.user = null
-        // Defense-in-depth: the service worker's api-cache already excludes
-        // auth/admin/analytics/metrics, but if any private endpoint ever
-        // slips past that regex, nothing else would purge it — drop the
-        // whole cache on logout so no API response outlives the session.
-        if (typeof caches !== 'undefined') {
-          caches.delete('api-cache').catch(() => {
-            // CacheStorage unavailable (http, private mode) — nothing cached there anyway.
-          })
-        }
+        throw error
+      }
+      this.user = null
+      // Defense-in-depth: the service worker's api-cache already excludes
+      // auth/admin/analytics/metrics, but if any private endpoint ever
+      // slips past that regex, nothing else would purge it — drop the
+      // whole cache on logout so no API response outlives the session.
+      if (typeof caches !== 'undefined') {
+        caches.delete('api-cache').catch(() => {
+          // CacheStorage unavailable (http, private mode) — nothing cached there anyway.
+        })
       }
     },
 
