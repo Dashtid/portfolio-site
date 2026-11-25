@@ -95,11 +95,16 @@ rides the frontend lane for the CV scrub guard):
 | `deploy-frontend`   | Vercel CLI deploy, gated on quality + e2e + lighthouse + security-scan (+ dependency-review when it runs), then `scripts/check-live-headers.py` holds the live headers of three pages to `vercel.json` |
 | `deploy-backend`    | `flyctl deploy --remote-only`, gated on backend-quality + security-scan (+ dependency-review when it runs); frontend deploys serialize behind it so the SSG bake never reads a mid-rollout API |
 
-Only `main` deploys. On a push the `changes` job also filters the range
-from each lane's last successful deploy, which `scripts/deployed-commits.py`
-reads from the production environment's deployment records, so a lane
-whose deploy failed, was skipped or never ran checks and deploys again
-with the next push.
+Only `main` deploys: each deploy job, and the rebake, checks the ref. A
+branch cut before the rebake got that check keeps its own copy of
+`rebake-frontend.yml` without it, and only a main-only deployment branch
+policy on the production environment covers such a branch.
+
+On a push the `changes` job also filters the range from each lane's last
+successful deploy, which `scripts/deployed-commits.py` reads from the
+production environment's deployment records, so a lane whose deploy
+failed, was skipped or never ran checks and deploys again with the next
+push.
 
 That catch-up does not repeat a push's dependency review. The review,
 like the TruffleHog scan in `security-scan`, covers only the commits the

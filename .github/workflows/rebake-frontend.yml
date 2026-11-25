@@ -7,10 +7,13 @@
 # main from the GitHub Actions UI (Run workflow button) with zero code
 # changes.
 #
-# Deliberately no CI gates here: a rebake deploys the exact SHA that
-# already passed the full pipeline; only the baked API content changes.
-# The post-deploy smoke still runs so a rebake can never silently ship
-# missing security headers.
+# Deliberately no CI gates here: a rebake rebuilds main's tip, which the
+# pipeline has normally checked and deployed already, though nothing here
+# confirms that; only the baked API content is meant to change. The job's
+# `if:` keeps this copy to main. A copy on an older branch has no such
+# line, and only a main-only branch policy on the production environment
+# stops a dispatch there. The post-deploy smoke still runs so a rebake can
+# never silently ship missing security headers.
 name: Rebake Frontend (CMS republish)
 
 on:
