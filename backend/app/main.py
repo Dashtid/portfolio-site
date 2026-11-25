@@ -20,6 +20,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -310,6 +311,30 @@ class HTTPSSchemeMiddleware:
         await self.app(scope, receive, send)
 
 
+# Hosts the API answers in production. redirect_slashes builds its Location
+# from the Host header, so an unchecked Host is reflected into the redirect.
+API_HOSTS = ["api.dashti.se"]
+
+
+class HostCheckMiddleware(TrustedHostMiddleware):
+    """Answer 400 to a Host outside API_HOSTS in production.
+
+    Fly's health checks reach the machine over its private network with
+    the machine's private address as Host, so the two health routes, which
+    never build a URL from the Host, skip the check. The match is exact:
+    /api/v1/health/ is a slash redirect and is still checked. Outside
+    production (local runs, tests) every Host passes.
+    """
+
+    EXEMPT_PATHS = frozenset({"/api/v1/health", "/api/v1/health/ready"})
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if settings.ENVIRONMENT != "production" or scope.get("path") in self.EXEMPT_PATHS:
+            await self.app(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
+
+
 # Background task for periodic auth-row cleanup
 async def cleanup_oauth_states_periodically():
     """Periodically purge expired OAuth states AND refresh-token rows (every 5 min).
@@ -527,8 +552,8 @@ if settings.RATE_LIMIT_ENABLED:
 # headers, so frontend JS could not read the error. Layers below are added
 # innermost-first; effective order outermost -> innermost:
 #   HTTPSScheme -> CORS -> Logging -> ErrorTracking -> Performance
-#   -> SecurityHeaders -> CacheControl -> Compression -> BodySizeLimit
-#   -> SlowAPI -> routes
+#   -> SecurityHeaders -> HostCheck -> CacheControl -> Compression
+#   -> BodySizeLimit -> SlowAPI -> routes
 # BodySizeLimit sits just outside SlowAPI and the routes: nothing between
 # it and the handlers reads request bodies, so DoS protection is preserved
 # while its 413s pass through every header/logging layer on the way out.
@@ -556,6 +581,10 @@ app.add_middleware(CompressionMiddleware, minimum_size=1000)
 
 # Cache control headers
 app.add_middleware(CacheControlMiddleware, max_age=300)
+
+# Host check (production) — inside the logging and security-header layers,
+# so a rejected Host is still logged and its 400 carries the headers.
+app.add_middleware(HostCheckMiddleware, allowed_hosts=API_HOSTS)
 
 # Security headers
 app.add_middleware(SecurityHeadersMiddleware)

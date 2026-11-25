@@ -240,6 +240,63 @@ class TestHTTPSSchemePin:
         assert response.headers["location"] == "http://testserver/api/v1/companies/"
 
 
+class TestHostCheck:
+    """Production answers api.dashti.se only; the two health routes answer any Host.
+
+    The slash redirect builds its Location from the Host header, so an
+    unchecked Host is reflected into it. Fly's health checks send the
+    machine's private address as Host, and the image's HEALTHCHECK sends
+    localhost:8000.
+    """
+
+    @pytest.fixture
+    def production(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+
+    @pytest.mark.parametrize("host", ["api.dashti.se", "API.dashti.se", "api.dashti.se:443"])
+    def test_api_host_is_served(self, client: TestClient, production: None, host: str):
+        response = client.get("/api/v1/companies", headers={"Host": host}, follow_redirects=False)
+        assert response.status_code == 307
+
+    @pytest.mark.parametrize(
+        "host",
+        [
+            "evil.example",
+            "evil.example/x",  # unparseable: the Location fell back to the server address
+            "dashti-portfolio-backend.fly.dev",
+            "172.19.17.178:8000",
+        ],
+    )
+    def test_other_hosts_get_400(self, client: TestClient, production: None, host: str):
+        response = client.get("/api/v1/companies", headers={"Host": host}, follow_redirects=False)
+        assert response.status_code == 400
+        assert response.text == "Invalid host header"
+        assert "location" not in response.headers
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+    @pytest.mark.parametrize("host", ["172.19.17.178:8000", "localhost:8000"])
+    @pytest.mark.parametrize("path", ["/api/v1/health", "/api/v1/health/ready"])
+    @pytest.mark.parametrize("method", ["GET", "HEAD"])
+    def test_health_routes_answer_any_host(
+        self, client: TestClient, production: None, host: str, path: str, method: str
+    ):
+        response = client.request(method, path, headers={"Host": host})
+        assert response.status_code == 200
+
+    def test_health_exemption_is_exact(self, client: TestClient, production: None):
+        response = client.get(
+            "/api/v1/health/", headers={"Host": "172.19.17.178:8000"}, follow_redirects=False
+        )
+        assert response.status_code == 400
+
+    def test_any_host_passes_outside_production(self, client: TestClient):
+        response = client.get(
+            "/api/v1/companies", headers={"Host": "evil.example"}, follow_redirects=False
+        )
+        assert response.status_code == 307
+        assert response.headers["location"] == "http://evil.example/api/v1/companies/"
+
+
 class TestStaticFilesMount:
     """Tests for static files mounting."""
 
