@@ -26,16 +26,52 @@ env:
   NODE_VERSION: '24'
 
 jobs:
-  # Detect which paths changed
+  # Detect which paths changed: since the previous tip and, on a push, since
+  # each half's last successful deploy, so a deploy that failed, was skipped
+  # or never ran is caught up by the next push whatever that push touches.
   changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: read # scripts/deployed-commits.py reads the deploy records
+    # On a push, a half also runs unless its drift filter answered 'false':
+    # an unknown last deploy, or a failed lookup, counts as drift.
     outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
-      backend: ${{ steps.filter.outputs.backend }}
+      frontend: >-
+        ${{ steps.filter.outputs.frontend == 'true' ||
+        (github.event_name == 'push' && steps.frontend-drift.outputs.frontend != 'false') }}
+      backend: >-
+        ${{ steps.filter.outputs.backend == 'true' ||
+        (github.event_name == 'push' && steps.backend-drift.outputs.backend != 'false') }}
+    env:
+      # One copy of the path rules, read by the three filter steps below.
+      PATH_FILTERS: |
+        # ci-cd.yml is in BOTH filters: a pipeline change must re-validate
+        # (and re-deploy) both sides, otherwise workflow edits ship with
+        # zero validation until the next code commit touches them.
+        frontend:
+          - 'frontend/**'
+          - 'package*.json'
+          - '.github/workflows/ci-cd.yml'
+          # cv/ is public-by-scrubbing: the cvPublicScrub vitest guard
+          # must run on any commit that touches it, and without this
+          # entry a cv-only commit runs NO jobs at all.
+          - 'cv/**'
+          # deploy-frontend runs this check after every deploy.
+          - 'scripts/check-live-headers.py'
+        backend:
+          - 'backend/**'
+          - 'requirements*.txt'
+          - '.github/workflows/ci-cd.yml'
+          # backend-quality runs this guard, so a change to it must too.
+          - 'scripts/check-lock-parity.py'
+          # backend/tests holds the tests of these two scripts.
+          - 'scripts/check-live-headers.py'
+          - 'scripts/deployed-commits.py'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Full history puts the filter's base commit in the clone, so no
+          # Full history puts the filters' base commits in the clone, so no
           # later git command needs the job token; like every checkout in
           # this file, it leaves none on disk.
           fetch-depth: 0
@@ -43,28 +79,30 @@ jobs:
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
-          filters: |
-            # ci-cd.yml is in BOTH filters: a pipeline change must re-validate
-            # (and re-deploy) both sides, otherwise workflow edits ship with
-            # zero validation until the next code commit touches them.
-            frontend:
-              - 'frontend/**'
-              - 'package*.json'
-              - '.github/workflows/ci-cd.yml'
-              # cv/ is public-by-scrubbing: the cvPublicScrub vitest guard
-              # must run on any commit that touches it, and without this
-              # entry a cv-only commit runs NO jobs at all.
-              - 'cv/**'
-              # deploy-frontend runs this check after every deploy.
-              - 'scripts/check-live-headers.py'
-            backend:
-              - 'backend/**'
-              - 'requirements*.txt'
-              - '.github/workflows/ci-cd.yml'
-              # backend-quality runs this guard, so a change to it must too.
-              - 'scripts/check-lock-parity.py'
-              # backend/tests holds this script's tests.
-              - 'scripts/check-live-headers.py'
+          filters: ${{ env.PATH_FILTERS }}
+      - name: Find each half's last successful deploy
+        id: deployed
+        if: github.event_name == 'push'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/deployed-commits.py production \
+            frontend=https://dashti.se backend=https://api.dashti.se
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: frontend-drift
+        if: steps.deployed.outputs.frontend != ''
+        continue-on-error: true
+        with:
+          base: ${{ steps.deployed.outputs.frontend }}
+          filters: ${{ env.PATH_FILTERS }}
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: backend-drift
+        if: steps.deployed.outputs.backend != ''
+        continue-on-error: true
+        with:
+          base: ${{ steps.deployed.outputs.backend }}
+          filters: ${{ env.PATH_FILTERS }}
 
   # Frontend Quality Checks
   frontend-quality:

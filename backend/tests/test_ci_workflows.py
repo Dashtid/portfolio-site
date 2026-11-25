@@ -170,8 +170,7 @@ def test_frontend_deploys_end_by_holding_served_headers_to_vercel_json(
 
 
 def _path_filters() -> dict[str, list[str]]:
-    [step] = [s for s in _load("ci-cd.yml")["jobs"]["changes"]["steps"] if s.get("id") == "filter"]
-    filters = yaml.safe_load(step["with"]["filters"])
+    filters = yaml.safe_load(_load("ci-cd.yml")["jobs"]["changes"]["env"]["PATH_FILTERS"])
     assert isinstance(filters, dict)
     return filters
 
@@ -183,7 +182,47 @@ def test_a_header_check_change_runs_its_tests_and_a_frontend_deploy() -> None:
 
 
 def test_the_changes_job_needs_no_fetch_after_checkout() -> None:
-    # With full history the filter finds the pushed range's base locally; a
-    # depth-1 clone would make it fetch, and without credentials.
+    # With full history the filters find their base commits locally; a
+    # depth-1 clone would make them fetch, and without credentials.
     [checkout] = _uses(_load("ci-cd.yml")["jobs"]["changes"], "actions/checkout")
     assert checkout["with"] == {"fetch-depth": 0, "persist-credentials": False}
+
+
+def test_a_push_also_filters_the_range_since_each_half_last_deployed() -> None:
+    jobs = _load("ci-cd.yml")["jobs"]
+    changes = jobs["changes"]
+    assert changes["permissions"] == {"contents": "read", "deployments": "read"}
+    steps = {step["id"]: step for step in changes["steps"] if "id" in step}
+    # One copy of the path rules for the push's own range and both drift ranges.
+    for step_id in ("filter", "frontend-drift", "backend-drift"):
+        assert steps[step_id]["uses"] == steps["filter"]["uses"]
+        assert steps[step_id]["with"]["filters"] == "${{ env.PATH_FILTERS }}"
+    assert "scripts/deployed-commits.py" in _path_filters()["backend"]
+
+    deployed = steps["deployed"]
+    assert deployed["if"] == "github.event_name == 'push'"
+    assert deployed["continue-on-error"] is True
+    run = " ".join(deployed["run"].replace("\\\n", " ").split())
+    # The script looks deploys up by the environment and URLs the deploy jobs
+    # declare, and a rebake declares deploy-frontend's.
+    frontend, backend = (
+        jobs["deploy-frontend"]["environment"],
+        jobs["deploy-backend"]["environment"],
+    )
+    rebake = _load("rebake-frontend.yml")["jobs"]["rebake"]["environment"]
+    assert frontend["name"] == backend["name"] == rebake["name"]
+    assert rebake["url"] == frontend["url"]
+    assert run == (
+        f"python3 scripts/deployed-commits.py {frontend['name']} "
+        f"frontend={frontend['url']} backend={backend['url']}"
+    )
+    for half in ("frontend", "backend"):
+        drift = steps[f"{half}-drift"]
+        assert drift["if"] == f"steps.deployed.outputs.{half} != ''"
+        assert drift["continue-on-error"] is True
+        assert drift["with"]["base"] == f"${{{{ steps.deployed.outputs.{half} }}}}"
+        # Anything but an explicit 'false' from the drift filter runs the half.
+        assert " ".join(changes["outputs"][half].split()) == (
+            f"${{{{ steps.filter.outputs.{half} == 'true' || (github.event_name == 'push' && "
+            f"steps.{half}-drift.outputs.{half} != 'false') }}}}"
+        )
