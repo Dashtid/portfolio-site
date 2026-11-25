@@ -22,7 +22,9 @@ RUN pip install --no-cache-dir --prefix=/install --require-hashes -r requirement
 # Stage 2: Runtime - minimal production image
 FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
 
-# Create non-root user (CI-016). All runtime files are owned by appuser.
+# Create non-root user. It owns no file in the image: the code is
+# root-owned and read-only for it, and the server writes only to UPLOAD_DIR
+# (the /data volume on Fly) and /tmp.
 RUN groupadd --system --gid 1001 appgroup \
     && useradd --system --uid 1001 --gid appgroup --home /app --shell /sbin/nologin appuser
 
@@ -31,8 +33,8 @@ WORKDIR /app
 # Copy Python dependencies from the builder stage into the system prefix
 COPY --from=builder /install /usr/local
 
-# Copy application code
-COPY --chown=appuser:appgroup . .
+# Copy application code, root-owned: no --chown, so the server cannot rewrite it
+COPY . .
 
 # Runtime env
 ENV PYTHONUNBUFFERED=1 \
