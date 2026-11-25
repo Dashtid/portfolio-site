@@ -125,6 +125,18 @@ $RECYCLE.BIN/
 *.old.*
 *.old[0-9]
 
+# Files a backup restore writes or reads (db-backup.yml, restore-drill.yml):
+# decrypted dumps and archives, the encrypted artifacts, the age key files
+*.dump
+*.sql
+*.age
+uploads*.tar.gz
+pg-backup-*
+uploads-backup-*
+age*key*.txt
+key.txt
+recipient.txt
+
 # Temporary files
 *.tmp
 *.temp
