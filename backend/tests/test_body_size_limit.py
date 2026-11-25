@@ -31,6 +31,15 @@ CHUNKS_PAST_THE_CAP = MAX_BODY_SIZE // MB + 2
 
 def _chunked_scope(method: str, path: str) -> dict[str, Any]:
     """An HTTP scope as uvicorn builds it for a chunked request."""
+    return _scope(method, path, (b"transfer-encoding", b"chunked"))
+
+
+def _sized_scope(method: str, path: str, length: int) -> dict[str, Any]:
+    """An HTTP scope as uvicorn builds it for a request with a Content-Length."""
+    return _scope(method, path, (b"content-length", str(length).encode()))
+
+
+def _scope(method: str, path: str, framing: tuple[bytes, bytes]) -> dict[str, Any]:
     return {
         "type": "http",
         "asgi": {"version": "3.0", "spec_version": "2.3"},
@@ -41,7 +50,7 @@ def _chunked_scope(method: str, path: str) -> dict[str, Any]:
         "raw_path": path.encode(),
         "root_path": "",
         "query_string": b"",
-        "headers": [(b"host", b"testserver"), (b"transfer-encoding", b"chunked")],
+        "headers": [(b"host", b"testserver"), framing],
         "client": ("198.51.100.7", 50000),
         "server": ("testserver", 80),
     }
@@ -158,3 +167,31 @@ class TestChunkedBodyPastTheCap:
         assert client.status == 200
         assert client.headers["content-length"] == str(len(expected))
         assert bytes(client.body) == expected
+
+
+class TestDownstreamValueError:
+    """A ValueError raised below the middleware is not caught there."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("body", [b"", b'{"page_path": "/"}'], ids=["empty", "json"])
+    async def test_propagates_after_a_single_dispatch(self, body: bytes):
+        """pydantic's ValidationError and json's JSONDecodeError are ValueErrors.
+
+        The Content-Length parse shared a try block with call_next, so one
+        raised by the app was taken for an unparseable header and the
+        request went through the app again.
+        """
+        dispatches = 0
+
+        async def downstream(scope: Scope, receive: Receive, send: Send) -> None:
+            nonlocal dispatches
+            dispatches += 1
+            raise ValueError("raised by the app")
+
+        client = ChunkedClient([body], hangs_up=True)
+        with pytest.raises(ValueError, match="raised by the app"):
+            await BodySizeLimitMiddleware(downstream)(
+                _sized_scope("POST", "/api/v1/probe", len(body)), client.receive, client.send
+            )
+
+        assert dispatches == 1

@@ -157,15 +157,20 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         if request.url.path in BODY_SIZE_OVERRIDES and _bears_valid_token(request):
             max_body_size = BODY_SIZE_OVERRIDES[request.url.path]
         content_length = request.headers.get("content-length")
+        declared: int | None = None
         if content_length:
             try:
-                if int(content_length) > max_body_size:
-                    return self._oversize_response(max_body_size)
-                # Trusted Content-Length already covers the entire body.
-                return await call_next(request)
+                declared = int(content_length)
             except ValueError:
                 # Fall through to the streaming counter.
-                pass
+                declared = None
+        # Parsed apart from call_next: a ValueError raised downstream must
+        # propagate, not send the request through the app a second time.
+        if declared is not None:
+            if declared > max_body_size:
+                return self._oversize_response(max_body_size)
+            # Trusted Content-Length already covers the entire body.
+            return await call_next(request)
 
         # Missing or invalid Content-Length: wrap the receive callable so we
         # tally each chunk as it streams in. Once the running total exceeds
