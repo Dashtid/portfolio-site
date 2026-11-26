@@ -17,6 +17,7 @@ import './styles/tailwind.css'
 import './style.css'
 import App from './App.vue'
 import analyticsService from './services/analytics'
+import { findPost } from './data/writing'
 import { initSentry, captureException } from './utils/sentry'
 
 // D3-SEC-03: vite-ssg hardcodes its state transport as an EXECUTABLE
@@ -133,7 +134,17 @@ export const createApp = ViteSSG(
         // at the source so the beacon never fires from a logged-in session.
         if (to.path.startsWith('/admin')) return
 
-        analyticsService.trackPageView(to.path, to.name as string | undefined)
+        // An experience page sends its own page view, once its company has
+        // loaded or turned out not to exist (ExperienceDetail.vue).
+        if (to.name === 'experience-detail') return
+
+        // Only the path is sent, and a page that does not exist is recorded
+        // as '/404', the path of the not-found page: a URL that nothing but
+        // the catch-all route matches, or an article slug with no article.
+        const missing =
+          to.name === 'not-found-catchall' ||
+          (to.name === 'writing-article' && !findPost(String(to.params.slug)))
+        analyticsService.trackPageView(missing ? '/404' : to.path)
       })
 
       // Schedule Sentry: no-op without a DSN, otherwise the bundle loads on the

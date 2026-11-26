@@ -359,6 +359,7 @@ import axios, { type AxiosError } from 'axios'
 import type { Company } from '@/types'
 import { apiLogger } from '../../utils/logger'
 import { useExperienceDetailStore } from '../../stores/experienceDetail'
+import analyticsService from '@/services/analytics'
 import { useIntersectionAnimation } from '@/composables/useIntersectionAnimation'
 import VideoEmbed from '@/components/VideoEmbed.vue'
 import MapEmbed from '@/components/MapEmbed.vue'
@@ -652,10 +653,33 @@ const loadCompany = async (id: string): Promise<void> => {
   }
 }
 
+// This route's page view is sent from here rather than from main.ts: only
+// the company's load tells an id that exists from one that does not. One per
+// page, from the first load that settles it: the path for a company, '/404'
+// for an id the API does not know; nothing while a load has failed or was
+// cancelled, or once the visitor has moved on. The route watcher below sends
+// none: App.vue keys each page by its path, so another id mounts another
+// instance.
+const pagePath = route.path
+let pageViewSent = false
+const sendPageView = (id: string): void => {
+  if (pageViewSent || route.path !== pagePath) return
+  if (experienceStore.byId[id]) {
+    void analyticsService.trackPageView(pagePath)
+  } else if (notFound.value) {
+    void analyticsService.trackPageView('/404')
+  } else {
+    return
+  }
+  pageViewSent = true
+}
+
 // Retry after a transient failure (the "Try again" button in the error state)
-const retry = (): void => {
-  if (companyId.value) {
-    void loadCompany(companyId.value)
+const retry = async (): Promise<void> => {
+  const id = companyId.value
+  if (id) {
+    await loadCompany(id)
+    sendPageView(id)
   }
 }
 
@@ -686,8 +710,10 @@ watch(
 
 // Initial load
 onMounted(async (): Promise<void> => {
-  if (companyId.value) {
-    await loadCompany(companyId.value)
+  const id = companyId.value
+  if (id) {
+    await loadCompany(id)
+    sendPageView(id)
   }
 })
 

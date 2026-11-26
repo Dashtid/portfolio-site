@@ -4,6 +4,10 @@
  * All HTTP goes through apiClient so requests pick up auth interceptors,
  * the unified base URL, and the shared error/refresh handling. Types
  * mirror the Pydantic schemas in backend/app/schemas/analytics.py.
+ *
+ * A page view sends two fields, page_path and referrer. The service reads
+ * and writes no browser storage, so importing it (the SSG build does, in
+ * Node) touches none.
  */
 import apiClient from '../api/client'
 import { analyticsLogger } from '../utils/logger'
@@ -12,9 +16,7 @@ const ENDPOINT = '/api/v1/analytics'
 
 interface PageViewData {
   page_path: string
-  page_title: string
   referrer: string | null
-  visitor_id: string
 }
 
 export interface TopPage {
@@ -61,42 +63,11 @@ export interface VisitorStats {
 }
 
 class AnalyticsService {
-  private isEnabled: boolean
-
-  constructor() {
-    this.getOrCreateSessionId()
-    const stored =
-      typeof localStorage !== 'undefined' ? localStorage.getItem('analytics_enabled') : null
-    this.isEnabled = stored !== 'false'
-  }
-
-  private getOrCreateSessionId(): string {
-    if (typeof sessionStorage === 'undefined') return ''
-    let sessionId = sessionStorage.getItem('analytics_session_id')
-    if (!sessionId) {
-      // crypto.getRandomValues, not Math.random: this id is the only thing
-      // separating one visitor's page views from another's in the analytics
-      // table, so a predictable suffix would let a visitor guess — and write
-      // events into — someone else's session. getRandomValues needs no secure
-      // context and no fallback (baseline in every browser this site targets).
-      const bytes = new Uint8Array(6)
-      crypto.getRandomValues(bytes)
-      const suffix = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
-      sessionId = `session_${Date.now()}_${suffix}`
-      sessionStorage.setItem('analytics_session_id', sessionId)
-    }
-    return sessionId
-  }
-
-  async trackPageView(pagePath?: string, pageTitle?: string): Promise<void> {
-    if (!this.isEnabled) return
-
+  async trackPageView(pagePath?: string): Promise<void> {
     try {
       const data: PageViewData = {
         page_path: pagePath || window.location.pathname,
-        page_title: pageTitle || document.title,
-        referrer: document.referrer || null,
-        visitor_id: this.getOrCreateSessionId()
+        referrer: document.referrer || null
       }
       await apiClient.post(`${ENDPOINT}/track/pageview`, data)
     } catch (error) {
@@ -114,20 +85,14 @@ class AnalyticsService {
     label: string | null = null,
     _value: number | null = null
   ): Promise<void> {
-    if (!this.isEnabled) return
-
     try {
-      await this.trackPageView(
-        `/event/${category}/${action}${label ? `/${label}` : ''}`,
-        `Event: ${category} - ${action}`
-      )
+      await this.trackPageView(`/event/${category}/${action}${label ? `/${label}` : ''}`)
     } catch (error) {
       analyticsLogger.error('Failed to track event:', error)
     }
   }
 
   trackTiming(category: string, variable: string, time: number, label: string | null = null): void {
-    if (!this.isEnabled) return
     analyticsLogger.debug('Timing tracked:', {
       category,
       variable,
@@ -135,15 +100,6 @@ class AnalyticsService {
       label,
       timestamp: new Date().toISOString()
     })
-  }
-
-  setEnabled(enabled: boolean): void {
-    this.isEnabled = enabled
-    localStorage.setItem('analytics_enabled', enabled ? 'true' : 'false')
-  }
-
-  isAnalyticsEnabled(): boolean {
-    return this.isEnabled
   }
 
   /**

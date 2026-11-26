@@ -15,11 +15,10 @@ vi.mock('@/api/client', () => ({
   }
 }))
 
-// Logger mock must be complete: storage.ts (transitively imported via
-// apiClient) calls createLogger, and analyticsLogger is used by the service.
-// Factory must be inlined inside vi.mock — the call is hoisted above any
-// outer-scope declarations.
-vi.mock('@/utils/logger', () => {
+// analyticsLogger is used by the service. The stubs are created once, in
+// vi.hoisted (which runs before the hoisted vi.mock calls), so a copy of the
+// module loaded again after vi.resetModules() logs to the same stubs.
+const loggerStubs = vi.hoisted(() => {
   const stub = () => ({
     error: vi.fn(),
     warn: vi.fn(),
@@ -39,6 +38,7 @@ vi.mock('@/utils/logger', () => {
     createLogger: () => stub()
   }
 })
+vi.mock('@/utils/logger', () => loggerStubs)
 
 import apiClient from '@/api/client'
 import analyticsService from '@/services/analytics'
@@ -46,48 +46,88 @@ import analyticsService from '@/services/analytics'
 const mockedPost = vi.mocked(apiClient.post)
 const mockedGet = vi.mocked(apiClient.get)
 
+/**
+ * A stand-in for a Storage object, or for navigator, that records the name
+ * of every property read or written on it. Every property reads as a
+ * function returning null, so code that calls one runs on and is recorded.
+ */
+function accessRecorder<T extends object>(touched: string[]): T {
+  return new Proxy({} as T, {
+    get: (_target, property) => {
+      touched.push(String(property))
+      return () => null
+    },
+    set: (_target, property) => {
+      touched.push(String(property))
+      return true
+    },
+    has: (_target, property) => {
+      touched.push(String(property))
+      return false
+    }
+  })
+}
+
 describe('analytics service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     sessionStorage.clear()
     localStorage.clear()
-    analyticsService.setEnabled(true)
   })
 
   afterEach(() => {
     vi.resetAllMocks()
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
-  describe('session management', () => {
-    it('reuses existing session ID', () => {
-      const existingSessionId = 'session_existing_123'
-      sessionStorage.setItem('analytics_session_id', existingSessionId)
-      const sessionId = sessionStorage.getItem('analytics_session_id')
-      expect(sessionId).toBe(existingSessionId)
+  describe('browser storage', () => {
+    it('is not touched when the module is imported', async () => {
+      const touched: string[] = []
+      vi.stubGlobal('localStorage', accessRecorder<Storage>(touched))
+      vi.stubGlobal('sessionStorage', accessRecorder<Storage>(touched))
+      vi.resetModules()
+
+      const fresh = await import('@/services/analytics')
+
+      expect(fresh.default).toBeDefined()
+      expect(touched).toEqual([])
     })
 
-    it('session ID has correct format', () => {
-      const sessionId = `session_${Date.now()}_abcdef123`
-      sessionStorage.setItem('analytics_session_id', sessionId)
-      const retrievedId = sessionStorage.getItem('analytics_session_id')
-      expect(retrievedId).not.toBeNull()
-      expect(String(retrievedId)).toMatch(/^session_\d+_[a-z0-9]+$/)
+    it('is not written when a page view or an event is sent', async () => {
+      mockedPost.mockResolvedValue({ data: {} } as never)
+
+      await analyticsService.trackPageView('/test')
+      await analyticsService.trackEvent('outbound', 'github', 'footer')
+
+      expect(mockedPost).toHaveBeenCalledTimes(2)
+      expect(sessionStorage.length).toBe(0)
+      expect(localStorage.length).toBe(0)
     })
   })
 
   describe('trackPageView', () => {
-    it('sends page view to API', async () => {
+    it('sends the page path and the referrer, and nothing else', async () => {
       mockedPost.mockResolvedValue({ data: {} } as never)
+      document.title = 'Test Document Title'
+      vi.spyOn(document, 'referrer', 'get').mockReturnValue('https://www.example.com/')
 
-      await analyticsService.trackPageView('/test', 'Test Page')
+      await analyticsService.trackPageView('/test')
 
-      expect(mockedPost).toHaveBeenCalled()
-      const call = mockedPost.mock.calls[0]
-      expect(call[0]).toContain('/api/v1/analytics/track/pageview')
-      expect(call[1]).toMatchObject({
-        page_path: '/test',
-        page_title: 'Test Page'
-      })
+      expect(mockedPost).toHaveBeenCalledTimes(1)
+      const [url, payload] = mockedPost.mock.calls[0]
+      expect(url).toContain('/api/v1/analytics/track/pageview')
+      // Exact equality: any field beyond these two fails here.
+      expect(payload).toEqual({ page_path: '/test', referrer: 'https://www.example.com/' })
+    })
+
+    it('sends a null referrer when the page has none', async () => {
+      mockedPost.mockResolvedValue({ data: {} } as never)
+      vi.spyOn(document, 'referrer', 'get').mockReturnValue('')
+
+      await analyticsService.trackPageView('/test')
+
+      expect(mockedPost.mock.calls[0][1]).toEqual({ page_path: '/test', referrer: null })
     })
 
     it('uses current path when not provided', async () => {
@@ -97,19 +137,7 @@ describe('analytics service', () => {
 
       expect(mockedPost).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({ page_path: expect.any(String) })
-      )
-    })
-
-    it('uses document title when not provided', async () => {
-      mockedPost.mockResolvedValue({ data: {} } as never)
-      document.title = 'Test Document Title'
-
-      await analyticsService.trackPageView('/test')
-
-      expect(mockedPost).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ page_title: 'Test Document Title' })
+        expect.objectContaining({ page_path: window.location.pathname })
       )
     })
 
@@ -120,12 +148,6 @@ describe('analytics service', () => {
       await expect(analyticsService.trackPageView('/test')).resolves.not.toThrow()
       expect(analyticsLogger.error).toHaveBeenCalled()
     })
-
-    it('does not track when disabled', async () => {
-      analyticsService.setEnabled(false)
-      await analyticsService.trackPageView('/test')
-      expect(mockedPost).not.toHaveBeenCalled()
-    })
   })
 
   describe('trackEvent', () => {
@@ -134,13 +156,10 @@ describe('analytics service', () => {
 
       await analyticsService.trackEvent('click', 'button', 'submit', 1)
 
-      expect(mockedPost).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          page_path: '/event/click/button/submit',
-          page_title: 'Event: click - button'
-        })
-      )
+      expect(mockedPost).toHaveBeenCalledWith(expect.any(String), {
+        page_path: '/event/click/button/submit',
+        referrer: null
+      })
     })
 
     it('tracks events via page view without label', async () => {
@@ -148,25 +167,16 @@ describe('analytics service', () => {
 
       await analyticsService.trackEvent('click', 'button')
 
-      expect(mockedPost).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          page_path: '/event/click/button',
-          page_title: 'Event: click - button'
-        })
-      )
+      expect(mockedPost).toHaveBeenCalledWith(expect.any(String), {
+        page_path: '/event/click/button',
+        referrer: null
+      })
     })
 
     it('tracks events without label and value', async () => {
       mockedPost.mockResolvedValue({ data: {} } as never)
       await analyticsService.trackEvent('pageview', 'home')
       expect(mockedPost).toHaveBeenCalled()
-    })
-
-    it('does not track when disabled', async () => {
-      analyticsService.setEnabled(false)
-      await analyticsService.trackEvent('test', 'action')
-      expect(mockedPost).not.toHaveBeenCalled()
     })
   })
 
@@ -192,28 +202,6 @@ describe('analytics service', () => {
       const { analyticsLogger } = await import('@/utils/logger')
       analyticsService.trackTiming('api', 'request', 500)
       expect(analyticsLogger.debug).toHaveBeenCalled()
-    })
-
-    it('does not log when disabled', async () => {
-      const { analyticsLogger } = await import('@/utils/logger')
-      vi.mocked(analyticsLogger.debug).mockClear()
-      analyticsService.setEnabled(false)
-      analyticsService.trackTiming('test', 'var', 100)
-      expect(analyticsLogger.debug).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('setEnabled / isAnalyticsEnabled', () => {
-    it('persists disabled state to localStorage', () => {
-      analyticsService.setEnabled(false)
-      expect(localStorage.getItem('analytics_enabled')).toBe('false')
-      expect(analyticsService.isAnalyticsEnabled()).toBe(false)
-    })
-
-    it('persists enabled state to localStorage', () => {
-      analyticsService.setEnabled(true)
-      expect(localStorage.getItem('analytics_enabled')).toBe('true')
-      expect(analyticsService.isAnalyticsEnabled()).toBe(true)
     })
   })
 

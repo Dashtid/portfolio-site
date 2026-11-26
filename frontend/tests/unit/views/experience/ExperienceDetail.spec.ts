@@ -14,6 +14,8 @@ import type { Company } from '@/types'
 // which the component uses to recognise aborted requests.
 vi.mock('@/api/client', () => ({ default: { get: vi.fn() } }))
 vi.mock('axios')
+const trackPageView = vi.hoisted(() => vi.fn())
+vi.mock('@/services/analytics', () => ({ default: { trackPageView } }))
 vi.mock('@/utils/logger', async importOriginal => {
   const actual = await importOriginal<typeof import('@/utils/logger')>()
   return {
@@ -258,6 +260,85 @@ describe('ExperienceDetail', () => {
       expect(signal.aborted).toBe(false)
       wrapper.unmount()
       expect(signal.aborted).toBe(true)
+    })
+  })
+
+  /**
+   * main.ts's router hook leaves this route out: the view sends the page
+   * view itself, once the company's load has settled.
+   */
+  describe('Page view', () => {
+    it('sends the page path once the company has loaded', async () => {
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
+      await createWrapper('co-1')
+
+      expect(trackPageView.mock.calls).toEqual([['/experience/co-1']])
+    })
+
+    it('sends the path of a company hydrated in the store without a fetch', async () => {
+      await createWrapper('co-1', { experienceDetail: { byId: { 'co-1': baseCompany } } })
+
+      expect(mockedApiClient.get).not.toHaveBeenCalled()
+      expect(trackPageView.mock.calls).toEqual([['/experience/co-1']])
+    })
+
+    it('sends /404, not the path, for an id the API does not know', async () => {
+      mockedApiClient.get.mockRejectedValue({ response: { status: 404 } })
+      await createWrapper('no-such-company')
+
+      expect(trackPageView.mock.calls).toEqual([['/404']])
+    })
+
+    it('sends nothing while the load has failed, and the path once when a retry succeeds', async () => {
+      mockedApiClient.get.mockRejectedValueOnce({ response: { status: 500 } })
+      const { wrapper } = await createWrapper('co-1')
+      expect(trackPageView).not.toHaveBeenCalled()
+
+      // Pressed twice before the page re-renders: two loads, one page view.
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
+      const retry = wrapper.find('[role="alert"] button')
+      await Promise.all([retry.trigger('click'), retry.trigger('click')])
+      await flushPromises()
+
+      expect(mockedApiClient.get).toHaveBeenCalledTimes(3)
+      expect(trackPageView.mock.calls).toEqual([['/experience/co-1']])
+    })
+
+    it('sends nothing for a cancelled load', async () => {
+      mockedApiClient.get.mockRejectedValue(new Error('cancelled'))
+      mockedAxios.isCancel.mockReturnValue(true)
+      await createWrapper('co-1')
+
+      expect(trackPageView).not.toHaveBeenCalled()
+    })
+
+    it('sends nothing for a load that settles after the visitor has moved on', async () => {
+      let settle = (_response: unknown): void => {}
+      mockedApiClient.get.mockReturnValueOnce(
+        new Promise(resolve => {
+          settle = resolve
+        }) as never
+      )
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
+      const { router } = await createWrapper('co-1')
+
+      await router.push('/experience/co-2')
+      await flushPromises()
+      settle({ data: baseCompany })
+      await flushPromises()
+
+      expect(trackPageView).not.toHaveBeenCalled()
+    })
+
+    it('sends one per page: a later id in the same instance sends none', async () => {
+      mockedApiClient.get.mockResolvedValue({ data: baseCompany })
+      const { router } = await createWrapper('co-1')
+
+      await router.push('/experience/co-2')
+      await flushPromises()
+
+      expect(mockedApiClient.get).toHaveBeenCalledTimes(2)
+      expect(trackPageView.mock.calls).toEqual([['/experience/co-1']])
     })
   })
 
