@@ -21,6 +21,7 @@ from typing import Any
 import pytest
 from sentry_sdk.integrations.logging import EventHandler, LoggingIntegration
 
+from app.config import settings
 from app.core.sentry import (
     DATA_COLLECTION,
     FILTERED,
@@ -30,9 +31,16 @@ from app.core.sentry import (
     scrub_breadcrumb,
     scrub_event,
     sentry_options,
+    traces_sampler,
 )
 from app.utils.ip_hash import hash_ip
-from tests.sentry_scenario import CLIENT_ADDRESS, MARKERS, SCENARIO_PATH
+from tests.sentry_scenario import (
+    CLIENT_ADDRESS,
+    MARKERS,
+    SAMPLED_TRACE_ID,
+    SCENARIO_PATH,
+    TRACED_PATH,
+)
 
 _BACKEND = Path(__file__).resolve().parents[1]
 
@@ -73,6 +81,55 @@ class TestOptions:
         deprecated = {"send_default_pii", "enable_tracing", "event_scrubber"}
         assert not deprecated & sentry_options().keys()
         assert "include_local_variables" not in sentry_options()
+
+    def test_the_sampler_decides_every_transaction(self):
+        """With a traces_sampler, the SDK ignores traces_sample_rate, so it is not passed."""
+        options = sentry_options()
+        assert options["traces_sampler"] is traces_sampler
+        assert "traces_sample_rate" not in options
+
+
+def _sampling_context(path: str | None, parent_sampled: bool | None) -> dict[str, Any]:
+    """A sampling context as the ASGI integration builds one for a request."""
+    context: dict[str, Any] = {
+        "transaction_context": {"op": "http.server", "name": path},
+        "parent_sampled": parent_sampled,
+    }
+    if path is not None:
+        context["asgi_scope"] = {"type": "http", "method": "POST", "path": path}
+    return context
+
+
+class TestTracesSampler:
+    @pytest.fixture(autouse=True)
+    def configured_rate(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(settings, "SENTRY_TRACES_SAMPLE_RATE", 0.25)
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/api/v1/analytics/track/pageview",
+            "/api/v1/health",
+            "/api/v1/health/ready",
+        ],
+    )
+    @pytest.mark.parametrize("parent_sampled", [None, True, False])
+    def test_the_beacon_and_the_health_checks_are_never_sampled(
+        self, path: str, parent_sampled: bool | None
+    ):
+        assert traces_sampler(_sampling_context(path, parent_sampled)) == 0.0
+
+    def test_another_request_gets_the_configured_rate(self):
+        assert traces_sampler(_sampling_context("/api/v1/projects/", None)) == 0.25
+
+    @pytest.mark.parametrize(("parent_sampled", "rate"), [(True, 1.0), (False, 0.0)])
+    def test_another_request_follows_the_trace_it_continues(
+        self, parent_sampled: bool, rate: float
+    ):
+        assert traces_sampler(_sampling_context("/api/v1/projects/", parent_sampled)) == rate
+
+    def test_a_context_without_an_asgi_scope_gets_the_configured_rate(self):
+        assert traces_sampler(_sampling_context(None, None)) == 0.25
 
 
 class TestScrubEvent:
@@ -298,6 +355,8 @@ class TestWhatTheClientSends:
             "callback": 400,
             "pageview": 204,
             "scenario": 500,
+            "sampled_trace": 200,
+            "unsampled_trace": 200,
             "profile": 500,
         }
 
@@ -315,7 +374,6 @@ class TestWhatTheClientSends:
         transactions = {event["transaction"] for event in _payloads(sent, "transaction")}
         assert {
             "/api/v1/auth/github/callback",
-            "/api/v1/analytics/track/pageview",
             "/api/v1/admin/cv/profile",
             SCENARIO_PATH,
         } <= transactions
@@ -324,6 +382,18 @@ class TestWhatTheClientSends:
         assert f"cannot reach {FILTERED} for {FILTERED}" in values
         urls = [e.get("request", {}).get("url", "") for e in errors]
         assert any(url.endswith("/api/v1/admin/cv/profile") for url in urls)
+
+    def test_the_beacon_and_an_unsampled_trace_send_no_transaction(self, sent: dict[str, Any]):
+        """The sampler, as the SDK calls it: the beacon is never traced, and of
+        two requests to one route only the one in a sampled trace is."""
+        transactions = _payloads(sent, "transaction")
+        assert "/api/v1/analytics/track/pageview" not in {e["transaction"] for e in transactions}
+        traced = [
+            e["contexts"]["trace"]["trace_id"]
+            for e in transactions
+            if e["transaction"] == TRACED_PATH
+        ]
+        assert traced == [SAMPLED_TRACE_ID]
 
     def test_requests_carry_no_cookies_bodies_query_strings_or_addresses(
         self, sent: dict[str, Any]

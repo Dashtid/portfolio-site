@@ -12,6 +12,7 @@ URL credentials and IP addresses inside any string.
 import ipaddress
 import logging
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
@@ -164,6 +165,31 @@ def scrub_breadcrumb(crumb: dict[str, Any], hint: dict[str, Any]) -> dict[str, A
     return scrubbed
 
 
+# Request paths whose transactions are never sampled: the page-view beacon,
+# sent for every page a visitor opens, and the health checks.
+UNSAMPLED_PATH_PREFIXES = ("/api/v1/analytics/track/pageview", "/api/v1/health")
+
+
+def traces_sampler(sampling_context: dict[str, Any]) -> float:
+    """traces_sampler: the sample rate of one request's transaction.
+
+    The ASGI integration passes the request's ASGI scope as asgi_scope, and
+    the sampled flag of an incoming sentry-trace header as parent_sampled
+    (None without one). The page-view beacon and the health checks get 0.0.
+    Any other request follows the parent decision, 1.0 or 0.0, as the SDK
+    does when no sampler is set, and without one gets
+    SENTRY_TRACES_SAMPLE_RATE.
+    """
+    asgi_scope = sampling_context.get("asgi_scope")
+    path = asgi_scope.get("path") if isinstance(asgi_scope, Mapping) else None
+    if isinstance(path, str) and path.startswith(UNSAMPLED_PATH_PREFIXES):
+        return 0.0
+    parent_sampled = sampling_context.get("parent_sampled")
+    if parent_sampled is not None:
+        return 1.0 if parent_sampled else 0.0
+    return settings.SENTRY_TRACES_SAMPLE_RATE
+
+
 class SecurityEventFilter(logging.Filter):
     """Passes the security records LoggingIntegration does not send itself:
     WARNING ones, and SECURITY_NOTICES below WARNING. ERROR and above stay
@@ -203,13 +229,15 @@ def sentry_options() -> dict[str, Any]:
     SqlalchemyIntegration adds a span per query, HttpxIntegration covers the
     outbound GitHub API calls, and AsyncioIntegration links the contexts of
     tasks spawned with asyncio.create_task. LoggingIntegration keeps INFO
-    and up as breadcrumbs and sends ERROR and up as events.
+    and up as breadcrumbs and sends ERROR and up as events. traces_sampler
+    decides every transaction's sample rate, SENTRY_TRACES_SAMPLE_RATE
+    included, so traces_sample_rate is not passed.
     """
     return {
         "dsn": settings.SENTRY_DSN,
         "environment": settings.ENVIRONMENT,
         "release": f"portfolio-api@{settings.APP_VERSION}",
-        "traces_sample_rate": settings.SENTRY_TRACES_SAMPLE_RATE,
+        "traces_sampler": traces_sampler,
         "profiles_sample_rate": settings.SENTRY_PROFILES_SAMPLE_RATE,
         "data_collection": DATA_COLLECTION,
         # The SDK reads a request body before data_collection decides not to

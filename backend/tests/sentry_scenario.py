@@ -4,9 +4,10 @@ tests/test_sentry_privacy.py runs this in a child process: the SDK patches
 Starlette, FastAPI, SQLAlchemy, httpx and logging for the life of the
 process, and it has to start before app.main includes its routers, as it
 does in production. A capture transport keeps every envelope item; the
-client gets the production options with a placeholder DSN, the transport
-and every transaction sampled, and the security event handler is attached
-as main.py attaches it.
+client gets the production options with a placeholder DSN and the
+transport, SENTRY_TRACES_SAMPLE_RATE is 1.0, so the production sampler
+samples every transaction it does not exclude, and the security event
+handler is attached as main.py attaches it.
 
 Usage: python -m tests.sentry_scenario <output.json>
 """
@@ -23,10 +24,18 @@ import sentry_sdk
 from sentry_sdk.transport import Transport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
+from app.config import settings
 from app.core.sentry import attach_security_event_handler, sentry_options
 from app.utils.logger import get_logger
 
 CLIENT_ADDRESS = "198.51.100.73"
+
+# A public route requested twice, continuing a trace whose sentry-trace
+# header says sampled (1) and one that says not sampled (0).
+TRACED_PATH = "/api/v1/projects/"
+SAMPLED_TRACE_ID = "0123456789abcdef0123456789abcdef"
+UNSAMPLED_TRACE_ID = "fedcba9876543210fedcba9876543210"
+PARENT_SPAN_ID = "0123456789abcdef"
 
 # Values the requests carry. None of them may reach a captured payload.
 MARKERS = {
@@ -98,6 +107,7 @@ async def _scenario_route() -> None:
 
 def main(out_path: str) -> None:
     transport = CaptureTransport()
+    settings.SENTRY_TRACES_SAMPLE_RATE = 1.0
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         sentry_sdk.init(
@@ -105,7 +115,6 @@ def main(out_path: str) -> None:
                 **sentry_options(),
                 "dsn": "https://public@sentry.invalid/1",
                 "transport": transport,
-                "traces_sample_rate": 1.0,
             }
         )
         attach_security_event_handler()
@@ -151,6 +160,14 @@ def main(out_path: str) -> None:
             params={"code": MARKERS["oauth_code"], "state": MARKERS["oauth_state"]},
             headers=HEADERS,
         ).status_code
+        for name, trace_id, flag in [
+            ("sampled_trace", SAMPLED_TRACE_ID, "1"),
+            ("unsampled_trace", UNSAMPLED_TRACE_ID, "0"),
+        ]:
+            statuses[name] = client.get(
+                TRACED_PATH,
+                headers={**HEADERS, "sentry-trace": f"{trace_id}-{PARENT_SPAN_ID}-{flag}"},
+            ).status_code
         app.dependency_overrides[get_db] = unreachable_db
         statuses["profile"] = client.put(
             "/api/v1/admin/cv/profile",
