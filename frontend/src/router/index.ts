@@ -7,6 +7,7 @@ import HomeView from '../views/HomeView.vue'
 const ExperienceDetail = () => import('../views/experience/ExperienceDetail.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ColophonView = () => import('../views/ColophonView.vue')
+const PrivacyView = () => import('../views/PrivacyView.vue')
 const WritingIndexView = () => import('../views/writing/WritingIndexView.vue')
 const WritingArticleView = () => import('../views/writing/WritingArticleView.vue')
 
@@ -52,6 +53,15 @@ export const routes: RouteRecordRaw[] = [
     name: 'colophon',
     component: ColophonView,
     meta: { title: 'Colophon | David Dashti' }
+  },
+  {
+    // Privacy: what the site records about its readers. Static content only,
+    // like the colophon, so includedRoutes prerenders it without the API; its
+    // sitemap entry is hand-added to public/sitemap.xml as well.
+    path: '/privacy',
+    name: 'privacy',
+    component: PrivacyView,
+    meta: { title: 'Privacy | David Dashti' }
   },
   {
     // D3-FEAT-03: writing surface — index + per-article routes. Unlinked

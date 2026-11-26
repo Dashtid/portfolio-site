@@ -42,6 +42,7 @@ vi.mock('@/utils/logger', () => loggerStubs)
 
 import apiClient from '@/api/client'
 import analyticsService, {
+  privacySignalSent,
   setVisitCountingOptOut,
   visitCountingDeclined
 } from '@/services/analytics'
@@ -51,10 +52,15 @@ const mockedGet = vi.mocked(apiClient.get)
 
 const OPT_OUT_KEY = 'portfolio-analytics-opt-out'
 
+/** Each signal a browser sends to decline visit counting, set up for one test. */
+const SIGNALS: Array<[string, () => void]> = [
+  ['Global Privacy Control', () => vi.stubGlobal('navigator', { globalPrivacyControl: true })],
+  ['Do Not Track', () => vi.stubGlobal('navigator', { doNotTrack: '1' })]
+]
+
 /** Each way a browser declines visit counting, set up for one test. */
 const DECLINED_BY: Array<[string, () => void]> = [
-  ['Global Privacy Control', () => vi.stubGlobal('navigator', { globalPrivacyControl: true })],
-  ['Do Not Track', () => vi.stubGlobal('navigator', { doNotTrack: '1' })],
+  ...SIGNALS,
   ['the stored opt-out', () => setVisitCountingOptOut(true)]
 ]
 
@@ -178,7 +184,7 @@ describe('analytics service', () => {
       expect(visitCountingDeclined()).toBe(false)
     })
 
-    it('is false where navigator and localStorage do not exist, as in the prerender', () => {
+    it('is false where navigator and localStorage do not exist', () => {
       vi.stubGlobal('navigator', undefined)
       vi.stubGlobal('localStorage', undefined)
 
@@ -194,6 +200,50 @@ describe('analytics service', () => {
       await analyticsService.trackEvent('outbound', 'github', 'footer')
 
       expect(mockedPost).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('privacySignalSent', () => {
+    it.each(SIGNALS)('is true under %s', (_name, decline) => {
+      decline()
+      expect(privacySignalSent()).toBe(true)
+    })
+
+    it('is false for an opt-out stored without a signal, which still declines', () => {
+      setVisitCountingOptOut(true)
+      expect(privacySignalSent()).toBe(false)
+      expect(visitCountingDeclined()).toBe(true)
+    })
+
+    it('reads the values visitCountingDeclined() ignores as no signal', () => {
+      for (const stub of [
+        { globalPrivacyControl: false },
+        { globalPrivacyControl: 'true' },
+        { doNotTrack: '0' },
+        { doNotTrack: 'unspecified' }
+      ]) {
+        vi.stubGlobal('navigator', stub)
+        expect(privacySignalSent(), JSON.stringify(stub)).toBe(false)
+        expect(visitCountingDeclined(), JSON.stringify(stub)).toBe(false)
+      }
+    })
+
+    it('still reads Do Not Track when reading Global Privacy Control throws', () => {
+      vi.stubGlobal('navigator', {
+        get globalPrivacyControl(): boolean {
+          throw new Error('blocked')
+        },
+        doNotTrack: '1'
+      })
+      expect(privacySignalSent()).toBe(true)
+    })
+
+    it('is false where navigator is missing or carries neither signal', () => {
+      vi.stubGlobal('navigator', undefined)
+      expect(privacySignalSent()).toBe(false)
+      // A navigator with neither property, such as the one Node defines.
+      vi.stubGlobal('navigator', { userAgent: 'Node.js/24' })
+      expect(privacySignalSent()).toBe(false)
     })
   })
 

@@ -20,6 +20,14 @@
         <priority>0.5</priority>
     </url>
 
+    <!-- Privacy: what the site records about its readers, and for how long -->
+    <url>
+        <loc>https://dashti.se/privacy</loc>
+        <lastmod>2026-11-27</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
+
     <!--
       /writing is deliberately absent while it is empty + noindex; add it
       (and per-article entries) when the first article launches.

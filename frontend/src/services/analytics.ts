@@ -28,20 +28,28 @@ function readOrUndefined<T>(read: () => T): T | undefined {
 }
 
 /**
- * True while this browser asks not to be counted: Global Privacy Control is
- * on, Do Not Track is '1', or the opt-out is stored. Each source is read
- * again on every call, so a change applies from the next page view on, and
- * a source that is missing (navigator and localStorage in Node) or throws
- * counts as not set.
+ * True while the browser itself asks not to be counted: Global Privacy
+ * Control is on or Do Not Track is '1'. These are the two signals that
+ * visitCountingDeclined() takes besides the stored opt-out, read the same
+ * way: again on every call, a missing or throwing one counting as not set.
  */
-export function visitCountingDeclined(): boolean {
+export function privacySignalSent(): boolean {
   return (
     readOrUndefined(
       () => (navigator as Navigator & { globalPrivacyControl?: unknown }).globalPrivacyControl
-    ) === true ||
-    readOrUndefined(() => navigator.doNotTrack) === '1' ||
-    readOrUndefined(() => localStorage.getItem(OPT_OUT_KEY)) === '1'
+    ) === true || readOrUndefined(() => navigator.doNotTrack) === '1'
   )
+}
+
+/**
+ * True while this browser asks not to be counted: Global Privacy Control is
+ * on, Do Not Track is '1', or the opt-out is stored. Each source is read
+ * again on every call, so a change applies from the next page view on, and
+ * a source that is missing (localStorage in Node) or throws
+ * counts as not set.
+ */
+export function visitCountingDeclined(): boolean {
+  return privacySignalSent() || readOrUndefined(() => localStorage.getItem(OPT_OUT_KEY)) === '1'
 }
 
 /**

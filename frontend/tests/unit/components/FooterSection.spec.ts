@@ -47,6 +47,19 @@ describe('FooterSection', () => {
     expect(links[1].attributes('aria-label')).toContain('GitHub')
   })
 
+  it('ends the footer links with the colophon and the privacy page, styled like the rest', () => {
+    const wrapper = mount(FooterSection)
+    const links = wrapper.findAll('nav[aria-label="Footer"] a')
+    expect(links.slice(-2).map(link => [link.text(), link.attributes('href')])).toEqual([
+      ['Colophon', '/colophon'],
+      ['Privacy', '/privacy']
+    ])
+    const privacy = links[links.length - 1]
+    expect(privacy.classes()).toEqual(links[0].classes())
+    // Same-site pages open in place.
+    expect(privacy.attributes('target')).toBeUndefined()
+  })
+
   it('renders the build stamp linking to the exact deployed commit', () => {
     // __BUILD_COMMIT__/__BUILD_DATE__ are pinned in vitest.config.ts define.
     const wrapper = mount(FooterSection)

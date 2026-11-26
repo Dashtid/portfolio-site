@@ -52,6 +52,8 @@ const EXEMPT: Record<string, string[]> = {
     'link.href',
     '`https://github.com/Dashtid/portfolio-site/commit/${buildCommit}`'
   ],
+  // The privacy page's links to other sites, constants in the view.
+  'views/PrivacyView.vue': ['run.href'],
   // useEmbedValidator admits https URLs on the embed hosts only, and the
   // watch link is https://www.youtube.com/watch?v= around an id that matches
   // a fixed pattern.

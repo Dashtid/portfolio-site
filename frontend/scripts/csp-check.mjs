@@ -96,7 +96,7 @@ const BASE = `http://localhost:${server.address().port}`
 
 // SPA routes: the static pages plus one SSG'd experience page (whichever
 // the build produced — no hardcoded UUID).
-const routes = ['/', '/colophon', '/writing']
+const routes = ['/', '/colophon', '/privacy', '/writing']
 const expDir = path.join(DIST, 'experience')
 // Media placeholders in a route's baked HTML, counted the way
 // verify-dist-invariants.mjs counts them.
