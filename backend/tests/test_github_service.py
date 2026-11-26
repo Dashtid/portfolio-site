@@ -262,6 +262,7 @@ class TestGetPortfolioStats:
             service.get_user_info = AsyncMock(return_value=mock_user_info)
             service.get_user_repos = AsyncMock(return_value=mock_repos)
             service.get_repo_languages = AsyncMock(return_value=mock_languages)
+            service.get_pinned_repos = AsyncMock(return_value=[])
 
             result = await service.get_portfolio_stats("testuser")
 
