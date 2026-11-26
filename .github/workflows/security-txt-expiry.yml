@@ -17,6 +17,9 @@
 #
 # A second job reads the commit in the footer of https://dashti.se/ and fails
 # when frontend/ on main differs from it: production's frontend is behind main.
+# The same job reads VERIFIED_ON in frontend/src/views/ColophonView.vue and
+# fails once it is more than 90 days old, which gives about four weekly
+# warnings before ColophonView.spec fails past 120.
 name: security.txt expiry
 
 on:
@@ -246,4 +249,57 @@ jobs:
           if error:
               print(f"::error::{error} - {FIX}")
           sys.exit(1 if error else 0)
+          PY
+
+      # VERIFIED_ON dates every claim on /colophon. ColophonView.spec reads
+      # the same literal with the same month table and fails past 120 days.
+      # This step fails past 90, so about four weekly runs turn red before
+      # that; a literal it cannot read fails it too. !cancelled(): it runs
+      # whatever the check above found.
+      - name: Warn when the colophon's verification date passes 90 days
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - frontend/src/views/ColophonView.vue <<'PY'
+          import re
+          import sys
+          from datetime import date, datetime, timezone
+
+          MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+                    "August", "September", "October", "November", "December")
+          LITERAL = re.compile(r"^const VERIFIED_ON = '([^']*)'\r?$", re.MULTILINE)
+          SHAPE = re.compile(r"(\d{1,2}) ([A-Z][a-z]+) (\d{4})", re.ASCII)
+          FAIL_AFTER_DAYS = 90
+          FIX = ("re-check the page's claims against the live site and the repository,"
+                 " then move VERIFIED_ON to that day")
+
+
+          def verified_on(path):
+              # The literal's date, or what is wrong with the literal.
+              try:
+                  with open(path, encoding="utf-8") as page:
+                      found = LITERAL.findall(page.read())
+              except OSError as exc:
+                  return f"{path}: {exc}"
+              if len(found) != 1:
+                  return f"{path}: expected one VERIFIED_ON literal, found {len(found)}"
+              shape = SHAPE.fullmatch(found[0])
+              if not shape or shape[2] not in MONTHS:
+                  return f"{path}: VERIFIED_ON {found[0]!r} is not 'D Month YYYY'"
+              try:
+                  return date(int(shape[3]), MONTHS.index(shape[2]) + 1, int(shape[1]))
+              except ValueError:  # e.g. 31 April
+                  return f"{path}: VERIFIED_ON {found[0]!r} names no such day"
+
+
+          path = sys.argv[1]
+          verified = verified_on(path)
+          if isinstance(verified, str):
+              print(f"::error::{verified}")
+              sys.exit(1)
+          age = (datetime.now(timezone.utc).date() - verified).days
+          print(f"{path}: VERIFIED_ON {verified.isoformat()}, {age} days ago")
+          if age > FAIL_AFTER_DAYS:
+              print(f"::error::{path}: VERIFIED_ON is {age} days old, more than"
+                    f" {FAIL_AFTER_DAYS} - {FIX}")
+              sys.exit(1)
           PY

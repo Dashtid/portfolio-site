@@ -4,6 +4,7 @@ A step that runs `python3 - <<'PY'` is read from its workflow file and run in
 this process with the network replaced, so each check is tested as CI runs it.
 """
 
+import datetime
 import json
 import socket
 import ssl
@@ -13,7 +14,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import pytest
 import yaml
@@ -391,3 +392,131 @@ def test_the_commit_check_fails_when_main_has_moved_on_or_the_stamp_is_unusable(
     assert code == 1
     assert problem in error
     assert error.endswith(f" - {REBAKE}")
+
+
+DATE = ("security-txt-expiry.yml", "Warn when the colophon's verification date passes 90 days")
+COLOPHON = WORKFLOWS.parents[1] / "frontend" / "src" / "views" / "ColophonView.vue"
+MONTH_NAMES = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
+TODAY = datetime.date(2026, 11, 30)
+RECHECK = "re-check the page's claims against the live site and the repository"
+
+
+class _Clock(datetime.datetime):
+    """datetime.datetime with now() at 06:00 UTC on TODAY, the schedule's hour."""
+
+    @classmethod
+    def now(cls, tz: datetime.tzinfo | None = None) -> Self:
+        return cls(TODAY.year, TODAY.month, TODAY.day, 6, tzinfo=datetime.UTC)
+
+
+def _days_before_today(days: int) -> str:
+    """A date `days` before TODAY, written the way the colophon writes VERIFIED_ON."""
+    day = TODAY - datetime.timedelta(days=days)
+    return f"{day.day} {MONTH_NAMES[day.month - 1]} {day.year}"
+
+
+def _colophon(tmp_path: Path, *literals: str) -> Path:
+    """A ColophonView.vue with one VERIFIED_ON line per literal."""
+    page = tmp_path / "ColophonView.vue"
+    lines = "".join(f"const VERIFIED_ON = '{literal}'\n" for literal in literals)
+    page.write_text(f'<script setup lang="ts">\n{lines}</script>\n', encoding="utf-8")
+    return page
+
+
+def _check_date(monkeypatch: pytest.MonkeyPatch, page: Path) -> int:
+    monkeypatch.setattr(datetime, "datetime", _Clock)
+    return _run(_step(*DATE), [str(page)], monkeypatch)
+
+
+def test_the_date_check_reads_the_colophon_whatever_the_commit_check_found() -> None:
+    workflow = yaml.safe_load((WORKFLOWS / DATE[0]).read_text(encoding="utf-8"))
+    names = [step.get("name") for step in workflow["jobs"]["frontend-commit"]["steps"]]
+    assert names.index(DATE[1]) > names.index(COMMIT[1])
+    step = _step(*DATE)
+    assert step["if"] == "${{ !cancelled() }}"
+    # The job's checkout is the step's working directory.
+    head = step["run"].partition(" <<'PY'\n")[0]
+    assert head == "python3 - frontend/src/views/ColophonView.vue"
+    assert COLOPHON.is_file()
+
+
+def test_the_date_check_reads_the_literal_the_page_carries(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Under the fixed clock, so the page's date growing old fails the weekly
+    # run and ColophonView.spec, not this test.
+    code = _check_date(monkeypatch, COLOPHON)
+    out = capsys.readouterr().out
+    assert (code, _errors(out)) == (0, [])
+    assert f"{COLOPHON}: VERIFIED_ON 20" in out
+
+
+@pytest.mark.parametrize(("days", "fails"), [(0, False), (90, False), (91, True), (400, True)])
+def test_the_date_check_fails_once_the_date_is_more_than_90_days_old(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    days: int,
+    fails: bool,
+) -> None:
+    page = _colophon(tmp_path, _days_before_today(days))
+    code = _check_date(monkeypatch, page)
+    out = capsys.readouterr().out
+    verified = TODAY - datetime.timedelta(days=days)
+    assert f"{page}: VERIFIED_ON {verified.isoformat()}, {days} days ago" in out
+    errors = _errors(out)
+    assert code == int(fails)
+    if fails:
+        [error] = errors
+        assert error.startswith(f"::error::{page}: VERIFIED_ON is {days} days old")
+        assert f"more than 90 - {RECHECK}" in error
+    else:
+        assert errors == []
+
+
+@pytest.mark.parametrize(
+    ("literals", "problem"),
+    [
+        ((), "expected one VERIFIED_ON literal, found 0"),
+        (("1 May 2026", "2 May 2026"), "expected one VERIFIED_ON literal, found 2"),
+        (("4 Sept 2026",), "VERIFIED_ON '4 Sept 2026' is not 'D Month YYYY'"),
+        (("4 september 2026",), "VERIFIED_ON '4 september 2026' is not 'D Month YYYY'"),
+        (("2026-11-30",), "VERIFIED_ON '2026-11-30' is not 'D Month YYYY'"),
+        (("31 April 2026",), "VERIFIED_ON '31 April 2026' names no such day"),
+    ],
+)
+def test_the_date_check_fails_on_a_literal_it_cannot_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    literals: tuple[str, ...],
+    problem: str,
+) -> None:
+    page = _colophon(tmp_path, *literals)
+    code = _check_date(monkeypatch, page)
+    out = capsys.readouterr().out
+    assert code == 1
+    assert _errors(out) == [f"::error::{page}: {problem}"]
+
+
+def test_the_date_check_fails_when_the_page_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    missing = tmp_path / "ColophonView.vue"
+    code = _check_date(monkeypatch, missing)
+    [error] = _errors(capsys.readouterr().out)
+    assert code == 1
+    assert error.startswith(f"::error::{missing}: ")
