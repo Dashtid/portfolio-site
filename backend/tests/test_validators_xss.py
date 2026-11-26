@@ -14,6 +14,8 @@ We test:
     file, ftp, chrome-extension).
   * Schemes without a scheme separator (no ``://``) are rejected unless
     they start with ``/`` (a relative path).
+  * Protocol-relative ``//`` and ``/\\`` prefixes, which name another
+    host, are rejected, also with a tab or newline between the characters.
   * Valid HTTPS/HTTP URLs and relative paths are accepted.
   * Empty string and None are accepted (the field is optional).
 """
@@ -50,6 +52,10 @@ DANGEROUS_URLS = [
     " javascript:alert(1)",
     "java\tscript:alert(1)",
     "//attacker.example.com/payload",  # protocol-relative
+    "/\\attacker.example.com/payload",  # browsers read the backslash as a slash
+    "/\t/attacker.example.com/payload",  # the URL parser drops the tab first
+    "/\n\\attacker.example.com/payload",  # and newlines
+    "/\r\n/attacker.example.com/payload",
     "noschemejustletters",  # no scheme separator at all
 ]
 
@@ -61,6 +67,8 @@ VALID_URLS = [
     "/relative/path",
     "/images/foo.png",
     "/a",  # minimum-length relative path
+    "/static/documents/bachelor-thesis.pdf",
+    "/media/a1b2c3d4.pdf",
     "",
     None,
 ]
@@ -104,7 +112,9 @@ class TestCompanySchemaUrlValidation:
     URL_FIELDS = ["logo_url", "website", "video_url", "map_url"]
 
     @pytest.mark.parametrize("field", URL_FIELDS)
-    @pytest.mark.parametrize("payload", ["javascript:alert(1)", "data:text/html,<x>"])
+    @pytest.mark.parametrize(
+        "payload", ["javascript:alert(1)", "data:text/html,<x>", "/\\attacker.example.com"]
+    )
     def test_company_create_rejects_dangerous_url(self, field, payload):
         kwargs = {
             "name": "Test Co",
