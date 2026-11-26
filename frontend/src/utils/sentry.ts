@@ -1,7 +1,7 @@
 /**
  * Lazily loaded Sentry, with Web Vitals reporting.
  *
- * Three deliberate departures from the stock @sentry/vue setup. The first
+ * Four deliberate departures from the stock @sentry/vue setup. The first
  * two were measured against the live site on 2026-09-20 (Lighthouse 12.6,
  * mobile: performance 87, LCP 3.4 s, TBT 160 ms; desktop was already 100):
  *
@@ -25,6 +25,14 @@
  *    what that wait can cost). The SDK's callback wrapping is off for the
  *    same reason (see loadSentry).
  *
+ * 4. Less sent about each visit: no BrowserSession integration (it sends a
+ *    session envelope on load and on every route change), no client reports
+ *    (counts of dropped events, posted whenever the tab is hidden), no
+ *    Referer header on any event, and while visit counting is declined
+ *    (Global Privacy Control, Do Not Track or the opt-out stored by
+ *    services/analytics.ts) no performance traces and no Web Vitals on an
+ *    error report. Errors still report.
+ *
  * [!] Deferring would normally open a window in which errors are lost, and
  * here that window is not covered by anything else: Sentry is the frontend's
  * ONLY error capture. (A second, home-grown tracker, `utils/errorTracking`,
@@ -37,6 +45,7 @@
 
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
+import { visitCountingDeclined } from '../services/analytics'
 
 /**
  * The exports actually used, held individually rather than as the module
@@ -145,6 +154,49 @@ function deferredForeignCodeFilter(
   }
 }
 
+/**
+ * Deletes the Referer header from an event's request headers, in place, and
+ * returns the event. The HttpContext integration copies document.referrer
+ * into that header on every error and transaction; the User-Agent header and
+ * the page URL stay. Header names are matched case-insensitively. Never
+ * throws: a throwing hook drops the event.
+ *
+ * With traceLifecycle 'stream' (this SDK's default is 'static'), traces go
+ * out as streamed spans, and HttpContext puts the referrer on each segment
+ * span as an attribute that these event hooks never see.
+ */
+function withoutReferer<E extends { request?: { headers?: Record<string, string> } }>(event: E): E {
+  try {
+    const headers = event.request?.headers
+    if (headers) {
+      for (const name of Object.keys(headers)) {
+        if (name.toLowerCase() === 'referer') delete headers[name]
+      }
+    }
+  } catch {
+    // Sent with its headers as they are rather than not at all.
+  }
+  return event
+}
+
+/** The context initWebVitals keeps the latest Web Vital in. */
+const WEB_VITALS_CONTEXT = 'web_vitals'
+
+/**
+ * Deletes the Web Vitals context from an error event, in place, while visit
+ * counting is declined, and returns the event. initWebVitals records none
+ * then; this removes those it recorded before the visitor declined. Never
+ * throws: a throwing hook drops the event.
+ */
+function withoutVitalsWhileDeclined<E extends { contexts?: Record<string, unknown> }>(event: E): E {
+  try {
+    if (event.contexts && visitCountingDeclined()) delete event.contexts[WEB_VITALS_CONTEXT]
+  } catch {
+    // Sent with its contexts as they are rather than not at all.
+  }
+  return event
+}
+
 interface BufferedError {
   error: Error
   context?: Record<string, unknown>
@@ -228,13 +280,14 @@ async function initWebVitals(): Promise<void> {
     const { onCLS, onINP, onLCP, onFCP, onTTFB } = await import('web-vitals')
 
     const reportVital = (metric: { name: string; value: number; rating: string }): void => {
-      if (!sentry) return
+      // None while visit counting is declined, which is read again for each value.
+      if (!sentry || visitCountingDeclined()) return
 
       // Report as Sentry measurement
       sentry.setMeasurement(metric.name, metric.value, 'millisecond')
 
       // Also set as context for debugging
-      sentry.setContext('web_vitals', {
+      sentry.setContext(WEB_VITALS_CONTEXT, {
         [metric.name]: {
           value: metric.value,
           rating: metric.rating
@@ -297,7 +350,12 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
       dsn,
       environment: import.meta.env.MODE,
       release: `portfolio-frontend@${import.meta.env.VITE_APP_VERSION || '0.0.0'}`,
-      integrations: [
+      // Every default integration, Vue's included, except BrowserSession,
+      // which sends a session envelope with the full user agent on load and
+      // on every route change. The two added below take the place of any
+      // default of the same name (the SDK keeps the explicit one).
+      integrations: defaults => [
+        ...defaults.filter(integration => integration.name !== 'BrowserSession'),
         // [!] By default the SDK wraps every callback handed to setTimeout,
         // setInterval, requestAnimationFrame, XMLHttpRequest and
         // addEventListener in a function of its own. Minified, that wrapper
@@ -322,7 +380,17 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
         // Tracing. Replay is deliberately absent; see the file header.
         browserTracingIntegration({ router })
       ],
-      tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+      // Asked for each root span: a pageload or a navigation, or a later
+      // span, such as an interaction timing, that continues the page's
+      // trace. 0 while visit counting is declined, read again each time, so
+      // a change applies from the next span on; else the rate, or failing
+      // that the decision, of the trace the span continues; else one in ten
+      // in production and all in dev.
+      tracesSampler: ({ inheritOrSampleWith }) =>
+        visitCountingDeclined() ? 0 : inheritOrSampleWith(import.meta.env.PROD ? 0.1 : 1.0),
+      // The SDK would otherwise post its counts of dropped events, every
+      // trace the sampler leaves out among them, each time the tab is hidden.
+      sendClientReports: false,
       // Trace headers go to the API only. The SDK tests each target against a
       // request's full URL, a string as a substring, so both are anchored.
       tracePropagationTargets: [
@@ -348,8 +416,12 @@ async function loadSentry(app: App, router: Router, dsn: string): Promise<void> 
         // a certificate error have texts of their own and still report.
         /Failed to (?:register|update) a ServiceWorker for scope \('[^']*'\) with script \('[^']*'\): An unknown error occurred when fetching the script\.$/
       ],
-      // Errors raised only by code the site never shipped stop here.
-      beforeSend
+      // Errors raised only by code the site never shipped stop here. Every
+      // event, error or transaction, leaves without its Referer header.
+      // While visit counting is declined, an error leaves without Web Vitals
+      // and a transaction, even one under way before, is not sent at all.
+      beforeSend: event => beforeSend(withoutVitalsWhileDeclined(withoutReferer(event))),
+      beforeSendTransaction: event => (visitCountingDeclined() ? null : withoutReferer(event))
     })
 
     sentry = { captureException, setMeasurement, setContext }

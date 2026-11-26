@@ -26,8 +26,9 @@
  * a pattern tested only against strings would test what the author believed
  * that event looks like.
  */
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { ErrorEvent as SentryErrorEvent } from '@sentry/vue'
+import { setVisitCountingOptOut } from '@/services/analytics'
 
 const init = vi.fn()
 const captureExceptionSpy = vi.fn()
@@ -107,6 +108,31 @@ const fakeRouter = {} as unknown as import('vue-router').Router
 
 type BeforeSend = (event: unknown) => unknown
 
+type SdkIntegration = import('@sentry/core').Integration
+/** init()'s integrations option, in the function form it takes the defaults in. */
+type IntegrationsOption = (defaults: SdkIntegration[]) => SdkIntegration[]
+
+/** What the integrations function is handed: the browser SDK's defaults, then Vue's. */
+async function realDefaultIntegrations(): Promise<SdkIntegration[]> {
+  const real = await vi.importActual<typeof import('@sentry/vue')>('@sentry/vue')
+  return [...real.getDefaultIntegrations({}), real.vueIntegration()]
+}
+
+const NO_CALLBACK_WRAPPING = {
+  setTimeout: false,
+  setInterval: false,
+  requestAnimationFrame: false,
+  XMLHttpRequest: false,
+  eventTarget: false
+}
+
+/** Each way a browser declines visit counting, as services/analytics.ts reads it. */
+const DECLINED_BY: Array<[string, () => void]> = [
+  ['Global Privacy Control', () => vi.stubGlobal('navigator', { globalPrivacyControl: true })],
+  ['Do Not Track', () => vi.stubGlobal('navigator', { doNotTrack: '1' })],
+  ['the stored opt-out', () => setVisitCountingOptOut(true)]
+]
+
 /** An error event shaped the way the SDK hands it to beforeSend. */
 function eventWithFrame(filename: string, lineno: number, colno: number): Record<string, unknown> {
   return {
@@ -153,6 +179,7 @@ describe('utils/sentry', () => {
     sentry.__resetSentryForTests()
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+    setVisitCountingOptOut(false)
   })
 
   it('does not load anything synchronously — the import waits for idle', () => {
@@ -173,21 +200,93 @@ describe('utils/sentry', () => {
     sentry.initSentry(fakeApp, fakeRouter)
     await runIdleAndSettle(idle)
 
-    expect(replayIntegration).not.toHaveBeenCalled()
-
     const options = init.mock.calls[0][0] as {
-      integrations: Array<{ name: string }>
+      integrations: IntegrationsOption
       replaysSessionSampleRate?: number
       replaysOnErrorSampleRate?: number
       dsn: string
     }
     expect(options.dsn).toBe(DSN)
-    expect(options.integrations.map(i => i.name)).toEqual(['BrowserApiErrors', 'BrowserTracing'])
+    // What the function adds to an empty default set: these two alone.
+    expect(options.integrations([]).map(i => i.name)).toEqual([
+      'BrowserApiErrors',
+      'BrowserTracing'
+    ])
+    expect(replayIntegration).not.toHaveBeenCalled()
     // A replay sample rate left behind would silently re-enable it on a bump
     // that changes the default integration set.
     expect(options.replaysSessionSampleRate).toBeUndefined()
     expect(options.replaysOnErrorSampleRate).toBeUndefined()
     expect(sentry.isSentryInitialized()).toBe(true)
+  })
+
+  it('keeps every default integration, Vue included, but BrowserSession', async () => {
+    sentry.initSentry(fakeApp, fakeRouter)
+    await runIdleAndSettle(idle)
+    const { integrations } = init.mock.calls[0][0] as { integrations: IntegrationsOption }
+
+    const defaults = await realDefaultIntegrations()
+    const defaultNames = defaults.map(i => i.name)
+    // Not vacuous: the defaults hold the session integration, Vue's, and one
+    // of the two names init() adds.
+    expect(defaultNames).toEqual(
+      expect.arrayContaining(['BrowserSession', 'Vue', 'HttpContext', 'BrowserApiErrors'])
+    )
+
+    // The list as the real SDK settles it for init(): one integration per
+    // name, and the explicit one where a default has the same name.
+    const { getIntegrationsToSetup } =
+      await vi.importActual<typeof import('@sentry/core')>('@sentry/core')
+    const installed = getIntegrationsToSetup({ defaultIntegrations: defaults, integrations })
+
+    expect(installed.map(i => i.name)).toEqual([
+      ...defaultNames.filter(name => name !== 'BrowserSession'),
+      'BrowserTracing'
+    ])
+    const apiErrors = installed.find(i => i.name === 'BrowserApiErrors') as { options?: unknown }
+    expect(apiErrors.options).toEqual(NO_CALLBACK_WRAPPING)
+  })
+
+  it('sends no client reports, the counts a hidden tab would post', async () => {
+    sentry.initSentry(fakeApp, fakeRouter)
+    await runIdleAndSettle(idle)
+    const { sendClientReports } = init.mock.calls[0][0] as { sendClientReports?: boolean }
+    expect(sendClientReports).toBe(false)
+
+    // The real SDK: when the tab is hidden, a client posts the counts of what
+    // it dropped, every trace the sampler left out among them.
+    const real = await vi.importActual<typeof import('@sentry/vue')>('@sentry/vue')
+    const sentByHiddenTab = async (options: {
+      sendClientReports?: boolean
+    }): Promise<unknown[]> => {
+      const sent: unknown[] = []
+      const client = new real.BrowserClient({
+        dsn: DSN,
+        ...options,
+        stackParser: real.defaultStackParser,
+        integrations: [],
+        transport: () => ({
+          send: envelope => {
+            for (const [header] of envelope[1]) sent.push(header.type)
+            return Promise.resolve({})
+          },
+          flush: () => Promise.resolve(true)
+        })
+      })
+      client.recordDroppedEvent('sample_rate', 'transaction')
+      const hidden = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+      try {
+        document.dispatchEvent(new Event('visibilitychange'))
+      } finally {
+        hidden.mockRestore()
+      }
+      await client.flush(2000)
+      return sent
+    }
+
+    expect(await sentByHiddenTab({ sendClientReports })).toEqual([])
+    // Not vacuous: under the SDK's default the same tab posts one.
+    expect(await sentByHiddenTab({})).toEqual(['client_report'])
   })
 
   it('does nothing at all when no DSN is configured', () => {
@@ -207,19 +306,21 @@ describe('utils/sentry', () => {
   })
 
   describe('errors from code the site never shipped', () => {
-    it('applies the real foreign-code filter once its chunk is in, and leaves transactions alone', async () => {
+    it('applies the real foreign-code filter once its chunk is in, and not to transactions', async () => {
       sentry.initSentry(fakeApp, fakeRouter)
       await runIdleAndSettle(idle)
 
       const options = init.mock.calls[0][0] as {
         beforeSend: BeforeSend
-        beforeSendTransaction?: unknown
+        beforeSendTransaction: BeforeSend
       }
-      expect(options.beforeSendTransaction).toBeUndefined()
       // Once the chunk has settled the filter runs synchronously.
       await vi.waitFor(() => expect(options.beforeSend(botEvent())).toBeNull())
       const own = ownEvent()
       expect(options.beforeSend(own)).toBe(own)
+      // A transaction with a bot's frames is sent all the same.
+      const transaction = { ...botEvent(), type: 'transaction' }
+      expect(options.beforeSendTransaction(transaction)).toBe(transaction)
     })
 
     it("ignores Microsoft's link-scanner rejection and nothing else", async () => {
@@ -242,6 +343,12 @@ describe('utils/sentry', () => {
     it("turns off all five kinds of the SDK's callback wrapping", async () => {
       sentry.initSentry(fakeApp, fakeRouter)
       await runIdleAndSettle(idle)
+      const options = init.mock.calls[0][0] as { integrations: IntegrationsOption }
+      // The SDK calls the function once, at init(); the mocked init() does not.
+      const added = options.integrations([]) as Array<{
+        name: string
+        options?: Record<string, boolean>
+      }>
 
       // A wrapped timer or listener puts a frame from this origin under
       // foreign code, so the filter would keep a bot's error as mixed. Exact
@@ -254,10 +361,7 @@ describe('utils/sentry', () => {
         XMLHttpRequest: false,
         eventTarget: false
       })
-      const options = init.mock.calls[0][0] as {
-        integrations: Array<{ name: string; options?: Record<string, boolean> }>
-      }
-      const apiErrors = options.integrations.find(i => i.name === 'BrowserApiErrors')
+      const apiErrors = added.find(i => i.name === 'BrowserApiErrors')
       expect(apiErrors?.options).toEqual({
         setTimeout: false,
         setInterval: false,
@@ -325,7 +429,7 @@ describe('utils/sentry', () => {
         // Sentry is up although the filter's chunk is still on its way.
         expect(sentry.isSentryInitialized()).toBe(true)
         const options = init.mock.calls[0][0] as { beforeSend: BeforeSend }
-        const own = ownEvent()
+        const own = { ...ownEvent(), request: { headers: { Referer: 'https://example.net/' } } }
         const waitingBot = options.beforeSend(botEvent())
         const waitingOwn = options.beforeSend(own)
         expect(waitingBot).toBeInstanceOf(Promise)
@@ -333,6 +437,8 @@ describe('utils/sentry', () => {
         releaseFilterChunk()
         await expect(waitingBot).resolves.toBeNull()
         await expect(waitingOwn).resolves.toBe(own)
+        // The header goes before the wait, whatever the filter then decides.
+        expect(own.request.headers).toEqual({})
       })
 
       it('starts Sentry when it never arrives, and releases events unfiltered after 5 s', async () => {
@@ -587,6 +693,297 @@ describe('utils/sentry', () => {
         expect(propagates(targets, url), url).toBe(false)
       }
     })
+  })
+
+  /**
+   * The HttpContext integration copies document.referrer into a Referer
+   * header on every event. beforeSend and beforeSendTransaction delete it,
+   * and nothing else in the request.
+   */
+  describe('the Referer header', () => {
+    type SentPayload = { type?: string; request?: unknown }
+
+    it('is gone from the error and the transaction the real SDK sends', async () => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+      const { beforeSend, beforeSendTransaction } = init.mock.calls[0][0] as {
+        beforeSend: NonNullable<import('@sentry/vue').BrowserOptions['beforeSend']>
+        beforeSendTransaction: NonNullable<
+          import('@sentry/vue').BrowserOptions['beforeSendTransaction']
+        >
+      }
+      const referrer = vi
+        .spyOn(document, 'referrer', 'get')
+        .mockReturnValue('https://mail.example.net/?id=7')
+      onTestFinished(() => referrer.mockRestore())
+
+      // The real SDK, unmocked: its HttpContext integration writes the
+      // request data, then this init's hooks run, then the transport gets
+      // what would go on the wire.
+      const real = await vi.importActual<typeof import('@sentry/vue')>('@sentry/vue')
+      const sent: SentPayload[] = []
+      const client = new real.BrowserClient({
+        dsn: DSN,
+        sendClientReports: false,
+        stackParser: real.defaultStackParser,
+        integrations: [real.httpContextIntegration()],
+        beforeSend,
+        beforeSendTransaction,
+        transport: () => ({
+          send: envelope => {
+            for (const [, payload] of envelope[1]) sent.push(payload as SentPayload)
+            return Promise.resolve({})
+          },
+          flush: () => Promise.resolve(true)
+        })
+      })
+      client.init()
+
+      client.captureMessage('probe')
+      client.captureEvent({
+        type: 'transaction',
+        transaction: '/colophon',
+        start_timestamp: 1,
+        timestamp: 2,
+        spans: []
+      })
+      await client.flush(2000)
+
+      expect(sent.map(payload => payload.type)).toEqual([undefined, 'transaction'])
+      for (const payload of sent) {
+        expect(payload.request).toEqual({
+          url: window.location.href,
+          headers: { 'User-Agent': navigator.userAgent }
+        })
+      }
+    })
+
+    it('is deleted whatever the case of its name, and the other headers stay', async () => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+      const options = init.mock.calls[0][0] as {
+        beforeSend: BeforeSend
+        beforeSendTransaction: BeforeSend
+      }
+      const headers = (): Record<string, string> => ({
+        Referer: 'https://example.net/a',
+        referer: 'https://example.net/b',
+        'User-Agent': 'Mozilla/5.0',
+        Accept: 'text/html'
+      })
+
+      const transaction = { type: 'transaction', request: { headers: headers() } }
+      expect(options.beforeSendTransaction(transaction)).toBe(transaction)
+      expect(transaction.request.headers).toEqual({
+        'User-Agent': 'Mozilla/5.0',
+        Accept: 'text/html'
+      })
+
+      // The filter still decides once the header is gone.
+      await vi.waitFor(() => expect(options.beforeSend(botEvent())).toBeNull())
+      const own = { ...ownEvent(), request: { headers: headers() } }
+      expect(options.beforeSend(own)).toBe(own)
+      expect(own.request.headers).toEqual({ 'User-Agent': 'Mozilla/5.0', Accept: 'text/html' })
+
+      // Nothing to delete: the event comes back as it was.
+      for (const bare of [{ type: 'transaction' }, { type: 'transaction', request: {} }]) {
+        const before = JSON.stringify(bare)
+        expect(options.beforeSendTransaction(bare)).toBe(bare)
+        expect(JSON.stringify(bare)).toBe(before)
+      }
+    })
+  })
+
+  /**
+   * Traces follow visit counting: none while the browser declines it, read
+   * again for every trace, so no reload is needed either way.
+   */
+  describe('performance traces', () => {
+    type TracesSampler = (context: {
+      name: string
+      parentSampled?: boolean
+      inheritOrSampleWith: (fallbackSampleRate: number) => number
+    }) => number | boolean
+
+    /** The sampling context of a root span with no trace to continue. */
+    const newTrace = (name: string): Parameters<TracesSampler>[0] => ({
+      name,
+      inheritOrSampleWith: fallbackSampleRate => fallbackSampleRate
+    })
+
+    const initOptions = async (): Promise<{
+      tracesSampler: TracesSampler
+      tracesSampleRate?: number
+      beforeSendTransaction: BeforeSend
+    }> => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+      return init.mock.calls[0][0] as {
+        tracesSampler: TracesSampler
+        tracesSampleRate?: number
+        beforeSendTransaction: BeforeSend
+      }
+    }
+
+    it('samples one trace in ten in a production build, and all in dev', async () => {
+      const options = await initOptions()
+      // The sampler alone decides; a rate beside it would be ignored.
+      expect(options.tracesSampleRate).toBeUndefined()
+
+      vi.stubEnv('PROD', true)
+      expect(options.tracesSampler(newTrace('/'))).toBe(0.1)
+      vi.stubEnv('PROD', false)
+      expect(options.tracesSampler(newTrace('/'))).toBe(1)
+    })
+
+    it.each(DECLINED_BY)(
+      'samples none under %s, from the next trace on',
+      async (_name, decline) => {
+        vi.stubEnv('PROD', true)
+        const { tracesSampler } = await initOptions()
+        expect(tracesSampler(newTrace('/'))).toBe(0.1)
+
+        decline()
+
+        expect(tracesSampler(newTrace('/colophon'))).toBe(0)
+        // Not even for a span that continues a sampled trace.
+        const inherit = vi.fn(() => 1)
+        expect(
+          tracesSampler({ name: '/colophon', parentSampled: true, inheritOrSampleWith: inherit })
+        ).toBe(0)
+        expect(inherit).not.toHaveBeenCalled()
+      }
+    )
+
+    it.each(DECLINED_BY)(
+      'sends no transaction under %s, not even one under way before',
+      async (_name, decline) => {
+        const { beforeSendTransaction } = await initOptions()
+        const before = { type: 'transaction', transaction: '/colophon' }
+        expect(beforeSendTransaction(before)).toBe(before)
+
+        decline()
+
+        expect(beforeSendTransaction({ type: 'transaction', transaction: '/colophon' })).toBeNull()
+      }
+    )
+
+    it("otherwise returns what the SDK's inheritOrSampleWith makes of one in ten", async () => {
+      vi.stubEnv('PROD', true)
+      const { tracesSampler } = await initOptions()
+      const inherit = vi.fn((_fallbackSampleRate: number) => 0.25)
+
+      expect(tracesSampler({ name: '/', parentSampled: true, inheritOrSampleWith: inherit })).toBe(
+        0.25
+      )
+      expect(inherit.mock.calls).toEqual([[0.1]])
+    })
+
+    it('keeps the decision and the rate of the trace a later root span continues', async () => {
+      vi.stubEnv('PROD', true)
+      const { tracesSampler } = await initOptions()
+
+      // The real SDK, unmocked: after a sampled pageload ends, the tracing
+      // integration leaves its trace on the scope, and a later root span,
+      // such as an interaction timing, continues it.
+      const real = await vi.importActual<typeof import('@sentry/vue')>('@sentry/vue')
+      const client = new real.BrowserClient({
+        dsn: DSN,
+        tracesSampler,
+        sendClientReports: false,
+        stackParser: real.defaultStackParser,
+        integrations: [],
+        transport: () => ({ send: () => Promise.resolve({}), flush: () => Promise.resolve(true) })
+      })
+      const traceId = '0123456789abcdef0123456789abcdef'
+      const span = real.withScope(scope => {
+        scope.setClient(client)
+        scope.setPropagationContext({
+          traceId,
+          sampleRand: 0.05,
+          sampled: true,
+          dsc: { trace_id: traceId, sample_rate: '0.1', sampled: 'true' }
+        })
+        return real.startInactiveSpan({ name: 'interaction' })
+      })
+
+      // Sampled like the pageload, and still at its rate of one in ten.
+      expect(span.isRecording()).toBe(true)
+      expect(real.spanToJSON(span).data[real.SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE]).toBe(0.1)
+    })
+  })
+
+  /**
+   * Each Web Vital goes to the active trace as a measurement and into the
+   * web_vitals context, which every later event carries; neither while visit
+   * counting is declined.
+   */
+  describe('Web Vitals', () => {
+    type ReportVital = (metric: { name: string; value: number; rating: string }) => void
+    const LCP = { name: 'LCP', value: 1234, rating: 'good' }
+
+    /** init()'s beforeSend, settled, and the callback handed to onLCP. */
+    const initVitals = async (): Promise<{ beforeSend: BeforeSend; reportLcp: ReportVital }> => {
+      sentry.initSentry(fakeApp, fakeRouter)
+      await runIdleAndSettle(idle)
+      const { onLCP } = await import('web-vitals')
+      await vi.waitFor(() => expect(onLCP).toHaveBeenCalledTimes(1))
+      const { beforeSend } = init.mock.calls[0][0] as { beforeSend: BeforeSend }
+      // Once the filter's chunk has settled, beforeSend runs synchronously.
+      await vi.waitFor(() => expect(beforeSend(botEvent())).toBeNull())
+      return {
+        beforeSend,
+        reportLcp: vi.mocked(onLCP).mock.calls[0][0] as unknown as ReportVital
+      }
+    }
+
+    /** An error event of the site's own, carrying a vital and another context. */
+    const errorWithVitals = (): Record<string, unknown> & {
+      contexts: Record<string, unknown>
+    } => ({
+      ...ownEvent(),
+      contexts: { web_vitals: { LCP: { value: 1234, rating: 'good' } }, culture: { locale: 'sv' } }
+    })
+
+    it('reports a value as a measurement and as the web_vitals context', async () => {
+      const { reportLcp } = await initVitals()
+
+      reportLcp(LCP)
+
+      expect(setMeasurement).toHaveBeenCalledWith('LCP', 1234, 'millisecond')
+      expect(setContext).toHaveBeenCalledWith('web_vitals', {
+        LCP: { value: 1234, rating: 'good' }
+      })
+    })
+
+    it.each(DECLINED_BY)(
+      'records none under %s, from the next value on',
+      async (_name, decline) => {
+        const { reportLcp } = await initVitals()
+
+        decline()
+        reportLcp(LCP)
+
+        expect(setMeasurement).not.toHaveBeenCalled()
+        expect(setContext).not.toHaveBeenCalled()
+      }
+    )
+
+    it.each(DECLINED_BY)(
+      'leaves those recorded before out of an error report under %s',
+      async (_name, decline) => {
+        const { beforeSend } = await initVitals()
+        const counted = errorWithVitals()
+        expect(beforeSend(counted)).toBe(counted)
+        expect(Object.keys(counted.contexts)).toEqual(['web_vitals', 'culture'])
+
+        decline()
+
+        const declined = errorWithVitals()
+        expect(beforeSend(declined)).toBe(declined)
+        expect(declined.contexts).toEqual({ culture: { locale: 'sv' } })
+      }
+    )
   })
 
   describe('the idle window', () => {
