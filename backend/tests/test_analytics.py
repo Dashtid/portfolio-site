@@ -2,12 +2,32 @@
 Tests for analytics API module
 """
 
+import asyncio
 import logging
+import re
+from datetime import date
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.api.v1.analytics import logger, router
+from app.models.analytics import PageView
+from app.utils import visitor_key
+from tests.conftest import TestSessionLocal
+
+BEACON = "/api/v1/analytics/track/pageview"
+
+
+def _stored(*columns: Any) -> list[tuple[Any, ...]]:
+    """The given page_views columns of every stored row."""
+
+    async def read() -> list[tuple[Any, ...]]:
+        async with TestSessionLocal() as session:
+            return [tuple(row) for row in await session.execute(select(*columns))]
+
+    return asyncio.run(read())
 
 
 class TestAnalyticsModule:
@@ -199,6 +219,55 @@ class TestTrackPageviewEndpoint:
         assert len(ids) == len(set(ids))
 
 
+class TestDailyVisitorKey:
+    """A row's session_id is the daily visitor key of its address and User-Agent.
+
+    Every TestClient request has the address "unknown" (its peer is not an
+    address), so the requests here differ by User-Agent only.
+    """
+
+    @staticmethod
+    def _track(client: TestClient, path: str, user_agent: str, **body: Any) -> None:
+        response = client.post(
+            BEACON, json={"page_path": path, **body}, headers={"User-Agent": user_agent}
+        )
+        assert response.status_code == 200
+
+    def test_one_user_agent_gets_one_key_for_the_day(self, client: TestClient):
+        self._track(client, "/a", "agent-one")
+        self._track(client, "/b", "agent-one")
+
+        keys = dict(_stored(PageView.page_path, PageView.session_id))
+        assert keys["/a"] == keys["/b"]
+        assert re.fullmatch(r"v_[0-9a-f]{16}", keys["/a"])
+
+    def test_another_user_agent_gets_another_key(self, client: TestClient):
+        self._track(client, "/a", "agent-one")
+        self._track(client, "/b", "agent-two")
+
+        keys = dict(_stored(PageView.page_path, PageView.session_id))
+        assert keys["/a"] != keys["/b"]
+
+    def test_a_new_salt_gives_another_key(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        self._track(client, "/a", "agent-one")
+        # A salt dated in the past is replaced by the next beacon.
+        monkeypatch.setattr(visitor_key, "_salt_day", date(2000, 1, 1))
+        self._track(client, "/b", "agent-one")
+
+        keys = dict(_stored(PageView.page_path, PageView.session_id))
+        assert keys["/a"] != keys["/b"]
+
+    def test_visitor_id_in_the_body_is_ignored(self, client: TestClient):
+        self._track(client, "/a", "agent-one", visitor_id="client-chosen-1")
+        self._track(client, "/b", "agent-one", visitor_id="client-chosen-2")
+
+        keys = dict(_stored(PageView.page_path, PageView.session_id))
+        assert keys["/a"] == keys["/b"]
+        assert re.fullmatch(r"v_[0-9a-f]{16}", keys["/a"])
+
+
 class TestAnalyticsSummaryEndpoint:
     """Tests for GET /analytics/stats/summary endpoint."""
 
@@ -271,16 +340,11 @@ class TestAnalyticsSummaryEndpoint:
         but rows already in the table must not skew history either -- hence the
         read-time '/admin%' filter this test pins.
         """
+        # Two User-Agents, so the two browsers get two daily visitor keys.
         for path in ["/", "/experience/hermes"]:
-            client.post(
-                "/api/v1/analytics/track/pageview",
-                json={"page_path": path, "visitor_id": "visitor-session"},
-            )
+            client.post(BEACON, json={"page_path": path}, headers={"User-Agent": "visitor-agent"})
         for path in ["/admin", "/admin/companies", "/admin/cv"]:
-            client.post(
-                "/api/v1/analytics/track/pageview",
-                json={"page_path": path, "visitor_id": "owner-session"},
-            )
+            client.post(BEACON, json={"page_path": path}, headers={"User-Agent": "admin-agent"})
 
         data = client.get(
             "/api/v1/analytics/stats/summary",
@@ -292,7 +356,8 @@ class TestAnalyticsSummaryEndpoint:
         assert page_paths == {"/", "/experience/hermes"}
         assert not any(p.startswith("/admin") for p in page_paths)
         assert sum(d["views"] for d in data["daily_views"]) == 2
-        # An admin-ONLY session has no real page view, so it is not a visitor.
+        # A key with admin paths only has no real page view, so it is not a visitor.
+        assert len({key for (key,) in _stored(PageView.session_id)}) == 2
         assert data["unique_visitors"] == 1
 
     def test_summary_default_period(self, client: TestClient, admin_user_in_db: dict[str, Any]):

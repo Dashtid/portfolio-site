@@ -33,6 +33,7 @@ from app.schemas.analytics import (
 )
 from app.utils.ip_hash import hash_ip
 from app.utils.logger import get_logger
+from app.utils.visitor_key import daily_visitor_key
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -103,21 +104,18 @@ async def track_pageview(
     """
     Track a page view (public endpoint).
 
-    Records visitor page views for analytics. The raw client IP is hashed
-    before persistence (GDPR pseudonymisation). PERF-01: geo-IP lookup is
+    Records visitor page views for analytics. session_id is the daily
+    visitor key of the client address and User-Agent
+    (app/utils/visitor_key.py). The raw client IP is hashed before
+    persistence (GDPR pseudonymisation). PERF-01: geo-IP lookup is
     deferred to a `BackgroundTask` and back-fills the `country` column
     asynchronously so the response returns as soon as the row is inserted.
     """
     # Get client IP securely (only trusts X-Forwarded-For from known proxies)
     client_ip = get_client_ip(request)
 
-    # Determine session_id: use visitor_id from frontend, or generate from IP hash
-    if page_view.visitor_id:
-        session_id = page_view.visitor_id
-    else:
-        # Fallback: generate anonymous session from a keyed hash of the IP.
-        # See app/utils/ip_hash.py for the construction.
-        session_id = f"anon_{hash_ip(client_ip)}"
+    # A visitor_id in the body is not read: the key is computed here.
+    session_id = daily_visitor_key(client_ip, request.headers.get("User-Agent") or "")
 
     # Truncate to storage width: the schema accepts up to 2048 for
     # path/referrer (long UTM URLs are real traffic worth recording) but
@@ -135,7 +133,6 @@ async def track_pageview(
     # from these values — attacker-controlled log injection.
     page_path = _scrub(page_view.page_path, 500) or "/"
     referrer = _scrub(page_view.referrer, 500)
-    session_id = _scrub(session_id, 255) or f"anon_{hash_ip(client_ip)}"
     user_agent = _scrub(request.headers.get("User-Agent"), 512)
 
     db_pageview = PageView(

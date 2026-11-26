@@ -6,6 +6,7 @@ import asyncio
 import logging
 from collections.abc import Generator
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,7 +18,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import settings
 from app.core.security import create_access_token
 from app.database import Base, get_db
-from app.main import app
+from app.main import app, cleanup_oauth_states_periodically
 from app.middleware import limiter
 
 # Import all models to ensure they're registered with Base.metadata
@@ -64,6 +65,31 @@ TestSessionLocal = sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+
+async def run_one_cleanup_pass() -> None:
+    """Run the body of app.main's cleanup loop once, against the test database.
+
+    The loop sleeps before each pass: the first sleep returns at once and the
+    second raises CancelledError, on which the loop ends. The loop imports
+    AsyncSessionLocal from app.database inside its body, so patching it there
+    points the pass at the test engine.
+    """
+    real_sleep = asyncio.sleep
+    sleeps = 0
+
+    async def sleep_once(_delay: float) -> None:
+        nonlocal sleeps
+        sleeps += 1
+        if sleeps >= 2:
+            raise asyncio.CancelledError
+        await real_sleep(0)
+
+    with (
+        patch("app.main.asyncio.sleep", sleep_once),
+        patch("app.database.AsyncSessionLocal", TestSessionLocal),
+    ):
+        await cleanup_oauth_states_periodically()
 
 
 @pytest.fixture(scope="session")

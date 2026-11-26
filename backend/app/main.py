@@ -56,6 +56,7 @@ from app.middleware import (
 )
 from app.services.github_service import github_service
 from app.utils.logger import get_logger
+from app.utils.visitor_key import rotate_daily_salt
 
 logger = get_logger(__name__)
 
@@ -446,6 +447,9 @@ async def cleanup_oauth_states_periodically():
     rows must survive, they are what makes replay-of-a-rotated-token
     detection (RFC 6819 §5.2.2.3) work until natural expiry. Before this,
     the table grew one row per login + one per rotation, forever.
+
+    Each pass first calls rotate_daily_salt(), so the visitor-key salt of
+    the previous UTC day is replaced within five minutes of midnight UTC.
     """
     # Local imports to avoid circular dependencies (noqa: PLC0415)
     from datetime import datetime  # noqa: PLC0415
@@ -460,6 +464,7 @@ async def cleanup_oauth_states_periodically():
     while True:
         try:
             await asyncio.sleep(300)  # Run every 5 minutes
+            rotate_daily_salt()
             async with AsyncSessionLocal() as session:
                 now = datetime.now(UTC)
                 states = await session.execute(
