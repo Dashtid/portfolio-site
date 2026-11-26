@@ -12,6 +12,8 @@ import analytics from '@/services/analytics'
  * Fire-and-forget: the call never awaits, never throws into the handler, and
  * never blocks or prevents the navigation (all wired links are
  * target="_blank", so the current tab stays alive for the request to finish).
+ * Nothing is sent while visitCountingDeclined() is true: trackEvent goes
+ * through trackPageView, which checks it.
  */
 export function useOutboundTracking() {
   const trackOutbound = (destination: string, label: string | null = null): void => {

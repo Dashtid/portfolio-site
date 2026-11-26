@@ -5,14 +5,58 @@
  * the unified base URL, and the shared error/refresh handling. Types
  * mirror the Pydantic schemas in backend/app/schemas/analytics.py.
  *
- * A page view sends two fields, page_path and referrer. The service reads
- * and writes no browser storage, so importing it (the SSG build does, in
- * Node) touches none.
+ * A page view sends two fields, page_path and referrer, and is not sent at
+ * all while visitCountingDeclined() is true. The only browser storage the
+ * module uses is the opt-out key, read or written inside a call and never
+ * when the module loads (the SSG build imports it in Node).
  */
 import apiClient from '../api/client'
 import { analyticsLogger } from '../utils/logger'
 
 const ENDPOINT = '/api/v1/analytics'
+
+/** localStorage key of this browser's opt-out: '1' while it is set. */
+const OPT_OUT_KEY = 'portfolio-analytics-opt-out'
+
+/** What `read` returns, or undefined when it throws (its API missing or blocked). */
+function readOrUndefined<T>(read: () => T): T | undefined {
+  try {
+    return read()
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * True while this browser asks not to be counted: Global Privacy Control is
+ * on, Do Not Track is '1', or the opt-out is stored. Each source is read
+ * again on every call, so a change applies from the next page view on, and
+ * a source that is missing (navigator and localStorage in Node) or throws
+ * counts as not set.
+ */
+export function visitCountingDeclined(): boolean {
+  return (
+    readOrUndefined(
+      () => (navigator as Navigator & { globalPrivacyControl?: unknown }).globalPrivacyControl
+    ) === true ||
+    readOrUndefined(() => navigator.doNotTrack) === '1' ||
+    readOrUndefined(() => localStorage.getItem(OPT_OUT_KEY)) === '1'
+  )
+}
+
+/**
+ * Stores this browser's opt-out (true) or removes it (false). Where storage
+ * is missing or refuses the change, the call changes nothing and throws
+ * nothing; visitCountingDeclined() reads back what holds.
+ */
+export function setVisitCountingOptOut(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(OPT_OUT_KEY, '1')
+    else localStorage.removeItem(OPT_OUT_KEY)
+  } catch {
+    // No storage to keep the choice in.
+  }
+}
 
 interface PageViewData {
   page_path: string
@@ -64,6 +108,8 @@ export interface VisitorStats {
 
 class AnalyticsService {
   async trackPageView(pagePath?: string): Promise<void> {
+    if (visitCountingDeclined()) return
+
     try {
       const data: PageViewData = {
         page_path: pagePath || window.location.pathname,

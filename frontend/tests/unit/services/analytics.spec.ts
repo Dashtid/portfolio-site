@@ -41,10 +41,22 @@ const loggerStubs = vi.hoisted(() => {
 vi.mock('@/utils/logger', () => loggerStubs)
 
 import apiClient from '@/api/client'
-import analyticsService from '@/services/analytics'
+import analyticsService, {
+  setVisitCountingOptOut,
+  visitCountingDeclined
+} from '@/services/analytics'
 
 const mockedPost = vi.mocked(apiClient.post)
 const mockedGet = vi.mocked(apiClient.get)
+
+const OPT_OUT_KEY = 'portfolio-analytics-opt-out'
+
+/** Each way a browser declines visit counting, set up for one test. */
+const DECLINED_BY: Array<[string, () => void]> = [
+  ['Global Privacy Control', () => vi.stubGlobal('navigator', { globalPrivacyControl: true })],
+  ['Do Not Track', () => vi.stubGlobal('navigator', { doNotTrack: '1' })],
+  ['the stored opt-out', () => setVisitCountingOptOut(true)]
+]
 
 /**
  * A stand-in for a Storage object, or for navigator, that records the name
@@ -82,10 +94,11 @@ describe('analytics service', () => {
   })
 
   describe('browser storage', () => {
-    it('is not touched when the module is imported', async () => {
+    it('is not touched when the module is imported, and neither is navigator', async () => {
       const touched: string[] = []
       vi.stubGlobal('localStorage', accessRecorder<Storage>(touched))
       vi.stubGlobal('sessionStorage', accessRecorder<Storage>(touched))
+      vi.stubGlobal('navigator', accessRecorder<Navigator>(touched))
       vi.resetModules()
 
       const fresh = await import('@/services/analytics')
@@ -103,6 +116,106 @@ describe('analytics service', () => {
       expect(mockedPost).toHaveBeenCalledTimes(2)
       expect(sessionStorage.length).toBe(0)
       expect(localStorage.length).toBe(0)
+    })
+  })
+
+  describe('visitCountingDeclined', () => {
+    it('is false while no signal is set', () => {
+      expect(visitCountingDeclined()).toBe(false)
+    })
+
+    it.each(DECLINED_BY)('is true under %s', (_name, decline) => {
+      decline()
+      expect(visitCountingDeclined()).toBe(true)
+    })
+
+    it('takes Global Privacy Control only as the boolean true', () => {
+      for (const value of [false, 'true', 1, null, undefined]) {
+        vi.stubGlobal('navigator', { globalPrivacyControl: value })
+        expect(visitCountingDeclined(), String(value)).toBe(false)
+      }
+    })
+
+    it("takes Do Not Track only as '1'", () => {
+      for (const value of ['0', 'unspecified', 'yes', null, 1]) {
+        vi.stubGlobal('navigator', { doNotTrack: value })
+        expect(visitCountingDeclined(), String(value)).toBe(false)
+      }
+    })
+
+    it("takes the stored opt-out only as '1'", () => {
+      for (const value of ['0', 'true', '']) {
+        localStorage.setItem(OPT_OUT_KEY, value)
+        expect(visitCountingDeclined(), value).toBe(false)
+      }
+    })
+
+    it('reads every source again on each call', () => {
+      expect(visitCountingDeclined()).toBe(false)
+      setVisitCountingOptOut(true)
+      expect(visitCountingDeclined()).toBe(true)
+      setVisitCountingOptOut(false)
+      expect(visitCountingDeclined()).toBe(false)
+      vi.stubGlobal('navigator', { doNotTrack: '1' })
+      expect(visitCountingDeclined()).toBe(true)
+    })
+
+    it('counts a source that throws as not set, and still reads the others', () => {
+      vi.stubGlobal('navigator', {
+        get globalPrivacyControl(): boolean {
+          throw new Error('blocked')
+        },
+        doNotTrack: '1'
+      })
+      expect(visitCountingDeclined()).toBe(true)
+
+      vi.stubGlobal('navigator', { doNotTrack: '0' })
+      vi.stubGlobal('localStorage', {
+        getItem: () => {
+          throw new DOMException('The operation is insecure.', 'SecurityError')
+        }
+      })
+      expect(visitCountingDeclined()).toBe(false)
+    })
+
+    it('is false where navigator and localStorage do not exist, as in the prerender', () => {
+      vi.stubGlobal('navigator', undefined)
+      vi.stubGlobal('localStorage', undefined)
+
+      expect(visitCountingDeclined()).toBe(false)
+      expect(() => setVisitCountingOptOut(true)).not.toThrow()
+    })
+
+    it.each(DECLINED_BY)('stops page views and events under %s', async (_name, decline) => {
+      mockedPost.mockResolvedValue({ data: {} } as never)
+      decline()
+
+      await analyticsService.trackPageView('/test')
+      await analyticsService.trackEvent('outbound', 'github', 'footer')
+
+      expect(mockedPost).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('setVisitCountingOptOut', () => {
+    it("stores '1' when switched on and removes the key when switched off", () => {
+      setVisitCountingOptOut(true)
+      expect(localStorage.getItem(OPT_OUT_KEY)).toBe('1')
+
+      setVisitCountingOptOut(false)
+      expect(localStorage.getItem(OPT_OUT_KEY)).toBeNull()
+      expect(localStorage.length).toBe(0)
+    })
+
+    it('throws nothing and keeps nothing when storage refuses the write', () => {
+      const refuse = (): never => {
+        throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
+      }
+      vi.stubGlobal('localStorage', { getItem: () => null, setItem: refuse, removeItem: refuse })
+
+      expect(() => setVisitCountingOptOut(true)).not.toThrow()
+      expect(() => setVisitCountingOptOut(false)).not.toThrow()
+      expect(visitCountingDeclined()).toBe(false)
     })
   })
 
