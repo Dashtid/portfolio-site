@@ -7,12 +7,14 @@ import logging
 import re
 from datetime import date
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.api.v1.analytics import logger, router
+from app.config import settings
 from app.models.analytics import PageView
 from app.utils import visitor_key
 from tests.conftest import TestSessionLocal
@@ -278,6 +280,51 @@ class TestDailyVisitorKey:
         keys = dict(_stored(PageView.page_path, PageView.session_id))
         assert keys["/a"] == keys["/b"]
         assert re.fullmatch(r"v_[0-9a-f]{16}", keys["/a"])
+
+
+class TestDeclinedPageViews:
+    """Sec-GPC: 1 or DNT: 1 gets 204 and records nothing; any other value is counted."""
+
+    @pytest.fixture
+    def lookup(self, monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+        """The country lookup, answering "SE", with the back-fill on the test database."""
+        mock = AsyncMock(return_value="SE")
+        monkeypatch.setattr("app.api.v1.analytics.get_country_code", mock)
+        monkeypatch.setattr("app.api.v1.analytics.AsyncSessionLocal", TestSessionLocal)
+        return mock
+
+    @pytest.mark.parametrize("header", ["Sec-GPC", "DNT"])
+    def test_a_1_stores_nothing_and_looks_nothing_up(
+        self, client: TestClient, lookup: AsyncMock, header: str
+    ):
+        response = client.post(BEACON, json={"page_path": "/a"}, headers={header: "1"})
+
+        assert response.status_code == 204
+        assert response.content == b""
+        assert _stored(PageView.page_path) == []
+        lookup.assert_not_awaited()
+
+    @pytest.mark.parametrize(
+        ("header", "value"), [("Sec-GPC", "0"), ("DNT", "0"), ("Sec-GPC", "true"), ("DNT", "")]
+    )
+    def test_any_other_value_is_counted(
+        self, client: TestClient, lookup: AsyncMock, header: str, value: str
+    ):
+        response = client.post(BEACON, json={"page_path": "/a"}, headers={header: value})
+
+        assert response.status_code == 200
+        assert _stored(PageView.page_path, PageView.country) == [("/a", "SE")]
+        lookup.assert_awaited_once()
+
+    def test_declined_beacons_still_use_up_the_public_tier(self, client: TestClient):
+        limit = int(settings.RATE_LIMIT_PUBLIC.split("/")[0])
+        declined = {"Sec-GPC": "1"}
+
+        for i in range(limit):
+            response = client.post(BEACON, json={"page_path": "/"}, headers=declined)
+            assert response.status_code == 204, f"request {i + 1}: {response.status_code}"
+
+        assert client.post(BEACON, json={"page_path": "/"}, headers=declined).status_code == 429
 
 
 class TestAnalyticsSummaryEndpoint:

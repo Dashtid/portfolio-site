@@ -11,7 +11,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, Response
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -104,13 +104,19 @@ async def track_pageview(
     """
     Track a page view (public endpoint).
 
-    Records visitor page views for analytics. session_id is the daily
-    visitor key of the client address and User-Agent
-    (app/utils/visitor_key.py); the row stores neither of them, nor a
-    digest of the address. PERF-01: geo-IP lookup is deferred to a
-    `BackgroundTask` and back-fills the `country` column asynchronously so
-    the response returns as soon as the row is inserted.
+    Records visitor page views for analytics. A request with Sec-GPC: 1 or
+    DNT: 1 gets 204 and records nothing. session_id is the daily visitor
+    key of the client address and User-Agent (app/utils/visitor_key.py);
+    the row stores neither of them, nor a digest of the address. PERF-01:
+    geo-IP lookup is deferred to a `BackgroundTask` and back-fills the
+    `country` column asynchronously so the response returns as soon as the
+    row is inserted.
     """
+    # Only the exact value "1" declines, as the Global Privacy Control spec
+    # says of Sec-GPC. Nothing else runs: no row, no country lookup.
+    if request.headers.get("Sec-GPC") == "1" or request.headers.get("DNT") == "1":
+        return Response(status_code=204)
+
     # Get client IP securely (only trusts X-Forwarded-For from known proxies)
     client_ip = get_client_ip(request)
 
