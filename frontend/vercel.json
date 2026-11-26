@@ -80,7 +80,7 @@
         },
         {
           "key": "X-DNS-Prefetch-Control",
-          "value": "on"
+          "value": "off"
         },
         {
           "key": "Cross-Origin-Opener-Policy",
