@@ -770,7 +770,7 @@ onUnmounted(() => {
 
 /* Focus beats the reveal — see the matching rule in HomeView. Here the
    animated wrapper is .experience-section, so this also covers the video
-   and map iframes a keyboard user tabs into. */
+   and map buttons, links and iframes a keyboard user tabs into. */
 [data-anim='hidden']:focus-within {
   opacity: 1;
   transform: none;

@@ -52,8 +52,10 @@ const EXEMPT: Record<string, string[]> = {
     'link.href',
     '`https://github.com/Dashtid/portfolio-site/commit/${buildCommit}`'
   ],
-  // useEmbedValidator admits https URLs on the embed hosts only.
-  'components/VideoEmbed.vue': ['safeUrl'],
+  // useEmbedValidator admits https URLs on the embed hosts only, and the
+  // watch link is https://www.youtube.com/watch?v= around an id that matches
+  // a fixed pattern.
+  'components/VideoEmbed.vue': ['playUrl', 'watchUrl'],
   'components/MapEmbed.vue': ['localizedUrl'],
   // The CV photo: a data:image URI (PhotoDataUri in the backend schema) in an
   // img, which never runs a URL as script.

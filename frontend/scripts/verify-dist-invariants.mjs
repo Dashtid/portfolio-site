@@ -32,6 +32,9 @@
  * 7. The ingest origin of every Sentry DSN in the bundle must be in the CSP's
  *    connect-src, which names that host exactly. A DSN on another host would
  *    have every error report blocked, and nothing else would say so.
+ * 8. No baked page may carry an <iframe>. VideoEmbed and MapEmbed render a
+ *    placeholder and create their frame only after a click, so a frame in the
+ *    baked HTML would load YouTube or Google Maps as the page loads.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -297,6 +300,28 @@ for (const origin of dsnOrigins) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 8. No <iframe> in any baked page.
+//
+// The video and map embeds bake a placeholder; their iframe exists only after
+// the placeholder's button is pressed. A frame in the baked HTML would make the
+// browser request the embed's host on page load, before any click. The count
+// of baked placeholders is reported, not enforced: it depends on which
+// experience records carry a video or a map.
+// ---------------------------------------------------------------------------
+let bakedPlaceholders = 0
+for (const file of walkHtml(dist)) {
+  const rel = path.relative(dist, file).replace(/\\/g, '/')
+  const html = fs.readFileSync(file, 'utf-8')
+  if (/<iframe[\s>/]/i.test(html)) {
+    fail(
+      `<iframe> in baked ${rel}: the embeds must bake their placeholder and create the ` +
+        'frame only on a click (VideoEmbed.vue, MapEmbed.vue)'
+    )
+  }
+  bakedPlaceholders += (html.match(/class="[^"]*\bembed-facade\b/g) ?? []).length
+}
+
 console.log(
   `[dist-invariants] OK: marked lazy-only (lives in ${markerLivesIn.join(', ')}), ` +
     `${eagerRefs.length} eager chunks clean, Admin excluded + ExperienceDetail present in precache, ` +
@@ -306,5 +331,6 @@ console.log(
     `(${decodedStates} state and ${decodedLdJson} JSON-LD blocks decoded), ` +
     `${homeCards} project cards prerendered, ` +
     `${backdropRules} backdrop-filter rules carry both forms, ` +
-    `${dsnOrigins.size} Sentry DSN origin(s) allowed by connect-src`
+    `${dsnOrigins.size} Sentry DSN origin(s) allowed by connect-src, ` +
+    `no <iframe> baked (${bakedPlaceholders} media placeholders)`
 )

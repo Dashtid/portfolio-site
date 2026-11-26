@@ -41,10 +41,12 @@ const FIXTURE_COMPANIES = [
     website: 'https://example.com',
     // Media leads every experience page — the primary fixture carries BOTH
     // embeds so the baselines cover the two-column media grid. URLs must
-    // satisfy useEmbedValidator (www host + embed path); the iframe loads
-    // themselves are fulfilled blank in useHermeticHome so third-party player
-    // chrome never enters a baseline.
-    video_url: 'https://www.youtube-nocookie.com/embed/fixture-video',
+    // satisfy useEmbedValidator (www host + embed path). The baselines show
+    // the click-to-load placeholders; the video ids have YouTube's
+    // 11-character shape, so the placeholder's watch link renders too. Only
+    // the click test in Detail Pages loads the frames, from the blank
+    // documents useHermeticHome serves for both hosts.
+    video_url: 'https://www.youtube-nocookie.com/embed/fixtureVid1',
     video_title: 'Fixture Product Video',
     map_url: 'https://www.google.com/maps/embed?pb=fixture-location',
     map_title: 'Fixture HQ Location',
@@ -73,7 +75,7 @@ const FIXTURE_COMPANIES = [
     // Video-only (null title exercises the `${name} Video` caption
     // fallback): pins the single-media md:max-w-xl layout state, which the
     // two-embed primary fixture cannot reach.
-    video_url: 'https://www.youtube-nocookie.com/embed/fixture-video-2',
+    video_url: 'https://www.youtube-nocookie.com/embed/fixtureVid2',
     video_title: null,
     map_url: null,
     map_title: null,
@@ -350,8 +352,9 @@ function useHermeticHome() {
       route.fulfill({ json: FIXTURE_GITHUB_STATS })
     )
     await page.route('**/api/v1/analytics/**', route => route.fulfill({ json: { status: 'ok' } }))
-    // The fixture media embeds above resolve to real third-party hosts —
-    // fulfill them with an empty document so the ratio boxes render a
+    // The fixture media embeds above resolve to real third-party hosts, which
+    // a frame requests once its placeholder is clicked — fulfill them with an
+    // empty document so no request leaves the test and a loaded frame is a
     // deterministic blank (an abort would paint Chromium's subframe error
     // page instead; YouTube/Maps chrome is not ours to baseline either way).
     await page.route('https://www.youtube-nocookie.com/**', route =>
@@ -574,6 +577,44 @@ test.describe('Visual Regression Tests', () => {
       await themeToggle.click()
       await page.waitForTimeout(300)
       await expect(page).toHaveScreenshot('experience-detail-dark.png', { fullPage: true })
+    })
+
+    // Functional (non-snapshot): the media placeholders request nothing from
+    // YouTube or Google until their button is pressed, and each press loads
+    // its own frame only. The frames get useHermeticHome's blank documents.
+    test('experience detail page - media loads only after a click', async ({ page }) => {
+      const thirdParty: string[] = []
+      page.on('request', request => {
+        if (/youtube|ytimg|googlevideo|google/.test(new URL(request.url()).hostname)) {
+          thirdParty.push(request.url())
+        }
+      })
+      await page.goto(`/experience/${primaryId}`)
+      await waitForStableUI(page)
+      await expect(page.locator('.embed-facade')).toHaveCount(2)
+      await expect(page.locator('iframe')).toHaveCount(0)
+      expect(thirdParty).toEqual([])
+
+      await page.getByRole('button', { name: 'Play video: Fixture Product Video' }).click()
+      const video = page.locator(
+        'iframe[src^="https://www.youtube-nocookie.com/embed/fixtureVid1"]'
+      )
+      await expect(video).toHaveAttribute('src', /[?&]autoplay=1(&|$)/)
+      await expect(video).toBeFocused()
+      await expect.poll(() => thirdParty.length).toBeGreaterThan(0)
+      expect(
+        thirdParty.filter(url => !url.startsWith('https://www.youtube-nocookie.com/'))
+      ).toEqual([])
+
+      await page.getByRole('button', { name: 'Show map: Fixture HQ Location' }).click()
+      const map = page.locator(
+        'iframe[src^="https://www.google.com/maps/embed?pb=fixture-location"]'
+      )
+      await expect(map).toBeFocused()
+      await expect
+        .poll(() => thirdParty.some(url => url.startsWith('https://www.google.com/')))
+        .toBe(true)
+      await expect(page.locator('.embed-facade')).toHaveCount(0)
     })
   })
 

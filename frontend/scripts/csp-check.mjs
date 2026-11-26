@@ -9,12 +9,17 @@
 // @vueuse/core's useDark() injecting a transient <style> on every theme
 // flip, something no grep of the sources or the dist could see. The theme
 // is flipped twice on every SPA route below for exactly that reason: keep
-// exercising the runtime injections the hashes exist to cover.
+// exercising the runtime injections the hashes exist to cover. On the
+// experience page every media placeholder is pressed as well, so the
+// YouTube and Google Maps frames load under frame-src, and a route whose
+// hydration logs a mismatch fails too.
 //
 // Run:  node scripts/csp-check.mjs   (after a build; CI runs it in the e2e
 // job against the downloaded dist artifact). Non-CSP console noise — e.g.
 // CORS failures against the production API from a localhost origin — is
-// deliberately ignored; only policy violations and missing styling fail.
+// deliberately ignored; only policy violations, hydration mismatches,
+// placeholders missing after hydration or loading no frame when pressed,
+// and missing styling fail.
 import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -93,12 +98,24 @@ const BASE = `http://localhost:${server.address().port}`
 // the build produced — no hardcoded UUID).
 const routes = ['/', '/colophon', '/writing']
 const expDir = path.join(DIST, 'experience')
+// Media placeholders in a route's baked HTML, counted the way
+// verify-dist-invariants.mjs counts them.
+const bakedPlaceholders = new Map()
+const placeholdersIn = file =>
+  (fs.readFileSync(file, 'utf-8').match(/class="[^"]*\bembed-facade\b/g) ?? []).length
 if (fs.existsSync(expDir)) {
-  const first = fs
+  // The first page that bakes a media placeholder, when there is one, so the
+  // click step below has something to click.
+  const pages = fs
     .readdirSync(expDir)
     .filter(f => f.endsWith('.html'))
-    .sort()[0]
-  if (first) routes.push(`/experience/${first.replace(/\.html$/, '')}`)
+    .sort()
+  const chosen = pages.find(f => placeholdersIn(path.join(expDir, f)) > 0) ?? pages[0]
+  if (chosen) {
+    const route = `/experience/${chosen.replace(/\.html$/, '')}`
+    routes.push(route)
+    bakedPlaceholders.set(route, placeholdersIn(path.join(expDir, chosen)))
+  }
 }
 
 const browser = await chromium.launch()
@@ -122,20 +139,31 @@ const check = (label, ok, detail = '') => {
 }
 
 const page = await context.newPage()
+let current = ''
 page.on('console', m => {
   if (m.type() === 'error' && /Content Security Policy/i.test(m.text())) {
     failed = true
     console.log(`[-] console CSP error: ${m.text().slice(0, 160)}`)
   }
+  // Every route here is a real prerendered page, so the client's first
+  // render must match the baked markup. Vue's production build logs this
+  // line once per page when it does not.
+  if (m.text().includes('Hydration completed but contains mismatches')) {
+    failed = true
+    console.log(`[-] ${current}: hydration mismatch: ${m.text().slice(0, 160)}`)
+  }
 })
 
 for (const route of routes) {
-  // domcontentloaded + hydration marker, NOT networkidle/load: the
-  // experience pages embed third-party iframes (YouTube, Maps) whose
-  // network activity never goes idle on a slow runner — the first CI run
-  // of this harness timed out exactly there. CSP violations accumulate in
-  // the listener as resources process; waiting for the navbar toggle
-  // (client hydration) plus a settle window is what the checks need.
+  current = route
+  // domcontentloaded + a settle window, NOT networkidle/load: once its
+  // media placeholders are clicked, the experience page holds third-party
+  // iframes (YouTube, Maps) whose network activity never goes idle on a
+  // slow runner — the first CI run of this harness timed out exactly there.
+  // CSP violations accumulate in the listener as resources process. The
+  // navbar toggle is in the baked HTML, so waiting for it shows that the
+  // page has rendered, not that the client has hydrated it; the media step
+  // below waits for hydration before it presses anything.
   await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' })
   await page.waitForSelector('[data-testid="theme-toggle"]', { timeout: 20000 })
   await page.waitForTimeout(800)
@@ -150,9 +178,42 @@ for (const route of routes) {
   await toggle.click()
   await page.waitForTimeout(400)
 
+  // Media placeholders: each button replaces its placeholder with the
+  // YouTube or Google Maps iframe, whose navigation frame-src must allow.
+  // The buttons are in the baked HTML, so they are on the page before
+  // hydration binds their click handlers, and a press before that does
+  // nothing. [data-anim] is set in the experience page's onMounted hook,
+  // which runs after hydration. Every baked placeholder must still be on
+  // the page then: one that is gone was replaced without a click. A
+  // pressed placeholder leaves the page, so the first match is always the
+  // next one.
+  const baked = bakedPlaceholders.get(route) ?? 0
+  let placeholders = 0
+  if (baked > 0) {
+    await page.waitForSelector('[data-anim]', { state: 'attached', timeout: 20000 })
+    const facades = page.locator('.embed-facade button')
+    placeholders = await facades.count()
+    check(
+      `${route}: ${baked} baked media placeholder(s) still on the page after hydration`,
+      placeholders === baked,
+      `${placeholders} found`
+    )
+    for (let i = 0; i < placeholders; i++) await facades.first().click()
+    await page.waitForTimeout(3000)
+    const frames = await page.locator('figure iframe').count()
+    check(
+      `${route}: ${placeholders} media placeholder(s) replaced by their iframes`,
+      frames === placeholders,
+      `${frames} iframe(s)`
+    )
+  } else if (route.startsWith('/experience/')) {
+    console.log(`[i] ${route}: no media placeholder baked, so none clicked`)
+  }
+
+  const exercised = placeholders > 0 ? 'two theme flips and the media clicks' : 'two theme flips'
   const violations = await page.evaluate(() => window.__cspViolations)
   check(
-    `${route}: zero CSP violations (incl. two theme flips)`,
+    `${route}: zero CSP violations (incl. ${exercised})`,
     violations.length === 0,
     violations.slice(0, 3).join(' | ')
   )
@@ -165,6 +226,7 @@ for (const route of routes) {
 
 // Hero stagger: the nth-of-type CSS that replaced the style attributes
 // (e1ee743) must keep producing five distinct animation delays.
+current = '/'
 await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
 await page.waitForSelector('.trace-nodes .trace-node', { timeout: 20000 })
 const delays = await page.$$eval('.trace-nodes .trace-node', els =>
@@ -178,6 +240,7 @@ check(
 
 // offline.html: its single <style> block is allowed by hash — it must
 // actually apply (flex-centred body), not just fail to violate.
+current = '/offline.html'
 await page.goto(`${BASE}/offline.html`, { waitUntil: 'load' })
 await page.waitForTimeout(300)
 const offline = await page.evaluate(() => ({

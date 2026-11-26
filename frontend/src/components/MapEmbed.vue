@@ -2,13 +2,41 @@
   <figure class="map-embed">
     <div v-if="localizedUrl" class="ratio">
       <iframe
+        v-if="loaded"
+        ref="frame"
         :src="localizedUrl"
         :title="title"
         allowfullscreen
-        loading="lazy"
         referrerpolicy="strict-origin-when-cross-origin"
         class="map-iframe"
       />
+      <div
+        v-else
+        class="embed-facade flex aspect-video w-full flex-col items-center justify-center bg-slate-50 px-4 py-3 text-center dark:bg-slate-900/60"
+      >
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:bg-primary-500 dark:text-slate-950 dark:hover:bg-primary-400"
+          :aria-label="`Show map: ${title}`"
+          :aria-describedby="noticeId"
+          @click="show"
+        >
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 4.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"
+            />
+          </svg>
+          Show map
+        </button>
+        <p
+          :id="noticeId"
+          class="mt-3 max-w-sm text-balance font-mono text-xs leading-normal text-slate-600 dark:text-slate-400"
+        >
+          Loads Google Maps, which may store data on your device. Nothing is requested from Google
+          until you press the button.
+        </p>
+      </div>
     </div>
     <div v-else class="map-fallback" role="alert">
       <span class="fallback-icon" aria-hidden="true">📍</span>
@@ -19,19 +47,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
+import { computed, nextTick, ref, toRef, useId } from 'vue'
 import { useEmbedValidator } from '@/composables/useEmbedValidator'
 
 /**
  * MapEmbed Component
  *
- * Responsive Google Maps embed with lazy loading. The iframe carries no
+ * Google Maps embed that loads on a click. Until then the box holds a
+ * placeholder: a button described by a notice. The server and the first
+ * client render both produce the placeholder; only the button's click
+ * creates the iframe, which then takes focus. The iframe carries no
  * role/tabindex overrides (D3-FE-05): role="application" forced screen
  * readers into application mode and tabindex="0" double-stopped keyboard
  * focus. The heading renders as a figcaption below the media, so it no
  * longer outranks the page's section headings in the document outline.
  * referrerpolicy matches the site's Referrer-Policy header: Google gets the
  * page's origin, not its full URL.
+ *
+ * The iframe has no sandbox and no credentialless attribute: either one needs
+ * a manual check of the map's controls and links in Chrome, Firefox and
+ * Safari.
  */
 
 interface Props {
@@ -44,6 +79,11 @@ const props = withDefaults(defineProps<Props>(), {
   title: 'Location map',
   heading: null
 })
+
+const loaded = ref(false)
+const frame = ref<HTMLIFrameElement | null>(null)
+// useId gives the server render and the hydrated client the same id.
+const noticeId = useId()
 
 // D3-SEC-04: www.google.com only — bare google.com passed validation but
 // CSP frame-src blocked the iframe (blank box), and maps.google.com was
@@ -61,6 +101,12 @@ const localizedUrl = computed(() => {
     ? safeUrl.value
     : `${safeUrl.value}${safeUrl.value.includes('?') ? '&' : '?'}hl=en`
 })
+
+async function show() {
+  loaded.value = true
+  await nextTick()
+  frame.value?.focus()
+}
 </script>
 
 <style scoped>
@@ -69,9 +115,11 @@ const localizedUrl = computed(() => {
    section while spacing utilities were rediscovered in S3. */
 
 .ratio {
-  /* Identical treatment to VideoEmbed (D3-FE-05): aspect-video + a 1px
-     ring, no shadow — the case-study layout keeps media quiet. */
-  aspect-ratio: 16 / 9;
+  /* Identical treatment to VideoEmbed (D3-FE-05): a 1px ring, no shadow —
+     the case-study layout keeps media quiet. The 16:9 ratio sits on the
+     iframe and on the placeholder, not on this box, so the placeholder can
+     grow taller when its text needs the room (a narrow screen, enlarged
+     text) instead of being cut off by overflow: hidden. */
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
@@ -81,7 +129,7 @@ const localizedUrl = computed(() => {
 .map-iframe {
   border: none;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 9;
   display: block;
 }
 
