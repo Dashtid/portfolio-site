@@ -2,10 +2,15 @@
 Tests for database models
 """
 
+import re
+
+from sqlalchemy import select
+
 from app.models.analytics import PageView
 from app.models.company import Company
 from app.models.document import Document
 from app.models.education import Education
+from app.models.oauth_state import OAuthState
 from app.models.project import Project
 from app.models.skill import Skill
 from app.models.user import User
@@ -141,6 +146,26 @@ class TestPageViewModel:
         )
         assert page_view.page_path == "/home"
         assert page_view.referrer == "https://google.com"
+
+    def test_a_select_of_the_entity_leaves_the_deferred_columns_out(self):
+        """user_agent, ip_address and city are deferred; named, they are selected."""
+        deferred = re.compile(r"\b(?:user_agent|ip_address|city)\b")
+        entity = str(select(PageView))
+        assert "page_views.page_path" in entity
+        assert not deferred.search(entity)
+        named = str(select(PageView.user_agent, PageView.ip_address, PageView.city))
+        assert deferred.findall(named) == ["user_agent", "ip_address", "city"]
+
+
+class TestOAuthStateModel:
+    """Tests for OAuthState model."""
+
+    def test_a_select_of_the_entity_leaves_client_ip_out(self):
+        """client_ip is deferred; named, it is selected."""
+        entity = str(select(OAuthState))
+        assert "oauth_states.state" in entity
+        assert "client_ip" not in entity
+        assert "oauth_states.client_ip" in str(select(OAuthState.client_ip))
 
 
 class TestModelDefaults:
