@@ -35,7 +35,7 @@ backend/app/
 ├── services/      # External integrations (GitHub API)
 ├── middleware/    # Logging, rate limiting, cache, security headers, CSP
 ├── core/          # Auth, dependencies, security helpers
-└── utils/         # Logger, IP hashing
+└── utils/         # Logger, IP hashing, daily visitor key
 ```
 
 ## Data Flow
@@ -54,7 +54,7 @@ immediately, no post-load refetch, no hydration mismatch.
 ## Authentication Flow
 
 1. User clicks "Login with GitHub" on `/admin/login`
-2. Backend generates a single-use, IP-bound CSRF state (5-minute TTL, database-backed) and redirects to GitHub
+2. Backend generates a single-use CSRF state (5-minute TTL, database-backed), binds it to the browser with an HttpOnly cookie that also holds a PKCE code verifier, and redirects to GitHub with the verifier's S256 challenge
 3. GitHub callback validates the state, exchanges the code for a GitHub access token, fetches the user profile
 4. Backend issues a JWT access + refresh token pair and sets them as HTTP-only `secure` `samesite=lax` cookies
 5. Frontend Pinia auth store mirrors **only** the user object (`{id, username, name, email, avatar_url}`); tokens never reach JavaScript
@@ -68,7 +68,7 @@ immediately, no post-load refetch, no hydration mismatch.
 | CRUD Service Factory | Generic, type-safe API calls (`createCrudService<T>()`) |
 | Cookie-only auth | HTTP-only cookies for tokens; refresh endpoint returns no body tokens |
 | Token-refresh dedup | A subscriber queue funnels concurrent 401s through a single refresh call |
-| HMAC IP pseudonymisation | Visitor IPs hashed with HMAC-SHA256 keyed off `SECRET_KEY` before storage |
+| Visitor pseudonymisation | analytics rows carry a daily visitor key (HMAC under an in-memory salt replaced every UTC day), never an address; log lines carry a keyed HMAC-SHA256 digest of the address |
 | Middleware stack | Security headers, environment-conditional CSP, rate limiting, compression, logging |
 | Async database | SQLAlchemy async with connection pooling; Alembic for migrations |
 | SHA-pinned actions | All GitHub Actions referenced by full commit SHA, not version tag |

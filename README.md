@@ -21,7 +21,7 @@ every claim verifiable against this repository.
 - GitHub OAuth sign-in for the admin panel (content CMS, analytics, CV export, OSS dashboard)
 - Downloadable publications (thesis PDFs), GitHub stats and an open-source contributions strip rendered live
 - Static-site pre-render of every public route for SEO + first-paint speed
-- Per-visitor analytics (country-level, no PII stored) with an admin dashboard
+- Visit statistics (page, country, referring site; no cookies, no stored IP addresses) with an admin dashboard
 - Dark / light theme; a footer build stamp linking every deploy to its exact commit
 
 ## Tech stack
@@ -40,7 +40,7 @@ A few decisions in the build that aren't obvious from the dependency list:
 - **SSG pre-render with hydration handoff.** Every public route is pre-rendered at build time via vite-ssg. Pinia state populated server-side gets serialised into the page HTML and rehydrated on the client — no post-load refetch, no hydration mismatch.
 - **Fully hash-locked CSP — no `'unsafe-inline'` anywhere.** `script-src` and `style-src` are `'self'` plus pinned SHA-256 hashes; every hash has a named owner in a unit test that recomputes it from source, the built pages are scanned for styling the policy would not cover, and a CI gate serves the real bundle under the real policy in a browser and fails on any violation. That last gate exists because it once caught a runtime `<style>` injection (the theme switcher's transition guard) that no static scan could see.
 - **HTTP-only-cookie auth, no localStorage.** Tokens never touch JavaScript. The refresh endpoint sets cookies and returns `{"refreshed": true}` so an XSS can't lift credentials out of the response body either.
-- **HMAC-keyed IP pseudonymisation.** Visitor IPs are hashed with HMAC-SHA256 keyed off `SECRET_KEY` before storage — rainbow-table resistant across the IPv4 space without a second secret to manage.
+- **No stored visitor addresses.** Analytics rows hold no IP address and no user agent: a visitor is counted per day by an HMAC of address and user agent under a random salt that lives only in memory and is replaced daily. Request logs name a client only by a keyed HMAC-SHA256 digest of its address.
 - **Strict production posture.** `/api/docs`, `/api/redoc` and `/openapi.json` are disabled in production (the API has no third-party consumers); framing denied, MIME sniffing off, HSTS with the domain on the browser preload list.
 - **A 2 KB canvas instead of a 122 KB library.** The dark-mode hero animation used to be a three.js starfield; measured against a seeded Canvas2D implementation the visual difference sat below perceptual threshold, so the library went and ~120 KB gzip of JavaScript went with it.
 - **CI as a real gate.** Frontend lint + type-check + the vitest unit suite (664 tests in 52 files, the runner's own count, 2026-10-20) + Playwright e2e and visual regression against pixel-pinned baselines. Backend ruff + mypy + the pytest suite (961 collected, `pytest --collect-only -q`, 2026-10-20) with an enforced 83% coverage floor. Lighthouse runs every push with assertion-level budgets that fail CI on regressions, and a post-deploy smoke asserts the production security headers — including the hash-locked CSP — after every deploy. Deploy jobs are gated on the quality jobs; no broken commit ships.
