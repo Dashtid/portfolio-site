@@ -138,6 +138,11 @@ _ = bisect_left
 # by their raw path gave every invented URL its own entry.
 UNMATCHED_ROUTE = "<unmatched>"
 
+# The page-view beacon leaves no request log line while its status is below
+# 400 (app/middleware/logging.py), and no slow-request line either. Its
+# duration is still recorded in the metrics.
+_PAGE_VIEW_BEACON = "/api/v1/analytics/track/pageview"
+
 
 def _resolve_route_template(request: Request) -> str:
     """Return the route template that matched, e.g. /companies/{company_id}.
@@ -199,8 +204,11 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
             # Add performance headers
             response.headers["X-Response-Time"] = f"{round(duration_ms, 2)}ms"
 
-            # Log slow requests (> 1 second)
-            if duration_ms > 1000:
+            # Log slow requests (> 1 second); the page-view beacon only when
+            # its status is 400 or more.
+            if duration_ms > 1000 and (
+                response.status_code >= 400 or not raw_path.startswith(_PAGE_VIEW_BEACON)
+            ):
                 request_id = getattr(request.state, "request_id", "unknown")
                 logger.warning(
                     f"Slow request detected: {duration_ms}ms",

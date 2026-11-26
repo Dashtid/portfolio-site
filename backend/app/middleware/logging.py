@@ -26,9 +26,11 @@ _UPSTREAM_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 # any uptime monitoring. Skipping request/response log lines for them is
 # PERF-07: it strips ~80% of the log volume on a quiet site, drops the
 # allocations for the start/end pairs, and stops the noise from drowning
-# out signal in Fly's tail. They still go through the rest of the pipeline
-# (CORS, security headers, performance metrics) — only the log lines drop.
-_SILENT_LOG_PREFIXES = ("/api/v1/health", "/api/health")
+# out signal in Fly's tail. The page-view beacon, sent for every page a
+# visitor opens, is silent the same way. These paths still go through the
+# rest of the pipeline (CORS, security headers, performance metrics) — only
+# the log lines drop, and only while the response status is below 400.
+_SILENT_LOG_PREFIXES = ("/api/v1/health", "/api/health", "/api/v1/analytics/track/pageview")
 
 # D3-BE-02: query-param keys whose values are secrets. The GitHub OAuth
 # callback arrives as GET /api/v1/auth/github/callback?code=...&state=...,
@@ -99,14 +101,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         token = request_id_var.set(request_id)
 
         # PERF-07: opt out of request/response logging for high-frequency
-        # health checks. We still set request_id and propagate it back in
-        # the response header so on-call can correlate if they need to.
+        # health checks and the page-view beacon. We still set request_id
+        # and propagate it back in the response header so on-call can
+        # correlate if they need to.
         silent = request.url.path.startswith(_SILENT_LOG_PREFIXES)
 
         # Start timer
         start_time = time.time()
 
-        # Log incoming request (skipped for /health* to cut log volume).
+        # Log incoming request (skipped for the silent paths).
         if not silent:
             logger.info(
                 "Incoming request",
@@ -131,9 +134,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 # injects request_id onto every record this request emits;
                 # we keep it in the explicit extra here so downstream log
                 # consumers and existing assertions still see it directly.
-                # A health check is silent only while it passes: with
+                # A silent path is silent only while it succeeds: with
                 # uvicorn's access log off, this is the one line a failing
-                # one (a readiness 503) leaves.
+                # request there (a readiness 503, a beacon's 422 or 429)
+                # leaves, and it carries no client fields.
                 if not silent or response.status_code >= 400:
                     logger.info(
                         "Request completed",
@@ -152,8 +156,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 # Calculate duration
                 duration_ms = round((time.time() - start_time) * 1000, 2)
 
-                # Always log errors, even on /health* — a failing health
-                # check is a higher-priority signal than the success noise.
+                # Always log errors, even on the silent paths — a failing
+                # health check is a higher-priority signal than the success
+                # noise.
                 logger.error(
                     "Request failed",
                     extra={

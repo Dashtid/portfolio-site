@@ -3,6 +3,7 @@ Tests for middleware components including rate limiting
 """
 
 import asyncio
+import itertools
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -1686,6 +1687,62 @@ class TestHealthCheckLogging:
         assert len(completed) == 1
         assert completed[0].kwargs["extra"]["path"] == "/api/v1/health/ready"
         assert completed[0].kwargs["extra"]["status_code"] == 503
+
+
+class TestPageViewBeaconLogging:
+    """The page-view beacon logs nothing while it succeeds, slow or not.
+
+    One that fails gets its "Request completed" line, and a slow-request
+    line when it took over a second.
+    """
+
+    BEACON = "/api/v1/analytics/track/pageview"
+
+    @pytest.mark.parametrize("headers", [{}, {"Sec-GPC": "1"}], ids=["recorded", "declined"])
+    def test_a_204_beacon_is_silent(self, client: TestClient, headers: dict[str, str]):
+        with patch("app.middleware.logging.logger") as mock_logger:
+            response = client.post(self.BEACON, json={"page_path": "/"}, headers=headers)
+            assert response.status_code == 204
+        mock_logger.info.assert_not_called()
+
+    def test_a_rejected_beacon_is_logged_without_client_fields(self, client: TestClient):
+        with patch("app.middleware.logging.logger") as mock_logger:
+            response = client.post(self.BEACON, json={"page_path": "/" + "x" * 3000})
+            assert response.status_code == 422
+
+        assert [c.args[0] for c in mock_logger.info.call_args_list] == ["Request completed"]
+        extra = mock_logger.info.call_args.kwargs["extra"]
+        assert extra["path"] == self.BEACON
+        assert extra["status_code"] == 422
+        assert "client_ip_hash" not in extra
+        assert "user_agent" not in extra
+
+    @pytest.mark.parametrize(
+        ("body", "status", "slow_lines"),
+        [({"page_path": "/"}, 204, 0), ({"page_path": "/" + "x" * 3000}, 422, 1)],
+        ids=["recorded", "rejected"],
+    )
+    def test_a_slow_beacon_gets_a_slow_request_line_only_when_it_fails(
+        self, client: TestClient, body: dict[str, str], status: int, slow_lines: int
+    ):
+        """Each clock reading in PerformanceMiddleware comes two seconds after the last."""
+        from app.middleware.performance import metrics
+
+        key = "POST " + self.BEACON
+        before = metrics.request_count.get(key, 0)
+        clock = itertools.count(step=2.0)
+        with (
+            patch("app.middleware.performance.time") as mock_time,
+            patch("app.middleware.performance.logger") as mock_logger,
+        ):
+            mock_time.time.side_effect = lambda: next(clock)
+            response = client.post(self.BEACON, json=body)
+
+        assert response.status_code == status
+        assert response.headers["X-Response-Time"] == "2000.0ms"
+        slow = [c for c in mock_logger.warning.call_args_list if "Slow request" in c.args[0]]
+        assert len(slow) == slow_lines
+        assert metrics.request_count[key] == before + 1
 
 
 class TestLogLinesCarryNoClientAddress:
