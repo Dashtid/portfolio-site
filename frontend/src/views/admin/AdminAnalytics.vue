@@ -33,6 +33,7 @@
         <div class="stat-card">
           <div class="stat-value">{{ formatCount(summary.unique_visitors) }}</div>
           <div class="stat-label">Unique visitors</div>
+          <div class="stat-note">A visitor counts once per day</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ formatDuration(summary.avg_session_duration) }}</div>
@@ -164,7 +165,7 @@ const ranges: Range[] = [
   { label: '7d', days: 7 },
   { label: '30d', days: 30 },
   { label: '90d', days: 90 },
-  { label: '1y', days: 365 }
+  { label: '180d', days: 180 }
 ]
 
 const days = ref<number>(30)
@@ -346,6 +347,12 @@ onMounted(load)
   letter-spacing: 0.05em;
 }
 
+.stat-note {
+  margin-top: var(--spacing-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-slate-500);
+}
+
 .card {
   background: white;
   border: 1px solid var(--color-slate-200);
@@ -516,6 +523,7 @@ onMounted(load)
 }
 
 [data-theme='dark'] .stat-label,
+[data-theme='dark'] .stat-note,
 [data-theme='dark'] .card-meta,
 [data-theme='dark'] .top-list-secondary,
 [data-theme='dark'] .empty-state,

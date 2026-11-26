@@ -84,6 +84,16 @@ describe('AdminAnalytics', () => {
       expect(normalized).toContain('456')
     })
 
+    it('notes on the unique-visitors card that a visitor counts once per day', async () => {
+      const wrapper = await createWrapper()
+      const notes = wrapper.findAll('.stat-note')
+      expect(notes).toHaveLength(1)
+      expect(notes[0].text()).toBe('A visitor counts once per day')
+      const visitorsCard = wrapper.findAll('.stat-card')[1]
+      expect(visitorsCard.find('.stat-label').text()).toBe('Unique visitors')
+      expect(visitorsCard.find('.stat-note').exists()).toBe(true)
+    })
+
     it('formats the average session duration as `Xm Ys`', async () => {
       const wrapper = await createWrapper()
       // 95s → 1m 35s
@@ -181,20 +191,26 @@ describe('AdminAnalytics', () => {
       expect(analyticsService.getAnalyticsSummary).not.toHaveBeenCalled()
     })
 
-    it('clamps the visitor-stats range at 90 days for the 1-year tab', async () => {
+    it('offers 7, 30, 90 and 180 days, the longest range the API accepts', async () => {
+      const wrapper = await createWrapper()
+      expect(wrapper.findAll('.range-tab').map(t => t.text())).toEqual(['7d', '30d', '90d', '180d'])
+    })
+
+    it('clamps the visitor-stats range at 90 days for the 180-day tab', async () => {
       const wrapper = await createWrapper()
       vi.clearAllMocks()
       vi.mocked(analyticsService.getAnalyticsSummary).mockResolvedValue(
-        makeSummary({ period_days: 365 })
+        makeSummary({ period_days: 180 })
       )
       vi.mocked(analyticsService.getVisitorStats).mockResolvedValue(makeVisitorStats())
 
-      const yearTab = wrapper.findAll('.range-tab').find(t => t.text() === '1y')
-      await yearTab!.trigger('click')
+      const longestTab = wrapper.findAll('.range-tab').find(t => t.text() === '180d')
+      expect(longestTab).toBeDefined()
+      await longestTab!.trigger('click')
       await flushPromises()
 
-      expect(analyticsService.getAnalyticsSummary).toHaveBeenCalledWith(365)
-      // Visitor stats argument should be min(365, 90) = 90.
+      expect(analyticsService.getAnalyticsSummary).toHaveBeenCalledWith(180)
+      // Visitor stats argument should be min(180, 90) = 90.
       expect(analyticsService.getVisitorStats).toHaveBeenCalledWith(90)
     })
   })
