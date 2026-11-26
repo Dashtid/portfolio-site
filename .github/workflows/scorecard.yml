@@ -48,7 +48,7 @@ jobs:
         # SHA must be the action's commit SHA, not the tag-object SHA --
         # api.securityscorecards.dev rejects tag-object SHAs as
         # "imposter commits" during webapp publish verification.
-        uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        uses: ossf/scorecard-action@23f22cd43608bae7a1f1fa2603d7314dee9538a5 # v2.6.0
         # The image the pinned action.yaml names; move it with the action.
         # image: ghcr.io/ossf/scorecard-action:v2.5.0@sha256:1e1481c65fc2407d3fd6ab18a23c741eb4d1c0d9359ebafc4b3ab13aa61d8627
         with:
