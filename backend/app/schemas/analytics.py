@@ -11,10 +11,10 @@ class PageViewCreate(BaseModel):
     """Schema for creating a page view record."""
 
     # Generous caps: campaign/UTM URLs legitimately exceed 500 chars, and
-    # rejecting the beacon would lose the visit entirely. Values are
-    # truncated to the String(500) PageView columns at insert (see
-    # track_pageview) — letting them through untruncated raises Postgres
-    # 22001 (value too long) from an unauthenticated endpoint.
+    # rejecting the beacon would lose the visit entirely. At insert (see
+    # track_pageview) page_path is truncated to its String(500) column and
+    # referrer is reduced to its host — letting them through untruncated
+    # raises Postgres 22001 (value too long) from an unauthenticated endpoint.
     page_path: str = Field(..., max_length=2048)
     page_title: str | None = Field(None, max_length=512)
     referrer: str | None = Field(None, max_length=2048)

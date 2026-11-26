@@ -7,9 +7,11 @@ Provides endpoints for:
 - Getting visitor statistics (admin)
 """
 
+import ipaddress
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, Response
 from sqlalchemy import func, insert, select, update
@@ -63,6 +65,40 @@ def _scrub(value: str | None, limit: int) -> str | None:
     return cleaned or None
 
 
+# Referrers from these hosts are stored as NULL: a page of this site.
+_OWN_HOSTS = frozenset({"dashti.se", "www.dashti.se"})
+
+
+def _is_ip_address(host: str) -> bool:
+    """True when host is an IPv4 or IPv6 address (brackets already removed)."""
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return True
+
+
+def _referrer_host(referrer: str | None) -> str | None:
+    """The lowercased host of a referrer URL, or None.
+
+    Path, query, fragment, port and user:password@ are dropped, and so is a
+    trailing dot. None when the referrer is absent or empty, does not parse
+    (urlsplit raises ValueError, as on an unclosed IPv6 bracket), has no
+    host, names dashti.se or www.dashti.se, or has an IPv4 or IPv6 address
+    as its host.
+    """
+    if not referrer:
+        return None
+    try:
+        host = urlsplit(referrer.translate(_CONTROL_CHARS)).hostname
+    except ValueError:
+        return None
+    host = (host or "").rstrip(".")
+    if not host or host in _OWN_HOSTS or _is_ip_address(host):
+        return None
+    return host[:500]
+
+
 async def _backfill_country(pageview_id: str, client_ip: str) -> None:
     """Resolve client_ip → country and write it onto the PageView row.
 
@@ -107,10 +143,10 @@ async def track_pageview(
     Records visitor page views for analytics. A request with Sec-GPC: 1 or
     DNT: 1 gets 204 and records nothing. session_id is the daily visitor
     key of the client address and User-Agent (app/utils/visitor_key.py);
-    the row stores neither of them, nor a digest of the address. PERF-01:
-    geo-IP lookup is deferred to a `BackgroundTask` and back-fills the
-    `country` column asynchronously so the response returns as soon as the
-    row is inserted.
+    the row stores neither of them, nor a digest of the address, and of the
+    referrer only its host. PERF-01: geo-IP lookup is deferred to a
+    `BackgroundTask` and back-fills the `country` column asynchronously so
+    the response returns as soon as the row is inserted.
     """
     # Only the exact value "1" declines, as the Global Privacy Control spec
     # says of Sec-GPC. Nothing else runs: no row, no country lookup.
@@ -126,7 +162,8 @@ async def track_pageview(
     # Truncate to storage width: the schema accepts up to 2048 for
     # path/referrer (long UTM URLs are real traffic worth recording) but
     # the columns are String(500), and Postgres raises 22001 on overflow —
-    # turning this unauthenticated beacon into a 500.
+    # turning this unauthenticated beacon into a 500. The referrer is
+    # reduced to its host first, which _referrer_host caps the same way.
     #
     # _scrub also strips C0 control characters, which is the SAME class of
     # bug as the length overflow above and was missed by it: Postgres text
@@ -136,7 +173,7 @@ async def track_pageview(
     # whole C0 range also keeps newlines and NULs out of log lines built
     # from these values — attacker-controlled log injection.
     page_path = _scrub(page_view.page_path, 500) or "/"
-    referrer = _scrub(page_view.referrer, 500)
+    referrer = _referrer_host(page_view.referrer)
 
     # A Core INSERT that names only these four columns. A PageView added to
     # the session would be inserted with every other nullable column named

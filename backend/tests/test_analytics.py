@@ -13,7 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.api.v1.analytics import logger, router
+from app.api.v1.analytics import _referrer_host, logger, router
 from app.config import settings
 from app.models.analytics import PageView
 from app.utils import visitor_key
@@ -70,7 +70,7 @@ class TestTrackPageviewEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["page_path"] == "/projects"
-        assert data["referrer"] == "https://google.com"
+        assert data["referrer"] == "google.com"
         assert "id" in data
         assert "timestamp" in data
 
@@ -121,9 +121,10 @@ class TestTrackPageviewEndpoint:
 
     def test_track_pageview_truncates_long_values_to_column_width(self, client: TestClient):
         """Long UTM-style paths/referrers (501-2048 chars) are accepted and
-        stored truncated to the String(500) columns instead of 500-ing at
-        INSERT (Postgres 22001) or dropping the beacon with a 422. The long
-        User-Agent header is not stored at all.
+        the path is stored truncated to its String(500) column instead of
+        500-ing at INSERT (Postgres 22001) or dropping the beacon with a 422.
+        The referrer is stored as its host, and the long User-Agent header
+        is not stored at all.
         """
         long_path = "/campaign?" + "utm_content=" + "x" * 900
         long_ref = "https://example.com/?ref=" + "y" * 900
@@ -135,7 +136,7 @@ class TestTrackPageviewEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["page_path"] == long_path[:500]
-        assert data["referrer"] == long_ref[:500]
+        assert data["referrer"] == "example.com"
 
     def test_track_pageview_rejects_over_2048(self, client: TestClient):
         """Beyond the generous 2048 cap the beacon is rejected outright —
@@ -280,6 +281,65 @@ class TestDailyVisitorKey:
         keys = dict(_stored(PageView.page_path, PageView.session_id))
         assert keys["/a"] == keys["/b"]
         assert re.fullmatch(r"v_[0-9a-f]{16}", keys["/a"])
+
+
+class TestReferrerHost:
+    """A page view's referrer is stored as the lowercased host of the URL."""
+
+    @pytest.mark.parametrize(
+        ("referrer", "host"),
+        [
+            ("https://www.Google.com/search?q=private#results", "www.google.com"),
+            ("https://www.linkedin.com:443/in/someone?trk=feed", "www.linkedin.com"),
+            ("https://user:password@mail.example.org/inbox/123", "mail.example.org"),
+            ("https://example.com./path", "example.com"),
+            ("android-app://com.google.android.gm/", "com.google.android.gm"),
+            ("https://ex" + chr(0) + "ample.com/" + chr(10), "example.com"),
+            ("https://api.dashti.se/x", "api.dashti.se"),
+            ("https://1.example.com/x", "1.example.com"),
+        ],
+    )
+    def test_the_host_is_kept(self, referrer: str, host: str):
+        assert _referrer_host(referrer) == host
+
+    @pytest.mark.parametrize(
+        "referrer",
+        [
+            None,
+            "",
+            "not a url",
+            "/relative/path",
+            "https:///no-host",
+            "http://./",
+            "http://[::1/unclosed",
+            "https://[not-an-address]/",
+            "https://dashti.se",
+            "https://dashti.se/colophon?q=1",
+            "https://WWW.Dashti.SE./writing",
+            "https://192.168.1.10:8080/intranet",
+            "http://203.0.113.7./",
+            "https://[2001:db8::1]:8443/x",
+            "http://[::ffff:192.0.2.1]/",
+            "http://[fe80::1%25eth0]/",
+        ],
+    )
+    def test_no_host_is_stored_for_these(self, referrer: str | None):
+        assert _referrer_host(referrer) is None
+
+    def test_the_beacon_stores_the_host_or_null(self, client: TestClient):
+        for path, referrer in [
+            ("/a", "https://www.linkedin.com/in/someone?trk=feed"),
+            ("/b", "https://dashti.se/colophon"),
+            ("/c", "http://192.168.1.10:8080/intranet"),
+        ]:
+            response = client.post(BEACON, json={"page_path": path, "referrer": referrer})
+            assert response.status_code == 200
+
+        assert sorted(_stored(PageView.page_path, PageView.referrer)) == [
+            ("/a", "www.linkedin.com"),
+            ("/b", None),
+            ("/c", None),
+        ]
 
 
 class TestDeclinedPageViews:
