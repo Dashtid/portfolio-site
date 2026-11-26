@@ -10,8 +10,7 @@ It is enabled on this repository, it is private until published, and it gives
 you a thread you can see rather than a mail you cannot tell arrived.
 
 **Alternative:** a direct message on
-[LinkedIn](https://www.linkedin.com/in/david-dashti/), or
-<dashti.dat@gmail.com> if you would rather use email.
+[LinkedIn](https://www.linkedin.com/in/david-dashti/).
 
 > [!] Do not use `security@dashti.se`. The site's `security.txt` listed it
 > until 2026-09-20 and the API's copy at `api.dashti.se` until 2026-11-06,
