@@ -114,12 +114,14 @@ import FooterSection from '@/components/FooterSection.vue'
 
 /**
  * Every line below was verified against the running site or the repository
- * on the date shown, not written from memory. If you change the CSP, the
- * cookie policy, the pin verifier or the backup schedule, change this page in
- * the same commit and move VERIFIED_ON — a stale security claim on a public
- * page is worse than no page, and this one invites the reader to check.
+ * on the date shown, not written from memory. If you change any response
+ * header, the deploy jobs or their gates, the action pins, the dependency
+ * installs, the sign-in flow, the analytics, the embeds or the backup
+ * schedule, change this page in the same commit and move VERIFIED_ON — a
+ * stale security claim on a public page is worse than no page, and this one
+ * invites the reader to check.
  */
-const VERIFIED_ON = '4 September 2026'
+const VERIFIED_ON = '27 November 2026'
 
 interface Fact {
   term: string
@@ -151,7 +153,7 @@ const sections: Section[] = [
       {
         term: 'Content',
         detail:
-          'Edited through a private admin interface, stored in Postgres, and baked into the static pages by a build. Publishing is therefore a deploy, with the same checks as any code change.'
+          'Edited through a private admin interface, stored in Postgres, and baked into the static pages by a build. Publishing is therefore a rebuild of the current code: content passes the build-time page checks and a post-deploy header check, while code changes get the full pipeline.'
       }
     ]
   },
@@ -179,7 +181,7 @@ const sections: Section[] = [
       {
         term: 'The rest',
         detail:
-          'Framing denied, MIME sniffing off, referrers trimmed across origins, and camera, microphone, geolocation, payment, USB and the motion sensors all switched off for the page and anything it embeds.'
+          'Framing denied, MIME sniffing off, referrers trimmed across origins, and camera, microphone, geolocation, payment, USB and the motion sensors all switched off for the page and anything it embeds, and videos and maps load from their providers only after a click.'
       }
     ]
   },
@@ -202,12 +204,12 @@ const sections: Section[] = [
       {
         term: 'Stolen-token handling',
         detail:
-          'Replaying an already-used renewal token is treated as theft, per RFC 6819, and revokes every session for the account at once. A brief window is carved out for the harmless case of two browser tabs renewing simultaneously, so ordinary use is not mistaken for an attack.'
+          'Replaying an already-used renewal token is treated as theft, per RFC 6819, and revokes every renewal credential for the account at once, so no session outlives the thirty-minute working credential it already holds. A brief window is carved out for the harmless case of two browser tabs renewing simultaneously, so ordinary use is not mistaken for an attack.'
       },
       {
         term: 'Abuse limits',
         detail:
-          'Requests are rate limited and oversized request bodies are rejected before they reach any handler.'
+          'Requests are rate limited per client address, an IPv6 client per /64, and no handler reads past the size cap: a body declared too large is refused before any handler runs, one streamed past the cap is cut off there and refused, and one that arrives too slowly is dropped.'
       }
     ]
   },
@@ -225,7 +227,7 @@ const sections: Section[] = [
       {
         term: 'Verified dependencies',
         detail:
-          'Every Python package is installed only if its hash matches a value committed to the repository. That includes the installer itself, so the tool doing the verifying is verified too. JavaScript packages install from a committed lockfile.'
+          'Every Python package in the backend image and in its test job is installed only if its hash matches a value committed to the repository, the installer included, so the tool doing the verifying is verified too. The site’s JavaScript packages and the deploy tool install from committed lockfiles. The lint hooks that check each push are pinned by version, not by hash.'
       },
       {
         term: 'Scanning',
@@ -235,7 +237,7 @@ const sections: Section[] = [
       {
         term: 'Gates',
         detail:
-          'Nothing deploys until the unit tests, the browser tests and a performance and accessibility budget have all passed. Deploying is not a separate decision from testing.'
+          'Code reaches production only from main and only through the pipeline, and each half waits on its own checks: the frontend on its unit tests, browser tests, a run under the real security policy and a performance and accessibility budget; the API on its lint and unit tests. Both also wait on the action-pin check, a secret scan and a review of any dependency the push adds, and every push gets a vulnerability scan. Content edits are republished by a one-click rebuild of the current code, which runs the build-time page checks and a check of every security header, not the test suites.'
       }
     ]
   },
@@ -248,7 +250,7 @@ const sections: Section[] = [
       {
         term: 'Nightly, encrypted',
         detail:
-          'The database is dumped every night and encrypted to a public key before it is stored. The matching private key is held offline and never reaches the machine that runs the backup, so the backup process cannot read its own output.'
+          'The database is dumped every night and encrypted to a public key before it is stored. The matching private key is kept outside the build and hosting systems and never reaches the machine that runs the backup, so the backup process cannot read its own output.'
       },
       {
         term: 'Rehearsed, not assumed',
@@ -258,7 +260,7 @@ const sections: Section[] = [
       {
         term: 'When something went wrong',
         detail:
-          'That rehearsal is also what caught a stored key being unusable, and the recovery — rotate the key, re-encrypt, run the whole drill again on a fresh backup — was completed the same week. Drills earn their keep on the days they fail.'
+          'That rehearsal also caught a stored key being unusable, and diagnosing it exposed the private key: the key was rotated, every backup encrypted to the old one was deleted, and the whole drill was run again on a fresh backup the same week (September 2026). Drills earn their keep on the days they fail.'
       }
     ]
   }

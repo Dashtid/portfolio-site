@@ -147,12 +147,16 @@ describe('ColophonView claims still match the shipped CSP', () => {
   })
 })
 
-const vueSources = (dir: string): string[] =>
+const vueFiles = (dir: string): { name: string; source: string }[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
     const full = resolve(dir, entry.name)
-    if (entry.isDirectory()) return vueSources(full)
-    return entry.name.endsWith('.vue') ? [readFileSync(full, 'utf-8')] : []
+    if (entry.isDirectory()) return vueFiles(full)
+    return entry.name.endsWith('.vue')
+      ? [{ name: entry.name, source: readFileSync(full, 'utf-8') }]
+      : []
   })
+
+const vueSources = (dir: string): string[] => vueFiles(dir).map(file => file.source)
 
 // Referrer policies that send another origin no more than the page's origin.
 const TRIMMED = new Set([
@@ -177,6 +181,37 @@ describe('ColophonView referrer claim', () => {
     )
     expect(policies.length).toBeGreaterThan(0)
     expect(policies.filter(policy => !TRIMMED.has(policy))).toEqual([])
+  })
+})
+
+describe('ColophonView embeds claim', () => {
+  it('holds while the only frames are the embeds, each created by a click', async () => {
+    // The page: "videos and maps load from their providers only after a
+    // click". verify-dist-invariants.mjs (invariant 8) fails build:ssg on an
+    // <iframe> in any baked page. Here: VideoEmbed and MapEmbed are the only
+    // components with an <iframe>, each renders it only once `loaded` is
+    // true, and one line, in its button's click handler, sets it.
+    const wrapper = await mountView()
+    expect(wrapper.text()).toContain('videos and maps load from their providers only after a click')
+    const invariants = readFileSync(
+      resolve(FRONTEND_ROOT, 'scripts', 'verify-dist-invariants.mjs'),
+      'utf-8'
+    )
+    expect(invariants).toContain('/<iframe[\\s>/]/i.test(html)')
+    const framed = vueFiles(resolve(FRONTEND_ROOT, 'src')).filter(file =>
+      /<iframe\b/.test(file.source)
+    )
+    expect(framed.map(file => file.name).sort()).toEqual(['MapEmbed.vue', 'VideoEmbed.vue'])
+    for (const { source } of framed) {
+      expect(source.match(/<iframe\b/g)).toHaveLength(1)
+      expect(source).toMatch(/<iframe\s+v-if="loaded"/)
+      expect(source.match(/\bloaded\.value = true\b/g)).toHaveLength(1)
+      const handlers = [...source.matchAll(/@click="(\w+)"/g)].map(m => m[1])
+      expect(handlers).toHaveLength(1)
+      expect(source).toMatch(
+        new RegExp(`function ${handlers[0]}\\(\\) \\{\\s+loaded\\.value = true\\b`)
+      )
+    }
   })
 })
 

@@ -9,8 +9,8 @@
 # is PUBLIC, and public-repo artifacts are downloadable by any logged-in
 # GitHub account, so plaintext dumps were an open data exposure. The age
 # recipient below is a public key — safe to commit; the runner never holds
-# decryption capability. The private key lives OFFLINE with the owner
-# (password manager). Restore:
+# decryption capability. No workflow or repository secret holds the private
+# key; it is kept outside CI and Fly. Restore:
 #   unzip artifact && age -d -i age-backup-key.txt portfolio-YYYYMMDD.dump.age \
 #     > portfolio.dump && pg_restore ...
 #

@@ -2,8 +2,9 @@
 
 Vercel serves the statically-generated frontend; Fly.io runs the FastAPI
 backend next to a Fly Postgres app. Everything deploys from
-`.github/workflows/ci-cd.yml` on pushes to `main` — there is no manual
-deploy step in the normal path.
+`.github/workflows/ci-cd.yml` on pushes to `main`; content edits are
+republished by the manual `rebake-frontend.yml` dispatch, which rebuilds
+the current `main`.
 
 **Production URLs**: <https://dashti.se> (frontend), <https://api.dashti.se> (backend)
 

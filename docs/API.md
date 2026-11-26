@@ -33,7 +33,7 @@ since there are no third-party API consumers.
 
 - **Login**: GitHub OAuth via `/api/v1/auth/github` with PKCE (CSRF state is single-use with a 5-minute TTL, and bound to the browser by an HttpOnly cookie that also holds the PKCE code verifier)
 - **Sessions**: JWT access + refresh tokens issued as HTTP-only, `secure`, `samesite=lax` cookies. The frontend never touches tokens directly.
-- **Refresh**: `/api/v1/auth/refresh` rotates the cookies and returns `{"refreshed": true}` — the response body is intentionally token-free so an XSS payload calling the endpoint cannot extract credentials. Replaying an already-used refresh token is treated as theft (RFC 6819) and revokes every session for the account, with a short grace window so two tabs renewing simultaneously are not mistaken for an attack.
+- **Refresh**: `/api/v1/auth/refresh` rotates the cookies and returns `{"refreshed": true}` — the response body is intentionally token-free so an XSS payload calling the endpoint cannot extract credentials. Replaying an already-used refresh token is treated as theft (RFC 6819) and revokes every refresh token for the account; access tokens already issued are not tracked server-side and stay valid until they expire (`ACCESS_TOKEN_EXPIRE_MINUTES`, 30). A short grace window keeps two tabs renewing simultaneously from being mistaken for an attack.
 - **Bearer header fallback**: still accepted by `/api/v1/auth/me` and other protected endpoints for non-browser API clients (curl, test suites). The frontend itself uses cookies only.
 
 ## Rate Limits
