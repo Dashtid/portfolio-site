@@ -17,12 +17,14 @@ class PageView(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     page_path: Mapped[str] = mapped_column(String(500), nullable=False)
     referrer: Mapped[str | None] = mapped_column(String(500))
-    user_agent: Mapped[str | None] = mapped_column(Text)
-    # Pseudonymised IP: HMAC-SHA256 keyed off SECRET_KEY, truncated to 16 hex
-    # chars. See app/utils/ip_hash.py — the key is what defeats a rainbow table.
-    ip_address: Mapped[str | None] = mapped_column(String(64))
+    # user_agent, ip_address and city are no longer written: track_pageview's
+    # INSERT names none of them. They are deferred, so a SELECT that loads a
+    # PageView names none of them either; reading one on a loaded row runs a
+    # query of its own, which async code cannot do.
+    user_agent: Mapped[str | None] = mapped_column(Text, deferred=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), deferred=True)
     country: Mapped[str | None] = mapped_column(String(2))  # ISO country code
-    city: Mapped[str | None] = mapped_column(String(100))
+    city: Mapped[str | None] = mapped_column(String(100), deferred=True)
     session_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     # Timestamps — indexed for analytics time-range queries

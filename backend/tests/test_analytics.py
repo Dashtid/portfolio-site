@@ -120,8 +120,8 @@ class TestTrackPageviewEndpoint:
     def test_track_pageview_truncates_long_values_to_column_width(self, client: TestClient):
         """Long UTM-style paths/referrers (501-2048 chars) are accepted and
         stored truncated to the String(500) columns instead of 500-ing at
-        INSERT (Postgres 22001) or dropping the beacon with a 422. The UA
-        header is capped at 512 before the unbounded Text column.
+        INSERT (Postgres 22001) or dropping the beacon with a 422. The long
+        User-Agent header is not stored at all.
         """
         long_path = "/campaign?" + "utm_content=" + "x" * 900
         long_ref = "https://example.com/?ref=" + "y" * 900
@@ -201,7 +201,19 @@ class TestTrackPageviewEndpoint:
             headers={"X-Forwarded-For": "1.2.3.4, 5.6.7.8"},
         )
         assert response.status_code == 200
-        # Note: IP is stored in DB but not returned in response
+
+    def test_track_pageview_stores_no_address_digest_or_user_agent(self, client: TestClient):
+        """ip_address, user_agent and city stay NULL on every new row."""
+        response = client.post(
+            BEACON,
+            json={"page_path": "/a"},
+            headers={"User-Agent": "Mozilla/5.0 probe", "X-Forwarded-For": "203.0.113.9"},
+        )
+        assert response.status_code == 200
+
+        assert _stored(PageView.ip_address, PageView.user_agent, PageView.city) == [
+            (None, None, None)
+        ]
 
     def test_track_multiple_pageviews(self, client: TestClient):
         """Test tracking multiple page views creates separate records."""

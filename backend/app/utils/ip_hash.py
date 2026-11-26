@@ -1,10 +1,14 @@
 """
-Privacy-preserving IP pseudonymisation for analytics.
+Keyed IP digest for log lines.
 
-Raw visitor IPs are passed through HMAC-SHA256 keyed off ``SECRET_KEY`` before
-being stored on the ``PageView`` row. The HMAC construction defeats the
-rainbow-table attack that plain ``sha256(ip)`` is vulnerable to (IPv4 has
-only ~4.3B possible values, so a precomputed table is feasible without a key).
+The request log, the unhandled-exception line, the 429 line and the security
+events name a client by ``hash_ip(address)``, never by the address: an
+HMAC-SHA256 keyed off ``SECRET_KEY``, cut to 16 hex characters. The key is
+what defeats the rainbow-table attack that plain ``sha256(ip)`` is vulnerable
+to (IPv4 has only ~4.3B possible values, so a precomputed table is feasible
+without a key). The digest of one address is the same on every day, so the
+requests of one client can be traced through the log; page_views rows do not
+carry it (they hold the daily key of app/utils/visitor_key.py).
 
 We reuse ``SECRET_KEY`` rather than introducing a separate ``IP_HASH_SECRET``
 to keep secret management lean. The two would leak together in practice
@@ -13,11 +17,10 @@ adds operational cost without raising the security floor. The
 ``"ip-hash-v1:"`` domain-separation prefix prevents collisions with any
 other future HMAC use of the same key.
 
-Rotating ``SECRET_KEY`` invalidates the mapping — same IP -> different hash.
-Existing rows keep their old hashes, so for ~30 days after a rotation a
-returning visitor counts as a new visitor in the analytics window. That's an
-acceptable, one-time effect; rotation is already an "everyone gets logged
-out" event because of the JWT use.
+Rotating ``SECRET_KEY`` invalidates the mapping — same IP -> different hash —
+so log lines from before and after a rotation no longer share a client's
+digest. Rotation is already an "everyone gets logged out" event because of
+the JWT use.
 """
 
 import hashlib
@@ -35,8 +38,8 @@ _DOMAIN_PREFIX = b"ip-hash-v1:"
 def hash_ip(ip: str) -> str:
     """Return a pseudonymous fixed-width hex digest for ``ip``.
 
-    Deterministic for a given (``SECRET_KEY``, ``ip``) pair so repeat
-    visits from the same IP collapse to the same hash.
+    Deterministic for a given (``SECRET_KEY``, ``ip``) pair, so every log
+    line of one address carries the same digest.
     """
     key = (settings.SECRET_KEY or "").encode()
     msg = _DOMAIN_PREFIX + ip.encode()

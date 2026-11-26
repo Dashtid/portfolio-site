@@ -62,9 +62,9 @@ _USER_AGENT_LOG_CHARS = 64
 def client_log_fields(request: Request) -> dict[str, str | None]:
     """The client fields a log line may carry.
 
-    The address only as the keyed digest the page_views table stores
-    (app/utils/ip_hash.py), so log lines and analytics rows still join on
-    it, and the User-Agent cut to its first characters.
+    The address only as its keyed digest (app/utils/ip_hash.py), the same
+    for one address on every day, so the requests of one client can be
+    traced, and the User-Agent cut to its first characters.
     """
     user_agent = request.headers.get("user-agent")
     return {

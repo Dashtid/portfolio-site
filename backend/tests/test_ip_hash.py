@@ -1,4 +1,4 @@
-"""Tests for the keyed IP-hash helper used by analytics pseudonymisation."""
+"""Tests for the keyed IP digest that log lines carry."""
 
 from unittest.mock import patch
 
@@ -6,7 +6,7 @@ from app.utils.ip_hash import hash_ip
 
 
 def test_hash_ip_is_deterministic() -> None:
-    """Same IP -> same hash, so returning visitors collapse to one session."""
+    """Same IP -> same hash, so one client's log lines share a digest."""
     assert hash_ip("203.0.113.5") == hash_ip("203.0.113.5")
 
 
@@ -16,7 +16,7 @@ def test_hash_ip_is_unique_per_ip() -> None:
 
 
 def test_hash_ip_is_fixed_width_hex() -> None:
-    """16-char hex digest, matching the column width of ip_address / session_id suffix."""
+    """16-char hex digest."""
     digest = hash_ip("203.0.113.5")
     assert len(digest) == 16
     assert all(c in "0123456789abcdef" for c in digest)

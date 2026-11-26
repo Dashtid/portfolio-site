@@ -10,9 +10,9 @@ Privacy (D3-BE-03 / SEC-005B): the visitor IP is truncated BEFORE it goes
 upstream — IPv4 keeps the /24, IPv6 the /48 — so ipapi.co never sees a
 full address it could correlate. Country resolution is unaffected: geo
 databases assign country at coarser granularity than these prefixes. The
-stored PageView row was already pseudonymised (keyed SHA-256 in
-app/utils/ip_hash.py); the third-party disclosure was the remaining raw-IP
-sink. Only the ISO-3166 alpha-2 country code comes back.
+stored PageView row holds no address and no digest of one, only the daily
+visitor key of app/utils/visitor_key.py. Only the ISO-3166 alpha-2 country
+code comes back.
 """
 
 import ipaddress

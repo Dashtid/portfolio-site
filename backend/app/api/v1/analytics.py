@@ -7,11 +7,12 @@ Provides endpoints for:
 - Getting visitor statistics (admin)
 """
 
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
-from sqlalchemy import func, select, update
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_admin_user
@@ -31,7 +32,6 @@ from app.schemas.analytics import (
     TopPage,
     VisitorStats,
 )
-from app.utils.ip_hash import hash_ip
 from app.utils.logger import get_logger
 from app.utils.visitor_key import daily_visitor_key
 
@@ -106,10 +106,10 @@ async def track_pageview(
 
     Records visitor page views for analytics. session_id is the daily
     visitor key of the client address and User-Agent
-    (app/utils/visitor_key.py). The raw client IP is hashed before
-    persistence (GDPR pseudonymisation). PERF-01: geo-IP lookup is
-    deferred to a `BackgroundTask` and back-fills the `country` column
-    asynchronously so the response returns as soon as the row is inserted.
+    (app/utils/visitor_key.py); the row stores neither of them, nor a
+    digest of the address. PERF-01: geo-IP lookup is deferred to a
+    `BackgroundTask` and back-fills the `country` column asynchronously so
+    the response returns as soon as the row is inserted.
     """
     # Get client IP securely (only trusts X-Forwarded-For from known proxies)
     client_ip = get_client_ip(request)
@@ -120,9 +120,7 @@ async def track_pageview(
     # Truncate to storage width: the schema accepts up to 2048 for
     # path/referrer (long UTM URLs are real traffic worth recording) but
     # the columns are String(500), and Postgres raises 22001 on overflow —
-    # turning this unauthenticated beacon into a 500. The UA header is
-    # attacker-sized (it bypasses body-size limits and the request
-    # schema), so cap it before the unbounded Text column.
+    # turning this unauthenticated beacon into a 500.
     #
     # _scrub also strips C0 control characters, which is the SAME class of
     # bug as the length overflow above and was missed by it: Postgres text
@@ -133,32 +131,30 @@ async def track_pageview(
     # from these values — attacker-controlled log injection.
     page_path = _scrub(page_view.page_path, 500) or "/"
     referrer = _scrub(page_view.referrer, 500)
-    user_agent = _scrub(request.headers.get("User-Agent"), 512)
 
-    db_pageview = PageView(
-        page_path=page_path,
-        referrer=referrer,
-        user_agent=user_agent,
-        ip_address=hash_ip(client_ip),
-        country=None,
-        session_id=session_id,
+    # A Core INSERT that names only these four columns. A PageView added to
+    # the session would be inserted with every other nullable column named
+    # as NULL, user_agent, ip_address and city included.
+    pageview_id = str(uuid.uuid4())
+    await db.execute(
+        insert(PageView).values(
+            id=pageview_id, page_path=page_path, referrer=referrer, session_id=session_id
+        )
     )
-    db.add(db_pageview)
     await db.commit()
-    await db.refresh(db_pageview)
 
     # Schedule the geo-IP back-fill AFTER the response goes out. Starlette
     # awaits background_tasks before closing the connection but only after
     # the response body has been sent — the client sees no extra latency.
-    background_tasks.add_task(_backfill_country, str(db_pageview.id), client_ip)
+    background_tasks.add_task(_backfill_country, pageview_id, client_ip)
 
     return PageViewResponse(
-        id=str(db_pageview.id),
-        visitor_id=str(db_pageview.session_id) if db_pageview.session_id else "anonymous",
-        page_path=str(db_pageview.page_path),
+        id=pageview_id,
+        visitor_id=session_id,
+        page_path=page_path,
         page_title=None,
-        referrer=str(db_pageview.referrer) if db_pageview.referrer else None,
-        timestamp=db_pageview.created_at or datetime.now(UTC),
+        referrer=referrer,
+        timestamp=datetime.now(UTC),
     )
 
 

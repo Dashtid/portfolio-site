@@ -1689,7 +1689,7 @@ class TestHealthCheckLogging:
 
 
 class TestLogLinesCarryNoClientAddress:
-    """Log lines name a client by the keyed IP digest page_views stores.
+    """Log lines name a client by the keyed IP digest of app/utils/ip_hash.py.
 
     The request log, the unhandled-exception line and the 429 line carry
     client_ip_hash, never the address, and at most 64 characters of the
