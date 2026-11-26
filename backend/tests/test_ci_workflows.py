@@ -345,7 +345,8 @@ def test_the_image_scan_reads_the_runtime_base_weekly_and_gates_no_deploy() -> N
             ".github/workflows/image-scan.yml",
         ]
     assert workflow["permissions"] == {"contents": "read"}
-    # Not security-scan, the check main's ruleset requires: a base with a
+    # Not security-scan, the one status check main requires (through its
+    # classic branch protection rule, not its ruleset): a base with a
     # fixable vulnerability must not hold up unrelated pull requests.
     [(name, job)] = workflow["jobs"].items()
     assert name == "image-scan"
