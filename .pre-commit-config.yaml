@@ -206,6 +206,13 @@ repos:
         entry: '.env files must never be committed (use .env.example)'
         language: fail
         files: '(^|/)\.env(\.production)?$'
+      # A personal webmail address in tracked text is published with the
+      # repository and stays in its history, so the commit is refused instead.
+      - id: forbid-personal-mail
+        name: forbid personal webmail addresses
+        entry: '(?i)[a-z0-9._%+-]+@(gmail|googlemail|hotmail|outlook|live|icloud|yahoo|proton|protonmail|pm|passmail)\.[a-z]{2,}'
+        language: pygrep
+        types: [text]
 
   # pre-commit/mirrors-prettier is ARCHIVED (April 2024, frozen at a prettier 4
   # alpha); rbubley/mirrors-prettier is the maintained community fork tracking
