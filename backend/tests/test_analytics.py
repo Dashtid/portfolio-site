@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from app.api.v1.analytics import _referrer_host, logger, router
 from app.config import settings
+from app.main import PAGE_VIEW_RETENTION
 from app.models.analytics import PageView
 from app.utils import visitor_key
 from tests.conftest import TestSessionLocal
@@ -489,9 +490,9 @@ class TestAnalyticsSummaryEndpoint:
         assert response.status_code == 422
 
     def test_summary_period_too_large(self, client: TestClient, admin_user_in_db: dict[str, Any]):
-        """Test analytics summary rejects period more than 365 days."""
+        """Test analytics summary rejects period more than 180 days."""
         response = client.get(
-            "/api/v1/analytics/stats/summary?days=400",
+            "/api/v1/analytics/stats/summary?days=181",
             headers=admin_user_in_db["headers"],
         )
         # FastAPI returns 422 for Query parameter validation errors
@@ -594,7 +595,24 @@ class TestVisitorStatsEndpoint:
 
         # Too large
         response = client.get(
-            "/api/v1/analytics/stats/visitors?days=500",
+            "/api/v1/analytics/stats/visitors?days=181",
             headers=admin_user_in_db["headers"],
         )
         assert response.status_code == 422
+
+
+class TestStatsPeriodCap:
+    """The longest period either stats endpoint accepts is the page_views retention."""
+
+    @pytest.mark.parametrize("endpoint", ["summary", "visitors"])
+    def test_the_longest_period_is_the_retention(
+        self, client: TestClient, admin_user_in_db: dict[str, Any], endpoint: str
+    ):
+        days = PAGE_VIEW_RETENTION.days
+        url = f"/api/v1/analytics/stats/{endpoint}"
+        headers = admin_user_in_db["headers"]
+
+        response = client.get(f"{url}?days={days}", headers=headers)
+        assert response.status_code == 200
+        assert response.json()["period_days"] == days
+        assert client.get(f"{url}?days={days + 1}", headers=headers).status_code == 422

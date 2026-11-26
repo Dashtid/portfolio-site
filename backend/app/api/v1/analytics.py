@@ -198,7 +198,7 @@ async def track_pageview(
 async def get_analytics_summary(
     db: DbSession,
     current_user: AdminUser,
-    days: int = Query(default=30, ge=1, le=365, description="Number of days to include in summary"),
+    days: int = Query(default=30, ge=1, le=180, description="Number of days to include in summary"),
 ):
     """
     Get analytics summary (admin only).
@@ -297,7 +297,7 @@ async def get_analytics_summary(
 async def get_visitor_stats(
     db: DbSession,
     current_user: AdminUser,
-    days: int = Query(default=7, ge=1, le=365, description="Number of days to include in stats"),
+    days: int = Query(default=7, ge=1, le=180, description="Number of days to include in stats"),
 ) -> VisitorStats:
     """
     Get visitor statistics (admin only).

@@ -60,11 +60,11 @@ from app.utils.visitor_key import rotate_daily_salt
 
 logger = get_logger(__name__)
 
-# How long analytics page views are kept. The dashboard's `days` query
-# param is capped at 365 (app/api/v1/analytics.py), so nothing older is
-# reachable through the UI — keeping it only grows the row the one
-# unauthenticated writer on this API can create.
-PAGE_VIEW_RETENTION = timedelta(days=400)
+# How long analytics page views are kept: each cleanup pass deletes the
+# rows older than this. The stats endpoints' `days` query param is capped
+# at the same 180 days (app/api/v1/analytics.py), so the dashboard's
+# longest range reaches every row that is kept.
+PAGE_VIEW_RETENTION = timedelta(days=180)
 
 # Cadence of the background OSS-dashboard refresh. 6h is what the sync
 # service's own httpx-lifecycle comment assumes, and at ~4 rate-limit
@@ -476,7 +476,7 @@ async def cleanup_oauth_states_periodically():
                 # page_views is the only table an UNAUTHENTICATED caller can
                 # grow, and it had no retention at all — every beacon since
                 # launch was still resident. The analytics dashboard never
-                # queries beyond 365 days (the `days` param is capped at 365
+                # queries beyond 180 days (the `days` param is capped at 180
                 # in analytics.py), so anything older is unreadable weight.
                 views = await session.execute(
                     delete(PageView).where(PageView.created_at < now - PAGE_VIEW_RETENTION)

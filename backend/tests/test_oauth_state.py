@@ -170,7 +170,8 @@ class TestOAuthStateTtl:
 
         page_views is the only table an UNAUTHENTICATED caller can grow, and
         it had no retention at all -- every beacon since launch stayed
-        resident. Rows past PAGE_VIEW_RETENTION go; recent ones stay.
+        resident. Rows past PAGE_VIEW_RETENTION (180 days) go; a row a day
+        inside it and a recent one stay.
         """
         _ = client
 
@@ -178,6 +179,7 @@ class TestOAuthStateTtl:
             from app.main import PAGE_VIEW_RETENTION  # noqa: PLC0415
             from app.models.analytics import PageView  # noqa: PLC0415
 
+            assert timedelta(days=180) == PAGE_VIEW_RETENTION
             now = datetime.now(UTC)
             async with TestSessionLocal() as session:
                 session.add(
@@ -185,6 +187,13 @@ class TestOAuthStateTtl:
                         page_path="/ancient",
                         session_id="s-old",
                         created_at=now - PAGE_VIEW_RETENTION - timedelta(days=1),
+                    )
+                )
+                session.add(
+                    PageView(
+                        page_path="/inside",
+                        session_id="s-inside",
+                        created_at=now - PAGE_VIEW_RETENTION + timedelta(days=1),
                     )
                 )
                 session.add(
@@ -219,8 +228,7 @@ class TestOAuthStateTtl:
                 return {row.page_path for row in rows}
 
         remaining = _run(go())
-        assert "/ancient" not in remaining
-        assert "/recent" in remaining
+        assert remaining == {"/inside", "/recent"}
 
     def test_cleanup_loop_exits_on_cancellation(self, client: TestClient):
         """The cleanup loop's ``except CancelledError: break`` is reachable.
