@@ -169,6 +169,100 @@ Checked **2026-11-23**.
   Re-check too when GHSA-c859-jr93-m5j4 reaches the global database, which
   would let Dependabot raise it against 10.2.6.
 
+### Scorecard image — a tag the action's commit pin does not fix (accepted)
+
+Checked **2026-11-26**.
+
+- `scorecard.yml` pins `ossf/scorecard-action` by commit (v2.5.0), but the
+  action's `action.yaml` at that commit runs
+  `docker://ghcr.io/ossf/scorecard-action:v2.5.0`, a tag the pin does not
+  fix. The workflow records the tag's digest in an `# image:` comment under
+  the pin, and its `image-pin` job, which the analysis job needs, runs
+  `scripts/verify_action_pins.py --only ossf/scorecard-action`: the check
+  fails unless ghcr.io still serves that digest for the tag the action names.
+  `security-scan` in `ci-cd.yml` runs the full check on every push to `main`
+  and every pull request to it, so an action bump that leaves the comment
+  behind fails there.
+- A `docker://` step that names the image by digest is no way out while
+  `publish_results` is on: the results API behind the README badge accepts
+  the Scorecard step only as the action or as an image by tag, and only
+  `uses:` steps in the analysis job, which is why the check runs in a job of
+  its own.
+- An image pushed to the tag between the `image-pin` check and the analysis
+  job's pull would run in its place, with that job's grants:
+  `id-token: write`, `security-events: write` and `contents: read`. Accepted
+  because the two are minutes apart unless the analysis job is re-run on its
+  own, which does not repeat the check, and because that job holds no
+  repository secret and only read access to the code.
+- **Re-check trigger:** a `scorecard-action` release whose `action.yaml`
+  names its image by digest, which the commit pin then fixes and the check
+  accepts without a comment; `publish_results` turned off; or the results
+  API accepting an image by digest.
+
+### Vercel CLI — a prebuilt binary, locked by its hash (accepted)
+
+Checked **2026-11-26**.
+
+- Both production deploy paths, `ci-cd.yml`'s `deploy-frontend` and
+  `rebake-frontend.yml`, run the CLI from `.github/tools/vercel`. Its lock
+  holds one package, `@vercel/vc-native-linux-x64` 65.16.0, the CLI's Linux
+  x64 binary, with a sha512 integrity hash, and the entry lists no
+  dependencies and no install script. `install.sh` installs it with
+  `npm ci --ignore-scripts` under `$RUNNER_TEMP`, outside the checkout that
+  `vercel deploy` uploads, and fails unless the binary prints the locked
+  version. Neither the `vercel` launcher nor its JavaScript fallback,
+  `@vercel/cli-support`, is installed: both deploy steps call the binary by
+  its path, so no JavaScript that npm resolved runs in the process that
+  holds `VERCEL_TOKEN`.
+- Before `66ac1ab`, both paths ran `npm install -g vercel@65.16.0`, which
+  pins the top package only: the rest of the tree resolved when the job ran,
+  outside every lock and integrity hash. The first lock in that directory
+  (`66ac1ab`) also held the launcher and `@vercel/cli-support`, 388 more
+  packages. The launcher never loads `@vercel/cli-support` on the native
+  path, and on 2026-11-25, 43 GitHub advisories covered package versions in
+  its dependency tree.
+- The binary is Vercel's packaged build of the CLI's own JavaScript, and no
+  scanner sees what it was built from: `npm audit`, Dependabot and
+  OSV-Scanner, which Scorecard's Vulnerabilities check runs over every
+  lockfile, see one package and its version, so none can tell whether it
+  bundles code those advisories cover. Accepted because the deploys need a
+  current CLI (Vercel rejects deploys from CLIs below a server-side minimum)
+  and the binary needs no other package: the integrity hash fixes its bytes,
+  which change only through a bump of the lock.
+- **Re-check trigger:** every bump of the pin. Dependabot checks for one
+  every Monday, with a 7-day cooldown, and the `vercel-cli` job runs
+  `install.sh` on the pull request with no secrets; the new lock must still
+  hold the one package, with no dependencies and no install script.
+
+### Backend base image — scanned weekly, gating no deploy (accepted)
+
+Checked **2026-11-26**.
+
+- `.github/workflows/image-scan.yml` scans the base of `backend/Dockerfile`'s
+  runtime stage, its last `FROM`, and fails unless that names the image by
+  digest. It runs grype (`ghcr.io/anchore/grype:v0.122.0`, by a digest that
+  `security-scan` holds to the tag) for `linux/amd64` every Monday at 06:30
+  UTC, on pushes and pull requests to `main` that change the Dockerfile or
+  the workflow, and by hand. High and Critical matches that have a fix go to
+  code scanning under the category `grype-image`, and the last step fails
+  while one remains.
+- It uses grype because Trivy's image scan lists no CPython package for this
+  image. The runtime stage installs no OS package
+  (`backend/tests/test_ci_workflows.py` fails on an `apt-get` there), so
+  production's Debian packages and its CPython are the base's; the Python
+  packages installed on top come from `backend/requirements.txt`, which the
+  Trivy step in `security-scan` reads.
+- No deploy waits for the scan, so a backend deploy can ship on a base the
+  scan has flagged. Accepted because what a red run asks for is a digest
+  refresh, which holding a deploy back would not make, and because a base
+  with a fixable vulnerability must not hold up unrelated pull requests: the
+  scan is not part of `security-scan`, the one status check `main` requires
+  (through its classic branch protection rule, not its ruleset).
+- **Re-check trigger:** a red run. Move both `FROM` lines together to the
+  newest index of the tag that is at least 7 days old (Dependabot proposes
+  tag bumps here, but digest refreshes land by hand), and record here, with
+  its reason, any match that index still carries.
+
 ### `overrides`
 
 `frontend/package.json` no longer has an `overrides` field. Each of the five
@@ -195,6 +289,25 @@ that stood on 2026-11-15 was dropped after the lock was written without it:
 
 ### What changed since 2026-08-07, and the lesson
 
+- **2026-11-26:** CI now installs flyctl from a sha256 committed beside its
+  version, in each of the three jobs that run it, and the Vercel CLI from
+  the lock above. The grype and Scorecard images are held to recorded
+  digests that `scripts/verify_action_pins.py` checks against their tags
+  (see the backend base image and Scorecard image entries above), and the
+  same script now also fails on a `uses:` that names no full commit SHA, no
+  path in this repository and no Docker image by digest. The backup job's
+  PGDG apt source now trusts only the key with its published fingerprint.
+  Both deploy jobs now wait for `security-scan`, which fails on a verified
+  secret in the pushed commits or a pin that disagrees with its version
+  comment, and for the dependency review when it runs, which on a push
+  covers only the commits that push added. Each deploy job, and the rebake,
+  now requires `refs/heads/main`, the one branch `ci-cd.yml` runs for, and
+  [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) says what these gates leave
+  open. Neither this note nor the three entries checked on 2026-11-26
+  forecast how Scorecard, Dependabot or code scanning will mark an alert:
+  GitHub and the scanners set those states themselves, as when Trivy closed
+  code-scanning alert 120 with `picomatch` unchanged and GitHub marked
+  dismissed Dependabot alerts fixed (see 2026-11-24).
 - **2026-11-24:** once the 2026-11-23 lock reached `main`, GitHub marked the
   eight Dependabot alerts #187, #200, #218, #234, #238, #241, #248 and #249
   fixed, the dismissed and auto-dismissed ones included. Trivy's scan of
