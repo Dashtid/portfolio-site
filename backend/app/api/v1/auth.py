@@ -18,7 +18,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, is_configured_admin
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.core.security_events import security_event
 from app.database import get_db
@@ -576,11 +576,7 @@ async def refresh_token_endpoint(
 
     # Get user from database. We deliberately check after the jti check so
     # we can't be probed for user existence by replaying old jti values.
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user = await _refreshable_user(request, db, user_id)
 
     # Happy path: claim the rotation ATOMICALLY. Only one concurrent
     # request can flip revoked_at from NULL; the read-then-write this
@@ -643,6 +639,29 @@ def _session_auth_time(
         security_event(logging.INFO, "auth.session_expired", request, user_id=stored.user_id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")
     return auth_time
+
+
+async def _refreshable_user(request: Request, db: AsyncSession, user_id: str | None) -> User:
+    """Return the user a refresh token names, while it may renew its session.
+
+    Raises 404 for an unknown user and 403 unless the user is the configured
+    admin: the admin routes make that test on every request, and a refresh
+    makes it too, so a changed or unset ADMIN_GITHUB_ID stops the previous
+    account's sessions from renewing. The presented token stays unrotated.
+    """
+    user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not is_configured_admin(user):
+        security_event(
+            logging.WARNING,
+            "auth.admin_denied",
+            request,
+            user_id=user.id,
+            github_id=user.github_id,
+        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    return user
 
 
 async def _revoke_all_for_user(db: AsyncSession, user_id: str | None) -> int:

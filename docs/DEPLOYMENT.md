@@ -45,11 +45,12 @@ curl https://api.dashti.se/api/v1/health    # liveness
 
 Ending admin sessions: Sign Out revokes every refresh token the account
 holds, and its last access token expires within
-`ACCESS_TOKEN_EXPIRE_MINUTES`. Every admin route checks the account's
-GitHub id against `ADMIN_GITHUB_ID`, so changing that secret locks the
-previous account out at once. A session ends at most 30 days after its
-GitHub sign-in (`SESSION_MAX_AGE` in `backend/app/api/v1/auth.py`).
-Rotating `SECRET_KEY` ends every session, and also changes the keyed IP
+`ACCESS_TOKEN_EXPIRE_MINUTES`. Every admin route and every token refresh
+check the account's GitHub id against `ADMIN_GITHUB_ID`, so changing that
+secret locks the previous account out at once and its session renews no
+more. A session ends at most 30 days after its GitHub sign-in
+(`SESSION_MAX_AGE` in `backend/app/api/v1/auth.py`). Rotating
+`SECRET_KEY` ends every session, and also changes the keyed IP
 digests that analytics rows and log lines carry.
 
 ## Frontend (Vercel)

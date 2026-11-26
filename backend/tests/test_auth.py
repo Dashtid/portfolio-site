@@ -304,10 +304,10 @@ class TestAuthIntegration:
         assert data["username"] == "adminuser"
         assert data["is_admin"] is True
 
-    def test_refresh_token_with_valid_user_in_db(self, client: TestClient, test_user_in_db: dict):
+    def test_refresh_token_with_valid_user_in_db(self, client: TestClient, admin_user_in_db: dict):
         """Refresh succeeds and delivers new tokens via cookies, not the response body."""
         response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+            "/api/v1/auth/refresh", json={"refresh_token": admin_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200
@@ -317,10 +317,12 @@ class TestAuthIntegration:
         assert response.cookies.get("access_token")
         assert response.cookies.get("refresh_token")
 
-    def test_refreshed_token_works_for_me_endpoint(self, client: TestClient, test_user_in_db: dict):
+    def test_refreshed_token_works_for_me_endpoint(
+        self, client: TestClient, admin_user_in_db: dict
+    ):
         """A token issued by /refresh authenticates a follow-up /me call."""
         refresh_response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+            "/api/v1/auth/refresh", json={"refresh_token": admin_user_in_db["refresh_token"]}
         )
         assert refresh_response.status_code == 200
         new_access_token = refresh_response.cookies.get("access_token")
@@ -330,7 +332,7 @@ class TestAuthIntegration:
         me_response = client.get("/api/v1/auth/me", headers=new_headers)
 
         assert me_response.status_code == 200
-        assert me_response.json()["id"] == test_user_in_db["user_id"]
+        assert me_response.json()["id"] == admin_user_in_db["user_id"]
 
     def test_user_response_schema(self, client: TestClient, test_user_in_db: dict):
         """Test that user response matches expected schema."""
@@ -450,11 +452,11 @@ class TestRefreshTokenEdgeCases:
         assert response.status_code == 422
 
     def test_refresh_issues_new_refresh_token_cookie(
-        self, client: TestClient, test_user_in_db: dict
+        self, client: TestClient, admin_user_in_db: dict
     ):
         """Refresh rotates the refresh token: a fresh cookie value is set on every call."""
         response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+            "/api/v1/auth/refresh", json={"refresh_token": admin_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200
@@ -465,7 +467,7 @@ class TestRefreshTokenEdgeCases:
         assert "access_token" not in response.json()
 
     def test_refresh_reuse_after_rotation_is_rejected(
-        self, client: TestClient, test_user_in_db: dict, monkeypatch
+        self, client: TestClient, admin_user_in_db: dict, monkeypatch
     ):
         """A replayed refresh token OUTSIDE the rotation grace window is
         rejected as a reuse attempt.
@@ -479,7 +481,7 @@ class TestRefreshTokenEdgeCases:
         from app.api.v1 import auth as auth_module
 
         monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
-        original = test_user_in_db["refresh_token"]
+        original = admin_user_in_db["refresh_token"]
 
         first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
         assert first.status_code == 200
@@ -496,7 +498,7 @@ class TestRefreshTokenEdgeCases:
         assert "revoked" in second.json()["detail"].lower()
 
     def test_concurrent_refresh_grace_preserves_session(
-        self, client: TestClient, test_user_in_db: dict
+        self, client: TestClient, admin_user_in_db: dict
     ):
         """A replay WITHIN the grace window is treated as a benign
         concurrent rotation (multi-tab race), not theft.
@@ -506,7 +508,7 @@ class TestRefreshTokenEdgeCases:
         fired and this final refresh returned 401 — logging the admin out of
         every tab whenever two requests raced.
         """
-        original = test_user_in_db["refresh_token"]
+        original = admin_user_in_db["refresh_token"]
 
         first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
         assert first.status_code == 200
@@ -546,7 +548,7 @@ class TestRefreshTokenEdgeCases:
         assert replay.status_code == 401
 
     def test_logout_with_stale_cookie_revokes_rotated_sibling(
-        self, client: TestClient, test_user_in_db: dict
+        self, client: TestClient, admin_user_in_db: dict
     ):
         """Multi-tab logout: the cookie presented at logout may already be
         superseded by a rotation from another tab. Logout revokes ALL live
@@ -554,7 +556,7 @@ class TestRefreshTokenEdgeCases:
         under the old single-jti revoke it survived and the "logged-out"
         user stayed authenticated in the other tab.
         """
-        original = test_user_in_db["refresh_token"]
+        original = admin_user_in_db["refresh_token"]
 
         # Tab B rotates: original -> rotated.
         first = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
@@ -574,6 +576,52 @@ class TestRefreshTokenEdgeCases:
         client.cookies.clear()
         replay = client.post("/api/v1/auth/refresh", json={"refresh_token": rotated})
         assert replay.status_code == 401
+
+
+class TestRefreshRechecksTheAdmin:
+    """A refresh renews a session only while its account is the configured
+    admin, the same test get_current_admin_user makes on every admin route."""
+
+    def _refresh(self, client: TestClient, user: dict):
+        return client.post("/api/v1/auth/refresh", json={"refresh_token": user["refresh_token"]})
+
+    def test_an_account_that_is_not_the_admin_is_refused(
+        self, client: TestClient, test_user_in_db: dict
+    ):
+        response = self._refresh(client, test_user_in_db)
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "Not enough permissions"
+        assert "access_token" not in response.cookies
+        assert "refresh_token" not in response.cookies
+
+    def test_a_changed_admin_github_id_refuses_the_previous_admin(
+        self, client: TestClient, admin_user_in_db: dict, monkeypatch
+    ):
+        monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", "24680")
+
+        response = self._refresh(client, admin_user_in_db)
+
+        assert response.status_code == 403
+        assert "refresh_token" not in response.cookies
+
+    def test_an_unset_admin_github_id_refuses_every_refresh(
+        self, client: TestClient, admin_user_in_db: dict, monkeypatch
+    ):
+        monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", None)
+
+        assert self._refresh(client, admin_user_in_db).status_code == 403
+
+    def test_a_refused_refresh_leaves_the_token_unrotated(
+        self, client: TestClient, admin_user_in_db: dict, monkeypatch
+    ):
+        """The refusal revokes nothing: with the setting back, the same
+        token refreshes instead of tripping reuse detection."""
+        monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", "24680")
+        assert self._refresh(client, admin_user_in_db).status_code == 403
+
+        monkeypatch.setattr(settings, "ADMIN_GITHUB_ID", ADMIN_GITHUB_ID)
+        assert self._refresh(client, admin_user_in_db).status_code == 200
 
 
 def _store_refresh_row(
@@ -614,11 +662,11 @@ class TestSessionMaxAge:
     """A session lives at most SESSION_MAX_AGE from its GitHub sign-in,
     however often its refresh token rotates."""
 
-    def test_rotation_carries_auth_time_forward(self, client: TestClient, test_user_in_db: dict):
-        first_auth_time = _auth_time(test_user_in_db["refresh_token"])
+    def test_rotation_carries_auth_time_forward(self, client: TestClient, admin_user_in_db: dict):
+        first_auth_time = _auth_time(admin_user_in_db["refresh_token"])
 
         response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+            "/api/v1/auth/refresh", json={"refresh_token": admin_user_in_db["refresh_token"]}
         )
 
         assert response.status_code == 200
@@ -642,11 +690,11 @@ class TestSessionMaxAge:
         assert "refresh_token" not in response.cookies
 
     def test_token_without_auth_time_counts_from_its_row(
-        self, client: TestClient, test_user_in_db: dict
+        self, client: TestClient, admin_user_in_db: dict
     ):
         """A token minted before the claim existed keeps working, and the
         session's lifetime counts from the row that recorded it."""
-        user_id = test_user_in_db["user_id"]
+        user_id = admin_user_in_db["user_id"]
         issued_at = (datetime.now(UTC) - timedelta(days=2)).replace(microsecond=0)
         expires_at = datetime.now(UTC) + timedelta(days=5)
         legacy = _refresh_token_without_auth_time(user_id, "legacy-jti-recent-row", expires_at)
@@ -970,12 +1018,12 @@ class TestSecurityEvents:
         ]
 
     def test_refresh_reuse_is_an_error_with_the_revoked_count(
-        self, client: TestClient, test_user_in_db: dict, monkeypatch, security_records
+        self, client: TestClient, admin_user_in_db: dict, monkeypatch, security_records
     ):
         from app.api.v1 import auth as auth_module  # noqa: PLC0415
 
         monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
-        original = test_user_in_db["refresh_token"]
+        original = admin_user_in_db["refresh_token"]
         rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
         assert rotated.status_code == 200
         client.cookies.clear()
@@ -985,19 +1033,19 @@ class TestSecurityEvents:
         assert replay.status_code == 401
         assert _events(security_records) == [("auth.refresh_reuse_detected", logging.ERROR)]
         [record] = security_records
-        assert record.user_id == test_user_in_db["user_id"]
-        assert record.jti_prefix == test_user_in_db["refresh_jti"][:8]
+        assert record.user_id == admin_user_in_db["user_id"]
+        assert record.jti_prefix == admin_user_in_db["refresh_jti"][:8]
         assert record.revoked_count == 1  # the rotated successor
         assert record.seconds_since_rotation >= 0
         _assert_no_secret_logged(security_records, original)
 
     def test_reuse_that_revoked_sessions_answers_with_the_revoked_detail(
-        self, client: TestClient, test_user_in_db: dict, monkeypatch
+        self, client: TestClient, admin_user_in_db: dict, monkeypatch
     ):
         from app.api.v1 import auth as auth_module  # noqa: PLC0415
 
         monkeypatch.setattr(auth_module, "REFRESH_ROTATION_GRACE_SECONDS", -1)
-        original = test_user_in_db["refresh_token"]
+        original = admin_user_in_db["refresh_token"]
         rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
         assert rotated.status_code == 200
         client.cookies.clear()
@@ -1030,9 +1078,9 @@ class TestSecurityEvents:
         assert [(r.levelno, r.revoked_count) for r in reuse] == [(logging.WARNING, 0)]
 
     def test_a_replay_within_the_grace_window_is_info_not_error(
-        self, client: TestClient, test_user_in_db: dict, security_records
+        self, client: TestClient, admin_user_in_db: dict, security_records
     ):
-        original = test_user_in_db["refresh_token"]
+        original = admin_user_in_db["refresh_token"]
         rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": original})
         assert rotated.status_code == 200
         client.cookies.clear()
@@ -1092,6 +1140,21 @@ class TestSecurityEvents:
 
         assert response.status_code == 403
         assert _events(security_records) == [("auth.admin_denied", logging.WARNING)]
+
+    def test_a_refused_refresh_is_logged_as_admin_denied(
+        self, client: TestClient, test_user_in_db: dict, security_records
+    ):
+        response = client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": test_user_in_db["refresh_token"]}
+        )
+
+        assert response.status_code == 403
+        assert _events(security_records) == [("auth.admin_denied", logging.WARNING)]
+        [record] = security_records
+        assert record.path == "/api/v1/auth/refresh"
+        assert record.user_id == test_user_in_db["user_id"]
+        assert record.github_id == "12345"
+        _assert_no_secret_logged(security_records, test_user_in_db["refresh_token"])
 
     def test_each_event_is_counted_on_the_metrics_page(
         self, client: TestClient, test_user_in_db: dict

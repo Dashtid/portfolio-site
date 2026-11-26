@@ -91,20 +91,23 @@ async def get_current_user(
     return user
 
 
+def is_configured_admin(user: User) -> bool:
+    """Whether `user` is the configured admin right now.
+
+    The stored is_admin flag is not enough on its own: the user's GitHub id
+    must match ADMIN_GITHUB_ID, so changing the setting locks the previous
+    account out at once, and an unset one admits nobody.
+    """
+    admin_github_id = settings.ADMIN_GITHUB_ID
+    return bool(user.is_admin and admin_github_id and user.github_id == admin_github_id)
+
+
 async def get_current_admin_user(
     request: Request,
     current_user: User = Depends(get_current_user),  # noqa: B008
 ) -> User:
-    """Require the current user to be the configured admin.
-
-    The stored is_admin flag is not enough on its own: the user's GitHub id
-    must match ADMIN_GITHUB_ID on every request, so changing the setting
-    locks the previous account out at once, and an unset one admits nobody.
-    """
-    admin_github_id = settings.ADMIN_GITHUB_ID
-    if not (
-        current_user.is_admin and admin_github_id and current_user.github_id == admin_github_id
-    ):
+    """Require the current user to be the configured admin, on every request."""
+    if not is_configured_admin(current_user):
         security_event(
             logging.WARNING,
             "auth.admin_denied",
