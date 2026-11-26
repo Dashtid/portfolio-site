@@ -189,7 +189,7 @@ class TestTrackPageviewEndpoint:
         assert keys["/a"] == keys["/b"]
 
     def test_track_pageview_stores_no_address_digest_or_user_agent(self, client: TestClient):
-        """ip_address, user_agent and city stay NULL on every new row."""
+        """page_views has no column for them, and no stored value holds the User-Agent."""
         response = client.post(
             BEACON,
             json={"page_path": "/a"},
@@ -197,9 +197,10 @@ class TestTrackPageviewEndpoint:
         )
         assert response.status_code == 204
 
-        assert _stored(PageView.ip_address, PageView.user_agent, PageView.city) == [
-            (None, None, None)
-        ]
+        columns = PageView.__table__.columns
+        assert {"ip_address", "user_agent", "city"}.isdisjoint(columns.keys())
+        [row] = _stored(*columns)
+        assert [value for value in row if "probe" in str(value)] == []
 
     def test_track_multiple_pageviews(self, client: TestClient):
         """Test tracking multiple page views creates separate records."""

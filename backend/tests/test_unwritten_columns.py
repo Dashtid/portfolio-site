@@ -1,13 +1,12 @@
 """
-No SQL statement names a column that the code no longer writes.
+No SQL statement names a column that revision 0c6c75e2c56f drops.
 
-page_views.ip_address, user_agent and city, and oauth_states.client_ip, stay
-in the schema, unwritten. A migration that drops them can run while this code
-still serves (Fly runs the release command before the new machines start), so
-no statement this code emits may name them, neither a write nor a read. Each
-test records every statement the test engine runs while the code paths that
-use one table execute, checks that each kind of statement was seen, and looks
-for the column names in all of them.
+That revision drops page_views.ip_address, user_agent and city, and
+oauth_states.client_ip, and the models map none of them. No statement this
+code emits may name them, neither a write nor a read. Each test records every
+statement the test engine runs while the code paths that use one table
+execute, checks that each kind of statement was seen, and looks for the
+column names in all of them.
 """
 
 import asyncio

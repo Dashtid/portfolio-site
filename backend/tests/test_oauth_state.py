@@ -117,21 +117,18 @@ class TestOAuthStateTtl:
                     OAuthState(
                         state="expired-a-xxxxxxxxxxxx",
                         expires_at=now - timedelta(minutes=5),
-                        client_ip="203.0.113.1",
                     )
                 )
                 session.add(
                     OAuthState(
                         state="expired-b-xxxxxxxxxxxx",
                         expires_at=now - timedelta(seconds=1),
-                        client_ip="203.0.113.2",
                     )
                 )
                 session.add(
                     OAuthState(
                         state="fresh-xxxxxxxxxxxxxxxx",
                         expires_at=now + timedelta(minutes=5),
-                        client_ip="203.0.113.3",
                     )
                 )
                 await session.commit()

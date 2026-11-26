@@ -125,8 +125,7 @@ async def create_oauth_state(db: AsyncSession) -> str:
     expires_at = datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TTL_SECONDS)
 
     # A Core INSERT names state, expires_at and created_at (its Python
-    # default) only. An OAuthState added to the session would also be
-    # inserted with client_ip named as NULL.
+    # default) only.
     await db.execute(insert(OAuthState).values(state=state, expires_at=expires_at))
     await db.commit()
 

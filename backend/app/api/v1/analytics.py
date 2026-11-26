@@ -176,9 +176,8 @@ async def track_pageview(
     page_path = _scrub(page_view.page_path, 500) or "/"
     referrer = _referrer_host(page_view.referrer)
 
-    # A Core INSERT that names only these four columns. A PageView added to
-    # the session would be inserted with every other nullable column named
-    # as NULL, user_agent, ip_address and city included.
+    # A Core INSERT that names only these four columns: country is filled in
+    # by the back-fill below, and created_at takes its server default.
     pageview_id = str(uuid.uuid4())
     await db.execute(
         insert(PageView).values(

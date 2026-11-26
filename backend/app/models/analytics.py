@@ -5,7 +5,7 @@ Analytics model for tracking page views
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Index, String, Text, func
+from sqlalchemy import DateTime, Index, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -17,14 +17,7 @@ class PageView(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     page_path: Mapped[str] = mapped_column(String(500), nullable=False)
     referrer: Mapped[str | None] = mapped_column(String(500))
-    # user_agent, ip_address and city are no longer written: track_pageview's
-    # INSERT names none of them. They are deferred, so a SELECT that loads a
-    # PageView names none of them either; reading one on a loaded row runs a
-    # query of its own, which async code cannot do.
-    user_agent: Mapped[str | None] = mapped_column(Text, deferred=True)
-    ip_address: Mapped[str | None] = mapped_column(String(64), deferred=True)
     country: Mapped[str | None] = mapped_column(String(2))  # ISO country code
-    city: Mapped[str | None] = mapped_column(String(100), deferred=True)
     session_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     # Timestamps — indexed for analytics time-range queries

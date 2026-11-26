@@ -37,11 +37,6 @@ class OAuthState(Base):
         server_default=func.now(),
         nullable=False,
     )
-    # No longer written: a cookie binds the state to the browser that started
-    # the login (app/api/v1/auth.py). Nullable, so it needs no migration.
-    # create_oauth_state's INSERT does not name it, and it is deferred, so a
-    # SELECT that loads an OAuthState does not name it either.
-    client_ip: Mapped[str | None] = mapped_column(String(45), nullable=True, deferred=True)
 
     def is_expired(self) -> bool:
         """Check if the state has expired"""

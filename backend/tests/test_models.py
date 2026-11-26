@@ -147,25 +147,30 @@ class TestPageViewModel:
         assert page_view.page_path == "/home"
         assert page_view.referrer == "https://google.com"
 
-    def test_a_select_of_the_entity_leaves_the_deferred_columns_out(self):
-        """user_agent, ip_address and city are deferred; named, they are selected."""
-        deferred = re.compile(r"\b(?:user_agent|ip_address|city)\b")
+    def test_the_table_has_no_user_agent_ip_address_or_city(self):
+        """The model maps none of the three, so a SELECT of the entity names none."""
+        assert set(PageView.__table__.columns.keys()) == {
+            "id",
+            "page_path",
+            "referrer",
+            "country",
+            "session_id",
+            "created_at",
+        }
         entity = str(select(PageView))
         assert "page_views.page_path" in entity
-        assert not deferred.search(entity)
-        named = str(select(PageView.user_agent, PageView.ip_address, PageView.city))
-        assert deferred.findall(named) == ["user_agent", "ip_address", "city"]
+        assert not re.search(r"\b(?:user_agent|ip_address|city)\b", entity)
 
 
 class TestOAuthStateModel:
     """Tests for OAuthState model."""
 
-    def test_a_select_of_the_entity_leaves_client_ip_out(self):
-        """client_ip is deferred; named, it is selected."""
+    def test_the_table_has_no_client_ip(self):
+        """The model does not map client_ip, so a SELECT of the entity does not name it."""
+        assert set(OAuthState.__table__.columns.keys()) == {"state", "expires_at", "created_at"}
         entity = str(select(OAuthState))
         assert "oauth_states.state" in entity
         assert "client_ip" not in entity
-        assert "oauth_states.client_ip" in str(select(OAuthState.client_ip))
 
 
 class TestModelDefaults:

@@ -64,9 +64,12 @@ def test_upgrade_from_empty_matches_models(empty_db_at_head):
     )
 
 
-def test_baseline_created_page_views_city(empty_db_at_head):
-    """The column whose absence motivated D3-BE-04 must exist at head."""
+def test_head_has_no_page_views_client_columns_or_oauth_states_client_ip(empty_db_at_head):
+    """page_views has no city, ip_address or user_agent at head, and oauth_states no client_ip."""
     from sqlalchemy import inspect
 
-    columns = {col["name"] for col in inspect(empty_db_at_head).get_columns("page_views")}
-    assert "city" in columns
+    inspector = inspect(empty_db_at_head)
+    page_views = {col["name"] for col in inspector.get_columns("page_views")}
+    oauth_states = {col["name"] for col in inspector.get_columns("oauth_states")}
+    assert page_views == {"id", "page_path", "referrer", "country", "session_id", "created_at"}
+    assert oauth_states == {"state", "expires_at", "created_at"}
