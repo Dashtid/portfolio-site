@@ -29,7 +29,6 @@ from app.schemas.analytics import (
     DailyView,
     OutboundClick,
     PageViewCreate,
-    PageViewResponse,
     TopCountry,
     TopPage,
     VisitorStats,
@@ -129,24 +128,26 @@ async def _backfill_country(pageview_id: str, client_ip: str) -> None:
             await session.rollback()
 
 
-@router.post("/track/pageview", response_model=PageViewResponse)
+@router.post("/track/pageview", status_code=204, response_class=Response)
 @rate_limit_public
 async def track_pageview(
     request: Request,
     page_view: PageViewCreate,
     db: DbSession,
     background_tasks: BackgroundTasks,
-):
+) -> Response:
     """
-    Track a page view (public endpoint).
+    Track a page view (public endpoint); the answer is 204 with no body.
 
     Records visitor page views for analytics. A request with Sec-GPC: 1 or
-    DNT: 1 gets 204 and records nothing. session_id is the daily visitor
-    key of the client address and User-Agent (app/utils/visitor_key.py);
-    the row stores neither of them, nor a digest of the address, and of the
-    referrer only its host. PERF-01: geo-IP lookup is deferred to a
-    `BackgroundTask` and back-fills the `country` column asynchronously so
-    the response returns as soon as the row is inserted.
+    DNT: 1 records nothing. session_id is the daily visitor key of the
+    client address and User-Agent (app/utils/visitor_key.py); the row
+    stores neither of them, nor a digest of the address, and of the
+    referrer only its host. Body fields the schema does not declare, such
+    as the page_title and visitor_id of older frontend bundles, are
+    ignored. PERF-01: geo-IP lookup is deferred to a `BackgroundTask` and
+    back-fills the `country` column asynchronously so the response returns
+    as soon as the row is inserted.
     """
     # Only the exact value "1" declines, as the Global Privacy Control spec
     # says of Sec-GPC. Nothing else runs: no row, no country lookup.
@@ -191,14 +192,7 @@ async def track_pageview(
     # the response body has been sent — the client sees no extra latency.
     background_tasks.add_task(_backfill_country, pageview_id, client_ip)
 
-    return PageViewResponse(
-        id=pageview_id,
-        visitor_id=session_id,
-        page_path=page_path,
-        page_title=None,
-        referrer=referrer,
-        timestamp=datetime.now(UTC),
-    )
+    return Response(status_code=204)
 
 
 @router.get("/stats/summary", response_model=AnalyticsStats)

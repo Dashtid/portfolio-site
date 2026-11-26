@@ -273,13 +273,11 @@ class TestAnonymousJsonBodyCaps:
             "/api/v1/analytics/track/pageview",
             json={
                 "page_path": "/" + "p" * 2047,
-                "page_title": "t" * 512,
                 "referrer": "https://example.com/" + "r" * 2028,
-                "visitor_id": "v" * 128,
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 204
 
 
 async def _read_body_then_ok(scope: Scope, receive: Receive, send: Send) -> None:

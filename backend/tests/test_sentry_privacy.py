@@ -296,7 +296,7 @@ class TestWhatTheClientSends:
     def test_the_scenario_ran(self, sent: dict[str, Any]):
         assert sent["statuses"] == {
             "callback": 400,
-            "pageview": 200,
+            "pageview": 204,
             "scenario": 500,
             "profile": 500,
         }

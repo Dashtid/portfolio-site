@@ -8,7 +8,11 @@ from pydantic import BaseModel, Field
 
 
 class PageViewCreate(BaseModel):
-    """Schema for creating a page view record."""
+    """Schema for creating a page view record.
+
+    Undeclared fields are ignored (Pydantic's default extra="ignore"), so a
+    body that still carries page_title or visitor_id is accepted unchanged.
+    """
 
     # Generous caps: campaign/UTM URLs legitimately exceed 500 chars, and
     # rejecting the beacon would lose the visit entirely. At insert (see
@@ -16,22 +20,7 @@ class PageViewCreate(BaseModel):
     # referrer is reduced to its host — letting them through untruncated
     # raises Postgres 22001 (value too long) from an unauthenticated endpoint.
     page_path: str = Field(..., max_length=2048)
-    page_title: str | None = Field(None, max_length=512)
     referrer: str | None = Field(None, max_length=2048)
-    visitor_id: str | None = Field(None, max_length=128)  # Session ID from frontend
-
-
-class PageViewResponse(BaseModel):
-    """Response schema for page view."""
-
-    id: str
-    visitor_id: str
-    page_path: str
-    page_title: str | None
-    referrer: str | None
-    timestamp: datetime
-
-    model_config = {"from_attributes": True}
 
 
 class TopPage(BaseModel):

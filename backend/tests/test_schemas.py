@@ -11,7 +11,6 @@ from app.schemas.analytics import (
     AnalyticsStats,
     DailyView,
     PageViewCreate,
-    PageViewResponse,
     TopPage,
     VisitorInfo,
 )
@@ -27,33 +26,20 @@ class TestAnalyticsSchemas:
         """Test PageViewCreate with minimal data."""
         data = PageViewCreate(page_path="/home")
         assert data.page_path == "/home"
-        assert data.page_title is None
         assert data.referrer is None
 
     def test_page_view_create_full(self):
         """Test PageViewCreate with all fields."""
-        data = PageViewCreate(
-            page_path="/about",
-            page_title="About Me",
-            referrer="https://google.com",
-        )
+        data = PageViewCreate(page_path="/about", referrer="https://google.com")
         assert data.page_path == "/about"
-        assert data.page_title == "About Me"
         assert data.referrer == "https://google.com"
 
-    def test_page_view_response(self):
-        """Test PageViewResponse schema."""
-        data = PageViewResponse(
-            id="abc123-uuid",
-            visitor_id="visitor123",
-            page_path="/contact",
-            page_title="Contact",
-            referrer="https://linkedin.com",
-            timestamp=datetime(2025, 1, 15, 10, 30, 0),
+    def test_page_view_create_ignores_page_title_and_visitor_id(self):
+        """Older frontend bundles still send both; they are dropped, not refused."""
+        data = PageViewCreate.model_validate(
+            {"page_path": "/about", "page_title": "about", "visitor_id": "session_1_abc"}
         )
-        assert data.id == "abc123-uuid"
-        assert data.visitor_id == "visitor123"
-        assert data.page_path == "/contact"
+        assert data.model_dump() == {"page_path": "/about", "referrer": None}
 
     def test_top_page_schema(self):
         """Test TopPage schema."""

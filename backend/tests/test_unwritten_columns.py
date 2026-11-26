@@ -62,7 +62,7 @@ def test_page_view_statements_name_no_unwritten_column(
             json={"page_path": "/a", "referrer": "https://example.com/"},
             headers={"User-Agent": "probe-agent/1.0"},
         )
-        assert response.status_code == 200
+        assert response.status_code == 204
         for stats in ("summary", "visitors"):
             response = client.get(
                 f"/api/v1/analytics/stats/{stats}", headers=admin_user_in_db["headers"]

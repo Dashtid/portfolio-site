@@ -59,20 +59,33 @@ class TestAnalyticsModule:
 
 
 class TestTrackPageviewEndpoint:
-    """Tests for POST /analytics/track/pageview endpoint."""
+    """Tests for POST /analytics/track/pageview endpoint.
+
+    The beacon answers 204 with no body, so the tests read the stored rows.
+    """
 
     def test_track_pageview_success(self, client: TestClient):
-        """Test tracking a page view successfully."""
+        """A page view is stored and answered with 204 and no body."""
         response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/projects", "referrer": "https://google.com"},
+            BEACON, json={"page_path": "/projects", "referrer": "https://google.com"}
         )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["page_path"] == "/projects"
-        assert data["referrer"] == "google.com"
-        assert "id" in data
-        assert "timestamp" in data
+        assert response.status_code == 204
+        assert response.content == b""
+        assert _stored(PageView.page_path, PageView.referrer) == [("/projects", "google.com")]
+
+    def test_page_title_and_visitor_id_are_ignored(self, client: TestClient):
+        """Older frontend bundles still send both fields; the beacon is stored all the same."""
+        response = client.post(
+            BEACON,
+            json={
+                "page_path": "/about",
+                "page_title": "about",
+                "visitor_id": "session_1700000000000_0123456789ab",
+            },
+        )
+        assert response.status_code == 204
+        [(session_id,)] = _stored(PageView.session_id)
+        assert re.fullmatch(r"v_[0-9a-f]{16}", session_id)
 
     def test_track_pageview_strips_control_characters(self, client: TestClient):
         """A JSON-escaped NUL in any stored string field must not reach the DB.
@@ -85,39 +98,27 @@ class TestTrackPageviewEndpoint:
         """
         nul = chr(0)
         response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={
-                "page_path": f"/proj{nul}ects",
-                "referrer": f"https://ex.com/{nul}a",
-                "visitor_id": f"vis{nul}itor",
-            },
+            BEACON,
+            json={"page_path": f"/proj{nul}ects", "referrer": f"https://ex{nul}.com/{nul}a"},
             headers={"User-Agent": f"Mozilla{nul}/5.0"},
         )
-        assert response.status_code == 200
-        data = response.json()
-        assert nul not in data["page_path"]
-        assert data["page_path"] == "/projects"
-        assert data["referrer"] is not None and nul not in data["referrer"]
-        assert nul not in data["visitor_id"]
+        assert response.status_code == 204
+        assert _stored(PageView.page_path, PageView.referrer) == [("/projects", "ex.com")]
 
     def test_track_pageview_strips_crlf_log_injection(self, client: TestClient):
         """CR/LF in a beacon value must not survive into stored data."""
         response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/a" + chr(13) + chr(10) + "FAKE LOG LINE", "visitor_id": "v1"},
+            BEACON, json={"page_path": "/a" + chr(13) + chr(10) + "FAKE LOG LINE"}
         )
-        assert response.status_code == 200
-        assert response.json()["page_path"] == "/aFAKE LOG LINE"
+        assert response.status_code == 204
+        assert _stored(PageView.page_path) == [("/aFAKE LOG LINE",)]
 
     def test_track_pageview_all_control_chars_yields_usable_row(self, client: TestClient):
         """A path of nothing but control chars scrubs to empty -> falls back
         to "/" rather than storing an empty string or 500-ing."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": chr(0) + chr(1) + chr(31), "visitor_id": "v2"},
-        )
-        assert response.status_code == 200
-        assert response.json()["page_path"] == "/"
+        response = client.post(BEACON, json={"page_path": chr(0) + chr(1) + chr(31)})
+        assert response.status_code == 204
+        assert _stored(PageView.page_path) == [("/",)]
 
     def test_track_pageview_truncates_long_values_to_column_width(self, client: TestClient):
         """Long UTM-style paths/referrers (501-2048 chars) are accepted and
@@ -129,81 +130,63 @@ class TestTrackPageviewEndpoint:
         long_path = "/campaign?" + "utm_content=" + "x" * 900
         long_ref = "https://example.com/?ref=" + "y" * 900
         response = client.post(
-            "/api/v1/analytics/track/pageview",
+            BEACON,
             json={"page_path": long_path, "referrer": long_ref},
             headers={"User-Agent": "A" * 2000},
         )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["page_path"] == long_path[:500]
-        assert data["referrer"] == "example.com"
+        assert response.status_code == 204
+        assert _stored(PageView.page_path, PageView.referrer) == [(long_path[:500], "example.com")]
 
     def test_track_pageview_rejects_over_2048(self, client: TestClient):
         """Beyond the generous 2048 cap the beacon is rejected outright —
         nothing legitimate is that long."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/x" + "z" * 2100},
-        )
+        response = client.post(BEACON, json={"page_path": "/x" + "z" * 2100})
         assert response.status_code == 422
+        assert _stored(PageView.page_path) == []
 
     def test_track_pageview_without_referrer(self, client: TestClient):
         """Test tracking a page view without referrer."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/about"},
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["page_path"] == "/about"
-        assert data["referrer"] is None
+        response = client.post(BEACON, json={"page_path": "/about"})
+        assert response.status_code == 204
+        assert _stored(PageView.page_path, PageView.referrer) == [("/about", None)]
 
     def test_track_pageview_home_page(self, client: TestClient):
         """Test tracking home page view."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/"},
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["page_path"] == "/"
+        response = client.post(BEACON, json={"page_path": "/"})
+        assert response.status_code == 204
+        assert _stored(PageView.page_path) == [("/",)]
 
     def test_track_pageview_with_query_params(self, client: TestClient):
         """Test tracking page view with query parameters."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/projects?filter=featured"},
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["page_path"] == "/projects?filter=featured"
+        response = client.post(BEACON, json={"page_path": "/projects?filter=featured"})
+        assert response.status_code == 204
+        assert _stored(PageView.page_path) == [("/projects?filter=featured",)]
 
     def test_track_pageview_missing_page_path(self, client: TestClient):
         """Test tracking page view without page_path fails."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={},
-        )
+        response = client.post(BEACON, json={})
         assert response.status_code == 422  # Validation error
 
     def test_track_pageview_empty_page_path(self, client: TestClient):
-        """Test tracking page view with empty page_path."""
-        response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": ""},
-        )
-        # Implementation may allow empty string or reject it
-        # Either behavior is acceptable
-        assert response.status_code in [200, 422]
+        """An empty page_path is stored as "/"."""
+        response = client.post(BEACON, json={"page_path": ""})
+        assert response.status_code == 204
+        assert _stored(PageView.page_path) == [("/",)]
 
-    def test_track_pageview_captures_x_forwarded_for(self, client: TestClient):
-        """Test that X-Forwarded-For header is captured for IP."""
+    def test_forwarded_for_from_an_untrusted_peer_leaves_the_key_alone(self, client: TestClient):
+        """X-Forwarded-For counts only from a trusted proxy (app/core/ip_utils.py).
+
+        TestClient's peer is not an address, so the header is ignored and
+        both rows get the key of the same address and User-Agent.
+        """
+        assert client.post(BEACON, json={"page_path": "/a"}).status_code == 204
         response = client.post(
-            "/api/v1/analytics/track/pageview",
-            json={"page_path": "/test"},
-            headers={"X-Forwarded-For": "1.2.3.4, 5.6.7.8"},
+            BEACON, json={"page_path": "/b"}, headers={"X-Forwarded-For": "1.2.3.4, 5.6.7.8"}
         )
-        assert response.status_code == 200
+        assert response.status_code == 204
+
+        keys = dict(_stored(PageView.page_path, PageView.session_id))
+        assert keys["/a"] == keys["/b"]
 
     def test_track_pageview_stores_no_address_digest_or_user_agent(self, client: TestClient):
         """ip_address, user_agent and city stay NULL on every new row."""
@@ -212,7 +195,7 @@ class TestTrackPageviewEndpoint:
             json={"page_path": "/a"},
             headers={"User-Agent": "Mozilla/5.0 probe", "X-Forwarded-For": "203.0.113.9"},
         )
-        assert response.status_code == 200
+        assert response.status_code == 204
 
         assert _stored(PageView.ip_address, PageView.user_agent, PageView.city) == [
             (None, None, None)
@@ -221,17 +204,13 @@ class TestTrackPageviewEndpoint:
     def test_track_multiple_pageviews(self, client: TestClient):
         """Test tracking multiple page views creates separate records."""
         paths = ["/", "/about", "/projects", "/contact"]
-        ids = []
         for path in paths:
-            response = client.post(
-                "/api/v1/analytics/track/pageview",
-                json={"page_path": path},
-            )
-            assert response.status_code == 200
-            ids.append(response.json()["id"])
+            assert client.post(BEACON, json={"page_path": path}).status_code == 204
 
+        rows = _stored(PageView.id, PageView.page_path)
+        assert sorted(path for _, path in rows) == sorted(paths)
         # All IDs should be unique
-        assert len(ids) == len(set(ids))
+        assert len({row_id for row_id, _ in rows}) == len(paths)
 
 
 class TestDailyVisitorKey:
@@ -246,7 +225,7 @@ class TestDailyVisitorKey:
         response = client.post(
             BEACON, json={"page_path": path, **body}, headers={"User-Agent": user_agent}
         )
-        assert response.status_code == 200
+        assert response.status_code == 204
 
     def test_one_user_agent_gets_one_key_for_the_day(self, client: TestClient):
         self._track(client, "/a", "agent-one")
@@ -333,7 +312,7 @@ class TestReferrerHost:
             ("/c", "http://192.168.1.10:8080/intranet"),
         ]:
             response = client.post(BEACON, json={"page_path": path, "referrer": referrer})
-            assert response.status_code == 200
+            assert response.status_code == 204
 
         assert sorted(_stored(PageView.page_path, PageView.referrer)) == [
             ("/a", "www.linkedin.com"),
@@ -372,7 +351,7 @@ class TestDeclinedPageViews:
     ):
         response = client.post(BEACON, json={"page_path": "/a"}, headers={header: value})
 
-        assert response.status_code == 200
+        assert response.status_code == 204
         assert _stored(PageView.page_path, PageView.country) == [("/a", "SE")]
         lookup.assert_awaited_once()
 
