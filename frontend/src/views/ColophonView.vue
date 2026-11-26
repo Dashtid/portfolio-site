@@ -119,7 +119,8 @@ import FooterSection from '@/components/FooterSection.vue'
  * installs, the sign-in flow, the analytics, the embeds or the backup
  * schedule, change this page in the same commit and move VERIFIED_ON — a
  * stale security claim on a public page is worse than no page, and this one
- * invites the reader to check.
+ * invites the reader to check. ColophonView.spec reads the literal below as
+ * 'D Month YYYY' and fails once it is more than 120 days old.
  */
 const VERIFIED_ON = '27 November 2026'
 

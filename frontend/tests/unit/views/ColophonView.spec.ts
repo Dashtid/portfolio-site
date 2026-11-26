@@ -104,6 +104,80 @@ describe('ColophonView', () => {
   })
 })
 
+// VERIFIED_ON is read from the source as its 'D Month YYYY' literal and parsed
+// with this fixed month table, so the check does not depend on a locale.
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December'
+]
+const DAY_MS = 24 * 60 * 60 * 1000
+const MAX_AGE_DAYS = 120
+
+const verifiedOnLiteral = (source: string): string => {
+  const found = [...source.matchAll(/^const VERIFIED_ON = '([^']*)'\r?$/gm)].map(m => m[1])
+  if (found.length !== 1) throw new Error(`expected one VERIFIED_ON literal, found ${found.length}`)
+  return found[0]
+}
+
+// Whole days from the literal's date to the UTC date of `now`.
+const daysSince = (literal: string, now: Date): number => {
+  const match = /^(\d{1,2}) ([A-Z][a-z]+) (\d{4})$/.exec(literal)
+  const month = match ? MONTHS.indexOf(match[2]) : -1
+  if (!match || month < 0) throw new Error(`VERIFIED_ON '${literal}' is not 'D Month YYYY'`)
+  const day = Number(match[1])
+  const verified = Date.UTC(Number(match[3]), month, day)
+  if (new Date(verified).getUTCDate() !== day) {
+    throw new Error(`VERIFIED_ON '${literal}' names no such day`)
+  }
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  return (today - verified) / DAY_MS
+}
+
+describe('ColophonView verification date', () => {
+  const source = readFileSync(resolve(FRONTEND_ROOT, 'src', 'views', 'ColophonView.vue'), 'utf-8')
+
+  it('is the date the page shows', async () => {
+    const wrapper = await mountView()
+    expect(wrapper.text()).toContain(
+      `last verified against the live site on ${verifiedOnLiteral(source)},`
+    )
+  })
+
+  it(`is at most ${MAX_AGE_DAYS} days old`, () => {
+    // Past the limit, re-check every claim on the page against the live site
+    // and the repository, then move VERIFIED_ON to that day. One day ahead
+    // passes: a date written just after midnight east of UTC is still ahead
+    // of the UTC date here.
+    const age = daysSince(verifiedOnLiteral(source), new Date())
+    expect(age).toBeGreaterThanOrEqual(-1)
+    expect(age).toBeLessThanOrEqual(MAX_AGE_DAYS)
+  })
+
+  it('counts whole UTC days and accepts only a real day in D Month YYYY', () => {
+    const now = new Date(Date.UTC(2026, 10, 27, 23, 59))
+    expect(daysSince('27 November 2026', now)).toBe(0)
+    expect(daysSince('30 July 2026', now)).toBe(120)
+    expect(daysSince('29 July 2026', now)).toBe(121)
+    expect(daysSince('1 March 2024', new Date(Date.UTC(2024, 1, 28)))).toBe(-2)
+    for (const literal of ['31 April 2026', '4 Sept 2026', '4 september 2026', '2026-11-27']) {
+      expect(() => daysSince(literal, now)).toThrow(literal)
+    }
+    expect(() => verifiedOnLiteral("const VERIFIED_ON = '1 May 2026'\n".repeat(2))).toThrow(
+      'found 2'
+    )
+  })
+})
+
 describe('ColophonView claims still match the shipped CSP', () => {
   it('scripts really do carry no inline exemption', () => {
     // The page: "Scripts may load only from this origin, plus two SHA-256
