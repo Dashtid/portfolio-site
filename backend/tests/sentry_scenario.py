@@ -5,7 +5,8 @@ Starlette, FastAPI, SQLAlchemy, httpx and logging for the life of the
 process, and it has to start before app.main includes its routers, as it
 does in production. A capture transport keeps every envelope item; the
 client gets the production options with a placeholder DSN, the transport
-and every transaction sampled.
+and every transaction sampled, and the security event handler is attached
+as main.py attaches it.
 
 Usage: python -m tests.sentry_scenario <output.json>
 """
@@ -22,7 +23,7 @@ import sentry_sdk
 from sentry_sdk.transport import Transport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from app.core.sentry import sentry_options
+from app.core.sentry import attach_security_event_handler, sentry_options
 from app.utils.logger import get_logger
 
 CLIENT_ADDRESS = "198.51.100.73"
@@ -107,6 +108,7 @@ def main(out_path: str) -> None:
                 "traces_sample_rate": 1.0,
             }
         )
+        attach_security_event_handler()
     init_warnings = [f"{w.category.__name__}: {w.message}" for w in caught]
 
     from fastapi.testclient import TestClient

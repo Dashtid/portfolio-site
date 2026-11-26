@@ -10,18 +10,29 @@ URL credentials and IP addresses inside any string.
 """
 
 import ipaddress
+import logging
 import re
 from typing import Any
 
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.httpx import HttpxIntegration
+from sentry_sdk.integrations.logging import EventHandler, LoggingIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
 from app.config import settings
 
 FILTERED = "[Filtered]"
+
+# The security event log (app/core/security_events.py). LoggingIntegration
+# sends its ERROR records as it does any logger's; attach_security_event_handler
+# adds the WARNING records and the notices, so an alert rule on the logger
+# tag app.security sees every refused or suspicious authentication decision.
+SECURITY_LOGGER = "app.security"
+# Events below WARNING that are sent all the same: each admin sign-in, so a
+# sign-in nobody expected shows up in the alert mail.
+SECURITY_NOTICES = frozenset({"auth.login_success"})
 
 # Request headers sent with their values, matched as case-insensitive
 # substrings; every other header keeps its name with a filtered value.
@@ -153,6 +164,37 @@ def scrub_breadcrumb(crumb: dict[str, Any], hint: dict[str, Any]) -> dict[str, A
     return scrubbed
 
 
+class SecurityEventFilter(logging.Filter):
+    """Passes the security records LoggingIntegration does not send itself:
+    WARNING ones, and SECURITY_NOTICES below WARNING. ERROR and above stay
+    with the integration, which would otherwise send each of them twice."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno >= logging.ERROR:
+            return False
+        if record.levelno >= logging.WARNING:
+            return True
+        return getattr(record, "event", None) in SECURITY_NOTICES
+
+
+def attach_security_event_handler() -> None:
+    """Send the app.security records SecurityEventFilter passes as Sentry
+    events, through the same before_send scrubbing as every other event.
+
+    Call it after sentry_sdk.init. The logger is set up first, because
+    get_logger leaves a logger that already has a handler unconfigured; a
+    second call adds nothing.
+    """
+    from app.utils.logger import get_logger  # noqa: PLC0415
+
+    security_logger = get_logger(SECURITY_LOGGER)
+    if any(isinstance(handler, EventHandler) for handler in security_logger.handlers):
+        return
+    handler = EventHandler(level=logging.INFO)
+    handler.addFilter(SecurityEventFilter())
+    security_logger.addHandler(handler)
+
+
 def sentry_options() -> dict[str, Any]:
     """Keyword arguments for sentry_sdk.init.
 
@@ -160,7 +202,8 @@ def sentry_options() -> dict[str, Any]:
     so the set is visible in review and stable across SDK versions:
     SqlalchemyIntegration adds a span per query, HttpxIntegration covers the
     outbound GitHub API calls, and AsyncioIntegration links the contexts of
-    tasks spawned with asyncio.create_task.
+    tasks spawned with asyncio.create_task. LoggingIntegration keeps INFO
+    and up as breadcrumbs and sends ERROR and up as events.
     """
     return {
         "dsn": settings.SENTRY_DSN,
@@ -181,5 +224,6 @@ def sentry_options() -> dict[str, Any]:
             SqlalchemyIntegration(),
             HttpxIntegration(),
             AsyncioIntegration(),
+            LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
         ],
     }

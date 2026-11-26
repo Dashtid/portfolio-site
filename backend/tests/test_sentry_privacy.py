@@ -10,6 +10,7 @@ in everything the client would have sent.
 """
 
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -18,10 +19,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from sentry_sdk.integrations.logging import EventHandler, LoggingIntegration
 
 from app.core.sentry import (
     DATA_COLLECTION,
     FILTERED,
+    SECURITY_LOGGER,
+    SecurityEventFilter,
+    attach_security_event_handler,
     scrub_breadcrumb,
     scrub_event,
     sentry_options,
@@ -57,6 +62,10 @@ class TestOptions:
         assert options["before_send"] is scrub_event
         assert options["before_send_transaction"] is scrub_event
         assert options["before_breadcrumb"] is scrub_breadcrumb
+
+    def test_logging_integration_is_enumerated(self):
+        integrations = sentry_options()["integrations"]
+        assert sum(isinstance(item, LoggingIntegration) for item in integrations) == 1
 
     def test_no_option_the_pinned_sdk_deprecates_or_ignores(self):
         """send_default_pii and enable_tracing warn on init; with data_collection
@@ -198,6 +207,54 @@ class TestScrubBreadcrumb:
         assert scrub_breadcrumb({"message": text}, {}) == {"message": text}
 
 
+def _security_record(level: int, event: str | None) -> logging.LogRecord:
+    record = logging.LogRecord(SECURITY_LOGGER, level, __file__, 1, event or "x", None, None)
+    if event is not None:
+        record.event = event
+    return record
+
+
+class TestSecurityEvents:
+    @pytest.mark.parametrize(
+        ("level", "event", "passes"),
+        [
+            (logging.WARNING, "auth.login_refused", True),
+            (logging.WARNING, "admin.metrics_reset", True),
+            # LoggingIntegration sends these itself; passing them would send two.
+            (logging.ERROR, "auth.refresh_cross_user", False),
+            (logging.CRITICAL, "auth.refresh_cross_user", False),
+            # The sign-in notice.
+            (logging.INFO, "auth.login_success", True),
+            (logging.INFO, "auth.logout", False),
+            (logging.INFO, "auth.refresh_superseded", False),
+            (logging.INFO, None, False),
+        ],
+    )
+    def test_the_filter_passes_what_the_integration_does_not_send(
+        self, level: int, event: str | None, passes: bool
+    ):
+        assert SecurityEventFilter().filter(_security_record(level, event)) is passes
+
+    def test_the_handler_is_attached_once(self):
+        security_logger = logging.getLogger(SECURITY_LOGGER)
+        before = list(security_logger.handlers)
+        try:
+            attach_security_event_handler()
+            attach_security_event_handler()
+            added = [handler for handler in security_logger.handlers if handler not in before]
+            assert len(added) == 1
+            assert isinstance(added[0], EventHandler)
+            assert any(isinstance(item, SecurityEventFilter) for item in added[0].filters)
+            # The logger keeps its own stdout handler.
+            assert any(
+                not isinstance(handler, EventHandler) for handler in security_logger.handlers
+            )
+        finally:
+            for handler in list(security_logger.handlers):
+                if handler not in before:
+                    security_logger.removeHandler(handler)
+
+
 @pytest.fixture(scope="module")
 def sent(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
     """Everything the client captured while the scenario drove the app."""
@@ -293,6 +350,16 @@ class TestWhatTheClientSends:
         for crumb in crumbs:
             assert crumb["data"]["url"] == f"https://ipapi.co/{FILTERED}/country/"
             assert crumb["data"]["http.query"] == FILTERED
+
+    def test_a_refused_oauth_state_is_sent_once_as_a_security_event(self, sent: dict[str, Any]):
+        security = [e for e in _payloads(sent, "event") if e.get("logger") == SECURITY_LOGGER]
+        assert [(e["level"], e["logentry"]["message"]) for e in security] == [
+            ("warning", "auth.oauth_state_rejected")
+        ]
+        extra = security[0]["extra"]
+        assert extra["event"] == "auth.oauth_state_rejected"
+        assert extra["reason"] == "not_this_browser"
+        assert extra["path"] == "/api/v1/auth/github/callback"
 
     def test_init_warns_about_no_pii_or_tracing_option(self, sent: dict[str, Any]):
         for warning in sent["warnings"]:

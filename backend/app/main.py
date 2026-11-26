@@ -41,7 +41,7 @@ from app.api.v1 import (
 )
 from app.config import settings
 from app.core.security import decode_token
-from app.core.sentry import sentry_options
+from app.core.sentry import attach_security_event_handler, sentry_options
 from app.database import Base, engine
 from app.middleware import (
     CacheControlMiddleware,
@@ -76,6 +76,7 @@ OSS_REFRESH_INTERVAL_SECONDS = int(timedelta(hours=6).total_seconds())
 # the integrations wrap every route.
 if settings.SENTRY_DSN and settings.ERROR_TRACKING_ENABLED:
     sentry_sdk.init(**sentry_options())
+    attach_security_event_handler()
     logger.info("Sentry initialized", extra={"environment": settings.ENVIRONMENT})
 
 
