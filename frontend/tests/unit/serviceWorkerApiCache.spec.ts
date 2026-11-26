@@ -43,6 +43,7 @@ describe('service worker api-cache route', () => {
   it('matches none of the authenticated reads the frontend makes', () => {
     for (const path of [
       '/skills/admin/all',
+      '/education/admin/all',
       '/admin/cv/profile',
       '/admin/cv/export',
       '/admin/oss',
@@ -61,6 +62,7 @@ describe('service worker api-cache route', () => {
     // next one must not be cached either. Query strings change nothing.
     for (const path of [
       '/skills/admin/all?fresh=1',
+      '/education/admin/all?fresh=1',
       '/companies/admin',
       `/companies/${UUID}/admin`,
       '/projects/admin/all',
