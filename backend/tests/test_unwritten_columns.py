@@ -1,13 +1,13 @@
 """
 No SQL statement names a column that the code no longer writes.
 
-page_views.ip_address, user_agent and city stay in the schema, unwritten. A
-migration that drops them can run while this code still serves (Fly runs the
-release command before the new machines start), so no statement this code
-emits may name them, neither a write nor a read. Each test records every
-statement the test engine runs while the code paths that use the table
-execute, checks that each kind of statement was seen, and looks for the
-column names in all of them.
+page_views.ip_address, user_agent and city, and oauth_states.client_ip, stay
+in the schema, unwritten. A migration that drops them can run while this code
+still serves (Fly runs the release command before the new machines start), so
+no statement this code emits may name them, neither a write nor a read. Each
+test records every statement the test engine runs while the code paths that
+use one table execute, checks that each kind of statement was seen, and looks
+for the column names in all of them.
 """
 
 import asyncio
@@ -21,10 +21,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 
+from app.api.v1.auth import create_oauth_state, validate_and_consume_state
 from tests.conftest import TestSessionLocal, run_one_cleanup_pass, test_engine
 
 BEACON = "/api/v1/analytics/track/pageview"
 PAGE_VIEW_COLUMNS = re.compile(r"\b(?:ip_address|user_agent|city)\b", re.IGNORECASE)
+OAUTH_STATE_COLUMNS = re.compile(r"\bclient_ip\b", re.IGNORECASE)
 
 
 @contextlib.contextmanager
@@ -73,3 +75,21 @@ def test_page_view_statements_name_no_unwritten_column(
     assert _starting(statements, "DELETE FROM PAGE_VIEWS")
     assert [s for s in _starting(statements, "SELECT") if "page_views" in s]
     assert [s for s in statements if PAGE_VIEW_COLUMNS.search(s)] == []
+
+
+def test_oauth_state_statements_name_no_client_ip(client: TestClient) -> None:
+    """A state created, consumed and swept by a cleanup pass."""
+    _ = client  # the fixture creates the tables
+
+    async def lifecycle() -> None:
+        async with TestSessionLocal() as session:
+            state = await create_oauth_state(session)
+            assert await validate_and_consume_state(session, state)
+        await run_one_cleanup_pass()
+
+    with _statements() as statements:
+        asyncio.run(lifecycle())
+
+    assert _starting(statements, "INSERT INTO OAUTH_STATES")
+    assert len(_starting(statements, "DELETE FROM OAUTH_STATES")) == 2
+    assert [s for s in statements if OAUTH_STATE_COLUMNS.search(s)] == []

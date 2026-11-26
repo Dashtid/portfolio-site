@@ -14,7 +14,7 @@ from typing import Annotated, Any
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -124,8 +124,10 @@ async def create_oauth_state(db: AsyncSession) -> str:
     state = secrets.token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TTL_SECONDS)
 
-    oauth_state = OAuthState(state=state, expires_at=expires_at)
-    db.add(oauth_state)
+    # A Core INSERT names state, expires_at and created_at (its Python
+    # default) only. An OAuthState added to the session would also be
+    # inserted with client_ip named as NULL.
+    await db.execute(insert(OAuthState).values(state=state, expires_at=expires_at))
     await db.commit()
 
     return state
