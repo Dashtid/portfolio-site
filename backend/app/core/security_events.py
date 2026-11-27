@@ -18,7 +18,8 @@ def security_event(level: int, event: str, request: Request, **fields: Any) -> N
 
     The record's message and its `event` field name the decision, e.g.
     auth.login_success; it also carries the request path and the client
-    fields of the request log (the keyed IP digest, a cut User-Agent).
+    fields of client_log_fields() in app/middleware/logging.py (the keyed
+    IP digest, a cut User-Agent).
     Callers add identifiers and counts only, never a token, code or state
     value, and never a LogRecord attribute name (name, msg, args, ...) as
     a field: logging raises KeyError on those.

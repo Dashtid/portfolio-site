@@ -52,8 +52,8 @@ secret locks the previous account out at once and its session renews no
 more. A session ends at most 30 days after its GitHub sign-in
 (`SESSION_MAX_AGE` in `backend/app/api/v1/auth.py`). Rotating
 `SECRET_KEY` ends every session and changes the keyed IP digest that
-log lines carry; the daily visitor key of analytics rows does not
-depend on it.
+the rate-limit and security-event log lines carry; the daily visitor
+key of analytics rows does not depend on it.
 
 ## Frontend (Vercel)
 

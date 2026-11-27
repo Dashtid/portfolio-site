@@ -243,7 +243,7 @@ const sections: Section[] = [
       {
         kind: 'paragraph',
         runs: [
-          "The server keeps a technical log of requests to api.dashti.se: the time, what was requested, the result, the first 64 characters of your browser's user-agent string, and a keyed digest of your IP address, never the address itself. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
+          "The server keeps a technical log of requests to api.dashti.se: the time, what was requested and the result. A request refused by the rate limit is also logged with a keyed digest of your IP address, never the address itself, and each step of a sign-in with that digest and the first 64 characters of your browser's user-agent string. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
         ]
       },
       { kind: 'heading', text: 'Error and performance reports' },

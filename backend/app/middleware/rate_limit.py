@@ -121,7 +121,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
     logger.warning(
         "Rate limit exceeded",
         extra={
-            # The keyed digest the request log carries, never the address.
+            # A keyed digest of the address (app/utils/ip_hash.py), never the address.
             "client_ip_hash": hash_ip(get_client_ip(request)),
             "path": request.url.path,
             "method": request.method,

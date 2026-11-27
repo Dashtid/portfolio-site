@@ -1,13 +1,14 @@
 """
 Keyed IP digest for log lines.
 
-The request log, the unhandled-exception line, the 429 line and the security
-events name a client by ``hash_ip(address)``, never by the address: an
-HMAC-SHA256 keyed off ``SECRET_KEY``, cut to 16 hex characters. The key is
-what defeats the rainbow-table attack that plain ``sha256(ip)`` is vulnerable
-to (IPv4 has only ~4.3B possible values, so a precomputed table is feasible
-without a key). The digest of one address is the same on every day, so the
-requests of one client can be traced through the log; page_views rows do not
+The 429 line (app/middleware/rate_limit.py) and the security events
+(app/core/security_events.py) name a client by ``hash_ip(address)``, never by
+the address: an HMAC-SHA256 keyed off ``SECRET_KEY``, cut to 16 hex
+characters. The request log lines name no client. The key is what defeats the
+rainbow-table attack that plain ``sha256(ip)`` is vulnerable to (IPv4 has only
+~4.3B possible values, so a precomputed table is feasible without a key). The
+digest of one address is the same on every day, so the refusals and security
+events of one client can be traced through the log; page_views rows do not
 carry it (they hold the daily key of app/utils/visitor_key.py).
 
 We reuse ``SECRET_KEY`` rather than introducing a separate ``IP_HASH_SECRET``
@@ -39,7 +40,8 @@ def hash_ip(ip: str) -> str:
     """Return a pseudonymous fixed-width hex digest for ``ip``.
 
     Deterministic for a given (``SECRET_KEY``, ``ip``) pair, so every log
-    line of one address carries the same digest.
+    line that names one address (the 429 line, a security event) carries the
+    same digest.
     """
     key = (settings.SECRET_KEY or "").encode()
     msg = _DOMAIN_PREFIX + ip.encode()

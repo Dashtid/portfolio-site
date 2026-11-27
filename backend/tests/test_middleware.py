@@ -5,7 +5,11 @@ Tests for middleware components including rate limiting
 import asyncio
 import itertools
 import json
+import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -1745,13 +1749,32 @@ class TestPageViewBeaconLogging:
         assert metrics.request_count[key] == before + 1
 
 
-class TestLogLinesCarryNoClientAddress:
-    """Log lines name a client by the keyed IP digest of app/utils/ip_hash.py.
+@contextmanager
+def _every_log_record() -> Iterator[list[logging.LogRecord]]:
+    """Every record that any logger hands to its handlers inside the block.
 
-    The request log, the unhandled-exception line and the 429 line carry
-    client_ip_hash, never the address, and at most 64 characters of the
-    User-Agent. The request comes from fly-proxy's private address with
-    the client in Fly-Client-IP, as on Fly.
+    The app loggers do not propagate, so a handler on the root logger never
+    sees their records; Logger.callHandlers runs once for each record a
+    logger emits.
+    """
+    records: list[logging.LogRecord] = []
+    call_handlers = logging.Logger.callHandlers
+
+    def keep_then_call(logger: logging.Logger, record: logging.LogRecord) -> None:
+        records.append(record)
+        call_handlers(logger, record)
+
+    with patch.object(logging.Logger, "callHandlers", keep_then_call):
+        yield records
+
+
+class TestLogLinesCarryNoClientAddress:
+    """The request log lines and the unhandled-exception line name no client.
+
+    None of them carries client_ip_hash, a User-Agent or the address. The
+    429 line names a client by the keyed IP digest of app/utils/ip_hash.py
+    alone, never by the address. The request comes from fly-proxy's private
+    address with the client in Fly-Client-IP, as on Fly.
     """
 
     CLIENT = "203.0.113.7"
@@ -1775,40 +1798,83 @@ class TestLogLinesCarryNoClientAddress:
             }
         )
 
-    def _assert_pseudonymous(self, extra: dict, logged: str, *, user_agent: bool) -> None:
-        from app.utils.ip_hash import hash_ip
-
-        assert extra["client_ip_hash"] == hash_ip(self.CLIENT)
-        assert "client_ip" not in extra
+    def _assert_no_client(self, fields: dict, logged: str) -> None:
+        assert "client_ip_hash" not in fields
+        assert "user_agent" not in fields
+        assert "client_ip" not in fields
         assert self.CLIENT not in logged
-        if user_agent:
-            assert extra["user_agent"] == self.USER_AGENT[:64]
 
-    def test_request_log_line(self, client: TestClient):
+    def test_request_log_lines(self, client: TestClient):
         from app.main import app
+        from app.middleware.logging import LoggingMiddleware
+
+        async def crash(request):
+            raise RuntimeError("handler crashed")
 
         proxied = TestClient(app, client=("10.0.0.1", 1234))
         with patch("app.middleware.logging.logger") as mock_logger:
             proxied.get("/", headers={"Fly-Client-IP": self.CLIENT, "User-Agent": self.USER_AGENT})
+            with pytest.raises(RuntimeError):
+                asyncio.run(LoggingMiddleware(app=MagicMock()).dispatch(self._request(), crash))
 
-        incoming = [
-            c for c in mock_logger.info.call_args_list if c.args and c.args[0] == "Incoming request"
+        lines = mock_logger.info.call_args_list + mock_logger.error.call_args_list
+        assert [line.args[0] for line in lines] == [
+            "Incoming request",
+            "Request completed",
+            "Incoming request",
+            "Request failed",
         ]
-        self._assert_pseudonymous(
-            incoming[0].kwargs["extra"], str(mock_logger.mock_calls), user_agent=True
-        )
+        for line in lines:
+            self._assert_no_client(line.kwargs["extra"], str(mock_logger.mock_calls))
 
-    def test_missing_user_agent_logs_none(self, client: TestClient):
+    @pytest.mark.parametrize(("known", "status"), [(True, 200), (False, 404)])
+    def test_a_company_fetch_leaves_no_client_field_on_any_record(
+        self, client: TestClient, admin_user_in_db: dict[str, Any], known: bool, status: int
+    ):
+        """GET /api/v1/companies/{id}, the request an experience page sends."""
         from app.main import app
 
-        bare = TestClient(app, headers={"user-agent": ""})
-        with patch("app.middleware.logging.logger") as mock_logger:
-            bare.get("/")
+        company_id = "nonexistent-company-id"
+        if known:
+            created = client.post(
+                "/api/v1/companies/",
+                json={
+                    "name": "Example Company",
+                    "title": "Engineer",
+                    "description": "Example description",
+                    "order_index": 1,
+                },
+                headers=admin_user_in_db["headers"],
+            )
+            assert created.status_code == 201
+            company_id = created.json()["id"]
 
-        incoming = [
-            c for c in mock_logger.info.call_args_list if c.args and c.args[0] == "Incoming request"
-        ]
-        assert incoming[0].kwargs["extra"]["user_agent"] is None
+        proxied = TestClient(app, client=("10.0.0.1", 1234))
+        with _every_log_record() as records:
+            response = proxied.get(
+                f"/api/v1/companies/{company_id}",
+                headers={"Fly-Client-IP": self.CLIENT, "User-Agent": self.USER_AGENT},
+            )
+
+        assert response.status_code == status
+        assert [
+            record.getMessage() for record in records if record.name == "app.middleware.logging"
+        ] == ["Incoming request", "Request completed"]
+        for record in records:
+            self._assert_no_client(record.__dict__, repr(record.__dict__))
+
+    def test_client_fields_without_a_user_agent(self):
+        """client_log_fields(), which the security events carry, gives None."""
+        from app.middleware.logging import client_log_fields
+
+        request = Request(
+            {
+                "type": "http",
+                "headers": [(b"fly-client-ip", self.CLIENT.encode())],
+                "client": ("10.0.0.1", 1234),
+            }
+        )
+        assert client_log_fields(request)["user_agent"] is None
 
     def test_unhandled_exception_line(self):
         from app.middleware.error_tracking import ErrorTrackingMiddleware
@@ -1824,14 +1890,13 @@ class TestLogLinesCarryNoClientAddress:
         ):
             asyncio.run(middleware.dispatch(self._request(), crash))
 
-        self._assert_pseudonymous(
-            mock_logger.critical.call_args.kwargs["extra"],
-            str(mock_logger.mock_calls),
-            user_agent=True,
+        self._assert_no_client(
+            mock_logger.critical.call_args.kwargs["extra"], str(mock_logger.mock_calls)
         )
 
     def test_rate_limit_line(self):
         from app.middleware import rate_limit_exceeded_handler
+        from app.utils.ip_hash import hash_ip
 
         exc = MagicMock()
         exc.detail = "5 per 1 minute"
@@ -1839,8 +1904,8 @@ class TestLogLinesCarryNoClientAddress:
             response = asyncio.run(rate_limit_exceeded_handler(self._request(), exc))
 
         assert response.status_code == 429
-        self._assert_pseudonymous(
-            mock_logger.warning.call_args.kwargs["extra"],
-            str(mock_logger.mock_calls),
-            user_agent=False,
-        )
+        extra = mock_logger.warning.call_args.kwargs["extra"]
+        assert extra["client_ip_hash"] == hash_ip(self.CLIENT)
+        assert "client_ip" not in extra
+        assert "user_agent" not in extra
+        assert self.CLIENT not in str(mock_logger.mock_calls)

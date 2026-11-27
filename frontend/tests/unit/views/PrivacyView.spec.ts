@@ -262,6 +262,16 @@ describe('PrivacyView', () => {
     )
   })
 
+  it('names the only server log lines that carry a client digest', async () => {
+    const wrapper = await mountView()
+    // backend/app/middleware/logging.py's request lines carry no client
+    // field; rate_limit.py's 429 line carries the digest, and the security
+    // events of core/security_events.py the digest and a cut User-Agent.
+    expect(wrapper.findAll('p').map(paragraph => paragraph.text())).toContain(
+      "The server keeps a technical log of requests to api.dashti.se: the time, what was requested and the result. A request refused by the rate limit is also logged with a keyed digest of your IP address, never the address itself, and each step of a sign-in with that digest and the first 64 characters of your browser's user-agent string. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
+    )
+  })
+
   it('names what an error report carries, the latest load-time measurement included', async () => {
     const wrapper = await mountView()
     // utils/sentry.ts keeps the latest Web Vital in a context that every

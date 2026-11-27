@@ -12,7 +12,6 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
-from app.middleware.logging import client_log_fields
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -94,7 +93,6 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
                     "error_type": type(exc).__name__,
                     "error_message": str(exc),
                     "stack_trace": stack_trace,
-                    **client_log_fields(request),
                 },
             )
             _capture_to_sentry(exc, request, status_code=500)

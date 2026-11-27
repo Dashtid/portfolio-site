@@ -68,7 +68,7 @@ immediately, no post-load refetch, no hydration mismatch.
 | CRUD Service Factory | Generic, type-safe API calls (`createCrudService<T>()`) |
 | Cookie-only auth | HTTP-only cookies for tokens; refresh endpoint returns no body tokens |
 | Token-refresh dedup | A subscriber queue funnels concurrent 401s through a single refresh call |
-| Visitor pseudonymisation | analytics rows carry a daily visitor key (HMAC under an in-memory salt replaced every UTC day), never an address; log lines carry a keyed HMAC-SHA256 digest of the address |
+| Visitor pseudonymisation | analytics rows carry a daily visitor key (HMAC under an in-memory salt replaced every UTC day), never an address; request log lines carry no client field, and the rate-limit and security-event lines a keyed HMAC-SHA256 digest of the address |
 | Middleware stack | Security headers, environment-conditional CSP, rate limiting, compression, logging |
 | Async database | SQLAlchemy async with connection pooling; Alembic for migrations |
 | SHA-pinned actions | All GitHub Actions referenced by full commit SHA, not version tag |

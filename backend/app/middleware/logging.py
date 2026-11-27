@@ -1,5 +1,11 @@
 """
 Logging middleware for request/response tracking
+
+The request log lines ("Incoming request", "Request completed", "Request
+failed") name no client: no address, no digest of one and no User-Agent.
+client_log_fields() below gives the security events of
+app/core/security_events.py their client fields; the 429 line of
+app/middleware/rate_limit.py carries the address digest alone.
 """
 
 import re
@@ -62,11 +68,12 @@ _USER_AGENT_LOG_CHARS = 64
 
 
 def client_log_fields(request: Request) -> dict[str, str | None]:
-    """The client fields a log line may carry.
+    """The client fields of a security event (app/core/security_events.py).
 
     The address only as its keyed digest (app/utils/ip_hash.py), the same
-    for one address on every day, so the requests of one client can be
-    traced, and the User-Agent cut to its first characters.
+    for one address on every day, so the security events of one client can
+    be traced, and the User-Agent cut to its first characters. No request
+    log line carries either.
     """
     user_agent = request.headers.get("user-agent")
     return {
@@ -118,7 +125,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "method": request.method,
                     "path": request.url.path,
                     "query_params": _loggable_query_params(request),
-                    **client_log_fields(request),
                 },
             )
 
@@ -137,7 +143,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 # A silent path is silent only while it succeeds: with
                 # uvicorn's access log off, this is the one line a failing
                 # request there (a readiness 503, a beacon's 422 or 429)
-                # leaves, and it carries no client fields.
+                # leaves in the request log.
                 if not silent or response.status_code >= 400:
                     logger.info(
                         "Request completed",
