@@ -215,11 +215,24 @@ describe('PrivacyView', () => {
         'until the end of the day (UTC), in memory only'
       ],
       [
+        'The shortened IP address used for the country lookup',
+        'until the end of the day (UTC), in memory only'
+      ],
+      [
         'What your browser keeps',
         'until you clear it, and what is in session storage only until you close the tab'
       ]
     ])
-    expect(rows.map(row => row.get('th').attributes('scope'))).toEqual(Array(7).fill('row'))
+    expect(rows.map(row => row.get('th').attributes('scope'))).toEqual(Array(8).fill('row'))
+  })
+
+  it('says how long the server keeps the country lookup of a network', async () => {
+    const wrapper = await mountView()
+    // backend/app/core/geo_ip.py caches each shortened address and its
+    // country until the UTC date changes.
+    expect(wrapper.findAll('p').map(paragraph => paragraph.text())).toContain(
+      'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code. The server keeps the shortened address and its country in memory until the end of the day (UTC), so that it asks ipapi.co once a day for each network.'
+    )
   })
 
   it('names the storage of each write the code makes, the reload time included', async () => {

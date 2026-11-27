@@ -40,6 +40,7 @@ from app.api.v1 import (
     skills,
 )
 from app.config import settings
+from app.core.geo_ip import drop_previous_days
 from app.core.security import decode_token
 from app.core.sentry import attach_security_event_handler, sentry_options
 from app.database import Base, engine
@@ -448,8 +449,10 @@ async def cleanup_oauth_states_periodically():
     detection (RFC 6819 §5.2.2.3) work until natural expiry. Before this,
     the table grew one row per login + one per rotation, forever.
 
-    Each pass first calls rotate_daily_salt(), so the visitor-key salt of
-    the previous UTC day is replaced within five minutes of midnight UTC.
+    Each pass first calls rotate_daily_salt() and drop_previous_days(), so
+    the visitor-key salt of the previous UTC day is replaced, and the
+    geo-IP cache entries of that day are dropped, within five minutes of
+    midnight UTC.
     """
     # Local imports to avoid circular dependencies (noqa: PLC0415)
     from datetime import datetime  # noqa: PLC0415
@@ -465,6 +468,7 @@ async def cleanup_oauth_states_periodically():
         try:
             await asyncio.sleep(300)  # Run every 5 minutes
             rotate_daily_salt()
+            drop_previous_days()
             async with AsyncSessionLocal() as session:
                 now = datetime.now(UTC)
                 states = await session.execute(

@@ -230,7 +230,7 @@ const sections: Section[] = [
       {
         kind: 'paragraph',
         runs: [
-          'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code.'
+          'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code. The server keeps the shortened address and its country in memory until the end of the day (UTC), so that it asks ipapi.co once a day for each network.'
         ]
       },
       {
@@ -341,6 +341,10 @@ const sections: Section[] = [
           ["Vercel's request logs", 'a short time, kept by Vercel to run its service'],
           [
             'The daily random value behind the visitor key',
+            'until the end of the day (UTC), in memory only'
+          ],
+          [
+            'The shortened IP address used for the country lookup',
             'until the end of the day (UTC), in memory only'
           ],
           [

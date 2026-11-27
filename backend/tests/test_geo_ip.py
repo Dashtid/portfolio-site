@@ -2,19 +2,30 @@
 Tests for app/core/geo_ip.py
 
 The module is best-effort by design — upstream failures return None and the
-caller persists None. Tests cover the four behaviours that matter:
+caller persists None. Tests cover the five behaviours that matter:
 - Happy path: 200 + valid 2-letter body → country code returned and cached
 - Cache hit: second lookup for same IP doesn't call upstream again
 - Failure path: timeout / non-200 / malformed body → None, also cached
 - Private IPs short-circuit without any HTTP call
+- One UTC day: drop_previous_days() empties a cache made on an earlier UTC
+  date, when it runs, at the next lookup and at each cleanup pass, and keeps
+  the entries of the same day; an answer that arrives on a later UTC date
+  than its lookup began on is returned but not cached
 """
 
+import asyncio
+from collections.abc import Callable
+from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 
 from app.core import geo_ip
+from tests.conftest import run_one_cleanup_pass
+
+DAY = date(2030, 1, 1)
 
 
 @pytest.fixture(autouse=True)
@@ -25,11 +36,32 @@ def _clear_cache():
     geo_ip._reset_cache_for_tests()
 
 
+@pytest.fixture
+def set_day(monkeypatch: pytest.MonkeyPatch) -> Callable[[date], None]:
+    """Start on DAY; the returned setter moves the UTC date the module sees."""
+    today = [DAY]
+    monkeypatch.setattr(geo_ip, "_utc_today", lambda: today[0])
+
+    def move_to(day: date) -> None:
+        today[0] = day
+
+    return move_to
+
+
 def _mock_response(status_code: int, text: str) -> MagicMock:
     resp = MagicMock()
     resp.status_code = status_code
     resp.text = text
     return resp
+
+
+def _upstream_answering(client_cls: MagicMock, text: str = "SE") -> AsyncMock:
+    """Make the patched httpx.AsyncClient answer every lookup 200 with `text`."""
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.get.return_value = _mock_response(200, text)
+    client_cls.return_value = client
+    return client
 
 
 @pytest.mark.asyncio
@@ -212,3 +244,106 @@ async def test_cache_collapses_a_shared_slash_24():
     assert first == "SE"
     assert second == "SE"
     assert client.get.await_count == 1
+
+
+# ---- The cache holds the lookups of one UTC day ----------------------------
+
+
+@pytest.mark.asyncio
+async def test_drop_previous_days_empties_a_cache_made_on_an_earlier_utc_date(
+    set_day: Callable[[date], None],
+):
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        _upstream_answering(client_cls)
+        assert await geo_ip.get_country_code("8.8.8.8") == "SE"
+    assert geo_ip._cache == {"8.8.8.0": "SE"}
+
+    set_day(DAY + timedelta(days=1))
+    geo_ip.drop_previous_days()
+
+    assert geo_ip._cache == {}
+    assert geo_ip._cache_day == DAY + timedelta(days=1)
+
+
+@pytest.mark.asyncio
+async def test_the_first_lookup_of_a_new_utc_day_drops_the_previous_days_entries(
+    set_day: Callable[[date], None],
+):
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        client = _upstream_answering(client_cls)
+        await geo_ip.get_country_code("8.8.8.8")
+        await geo_ip.get_country_code("8.8.4.4")
+        set_day(DAY + timedelta(days=1))
+        assert await geo_ip.get_country_code("8.8.8.8") == "SE"
+
+    # Upstream is asked again, and the other network of the previous day is gone.
+    assert client.get.await_count == 3
+    assert geo_ip._cache == {"8.8.8.0": "SE"}
+
+
+@pytest.mark.asyncio
+async def test_entries_of_the_same_utc_day_stay(set_day: Callable[[date], None]):
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        client = _upstream_answering(client_cls)
+        await geo_ip.get_country_code("8.8.8.8")
+        geo_ip.drop_previous_days()
+        assert await geo_ip.get_country_code("8.8.8.8") == "SE"
+
+    assert client.get.await_count == 1
+    assert geo_ip._cache == {"8.8.8.0": "SE"}
+    assert geo_ip._cache_day == DAY
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "drop_while_waiting", [True, False], ids=["a drop while it waits", "no drop while it waits"]
+)
+async def test_an_answer_that_arrives_on_a_later_utc_date_is_not_cached(
+    set_day: Callable[[date], None], drop_while_waiting: bool
+):
+    """A lookup that begins before midnight UTC and is answered after it.
+
+    The answer is returned and not cached, whether or not a cleanup pass or
+    another lookup moved the cache to the new date while upstream was asked.
+    """
+    asked = asyncio.Event()
+    released = asyncio.Event()
+
+    async def answer_once_released(url: str) -> MagicMock:
+        asked.set()
+        await released.wait()
+        return _mock_response(200, "SE")
+
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        client = _upstream_answering(client_cls)
+        client.get.side_effect = answer_once_released
+        lookup = asyncio.create_task(geo_ip.get_country_code("8.8.8.8"))
+        await asyncio.wait_for(asked.wait(), timeout=5)
+        set_day(DAY + timedelta(days=1))
+        if drop_while_waiting:
+            geo_ip.drop_previous_days()
+        released.set()
+        assert await asyncio.wait_for(lookup, timeout=5) == "SE"
+
+    assert geo_ip._cache == {}
+    assert geo_ip._cache_day == DAY + timedelta(days=1)
+
+
+def test_a_cleanup_pass_drops_the_entries_of_a_past_day(
+    client: TestClient, set_day: Callable[[date], None]
+):
+    """The entries go at the first cleanup pass of a new UTC day, lookup or not."""
+    _ = client  # the pass deletes from tables the fixture creates
+
+    async def look_up() -> str | None:
+        with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+            _upstream_answering(client_cls)
+            return await geo_ip.get_country_code("8.8.8.8")
+
+    assert asyncio.run(look_up()) == "SE"
+    set_day(DAY + timedelta(days=1))
+
+    asyncio.run(run_one_cleanup_pass())
+
+    assert geo_ip._cache == {}
+    assert geo_ip._cache_day == DAY + timedelta(days=1)

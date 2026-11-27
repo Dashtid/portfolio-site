@@ -66,9 +66,10 @@ User-Agent, and once the day's salt is replaced the key cannot be turned
 back into either. A restart starts a new salt, so a visitor seen before
 and after it counts twice that day. Country is resolved via ipapi.co after
 the response, from the address with its host part zeroed (IPv4 /24,
-IPv6 /48). Outbound-click tracking rides the same endpoint under synthetic
-`/event/*` paths; the admin stats summary excludes those from page-view
-metrics and surfaces them as their own counter instead.
+IPv6 /48); the answer for that network stays in memory until the end of
+the UTC day. Outbound-click tracking rides the same endpoint under
+synthetic `/event/*` paths; the admin stats summary excludes those from
+page-view metrics and surfaces them as their own counter instead.
 
 Request log lines name no client. The rate-limit refusal line and the
 security events (each step of a sign-in) name one by a keyed digest
