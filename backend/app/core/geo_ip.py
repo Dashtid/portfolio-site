@@ -124,11 +124,14 @@ async def get_country_code(ip: str) -> str | None:
     if lookup_ip in _cache:
         return _cache[lookup_ip]
 
+    # The debug lines below never name the network: they carry the status
+    # code, the body's length or the exception's type, since the body and
+    # the exception's text can repeat the address or the request URL.
     try:
         async with httpx.AsyncClient(timeout=LOOKUP_TIMEOUT_SECONDS) as client:
             resp = await client.get(UPSTREAM_URL_TEMPLATE.format(ip=lookup_ip))
         if resp.status_code != 200:
-            logger.debug("geo-ip lookup non-200 for %s: %s", lookup_ip, resp.status_code)
+            logger.debug("geo-ip lookup non-200: %s", resp.status_code)
             _cache_put(lookup_ip, None, started_on)
             return None
         body = resp.text.strip().upper()
@@ -136,11 +139,11 @@ async def get_country_code(ip: str) -> str | None:
         if len(body) == 2 and body.isalpha():
             _cache_put(lookup_ip, body, started_on)
             return body
-        logger.debug("geo-ip lookup unexpected body for %s: %r", lookup_ip, body[:40])
+        logger.debug("geo-ip lookup unexpected body (%d characters)", len(body))
         _cache_put(lookup_ip, None, started_on)
         return None
     except (httpx.HTTPError, httpx.TimeoutException) as exc:
-        logger.debug("geo-ip lookup error for %s: %s", lookup_ip, exc)
+        logger.debug("geo-ip lookup error: %s", type(exc).__name__)
         _cache_put(lookup_ip, None, started_on)
         return None
 

@@ -5,7 +5,8 @@ The module is best-effort by design — upstream failures return None and the
 caller persists None. Tests cover the five behaviours that matter:
 - Happy path: 200 + valid 2-letter body → country code returned and cached
 - Cache hit: second lookup for same IP doesn't call upstream again
-- Failure path: timeout / non-200 / malformed body → None, also cached
+- Failure path: timeout / non-200 / malformed body → None, also cached, and
+  a debug line that does not name the network
 - Private IPs short-circuit without any HTTP call
 - One UTC day: drop_previous_days() empties a cache made on an earlier UTC
   date, when it runs, at the next lookup and at each cleanup pass, and keeps
@@ -14,7 +15,8 @@ caller persists None. Tests cover the five behaviours that matter:
 """
 
 import asyncio
-from collections.abc import Callable
+import logging
+from collections.abc import Callable, Iterator
 from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -46,6 +48,26 @@ def set_day(monkeypatch: pytest.MonkeyPatch) -> Callable[[date], None]:
         today[0] = day
 
     return move_to
+
+
+@pytest.fixture
+def debug_records() -> Iterator[list[logging.LogRecord]]:
+    """Every record the module's logger emits at DEBUG or above during the test."""
+    records: list[logging.LogRecord] = []
+
+    class Keep(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    keep = Keep(logging.DEBUG)
+    level = geo_ip.logger.level
+    geo_ip.logger.addHandler(keep)
+    geo_ip.logger.setLevel(logging.DEBUG)
+    try:
+        yield records
+    finally:
+        geo_ip.logger.setLevel(level)
+        geo_ip.logger.removeHandler(keep)
 
 
 def _mock_response(status_code: int, text: str) -> MagicMock:
@@ -195,6 +217,47 @@ async def test_country_code_normalised_to_uppercase():
         result = await geo_ip.get_country_code("8.8.8.8")
 
     assert result == "SE"
+
+
+# A body that repeats the network it was asked about, as a JSON error might.
+_ECHO_BODY = '{"ip": "8.8.8.0", "error": true}'
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("upstream", "line"),
+    [
+        (_mock_response(429, "8.8.8.0 is rate limited"), "geo-ip lookup non-200: 429"),
+        (
+            _mock_response(200, _ECHO_BODY),
+            f"geo-ip lookup unexpected body ({len(_ECHO_BODY)} characters)",
+        ),
+        (
+            httpx.TimeoutException("timed out: https://ipapi.co/8.8.8.0/country/"),
+            "geo-ip lookup error: TimeoutException",
+        ),
+    ],
+    ids=["non-200", "junk body", "timeout"],
+)
+async def test_a_failed_lookup_logs_no_network(
+    upstream: MagicMock | Exception, line: str, debug_records: list[logging.LogRecord]
+):
+    """The debug line of each failed lookup, where the answer repeats the network too."""
+    with patch("app.core.geo_ip.httpx.AsyncClient") as client_cls:
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        if isinstance(upstream, Exception):
+            client.get.side_effect = upstream
+        else:
+            client.get.return_value = upstream
+        client_cls.return_value = client
+
+        assert await geo_ip.get_country_code("8.8.8.8") is None
+
+    assert [record.getMessage() for record in debug_records] == [line]
+    for record in debug_records:
+        assert "8.8.8" not in record.getMessage()
+        assert "8.8.8" not in repr(record.args)
 
 
 # ---- D3-BE-03: IP truncation before the third-party lookup -----------------
