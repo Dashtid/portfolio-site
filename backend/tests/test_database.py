@@ -2,16 +2,29 @@
 Tests for database module
 """
 
+import time
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 import sqlalchemy as sa
 import sqlalchemy.ext.asyncio as sa_asyncio
 from alembic.config import Config
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import StatementError
 
 from alembic import command  # type: ignore[attr-defined]
-from app.database import AsyncSessionLocal, Base, _engine_kwargs, engine, get_db
+from app.config import settings
+from app.database import (
+    AsyncSessionLocal,
+    Base,
+    _engine_kwargs,
+    _slow_query_after,
+    engine,
+    get_db,
+)
+from app.models.analytics import PageView
 
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
 
@@ -126,6 +139,40 @@ class TestBoundParametersHidden:
 
         assert built, "env.py did not build its engine through async_engine_from_config"
         assert all(e.sync_engine.hide_parameters is True for e in built)
+
+
+class TestSlowQueryLine:
+    """A statement slower than SLOW_QUERY_THRESHOLD_MS gets a "Slow query
+    detected" line, except the two writes of a page view."""
+
+    # The SQL of each statement as the app's engine and Postgres render it.
+    DIALECTS = [engine.sync_engine.dialect, postgresql.dialect()]
+
+    @staticmethod
+    def _slow_lines(statement: sa.ClauseElement, dialect: sa.Dialect) -> int:
+        """The slow-query lines the listener writes for `statement`, one second past the threshold."""
+        context = SimpleNamespace(
+            _query_start_time=time.perf_counter() - settings.SLOW_QUERY_THRESHOLD_MS / 1000 - 1
+        )
+        sql = str(statement.compile(dialect=dialect))
+        with patch("app.database.logger") as mock_logger:
+            _slow_query_after(None, None, sql, (), context, False)
+        return mock_logger.warning.call_count
+
+    @pytest.mark.parametrize("dialect", DIALECTS, ids=["app engine", "postgresql"])
+    def test_the_writes_of_a_page_view_leave_no_line(self, dialect: sa.Dialect):
+        # The beacon's INSERT and the country back-fill's UPDATE, as
+        # app/api/v1/analytics.py builds them.
+        beacon = sa.insert(PageView).values(id="x", page_path="/", referrer=None, session_id="v_0")
+        backfill = sa.update(PageView).where(PageView.id == "x").values(country="SE")
+        assert [self._slow_lines(s, dialect) for s in (beacon, backfill)] == [0, 0]
+
+    @pytest.mark.parametrize("dialect", DIALECTS, ids=["app engine", "postgresql"])
+    def test_other_slow_statements_keep_their_line(self, dialect: sa.Dialect):
+        dashboard = sa.select(PageView.page_path).where(PageView.created_at >= sa.func.now())
+        purge = sa.delete(PageView).where(PageView.created_at < sa.func.now())
+        other = sa.insert(sa.table("page_views_archive", sa.column("id"))).values(id="x")
+        assert [self._slow_lines(s, dialect) for s in (dashboard, purge, other)] == [1, 1, 1]
 
 
 def create_async_engine_for(path: Path, **engine_kwargs) -> sa_asyncio.AsyncEngine:

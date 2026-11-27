@@ -3,6 +3,7 @@ Database connection and session management
 """
 
 import os
+import re
 import time
 
 from sqlalchemy import event
@@ -69,6 +70,15 @@ engine = create_async_engine(settings.async_database_url, **_engine_kwargs)
 #
 # Hooked on the underlying sync engine because SQLAlchemy fires DBAPI events
 # at that level; async engines wrap a sync engine under the hood.
+#
+# A page view's own writes, the beacon's INSERT and the country back-fill's
+# UPDATE (app/api/v1/analytics.py), get no slow-query line: a beacon that
+# succeeds leaves no request line and no slow-request line either
+# (app/middleware/logging.py, app/middleware/performance.py). Reads and
+# deletes on page_views keep theirs.
+_PAGE_VIEW_WRITE = re.compile(r"\s*(?:INSERT\s+INTO|UPDATE)\s+page_views\b", re.IGNORECASE)
+
+
 @event.listens_for(engine.sync_engine, "before_cursor_execute")
 def _slow_query_before(_conn, _cursor, _statement, _parameters, context, _executemany) -> None:
     context._query_start_time = time.perf_counter()
@@ -81,6 +91,8 @@ def _slow_query_after(_conn, _cursor, statement, parameters, context, _executema
         return
     duration_ms = (time.perf_counter() - start) * 1000.0
     if duration_ms < settings.SLOW_QUERY_THRESHOLD_MS:
+        return
+    if _PAGE_VIEW_WRITE.match(statement or ""):
         return
     # Cap the SQL preview so a huge IN (...) clause doesn't blow up the log
     # line. The full query is still in pg_stat_statements / equivalent.
