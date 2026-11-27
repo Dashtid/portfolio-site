@@ -1,6 +1,6 @@
 # Nightly logical backup of the production Postgres (dashti-portfolio-db).
 #
-# Complements Fly's automatic volume snapshots (5-day retention, restore-
+# Complements Fly's automatic volume snapshots (60-day retention, restore-
 # only-to-new-volume) with portable pg_dump artifacts kept for 30 days.
 # Before this workflow existed there was NO durable backup of the DB at
 # all — a finding from the 2026-07 full-stack review.

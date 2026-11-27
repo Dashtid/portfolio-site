@@ -33,7 +33,9 @@ dashti-portfolio-backend` showed them on 2026-10-10): `SECRET_KEY`,
 `FRONTEND_URL`, `ENVIRONMENT`, `DEBUG`, and `DATABASE_URL` (written by
 `flyctl postgres attach`). Each `fly secrets set` restarts the machine,
 so it is a deploy. `SENTRY_DSN` is optional and unset, so backend Sentry
-is off (see Monitoring).
+is off (see Monitoring). Setting it starts backend reports at once,
+without a commit, and /privacy (`frontend/src/views/PrivacyView.vue`)
+describes browser reports only, so that page changes first.
 
 Operational commands:
 
@@ -68,11 +70,13 @@ Security headers (hash-locked CSP, HSTS on the browser preload list,
 which hstspreload.org reported as `preloaded` on 2026-10-20,
 X-Content-Type-Options, X-Frame-Options, Permissions-Policy,
 Referrer-Policy) live in `frontend/vercel.json` and are served by the
-Vercel edge — the backend never sets them for the static site. The CSP's
-hashes are enforced three ways before any deploy: unit tests recompute
-each hash from source, `scripts/verify-dist-invariants.mjs` scans the
-built pages for uncovered styling, and `scripts/csp-check.mjs` drives the
-built bundle under the real policy in a browser.
+Vercel edge — the backend never sets them for the static site. Before a
+pipeline deploy the CSP's hashes are checked three ways: unit tests
+recompute each hash from source, `scripts/verify-dist-invariants.mjs`
+scans the built pages for uncovered styling, and `scripts/csp-check.mjs`
+drives the built bundle under the real policy in a browser. A rebake
+(`rebake-frontend.yml`) runs only the build-time scan, at the end of the
+Vercel build's `npm run build:ssg`, then the post-deploy header check.
 
 Caching (also `vercel.json`): `/assets/*` one year immutable, `/images/*`
 24 h + stale-while-revalidate, `/sw.js` must-revalidate.
@@ -119,12 +123,15 @@ catch-up deploys the tree with the flagged dependency. Fix the
 dependency in that next push. An advisory accepted instead belongs in
 the action's `allow-ghsas` list, where the acceptance is on record.
 
-Python installs in CI use `--require-hashes` against the committed
+`backend-quality`'s installs use `--require-hashes` against the committed
 lockfiles — including a hash-pinned bootstrap of pip itself
-(`requirements-pip.txt`). `requirements.txt` is compiled from
-`pyproject.toml` for the Linux deploy image (`--python-platform
-x86_64-unknown-linux-gnu`); regenerating it on another platform silently
-drops platform-markered packages like uvloop, so keep the flags.
+(`requirements-pip.txt`) — and `pre-commit.yml` installs pre-commit
+itself the same way (`.github/pre-commit-requirements.txt`); the hook
+environments pre-commit then builds are pinned by version, not hash.
+`requirements.txt` is compiled from `pyproject.toml` for the Linux deploy
+image (`--python-platform x86_64-unknown-linux-gnu`); regenerating it on
+another platform silently drops platform-markered packages like uvloop,
+so keep the flags.
 
 Supporting workflows:
 
