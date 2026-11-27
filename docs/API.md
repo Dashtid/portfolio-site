@@ -72,9 +72,10 @@ synthetic `/event/*` paths; the admin stats summary excludes those from
 page-view metrics and surfaces them as their own counter instead.
 
 Request log lines name no client. The rate-limit refusal line and the
-security events (each step of a sign-in) name one by a keyed digest
-instead: an HMAC-SHA256 of the address keyed off the application secret,
-truncated (`client_ip_hash`, see `app/utils/ip_hash.py`), the same for one
-address on every day; the security events also keep at most the first 64
+security events (listed under Security events in `docs/DEPLOYMENT.md`)
+name one by a keyed digest instead: an HMAC-SHA256 of the address keyed
+off the application secret, truncated
+(`client_ip_hash`, see `app/utils/ip_hash.py`), the same for one address
+on every day; the security events also keep at most the first 64
 characters of the User-Agent. The page-view beacon is logged only when it
 fails. uvicorn's own access log, which would print the address, is off.

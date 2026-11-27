@@ -178,9 +178,9 @@ const sections: Section[] = [
       {
         kind: 'list',
         items: [
-          'No cookies are set for visitors, and nothing here follows you to other websites.',
+          "This site sets no cookies for visitors (starting the owner's sign-in sets one), and nothing here follows you to other websites.",
           'For each page you open, the site records the page, your country, the website that sent you (its domain only) and a visitor key that changes every day. Your IP address and browser details are not stored with it.',
-          'Videos and maps stay switched off until you click them. Until then, nothing is requested from YouTube or Google.',
+          'Videos and maps stay switched off until you click them. Until then, nothing is requested from YouTube or Google; after a click, Google may set its own cookies.',
           'If your browser sends Global Privacy Control or Do Not Track, nothing is counted. You can also switch counting off below.'
         ]
       }
@@ -230,7 +230,7 @@ const sections: Section[] = [
       {
         kind: 'paragraph',
         runs: [
-          'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code. The server keeps the shortened address and its country in memory until the end of the day (UTC), so that it asks ipapi.co once a day for each network.'
+          'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code. The server keeps the shortened address and its country in memory until the end of the day (UTC), so that it does not ask ipapi.co about the same network on every visit.'
         ]
       },
       {
@@ -243,27 +243,27 @@ const sections: Section[] = [
       {
         kind: 'paragraph',
         runs: [
-          "The server keeps a technical log of requests to api.dashti.se: the time, what was requested and the result. A request refused by the rate limit is also logged with a keyed digest of your IP address, never the address itself, and each step of a sign-in with that digest and the first 64 characters of your browser's user-agent string. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
+          "The server keeps a technical log of requests to api.dashti.se: the time, what was requested and the result. A request refused by the rate limit is also logged with a keyed digest of your IP address, never the address itself. Each sign-in the server accepts or refuses, and each sign-out, is logged with that digest and the first 64 characters of your browser's user-agent string. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
         ]
       },
       { kind: 'heading', text: 'Error and performance reports' },
       {
         kind: 'paragraph',
         runs: [
-          "When something breaks in your browser, a report goes to Sentry, an error-tracking service: what went wrong, the page address, your browser and operating system as named in its user-agent string, your browser's language and time zone, the page's latest load-time measurement, and a short trail of what happened on the page before the error (pages opened, buttons clicked, requests made, messages written to the browser console). On one page view in ten, the browser also sends load-time measurements. Reports do not include your IP address, cookies or anything you type."
+          "When something breaks in your browser, a report goes to Sentry, an error-tracking service: what went wrong, the page address, your browser and operating system as named in its user-agent string, your browser's language and time zone, the page's latest performance measurement, and a short trail of what happened on the page before the error (pages opened, buttons clicked, requests made, messages written to the browser console). On one page view in ten, the browser also sends performance measurements. Reports do not include your IP address, cookies or anything you type."
         ]
       },
       {
         kind: 'paragraph',
         runs: [
-          'If your browser sends Global Privacy Control or Do Not Track, or you switch counting off below, no load-time measurements are sent. Error reports still are, because they are how a broken or attacked page gets noticed. The purpose is finding and fixing faults and attacks; the legal basis is legitimate interest (Article 6(1)(f)).'
+          'If your browser sends Global Privacy Control or Do Not Track, or you switch counting off below, no performance measurements are sent. Error reports still are, because they are how a broken or attacked page gets noticed. The purpose is finding and fixing faults and attacks; the legal basis is legitimate interest (Article 6(1)(f)).'
         ]
       },
       { kind: 'heading', text: 'What is kept in your browser' },
       {
         kind: 'paragraph',
         runs: [
-          "No cookies are set for visitors; only starting the owner's sign-in, described below, sets one. The site uses your browser's own storage for:"
+          "This site sets no cookies for visitors; only starting the owner's sign-in, described below, sets one. The site uses your browser's own storage for:"
         ]
       },
       {
@@ -295,7 +295,7 @@ const sections: Section[] = [
       {
         kind: 'paragraph',
         runs: [
-          "The sign-in at /admin is for the site owner only, and goes through GitHub. Starting it sets a cookie on api.dashti.se that ties the sign-in to your browser for five minutes. If GitHub then names an account other than the owner's, the sign-in is refused, and the server log keeps that account's GitHub name and number with the refusal."
+          "The sign-in at /admin is for the site owner only, and goes through GitHub. Starting it sets a cookie on api.dashti.se that ties the sign-in to your browser for five minutes. If GitHub then names an account other than the owner's, the sign-in is refused, and the server log keeps that account's GitHub username and account number with the refusal."
         ]
       }
     ]
@@ -383,7 +383,7 @@ const sections: Section[] = [
       {
         kind: 'paragraph',
         runs: [
-          'Under the GDPR you can ask to see the data held about you, to have it corrected or deleted, or to limit how it is used. The records above are built so that they cannot be traced back to a person, so there is usually nothing I can find and connect to you; if you send the date and time of a visit, I will look and tell you what I found. Send requests as a LinkedIn message; you will get an answer within a month.'
+          'Under the GDPR you can ask to see the data held about you, to have it corrected or deleted, or to limit how it is used. Apart from a refused sign-in, which the server log keeps with its GitHub account, the records above are built so that they cannot be traced back to a person, so there is usually nothing I can find and connect to you; if you send the date and time of a visit, or the GitHub username you tried to sign in with, I will look and tell you what I found. Send requests as a LinkedIn message; you will get an answer within a month.'
         ]
       },
       {

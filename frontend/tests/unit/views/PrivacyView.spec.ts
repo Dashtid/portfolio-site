@@ -231,7 +231,7 @@ describe('PrivacyView', () => {
     // backend/app/core/geo_ip.py caches each shortened address and its
     // country until the UTC date changes.
     expect(wrapper.findAll('p').map(paragraph => paragraph.text())).toContain(
-      'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code. The server keeps the shortened address and its country in memory until the end of the day (UTC), so that it asks ipapi.co once a day for each network.'
+      'To find your country, the server sends a shortened form of your IP address (the last part removed, so that it names a network rather than a device) to ipapi.co, a location lookup service, which returns only the country code. The server keeps the shortened address and its country in memory until the end of the day (UTC), so that it does not ask ipapi.co about the same network on every visit.'
     )
   })
 
@@ -280,19 +280,46 @@ describe('PrivacyView', () => {
     // backend/app/middleware/logging.py's request lines carry no client
     // field; rate_limit.py's 429 line carries the digest, and the security
     // events of core/security_events.py the digest and a cut User-Agent.
+    // Of those events, api/v1/auth.py writes only the callback's decisions
+    // and the sign-out for a request that carries no token the server signed.
     expect(wrapper.findAll('p').map(paragraph => paragraph.text())).toContain(
-      "The server keeps a technical log of requests to api.dashti.se: the time, what was requested and the result. A request refused by the rate limit is also logged with a keyed digest of your IP address, never the address itself, and each step of a sign-in with that digest and the first 64 characters of your browser's user-agent string. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
+      "The server keeps a technical log of requests to api.dashti.se: the time, what was requested and the result. A request refused by the rate limit is also logged with a keyed digest of your IP address, never the address itself. Each sign-in the server accepts or refuses, and each sign-out, is logged with that digest and the first 64 characters of your browser's user-agent string. The digest is the same for every request from one address, so that abuse can be traced and blocked. The visit notes described above are logged only when they fail. To limit abuse, the server also counts requests per address for one minute at a time, in memory only. The purpose is to keep the service secure and working; the legal basis is legitimate interest (Article 6(1)(f))."
     )
   })
 
-  it('names what an error report carries, the latest load-time measurement included', async () => {
+  it('names what an error report carries, the latest performance measurement included', async () => {
     const wrapper = await mountView()
-    // utils/sentry.ts keeps the latest Web Vital in a context that every
-    // later error event carries, except while counting is declined.
+    // utils/sentry.ts keeps the latest Web Vital (LCP, CLS, INP, FCP or
+    // TTFB, whichever came last) in a context that every later error event
+    // carries, except while counting is declined.
     // The SDK's default Breadcrumbs integration, which sentry.ts keeps, also
     // records console messages.
     expect(wrapper.text()).toContain(
-      "your browser's language and time zone, the page's latest load-time measurement, and a short trail of what happened on the page before the error (pages opened, buttons clicked, requests made, messages written to the browser console)"
+      "your browser's language and time zone, the page's latest performance measurement, and a short trail of what happened on the page before the error (pages opened, buttons clicked, requests made, messages written to the browser console)"
+    )
+  })
+
+  it("names the site's one cookie, Google's after a click and what a refused sign-in keeps", async () => {
+    const wrapper = await mountView()
+    // api/v1/auth.py: GET /api/v1/auth/github sets github_oauth for five
+    // minutes, and auth.login_refused logs the account's id and login.
+    // VideoEmbed.vue and MapEmbed.vue load Google's frame only on a click.
+    const items = wrapper.findAll('li').map(item => item.text())
+    const paragraphs = wrapper.findAll('p').map(paragraph => paragraph.text())
+    expect(items).toContain(
+      "This site sets no cookies for visitors (starting the owner's sign-in sets one), and nothing here follows you to other websites."
+    )
+    expect(items).toContain(
+      'Videos and maps stay switched off until you click them. Until then, nothing is requested from YouTube or Google; after a click, Google may set its own cookies.'
+    )
+    expect(paragraphs).toContain(
+      "This site sets no cookies for visitors; only starting the owner's sign-in, described below, sets one. The site uses your browser's own storage for:"
+    )
+    expect(paragraphs).toContain(
+      "The sign-in at /admin is for the site owner only, and goes through GitHub. Starting it sets a cookie on api.dashti.se that ties the sign-in to your browser for five minutes. If GitHub then names an account other than the owner's, the sign-in is refused, and the server log keeps that account's GitHub username and account number with the refusal."
+    )
+    expect(paragraphs).toContain(
+      'Under the GDPR you can ask to see the data held about you, to have it corrected or deleted, or to limit how it is used. Apart from a refused sign-in, which the server log keeps with its GitHub account, the records above are built so that they cannot be traced back to a person, so there is usually nothing I can find and connect to you; if you send the date and time of a visit, or the GitHub username you tried to sign in with, I will look and tell you what I found. Send requests as a LinkedIn message; you will get an answer within a month.'
     )
   })
 })
